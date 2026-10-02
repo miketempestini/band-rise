@@ -1,0 +1,50 @@
+/* styles.css
+   All the look and layout for Band Rise. Desktop-first.
+   Colors are kept as named variables at the top so the look is easy to change in one place. */
+
+:root {
+  --bg: #1d1b26;          /* page background: dark plum */
+  --panel: #2a2736;       /* panels and cards */
+  --text: #f4f1ea;        /* main text: warm off-white */
+  --text-muted: #a9a3b8;  /* secondary text */
+  --accent: #ffb547;      /* highlight color: stage-light amber */
+  --good: #5fd38d;        /* success / passing */
+  --bad: #ff6b6b;         /* failure / warnings */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+}
+
+/* ---------- Title screen ---------- */
+
+.title-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.title-screen__name {
+  margin: 0;
+  font-size: 96px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-shadow: 4px 4px 0 #000;
+}
+
+.title-screen__tagline {
+  margin: 12px 0 0;
+  font-size: 22px;
+  color: var(--text-muted);
+}

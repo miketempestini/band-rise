@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Band Rise Tests</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Styles only for the test page. */
+    body { padding: 32px 48px; font-family: Menlo, Consolas, monospace; }
+    h1 { margin: 0 0 8px; color: var(--accent); }
+    .summary { font-size: 20px; margin: 0 0 24px; }
+    .summary--pass { color: var(--good); }
+    .summary--fail { color: var(--bad); }
+    #results { list-style: none; padding: 0; margin: 0; }
+    .test { padding: 8px 12px; margin-bottom: 4px; background: var(--panel); border-left: 4px solid; white-space: pre; }
+    .test--pass { border-color: var(--good); }
+    .test--fail { border-color: var(--bad); color: var(--bad); }
+    .test__detail { margin-top: 4px; padding-left: 24px; color: var(--text-muted); white-space: normal; }
+  </style>
+</head>
+<body>
+  <h1>Band Rise Tests</h1>
+  <p id="summary" class="summary">Running...</p>
+  <ul id="results"></ul>
+
+  <!-- Game code, same order as index.html (no ui files) -->
+  <script src="js/balance.js"></script>
+  <script src="js/rng.js"></script>
+  <!-- js/content/*.js files go here -->
+  <script src="js/state.js"></script>
+  <!-- js/rules/*.js files go here -->
+
+  <!-- The test runner, then one test file per system -->
+  <script src="js/tests/test-runner.js"></script>
+  <script src="js/tests/rng.test.js"></script>
+
+  <script>Game.runTests();</script>
+</body>
+</html>

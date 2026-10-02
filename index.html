@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Band Rise</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- The whole game draws inside this box. For now it just shows the title. -->
+  <main id="app">
+    <section class="title-screen">
+      <h1 class="title-screen__name">Band Rise</h1>
+      <p class="title-screen__tagline">From open mic to arena.</p>
+    </section>
+  </main>
+
+  <!--
+    Scripts load in this exact order (see CLAUDE.md). Classic script tags only, no modules,
+    so the game works by double-clicking this file.
+  -->
+  <script src="js/balance.js"></script>
+  <script src="js/rng.js"></script>
+  <!-- js/content/*.js files go here -->
+  <script src="js/state.js"></script>
+  <!-- js/rules/*.js files go here -->
+  <!-- js/ui/*.js files go here -->
+</body>
+</html>

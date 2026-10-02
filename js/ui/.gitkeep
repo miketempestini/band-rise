@@ -1,0 +1,2 @@
+# Screens: one file per screen (title.js, today.js, calendar.js...).
+# Screens only read the state and draw it. See CLAUDE.md.

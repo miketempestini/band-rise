@@ -1,0 +1,2 @@
+# Game rules: one file per system (energy.js, gigs.js, booking.js...).
+# Plain functions: take the state, return { state, log }. See CLAUDE.md.

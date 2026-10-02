@@ -1,0 +1,14 @@
+# Mac clutter
+.DS_Store
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*~
+
+# Exported save files from testing
+*.bandrise.json
+
+# Claude Code local settings
+.claude/settings.local.json
