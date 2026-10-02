@@ -327,7 +327,12 @@ Game.balance = {
     qualityHighMoraleBonus: 5,
     qualityHighMoraleThreshold: 70,
     coWriterQualityDivisor: 10,
-    pointsPerStar: 20,               // Quality shown as 1 to 5 stars, one per 20 points
+    pointsPerStar: 20,               // Quality shown as 1 to 5 stars: quality / 20, rounded up
+    maxStars: 5,                     // The most stars a song can show
+    titleMaxLength: 40,              // Longest song name the player can type
+    titleSuggestionTries: 20,        // Tries to find a random title that isn't already used
+    luckyRoll: 20,                   // The reveal calls a luck roll this high or higher "Lucky night!"
+    unluckyRoll: 5,                  // ...and this low or lower "Not much luck this time"
     tightness: {
       max: 100,
       newOriginal: 30,               // A new original starts at this tightness
@@ -567,7 +572,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 2,                      // Save format version, bumped when the state shape changes
+    version: 3,                      // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

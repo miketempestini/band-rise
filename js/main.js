@@ -12,6 +12,11 @@ Game.app = {
   notice: null,         // a message to show on the title or settings screen: { kind: 'error' | 'info', text }
   payBackMessage: null, // result of the last Pay back attempt, shown in the debt panel
   pickerBlock: null,    // which block the action picker is open for ('morning' etc.), or null when closed
+  pickerSongStep: null, // an action id (like 'practice') while the picker asks which song, else null
+  revealQueue: [],      // ids of finished songs still waiting for their reveal screen
+  revealThen: 'today',  // the screen to show after the last reveal
+  revealError: null,    // a problem with the typed song name, shown on the reveal screen
+  songsReturnTo: 'today', // the screen the Songs screen's Back button returns to
   pendingWeekSummary: false, // true when the weekly summary should follow the Day results screen
   draftCareer: null,    // a career being set up: { name, instrument, allocation } (not saved until Start)
   debug: /[?&]debug\b/.test(window.location.search), // true when the address ends in ?debug
@@ -28,6 +33,8 @@ Game.app = {
       app.notice = null;
       app.payBackMessage = null;
       app.pickerBlock = null;
+      app.pickerSongStep = null;
+      app.revealError = null;
     }
     app.screen = screen;
     app.render();
@@ -108,19 +115,94 @@ Game.app = {
 
   closePicker: function () {
     Game.app.pickerBlock = null;
+    Game.app.pickerSongStep = null;
     document.onkeydown = null;
     Game.app.render();
   },
 
+  // An action was clicked in the picker. Actions that need a song open the song step first.
+  pickAction: function (actionId) {
+    var app = Game.app;
+    if (Game.content.actions[actionId].needsSong) {
+      app.pickerSongStep = actionId;
+      app.render();
+    } else {
+      app.planAction(actionId);
+    }
+  },
+
+  // From the song step back to the list of actions.
+  pickerShowActions: function () {
+    Game.app.pickerSongStep = null;
+    Game.app.render();
+  },
+
   // Plans an action in the open block (or clears it back to Free time when actionId is null).
-  planAction: function (actionId) {
+  // songId: the song picked for actions that need one.
+  planAction: function (actionId, songId) {
     var app = Game.app;
     var result = actionId
-      ? Game.rules.actions.plan(app.state, app.pickerBlock, actionId)
+      ? Game.rules.actions.plan(app.state, app.pickerBlock, actionId, songId)
       : Game.rules.actions.clear(app.state, app.pickerBlock);
     app.pickerBlock = null;
+    app.pickerSongStep = null;
     document.onkeydown = null;
     app.applyRule(result);
+  },
+
+  // ----- Songs -----
+
+  openSongs: function () {
+    Game.app.songsReturnTo = Game.app.screen;
+    Game.app.show('songs');
+  },
+
+  closeSongs: function () {
+    Game.app.show(Game.app.songsReturnTo || 'today');
+  },
+
+  // Shows the reveal screen for each finished song in turn, then goes to nextScreen.
+  startReveals: function (songIds, nextScreen) {
+    var app = Game.app;
+    app.revealQueue = songIds.slice();
+    app.revealThen = nextScreen;
+    app.revealError = null;
+    app.show('songReveal');
+  },
+
+  // On the reveal screen: roll another random title suggestion.
+  suggestRevealTitle: function () {
+    var app = Game.app;
+    var suggested = Game.rules.songs.suggestTitle(app.state);
+    var renamed = Game.rules.songs.rename(suggested.state, app.revealQueue[0], suggested.title);
+    app.revealError = null;
+    app.applyRule(renamed);
+  },
+
+  // On the reveal screen: keep the typed name, then show the next reveal (or move on).
+  nameRevealedSong: function (title) {
+    var app = Game.app;
+    var result = Game.rules.songs.rename(app.state, app.revealQueue[0], title);
+    if (result.log.length) {
+      app.revealError = result.log.join(' ');
+      app.render();
+      return;
+    }
+    app.state = result.state;
+    app.autoSave();
+    app.revealQueue.shift();
+    app.revealError = null;
+    if (app.revealQueue.length) app.render();
+    else app.show(app.revealThen);
+  },
+
+  // Debug: finish the song in progress right now and show its reveal.
+  debugFinishSong: function () {
+    var app = Game.app;
+    var result = Game.rules.debug.finishSong(app.state);
+    app.state = result.state;
+    app.autoSave();
+    app.startReveals([result.songId], app.screen === 'songReveal' ? 'today' : app.screen);
   },
 
   // Ends the day, then shows the Day results screen (and the weekly summary after it on Sundays).
@@ -141,7 +223,9 @@ Game.app = {
     app.autoSave();
     if (showResults) {
       app.pendingWeekSummary = result.weekEnded;
-      app.show('dayResults');
+      var finished = app.state.lastDayReport.finishedSongs || [];
+      if (finished.length) app.startReveals(finished, 'dayResults'); // the new song comes first
+      else app.show('dayResults');
     } else {
       app.show(result.weekEnded ? 'weeklySummary' : 'today');
     }

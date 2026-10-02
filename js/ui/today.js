@@ -30,11 +30,12 @@ Game.ui.today = {
           Game.ui.today.debtPanelHtml(state, app) +
         '</aside>' +
       '</div>' +
-      (app.pickerBlock ? Game.ui.actionPicker.html(state, app.pickerBlock) : '');
+      (app.pickerBlock ? Game.ui.actionPicker.html(state, app.pickerBlock, app.pickerSongStep) : '');
 
     h.bind(root, {
       endDay: function () { app.endDay(); },
       settings: function () { app.show('settings'); },
+      songs: function () { app.openSongs(); },
       openPicker: function (event, el) { app.openPicker(el.getAttribute('data-block')); },
       focusPayBack: function () {
         var input = root.querySelector('#payback-amount');
@@ -74,9 +75,17 @@ Game.ui.today = {
       if (row.kind === 'action') {
         var action = Game.content.actions[row.actionId];
         title = action.name;
+        var about = '';
+        if (row.songId && state.songs[row.songId]) {
+          about = '<span class="block__song">"' + h.escape(state.songs[row.songId].title) + '"</span>';
+        } else if (action.effects.songProgress) {
+          var preview = Game.rules.actions.writePreview(state, row.block);
+          about = '<span class="block__song">' + (preview.finishes ? 'Finishes the song!' :
+            'Song ' + Math.round(preview.from) + ' → ' + Math.round(preview.to) + '/' + Game.balance.songs.progressToFinish) + '</span>';
+        }
         detail = row.problem
           ? '<span class="block__problem">Won\'t happen: ' + h.escape(row.problem) + '</span>'
-          : (action.moneyCost ? h.money(action.moneyCost) + ' · ' : '') + 'Click to change';
+          : about + (action.moneyCost ? h.money(action.moneyCost) + ' · ' : '') + 'Click to change';
       } else {
         title = 'Free time';
         detail = '+' + b.time.emptyBlockEnergy + ' energy · Click to plan';

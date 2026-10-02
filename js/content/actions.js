@@ -14,6 +14,9 @@
 //                         energy: amount gained               (Rest)
 //                         morale: amount gained               (Rest)
 //                         buzz:   'postOnline' | 'flyers'     (hometown buzz, sized by the Promotion skill)
+//                         tightness: amount added to the song you pick (Practice)
+//                         songProgress: true                  (Write: adds progress to the song in progress)
+//   needsSong           true if the player picks which song it's for (Practice)
 //   countsAsWork        true if doing it means the day isn't a "full day off"
 //   noSkillWhenBurnedOut  true if Burned out stops its skill gain
 
@@ -27,13 +30,28 @@ Game.content = Game.content || {};
     practice: {
       id: 'practice',
       name: 'Practice',
-      description: 'Woodshed alone. Scales, licks, the hard parts.',
+      description: 'Woodshed alone on one song. Tightens it up and sharpens your playing.',
       blocks: 1,
       energyCost: b.energy.cost.practice,
       moneyCost: 0,
       moneyCategory: null,
       requirements: {},
-      effects: { skills: b.skills.baseGain.practice },
+      effects: { skills: b.skills.baseGain.practice, tightness: b.songs.tightness.practiceGain },
+      needsSong: true,
+      countsAsWork: true,
+      noSkillWhenBurnedOut: true
+    },
+
+    write: {
+      id: 'write',
+      name: 'Write',
+      description: 'Work on your song in progress (or start a new one).',
+      blocks: 1,
+      energyCost: b.energy.cost.write,
+      moneyCost: 0,
+      moneyCategory: null,
+      requirements: {},
+      effects: { skills: b.skills.baseGain.write, songProgress: true },
       countsAsWork: true,
       noSkillWhenBurnedOut: true
     },

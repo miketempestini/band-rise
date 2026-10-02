@@ -12,7 +12,7 @@ Game.ui.debugPanel = {
   render: function (root, app) {
     var h = Game.ui.helpers;
     var d = Game.balance.debug;
-    var showOn = ['today', 'weeklySummary', 'dayResults'];
+    var showOn = ['today', 'weeklySummary', 'dayResults', 'songs'];
 
     if (!app.debug || !app.state || app.state.gameOver || showOn.indexOf(app.screen) === -1) {
       root.innerHTML = '';
@@ -47,6 +47,9 @@ Game.ui.debugPanel = {
           '<button class="btn btn--small" data-action="setSkill">Set</button>' +
         '</div>' +
         '<div class="debug__row">' +
+          '<button class="btn btn--small" data-action="finishSong">Finish song now</button>' +
+        '</div>' +
+        '<div class="debug__row">' +
           '<label>Buzz <input type="number" id="debug-buzz" class="input input--tiny" value="' + Math.round(app.state.cities.hometown.buzz) + '"></label>' +
           '<button class="btn btn--small" data-action="setBuzz">Set</button>' +
         '</div>' +
@@ -64,6 +67,7 @@ Game.ui.debugPanel = {
         Game.ui.debugPanel.selectedSkill = skill;
         app.applyRule(rules.setSkill(app.state, skill, Number(root.querySelector('#debug-skill-value').value)));
       },
+      finishSong: function () { app.debugFinishSong(); },
       setBuzz: function () { app.applyRule(rules.setBuzz(app.state, Number(root.querySelector('#debug-buzz').value))); }
     });
 

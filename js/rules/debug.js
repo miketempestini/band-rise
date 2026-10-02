@@ -50,6 +50,20 @@ Game.rules.debug = {
     return { state: s, log: [] };
   },
 
+  // Finishes the song in progress right now (starting one first if there isn't one).
+  // Returns { state, log, songId } so the screen can show the reveal.
+  finishSong: function (state) {
+    var s = state;
+    var song = Game.rules.songs.inProgress(s);
+    if (!song) {
+      var started = Game.rules.songs.startSong(s);
+      s = started.state;
+      song = s.songs[started.songId];
+    }
+    var done = Game.rules.songs.finishSong(s, song.id);
+    return { state: done.state, log: done.log, songId: song.id };
+  },
+
   // Sets hometown buzz, kept between 0 and the max.
   setBuzz: function (state, value) {
     var b = Game.balance.buzz;

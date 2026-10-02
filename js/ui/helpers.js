@@ -18,6 +18,21 @@ Game.ui.helpers = {
     return 'Week ' + Game.rules.day.weekNumber(day) + ', ' + Game.content.calendar.dayNames[dow];
   },
 
+  // Star rating like "★★★☆☆" for a song's quality.
+  stars: function (quality) {
+    var max = Game.balance.songs.maxStars;
+    var n = Game.rules.songs.stars(quality);
+    return '<span class="stars" title="Quality ' + Math.round(quality) + '">' +
+      '★'.repeat(n) + '<span class="stars__empty">' + '★'.repeat(max - n) + '</span></span>';
+  },
+
+  // "Today", "Yesterday", or "5 days ago".
+  daysAgo: function (days) {
+    if (days <= 0) return 'Played today';
+    if (days === 1) return 'Played yesterday';
+    return 'Played ' + days + ' days ago';
+  },
+
   // Makes text safe to put on the page (so a name like "<b>" shows as typed instead of as HTML).
   escape: function (text) {
     return String(text)

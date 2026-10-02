@@ -75,9 +75,10 @@ Game.rules.day = {
   //   1. Each block, Morning to Evening: the day job, a planned action, or free time.
   //   2. End of the day: shift morale, a full day off, Exhausted.
   //   3. Friday payday; Sunday bills, morale drift, debt check, and the week's wrap-up.
-  //   4. Overnight: energy recovers, buzz fades, then tomorrow begins and rust is checked.
+  //   4. Overnight: energy recovers, buzz fades, then tomorrow begins; rust and song fading are checked.
   // Returns { state, log, weekEnded }. The full report is saved in state.lastDayReport
-  // for the Day results screen: { day, blocks: [{ block, title, lines }], overnight: [lines] }.
+  // for the Day results screen: { day, blocks: [{ block, title, lines }], overnight: [lines],
+  // finishedSongs: [songIds] } (finishedSongs drives the song reveal).
   endDay: function (state) {
     if (state.gameOver) {
       return { state: state, log: [], weekEnded: false };
@@ -88,7 +89,7 @@ Game.rules.day = {
     var util = Game.util;
     var s = util.clone(state);
     var dow = day.dayOfWeek(s.day);
-    var report = { day: s.day, blocks: [], overnight: [] };
+    var report = { day: s.day, blocks: [], overnight: [], finishedSongs: [] };
     var weekEnded = false;
     var exhausted = false;
     var jobBlocks = 0;
@@ -105,7 +106,8 @@ Game.rules.day = {
     b.time.blocks.forEach(function (block) {
       var lines = [];
       var title;
-      var actionId = Game.rules.actions.plannedActionId(s, block);
+      var entry = Game.rules.actions.plannedEntry(s, block);
+      var actionId = entry ? entry.actionId : null;
 
       if (day.isJobBlock(s, block)) {
         title = 'Day job';
@@ -117,8 +119,9 @@ Game.rules.day = {
           lines.push('The job drained you to 0 energy. You\'re Exhausted.');
         }
       } else if (actionId) {
-        var done = Game.rules.actions.perform(s, actionId);
+        var done = Game.rules.actions.perform(s, actionId, entry.songId);
         s = done.state;
+        if (done.finishedSongId) report.finishedSongs.push(done.finishedSongId);
         title = Game.content.actions[actionId].name;
         lines.push(done.line);
         lines = lines.concat(done.notes);
@@ -198,6 +201,11 @@ Game.rules.day = {
     var rust = Game.rules.skills.applyRust(s);
     s = rust.state;
     rust.log.forEach(function (line) { endLines.push(line); });
+
+    // Songs nobody has played or practiced for a week get looser.
+    var fading = Game.rules.songs.applyFading(s);
+    s = fading.state;
+    fading.log.forEach(function (line) { endLines.push(line); });
 
     // Sunday night: save the week's totals (including tonight's skill changes) for the weekly summary.
     if (weekEnded) {

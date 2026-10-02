@@ -6,7 +6,7 @@ Game.test('New career: starting numbers come from balance.js, with version and s
   var s = Game.rules.career.startCareer('Sam', 'guitar', 777).state;
   t.equal(s.version, b.save.version, 'version');
   t.equal(s.seed, 777, 'seed');
-  t.equal(s.rngState, 777, 'random generator position starts at the seed');
+  t.ok(typeof s.rngState === 'number', 'random generator position is saved (it moves when the starting covers are picked)');
   t.equal(s.day, 0, 'starts on Monday of week 1');
   t.equal(s.player.name, 'Sam');
   t.equal(s.player.cash, b.economy.startCash, 'cash');

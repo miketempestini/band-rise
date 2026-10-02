@@ -76,7 +76,7 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, energy, morale, skills, audience, actions, career, day, debug
+5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, actions, career, day, debug
    (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
 6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
@@ -125,6 +125,18 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
 - **Morale** changes should go through `Game.rules.morale.change` so Burned out stays up to date.
 - **Skills** grow through `Game.rules.skills.train` (it also resets the rust clock).
 - **Buzz**: `Game.rules.audience.addBuzz` / `fadeBuzz`. Cities are content in `js/content/cities.js`.
+
+## How the pieces fit (added in Phase 3)
+
+- **Songs** live in `state.songs` (see `js/rules/songs.js` for the shape). The song in progress is the
+  original whose `quality` is still `null`. `Game.rules.songs.playable(state)` lists finished songs.
+- **Randomness in rules:** `var rng = Game.rng.create(s.rngState); ... s.rngState = rng.getState();`
+  (see `finishSong` or `suggestTitle`). Never roll without saving the new position back.
+- **Actions that need a song** set `needsSong: true`; the picker then asks for a song and the entry
+  stores `songId`. `Game.rules.actions.perform(state, actionId, songId)`.
+- **Finished songs** are listed in `lastDayReport.finishedSongs`; `Game.app.startReveals` shows a
+  reveal screen for each before Day results.
+- **Name lists** (covers, song titles; people later) are in `js/content/names.js`.
 
 ## Saving
 

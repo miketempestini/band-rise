@@ -50,6 +50,7 @@ Game.ui.dayResults = {
     h.bind(root, {
       continue: function () { app.leaveDayResults(); },
       settings: function () { app.show('settings'); },
+      songs: function () { app.openSongs(); },
       focusPayBack: function () { app.leaveDayResults(); }
     });
   }

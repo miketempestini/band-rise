@@ -4,6 +4,27 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 4: Phase 3, songs and songwriting (2026-10-02)
+- **Starting catalog:** 5 covers picked at random (with the saved seed) from 12 made-up titles in
+  `js/content/names.js`. Quality 50, tightness 60.
+- **Write action:** -10 energy, +2 Songwriting (base). Adds 12 + Songwriting/5 progress to the song in progress
+  (starts a new one if none). At 100: quality = 15 + 0.6 x Songwriting + luck 0-25 + 5 if morale > 70,
+  rounded; stars = quality/20 rounded up (1-5); +5 morale; tightness 30; random title suggestion.
+  Burned out stops only the skill gain, not progress. The picker previews "+14 progress (28 → 42)" or "Finishes!".
+- **Song reveal screen** after End Day (before Day results): stars with a small pop animation, quality, a
+  "Base 15 + Songwriting 7.8 + luck 18 = 41" line (plus "Lucky night!" or a mood tip), and a name box
+  with a 🎲 Another button.
+- **Practice** now asks which song (second step in the picker; loosest song tagged): +10 tightness (max 100)
+  plus the Musicianship gain. Practicing counts as playing the song.
+- **Tightness fading:** a song unplayed for 7 days loses 3 that night, then 3 more each week, never below 20.
+  Shown in the Day results "Tonight" list.
+- **Songs screen** (new Songs button in the top bar): song in progress with progress bar and blocks left;
+  catalog table with title, Cover/Original, stars, quality, tightness bar, days since last played ("fading" in red).
+- **Debug:** "Finish song now" (starts one if needed) and shows the reveal.
+- **Saves:** version 3. Older saves get their 5 starting covers when loaded.
+- **Tests:** 85 passing (songs.test.js is new). One career test changed: the random generator position now
+  moves at career start, because the covers are picked randomly.
+
 ### Session 3c: Skill changes on the weekly wrap-up (2026-10-02)
 - The weekly summary has a **Skills this week** panel: each skill's current value and its change for the week
   (green +, red -, grey ±0), so you can see what your week's choices did.
@@ -78,10 +99,11 @@ A running log of what's built, what's next, and known issues. Update at the end 
   with a no-library test runner, git repo (pushed to github.com/miketempestini/band-rise, private).
 
 ## What's next
-- Phase 3 (to be defined). Natural next steps from Design.md: songs (Write, catalog, tightness) and the
-  first open mic, so buzz, Performance, and fans start to matter.
-- Held back on purpose: job standing changes (+1 per shift), vacation days, call in sick,
-  "Repeat yesterday" and Plan Week shortcuts, meeting people while networking (Phase 5).
+- Phase 4 (to be defined). Natural next step from Design.md: the first open mic (setlists of 2 songs,
+  gig score, crowd, fans, tips, Performance growth, "playing live" also refreshes a song's tightness +5).
+- Held back on purpose: milestones (First open mic, First original), co-writing (needs people),
+  recording/releasing, rehearsing with a band, renaming songs later from the Songs screen.
+- Also not built yet: job standing changes, vacation days, call in sick, "Repeat yesterday" and Plan Week shortcuts.
 
 ## Known issues / open decisions
 - **Buzz can't build from posting alone.** One Post online adds about +1.25 at Promotion 5, but buzz fades
@@ -92,6 +114,9 @@ A running log of what's built, what's next, and known issues. Update at the end 
 - A skill can start at 33 (30 points + the instrument's +3). That's above 30, so it rusts after 14 days if
   unused. Performance can't be used yet (it grows from playing live, which comes with gigs), so a 33 Performance
   will slip back to 30 over a few weeks. Fine for now; worth a look when gigs arrive.
+- If the game is closed during a song reveal, the song keeps its suggested name and the reveal isn't shown
+  again (rename on the Songs screen isn't built yet).
+- Debug "Skip 7 days" doesn't show song reveals (songs finished while skipping keep their suggested names).
 - Skills set with the debug panel keep their old "last used" day, so they may start rusting right away.
 - Older saves will be refused if a later phase adds new state fields without a version bump (the upgrade step
   in save.js fills in missing fields automatically when the version goes up).

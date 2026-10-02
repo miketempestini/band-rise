@@ -58,7 +58,9 @@ Game.state = {
 
       band: { name: null, memberIds: [], formedDay: null },
       people: {},      // id: { id, name, role, skill, reliability, ambition, trait, relationship, satisfaction, status, metDay, lastSeenDay }
-      songs: {},       // id: { id, title, isCover, progress, quality, tightness, lastPlayedDay, recording, releaseId }
+      songs: {},       // id: { id, title, isCover, progress, quality, tightness, lastPlayedDay, startedDay,
+                       //       writtenDay, qualityParts, recording, releaseId }  (covers are added by startCareer)
+      nextSongId: 1,   // used to give each new song its own id
       releases: [],    // { id, type: 'single' | 'ep' | 'album', songIds, day }
       cities: Game.state.startingCities(), // id: { id, fans, buzz, unlocked, lastActivityDay }
       venues: {},      // id: { id, relationship, bannedUntilDay, pendingRequestId }

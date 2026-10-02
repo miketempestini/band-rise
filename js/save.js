@@ -51,8 +51,15 @@ Game.save = {
       });
     }
 
+    var fromVersion = data.version;
     fillMissing(data, fresh);
     delete data.lastDayLog; // version 1 field, replaced by lastDayReport in version 2
+
+    // Version 3 added songs: older careers get their starting covers.
+    if (fromVersion < 3 && Object.keys(data.songs).length === 0) {
+      data = Game.rules.songs.addStartingCovers(data).state;
+    }
+
     data.version = Game.balance.save.version;
     return data;
   },

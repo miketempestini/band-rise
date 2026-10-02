@@ -3,18 +3,25 @@
 //
 // A planned action is stored like any other calendar item (see Design.md's data model):
 //   state.schedule[day][block] = entryId
-//   state.entries[entryId] = { id, day, block, type: 'action', actionId, status: 'planned' }
+//   state.entries[entryId] = { id, day, block, type: 'action', actionId, songId, status: 'planned' }
+// songId is only used by actions that need a song (Practice).
 
 window.Game = window.Game || {};
 Game.rules = Game.rules || {};
 
 Game.rules.actions = {
 
-  // The action planned for a block today, or null.
-  plannedActionId: function (state, block) {
+  // The calendar entry planned for a block today, or null.
+  plannedEntry: function (state, block) {
     var today = state.schedule[state.day];
     var entryId = today && today[block];
-    return entryId && state.entries[entryId] ? state.entries[entryId].actionId : null;
+    return entryId && state.entries[entryId] ? state.entries[entryId] : null;
+  },
+
+  // The action planned for a block today, or null.
+  plannedActionId: function (state, block) {
+    var entry = Game.rules.actions.plannedEntry(state, block);
+    return entry ? entry.actionId : null;
   },
 
   // Why an action can't be done with this much energy and cash, or null if it can.
@@ -45,11 +52,13 @@ Game.rules.actions = {
         row.kind = 'job';
         energy = clampEnergy(energy - b.energy.cost.dayJob);
       } else {
-        var actionId = Game.rules.actions.plannedActionId(state, block);
+        var entry = Game.rules.actions.plannedEntry(state, block);
+        var actionId = entry && entry.actionId;
         var action = actionId && Game.content.actions[actionId];
         if (action) {
           row.kind = 'action';
           row.actionId = actionId;
+          row.songId = entry.songId || null;
           row.problem = Game.rules.actions.affordProblem(action, energy, cash);
         }
         if (action && !row.problem) {
@@ -96,8 +105,38 @@ Game.rules.actions = {
     if (action.effects.energy) result.gains.energy = action.effects.energy;
     if (action.effects.morale) result.gains.morale = action.effects.morale;
     if (action.effects.buzz) result.gains.buzz = Game.rules.audience.promoBuzz(state, action.effects.buzz);
+    if (action.effects.tightness) result.gains.tightness = action.effects.tightness;
+    if (action.effects.songProgress) result.gains.songProgress = Game.rules.actions.writePreview(state, block);
+    if (action.needsSong && !Game.rules.songs.playable(state).length) {
+      result.ok = false;
+      result.reason = 'You don\'t have any finished songs yet.';
+    }
     result.tired = Game.rules.energy.isTired(row.energyBefore);
     return result;
+  },
+
+  // What a Write in this block would do to the song in progress, counting earlier Write blocks today.
+  // Returns { title, from, to, added, finishes, isNew }.
+  writePreview: function (state, block) {
+    var b = Game.balance.songs;
+    var blocks = Game.balance.time.blocks;
+    var song = Game.rules.songs.inProgress(state);
+    var from = song ? song.progress : 0;
+    // Earlier Write blocks today add their progress first (a finished song means this one starts fresh).
+    for (var i = 0; i < blocks.indexOf(block); i++) {
+      if (Game.rules.actions.plannedActionId(state, blocks[i]) === 'write') {
+        from += Game.rules.songs.progressPerBlock(state.player.skills.songwriting);
+        if (from >= b.progressToFinish) { from = 0; song = null; }
+      }
+    }
+    var added = Game.rules.songs.progressPerBlock(state.player.skills.songwriting);
+    var to = Math.min(b.progressToFinish, from + added);
+    return {
+      title: song ? song.title : 'a new song',
+      from: from, to: to, added: added,
+      finishes: to >= b.progressToFinish,
+      isNew: !song && from === 0
+    };
   },
 
   // The picker's list: every action, with its option details.
@@ -108,11 +147,21 @@ Game.rules.actions = {
   },
 
   // Plans an action in one of today's blocks (replacing anything planned there).
+  // songId: which song, for actions that need one (Practice). Left out, the loosest song is used.
   // If it isn't allowed, the state comes back unchanged with the reason in the log.
   // Returns { state, log }.
-  plan: function (state, block, actionId) {
-    if (!Game.content.actions[actionId]) {
+  plan: function (state, block, actionId, songId) {
+    var action = Game.content.actions[actionId];
+    if (!action) {
       return { state: state, log: ['Unknown action.'] };
+    }
+    if (action.needsSong) {
+      var playable = Game.rules.songs.playable(state);
+      if (!songId && playable.length) songId = Game.rules.songs.loosest(state).id;
+      var ok = playable.some(function (song) { return song.id === songId; });
+      if (!ok) return { state: state, log: ['Pick a finished song to practice.'] };
+    } else {
+      songId = null;
     }
     // Check it as if the block were empty, so swapping one action for another works.
     var check = Game.rules.actions.option(Game.rules.actions.clear(state, block).state, block, actionId);
@@ -123,7 +172,7 @@ Game.rules.actions = {
     var s = Game.rules.actions.clear(state, block).state;
     var id = 'e' + s.nextEntryId;
     s.nextEntryId += 1;
-    s.entries[id] = { id: id, day: s.day, block: block, type: 'action', actionId: actionId, status: 'planned' };
+    s.entries[id] = { id: id, day: s.day, block: block, type: 'action', actionId: actionId, songId: songId, status: 'planned' };
     s.schedule[s.day] = s.schedule[s.day] || {};
     s.schedule[s.day][block] = id;
     return { state: s, log: [] };
@@ -151,8 +200,9 @@ Game.rules.actions = {
 
   // Does an action during End Day: pays its costs and applies its effects.
   // If there isn't enough energy or cash by now, it's skipped.
-  // Returns { state, line, notes, skipped }: line is the one-line result for the Day results screen.
-  perform: function (state, actionId) {
+  // songId: the song for actions that need one (Practice).
+  // Returns { state, line, notes, skipped, finishedSongId }: line is the one-line result for Day results.
+  perform: function (state, actionId, songId) {
     var util = Game.util;
     var action = Game.content.actions[actionId];
     var s = state;
@@ -165,7 +215,9 @@ Game.rules.actions = {
     }
 
     var energyAtStart = s.player.energy;
+    var songwritingAtStart = s.player.skills.songwriting;
     var tired = Game.rules.energy.isTired(energyAtStart);
+    var finishedSongId = null;
 
     // Money.
     if (action.moneyCost > 0) {
@@ -184,6 +236,32 @@ Game.rules.actions = {
       var buzz = Game.rules.audience.promoBuzz(s, action.effects.buzz);
       s = Game.rules.audience.addBuzz(s, 'hometown', buzz).state;
       parts.push(util.signed(buzz) + ' ' + Game.content.cities.hometown.name + ' buzz');
+    }
+
+    // Song tightness (Practice). If the song is gone, the loosest song is used instead.
+    if (action.effects.tightness) {
+      if (!s.songs[songId] || s.songs[songId].quality === null) {
+        var fallback = Game.rules.songs.loosest(s);
+        songId = fallback ? fallback.id : null;
+      }
+      if (songId) {
+        var practiced = Game.rules.songs.practiceSong(s, songId, action.effects.tightness);
+        s = practiced.state;
+        parts.push(util.signed(practiced.added) + ' tightness on "' + s.songs[songId].title + '" (now ' + Math.round(s.songs[songId].tightness) + ')');
+      }
+    }
+
+    // Song progress (Write), using Songwriting from the start of the block.
+    if (action.effects.songProgress) {
+      var written = Game.rules.songs.write(s, songwritingAtStart);
+      s = written.state;
+      if (written.finished) {
+        finishedSongId = written.songId;
+        parts.push('finished your song');
+        notes = notes.concat(written.log);
+      } else {
+        parts.push(util.signed(written.added) + ' progress on your song (now ' + Math.round(written.progress) + '/' + Game.balance.songs.progressToFinish + ')');
+      }
     }
 
     // Skills.
@@ -209,6 +287,6 @@ Game.rules.actions = {
       notes = notes.concat(changed.log);
     }
 
-    return { state: s, line: parts.join(', ') + '.', notes: notes, skipped: false };
+    return { state: s, line: parts.join(', ') + '.', notes: notes, skipped: false, finishedSongId: finishedSongId };
   }
 };

@@ -35,7 +35,8 @@ Game.ui.topbar = {
       '<div class="stat"><span class="stat__label">Reputation</span><span class="stat__value">' + Math.round(p.reputation) + '</span></div>' +
       '<div class="stat"><span class="stat__label">Date</span><span class="stat__value">' + h.dateLabel(state.day) + '</span></div>' +
       '<div class="stat' + (daysToRent === 0 ? ' stat--warn' : '') + '"><span class="stat__label">Rent</span><span class="stat__value">' + rentText + '</span></div>' +
-      '<button class="btn btn--ghost topbar__settings" data-action="settings">Settings</button>' +
+      '<button class="btn btn--ghost topbar__nav" data-action="songs">Songs</button>' +
+      '<button class="btn btn--ghost topbar__nav" data-action="settings">Settings</button>' +
       '</header>';
   }
 };

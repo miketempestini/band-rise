@@ -108,6 +108,9 @@ Game.rules.career = {
     state.player.skills[bonus.skill] += bonus.amount;
     state.thisWeek.startSkills = Game.util.clone(state.player.skills); // week 1 starts from these
 
+    // Five random covers you can already play.
+    state = Game.rules.songs.addStartingCovers(state).state;
+
     return {
       state: state,
       log: ['Your career begins. +' + bonus.amount + ' ' + Game.content.skills[bonus.skill] + ' from your ' +
