@@ -5,7 +5,8 @@
 // The score (from Design.md):
 //   0.35 x band musicianship + 0.25 x Performance + 0.20 x average song quality
 //   + 0.20 x average tightness + modifiers + luck
-// Solo, "band musicianship" is just your own Musicianship.
+// "Band musicianship" is the band's average skill with your Musicianship counted twice
+// (see Game.rules.people.bandMusicianship). Solo, it's just your own Musicianship.
 
 window.Game = window.Game || {};
 Game.rules = Game.rules || {};
@@ -102,13 +103,14 @@ Game.rules.gigs = {
     if (p.morale > g.moraleHighThreshold) morale = g.highMoraleBonus;
 
     return [
-      { id: 'bandSkill', value: g.weights.bandMusicianship * p.skills.musicianship },
+      { id: 'bandSkill', value: g.weights.bandMusicianship * Game.rules.people.bandMusicianship(state) },
       { id: 'stagePresence', value: g.weights.performance * p.skills.performance },
       { id: 'songs', value: g.weights.songQuality * average('quality') },
       { id: 'tightness', value: g.weights.tightness * average('tightness') },
       { id: 'instrument', value: instrumentBonus },
       { id: 'tired', value: Game.rules.energy.isTired(energy) ? g.tiredPenalty : 0 },
       { id: 'morale', value: morale },
+      { id: 'traits', value: Game.rules.people.traitGigBonus(state) },
       { id: 'venueTier', value: Game.balance.venues.tiers[venue.tier].gigScorePenalty }
     ];
   },
@@ -235,8 +237,13 @@ Game.rules.gigs = {
       notes = m.log;
     }
 
-    // Tips.
-    if (tips > 0) s = Game.rules.money.earn(s, tips, 'tips').state;
+    // Tips: split into equal shares with the band (a Diva takes 1.5). You keep your share.
+    var yourTips = Math.round(tips * Game.rules.people.payShares(s).yourShare);
+    if (yourTips > 0) s = Game.rules.money.earn(s, yourTips, 'tips').state;
+    var bandNames = Game.rules.people.members(s).map(function (m) { return m.name; });
+    var bandGig = Game.rules.people.recordGig(s, result, tips);
+    s = bandGig.state;
+    notes = notes.concat(bandGig.log);
 
     // Each song played gets tighter and counts as played today.
     var songResults = songIds.map(function (id) {
@@ -285,6 +292,8 @@ Game.rules.gigs = {
         reputationNow: s.player.reputation,
         morale: moraleChange,
         tips: tips,
+        yourTips: yourTips,
+        band: bandNames,
         skills: skillGains
       },
       tipId: gigs.pickTip(parts, averageTightness),
@@ -297,7 +306,7 @@ Game.rules.gigs = {
       state: s,
       gig: gig,
       log: [resultName + ' set: ' + crowd + ' people, ' + (fans === 1 ? '+1 fan' : '+' + fans + ' fans') +
-        (tips ? ', $' + tips + ' in tips' : '') + '.'].concat(notes)
+        (yourTips ? ', $' + yourTips + ' in tips' + (bandNames.length ? ' (your share)' : '') : '') + '.'].concat(notes)
     };
   }
 };

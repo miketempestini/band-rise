@@ -18,6 +18,12 @@ Game.ui.actionPicker = {
     if (stepAction && stepAction.setSize) {
       body = Game.ui.actionPicker.setStepHtml(state, stepAction, pickedSet || []);
       title = blockName + ': pick ' + stepAction.setSize + ' songs for the open mic';
+    } else if (stepAction && stepAction.songsMax) {
+      body = Game.ui.actionPicker.setStepHtml(state, stepAction, pickedSet || []);
+      title = blockName + ': pick up to ' + stepAction.songsMax + ' songs to rehearse';
+    } else if (stepAction && stepAction.needsPerson) {
+      body = Game.ui.actionPicker.personStepHtml(state, block, songStepFor);
+      title = blockName + ': who will you ' + stepAction.name.toLowerCase() + ' with?';
     } else if (stepAction) {
       body = Game.ui.actionPicker.songStepHtml(state, block, songStepFor, sortBy, filter);
       title = blockName + ': which song will you ' + stepAction.name.toLowerCase() + '?';
@@ -51,7 +57,9 @@ Game.ui.actionPicker = {
         '<span class="pick__head">' +
           '<span class="pick__name">' + a.name + (isPlanned ? ' <span class="badge">Planned</span>' : '') +
             (a.needsSong ? ' <span class="pick__more">pick a song →</span>' : '') +
-            (a.setSize ? ' <span class="pick__more">pick ' + a.setSize + ' songs →</span>' : '') + '</span>' +
+            (a.setSize ? ' <span class="pick__more">pick ' + a.setSize + ' songs →</span>' : '') +
+            (a.songsMax ? ' <span class="pick__more">pick songs →</span>' : '') +
+            (a.needsPerson ? ' <span class="pick__more">pick someone →</span>' : '') + '</span>' +
           '<span class="pick__costs">' + picker.costText(a) + '</span>' +
         '</span>' +
         '<span class="pick__desc">' + a.description + '</span>' +
@@ -133,13 +141,17 @@ Game.ui.actionPicker = {
   // Set step (open mic): every finished song with its tightness, quality, and last played.
   // Click songs to tick them (ticking one more than the set holds swaps out your earliest pick);
   // the confirm button works once exactly the right number are ticked.
+  // Rehearse uses the same list, but you pick 1 to 4 songs instead of exactly 2.
   setStepHtml: function (state, action, picked) {
     var h = Game.ui.helpers;
-    var size = action.setSize;
-    var gain = Game.balance.songs.tightness.playLiveGain;
-    var suggested = Game.rules.gigs.suggestSet(state, size);
-    var venue = Game.rules.gigs.openMicTonight(state);
+    var exact = !!action.setSize;
+    var size = action.setSize || action.songsMax;
+    var gain = exact ? Game.balance.songs.tightness.playLiveGain : Game.balance.songs.tightness.rehearseGain;
+    var verb = exact ? 'played' : 'rehearsed';
+    var suggested = exact ? Game.rules.gigs.suggestSet(state, size) : Game.rules.actions.loosestSongs(state, size);
+    var venue = exact ? Game.rules.gigs.openMicTonight(state) : null;
     var crowd = venue ? Game.rules.gigs.crowdRange(state, venue) : null;
+    var ready = exact ? picked.length === size : picked.length >= 1 && picked.length <= size;
 
     var rows = Game.rules.songs.playable(state).map(function (song) {
       var on = picked.indexOf(song.id) !== -1;
@@ -152,22 +164,57 @@ Game.ui.actionPicker = {
         '</span>' +
         '<span class="pick__song-stats">' +
           '<span class="meter meter--tight"><span class="meter__fill" style="width:' + Math.round(song.tightness) + '%"></span></span>' +
-          '<span>Tightness <strong class="tight-num">' + Math.round(song.tightness) + '</strong> (+' + gain + ' if played)</span>' +
+          '<span>Tightness <strong class="tight-num">' + Math.round(song.tightness) + '</strong> (+' + gain + ' if ' + verb + ')</span>' +
           '<span class="muted">' + h.daysAgo(days) + '</span>' +
         '</span>' +
         '</button>';
     }).join('');
 
-    return '<p class="hint picker-note">' + (venue ? venue.name + ' tonight' : '') +
-        (crowd ? ' · expected crowd ' + crowd.low + ' to ' + crowd.high : '') +
-        ' · Tighter, better songs score higher. Originals win more fans.</p>' +
+    var note = exact
+      ? (venue ? venue.name + ' tonight' : '') + (crowd ? ' · expected crowd ' + crowd.low + ' to ' + crowd.high : '') +
+        ' · Tighter, better songs score higher. Originals win more fans.'
+      : 'Room costs ' + h.money(action.moneyCost) + '. Each song gets +' + gain + ' tightness if a bandmate shows up ' +
+        '(half if nobody does; x1.5 with a Workhorse). The loosest songs are suggested.';
+    return '<p class="hint picker-note">' + note + '</p>' +
       '<div class="picks">' + rows + '</div>' +
       '<div class="actions actions--split">' +
         '<button class="btn btn--ghost" data-action="pickerBack">← Back to actions</button>' +
-        '<span class="hint">' + picked.length + ' of ' + size + ' picked' +
+        '<span class="hint">' + picked.length + ' of ' + (exact ? '' : 'up to ') + size + ' picked' +
           (picked.length === size ? ' · click another song to swap' : '') + '</span>' +
-        '<button class="btn btn--primary" data-action="confirmSet"' + (picked.length === size ? '' : ' disabled') + '>' +
-          'Play these ' + size + ' songs</button>' +
+        '<button class="btn btn--primary" data-action="confirmSet"' + (ready ? '' : ' disabled') + '>' +
+          (exact ? 'Play these ' + size + ' songs' : 'Rehearse ' + picked.length + ' song' + (picked.length === 1 ? '' : 's')) + '</button>' +
+      '</div>';
+  },
+
+  // Person step (Jam, Hang out, Talk): band members first, then contacts, with role, skill,
+  // relationship (and satisfaction for members). People who can't be picked are greyed out with why.
+  personStepHtml: function (state, block, actionId) {
+    var h = Game.ui.helpers;
+    var action = Game.content.actions[actionId];
+    var entry = Game.rules.actions.plannedEntry(state, block);
+    var current = entry && entry.actionId === actionId ? entry.personId : null;
+    var rows = Game.rules.actions.peopleFor(state, actionId).map(function (p) {
+      var problem = Game.rules.actions.personProblem(state, actionId, p.id);
+      var isMember = p.status === 'member';
+      return '<button class="pick pick--song' + (p.id === current ? ' pick--current' : '') + '" data-action="pickPerson" data-person="' + p.id + '"' +
+        (problem ? ' disabled' : '') + '>' +
+        '<span class="pick__head">' +
+          '<span class="pick__name">' + h.escape(p.name) + (isMember ? ' <span class="badge badge--warn">Band</span>' : '') +
+            (p.id === current ? ' <span class="badge">Planned</span>' : '') + '</span>' +
+          '<span class="pick__costs">' + Game.content.roles[p.role].name + ' · skill ' + p.skill + ' · ' + Game.content.traits[p.trait].name + '</span>' +
+        '</span>' +
+        '<span class="pick__song-stats">' +
+          '<span class="meter meter--tight"><span class="meter__fill" style="width:' + Math.round(p.relationship) + '%"></span></span>' +
+          '<span>Relationship <strong class="tight-num">' + Math.floor(p.relationship) + '</strong>' +
+            (action.effects.relationship ? ' → <strong>' + Math.min(Game.balance.people.statMax, Math.floor(p.relationship + action.effects.relationship)) + '</strong>' : '') + '</span>' +
+          (isMember ? '<span class="muted">Satisfaction ' + Math.round(p.satisfaction) + '</span>' : '') +
+        '</span>' +
+        (problem ? '<span class="pick__reason">' + h.escape(problem) + '</span>' : '') +
+        '</button>';
+    }).join('');
+    return '<div class="picks">' + rows + '</div>' +
+      '<div class="actions">' +
+        '<button class="btn btn--ghost" data-action="pickerBack">← Back to actions</button>' +
       '</div>';
   },
 
@@ -192,6 +239,10 @@ Game.ui.actionPicker = {
     }
     if (g.gig) parts.push('Expected crowd ' + g.gig.crowd.low + ' to ' + g.gig.crowd.high + ' at ' + g.gig.venueName);
     if (g.tightness) parts.push('+' + g.tightness + ' tightness on a song you pick');
+    if (g.relationship) parts.push('+' + g.relationship + ' relationship with someone you pick');
+    if (g.talk) parts.push('+' + g.talk + ' satisfaction for a bandmate');
+    if (g.rehearsal) parts.push('+' + g.rehearsal + ' tightness on up to ' + Game.balance.songs.tightness.rehearseMaxSongs + ' songs');
+    if (g.meetChance) parts.push(Math.round(g.meetChance * 100) + '% chance to meet someone');
     if (g.buzz) parts.push(util.signed(g.buzz) + ' ' + Game.content.cities.hometown.name + ' buzz');
     Object.keys(g.skills).forEach(function (skill) {
       parts.push(util.signed(g.skills[skill]) + ' ' + Game.content.skills[skill]);
@@ -214,6 +265,7 @@ Game.ui.actionPicker = {
       if (action === 'pickAction') app.pickAction(target.getAttribute('data-id'));
       if (action === 'pickSong') app.planAction(app.pickerSongStep, target.getAttribute('data-song'));
       if (action === 'toggleSetSong') app.toggleSetSong(target.getAttribute('data-song'));
+      if (action === 'pickPerson') app.planAction(app.pickerSongStep, target.getAttribute('data-person'));
       if (action === 'confirmSet') app.planAction(app.pickerSongStep, app.pickerSet.slice());
       if (action === 'pickerBack') app.pickerShowActions();
       if (action === 'filterSongs') app.setPracticeFilter(target.getAttribute('data-filter'));

@@ -4,6 +4,37 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 6b: Skill bar fix (2026-10-02)
+- The Stats panel's skill bars now show the skill level out of 100 (they used to show progress toward the
+  next whole point, which looked wrong next to the numbers). Hover a bar for the exact value and how close
+  it is to the next point.
+
+### Session 6: Phase 5, people and the first bandmate (2026-10-02)
+- **Person generator** (`js/rules/people.js`): name, role, skill (10 to 30 + Networking/2 + Reputation/2),
+  reliability (40-95), ambition (10-90), one of six traits (Flaky +15 skill, Party Animal -20 reliability).
+- **Meeting people:** Network rolls 30% + Networking/2 (32.5% at the start); open mics 20%. Contacts list holds 12;
+  when full, the coldest *existing* contact drops off (the person you just met is protected, otherwise a
+  full list would always drop the newcomer at relationship 20).
+- **People screen** (People button in the top bar, with a red ! when someone wants to talk): band members and
+  contacts with stats, trait (upside/downside/clashes), relationship bar; members also show satisfaction and
+  this week's (or last week's) reasons. Invite shows exactly why it's blocked. Remove asks to confirm.
+- **New actions** (person picker step): Jam (+8), Hang out ($15, +5 relationship, +5 morale, not "work"),
+  Talk (members only, +15 satisfaction, once every 14 days). **Rehearse** (needs a band): $20, -15 energy,
+  +1.5 Musicianship base, pick 1-4 songs (+12 tightness; x1.5 with a Workhorse there; half if nobody shows).
+  Attendance rolls on reliability; Flaky also misses 25%.
+- **Invite:** joins right away when relationship 50+ and reputation >= skill - 30. Every song -20 tightness
+  (never below 0). The first member opens a **Name your band** screen (random suggestion + 🎲).
+- **Gigs with a band:** band skill uses band musicianship (your Musicianship counted twice; Perfectionist +5);
+  "Band traits" score part (+5 per Party Animal / Diva); tips split into shares (Diva 1.5); members get
+  +8 relationship per gig.
+- **Satisfaction** every Sunday per Design.md (+ Easygoing +2, Workhorse -3 with fewer than 2 rehearsals,
+  Perfectionist -10 right after a Rough gig). Under 30: "We need to talk" (Today panel, People badge,
+  Day results). Under 15: quits after the Sunday check, -10 morale. Relationships fade 1 a week without contact.
+  The weekly summary has a **Band this week** panel.
+- **Debug:** add random contact, set a person's relationship or satisfaction. The debug panel now folds up
+  (click "Debug").
+- **Saves:** version 5. **Tests:** 124 passing (people.test.js is new).
+
 ### Session 5b: Practice all songs + sorting (2026-10-02)
 - Practice's song step has **Practice all songs** on top: +1 tightness on every finished song
   (`balance.songs.tightness.practiceAllGain`) and they all count as played, so none of them fade.
@@ -128,17 +159,19 @@ A running log of what's built, what's next, and known issues. Update at the end 
   with a no-library test runner, git repo (pushed to github.com/miketempestini/band-rise, private).
 
 ## What's next
-- Phase 5 (to be defined). Likely next from Design.md: meeting people (Network and open mics), contacts,
-  and the first bandmate; then booking small rooms once reputation reaches 10 (milestones).
-- Held back on purpose: meeting people at open mics (20%), milestones (First open mic, First original, Small rooms),
-  booked venues and gig pay, merch, room-fullness modifiers (they only matter for rooms with a capacity),
-  co-writing, recording, renaming songs from the Songs screen.
+- Phase 6 (to be defined): booked venues (small rooms at reputation 10), email a venue, booking odds, guarantee
+  or door deals, gig pay split with `payShares`, cancellations. Milestones would fit well alongside.
+- Held back on purpose: session players, co-writing, milestones, merch, recording, renaming songs,
+  "3+ on stage" rules for clubs, Talk only being offered when satisfaction is low (it's always available now).
 - Also not built yet: job standing changes, vacation days, call in sick, "Repeat yesterday" and Plan Week shortcuts.
 
 ## Known issues / open decisions
 - **Balance check:** at starting skills a cover open mic scores about 32 (22 to 42), so mostly Solid: about
   1 fan and +2 reputation a night. Two open mics a week reach reputation 10 in roughly 2.5 weeks, matching
   Design.md's first-three-weeks target.
+- **Balance to watch:** a new bandmate makes every song lose 20 tightness, and with only open mics there's no
+  gig money yet, so "Earned gig money" only comes from tips. A low-ambition member is easy to keep happy; a
+  high-ambition one (over 70 wants 2 gigs a week) will slowly sour until booked venues arrive in Phase 6.
 - **Buzz can't build from posting alone.** One Post online adds about +1.25 at Promotion 5, but buzz fades
   2 every night, so it's gone by morning. Flyers or several posts a day are needed. Kept the Design.md numbers
   on purpose; revisit when gigs make buzz matter (options: smaller fade, bigger post bonus, or fade only above some level).

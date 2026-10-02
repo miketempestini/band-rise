@@ -21,6 +21,11 @@
 //                       'all' (Practice all songs: a small tightness gain on every song, see allSongsGain)
 //   setSize             how many songs the player picks for the set (open mic: 2)
 //   onlyOpenMicNight    true if it can only be planned in the Evening on an open mic night
+//   needsPerson         'anyone' (a contact or member) or 'member': the player picks who it's with
+//   needsBand           true if you need at least one bandmate (Rehearse)
+//   songsMax            pick 1 to this many songs (Rehearse)
+//                       more effects: relationship (Jam, Hang out), talk (Talk), rehearsal (Rehearse),
+//                       meet: true (Network: a chance to meet someone)
 //   countsAsWork        true if doing it means the day isn't a "full day off"
 //   noSkillWhenBurnedOut  true if Burned out stops its skill gain
 
@@ -77,6 +82,67 @@ Game.content = Game.content || {};
       noSkillWhenBurnedOut: false
     },
 
+    jam: {
+      id: 'jam',
+      name: 'Jam',
+      description: 'Play together with someone, no pressure. Builds the friendship.',
+      blocks: 1,
+      energyCost: b.energy.cost.jam,
+      moneyCost: 0,
+      moneyCategory: null,
+      requirements: {},
+      effects: { relationship: b.people.relationship.jam },
+      needsPerson: 'anyone',
+      countsAsWork: true,
+      noSkillWhenBurnedOut: false
+    },
+
+    hangOut: {
+      id: 'hangOut',
+      name: 'Hang out',
+      description: 'Grab food or a drink with someone. Good for both of you.',
+      blocks: 1,
+      energyCost: b.energy.cost.hangOut,
+      moneyCost: b.economy.hangOutCost,
+      moneyCategory: 'hangOut',
+      requirements: {},
+      effects: { relationship: b.people.relationship.hangOut, morale: b.morale.change.hangOut },
+      needsPerson: 'anyone',
+      countsAsWork: false,
+      noSkillWhenBurnedOut: false
+    },
+
+    talk: {
+      id: 'talk',
+      name: 'Talk',
+      description: 'Sit down with a bandmate and clear the air.',
+      blocks: 1,
+      energyCost: b.energy.cost.talk,
+      moneyCost: 0,
+      moneyCategory: null,
+      requirements: {},
+      effects: { talk: true },
+      needsPerson: 'member',
+      countsAsWork: true,
+      noSkillWhenBurnedOut: false
+    },
+
+    rehearse: {
+      id: 'rehearse',
+      name: 'Rehearse',
+      description: 'Rent the room and run songs with the band.',
+      blocks: 1,
+      energyCost: b.energy.cost.rehearse,
+      moneyCost: b.economy.rehearsalRoomPerBlock,
+      moneyCategory: 'rehearsal',
+      requirements: {},
+      effects: { skills: b.skills.baseGain.rehearse, rehearsal: true },
+      needsBand: true,
+      songsMax: b.songs.tightness.rehearseMaxSongs,
+      countsAsWork: true,
+      noSkillWhenBurnedOut: true
+    },
+
     rest: {
       id: 'rest',
       name: 'Rest',
@@ -100,7 +166,7 @@ Game.content = Game.content || {};
       moneyCost: b.economy.networkingCost,
       moneyCategory: 'networking',
       requirements: {},
-      effects: { skills: b.skills.baseGain.network },
+      effects: { skills: b.skills.baseGain.network, meet: true },
       countsAsWork: true,
       noSkillWhenBurnedOut: false
     },

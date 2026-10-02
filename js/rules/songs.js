@@ -225,6 +225,16 @@ Game.rules.songs = {
     return songs.slice().sort(compare);
   },
 
+  // Changes every finished song's tightness by an amount (like -20 when someone new joins),
+  // kept between 0 and 100. Returns { state, log }.
+  dropAllTightness: function (state, amount) {
+    var s = Game.util.clone(state);
+    Game.rules.songs.playable(s).forEach(function (song) {
+      s.songs[song.id].tightness = Game.util.clamp(song.tightness + amount, 0, Game.balance.songs.tightness.max);
+    });
+    return { state: s, log: [] };
+  },
+
   // Renames a song. The name can't be blank or too long.
   // If it isn't allowed, the state comes back unchanged with the reason in the log. Returns { state, log }.
   rename: function (state, songId, title) {

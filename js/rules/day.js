@@ -119,7 +119,7 @@ Game.rules.day = {
           lines.push('The job drained you to 0 energy. You\'re Exhausted.');
         }
       } else if (actionId) {
-        var done = Game.rules.actions.perform(s, actionId, entry.songId, entry.songIds);
+        var done = Game.rules.actions.perform(s, actionId, entry.songId, entry.songIds, entry.personId);
         s = done.state;
         if (done.finishedSongId) report.finishedSongs.push(done.finishedSongId);
         if (done.gig) report.gig = true;
@@ -178,6 +178,12 @@ Game.rules.day = {
       var drift = Game.rules.morale.weeklyDrift(s);
       s = drift.state;
       drift.log.forEach(function (line) { endLines.push(line); });
+
+      // The band's weekly satisfaction check, quits, and relationships fading.
+      var band = Game.rules.people.weeklyCheck(s);
+      s = band.state;
+      band.log.forEach(function (line) { endLines.push(line); });
+      s.thisWeek.bandNotes = band.log; // shown on the weekly summary
 
       s = day.checkDebt(s);
       if (s.gameOver) {
@@ -259,6 +265,7 @@ Game.rules.day = {
       loans: w.loans,
       paidBack: w.paidBack,
       shiftsWorked: w.shiftsWorked,
+      bandNotes: w.bandNotes || [],
       startSkills: Game.util.clone(startSkills),
       endSkills: Game.util.clone(s.player.skills)
     });

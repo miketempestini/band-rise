@@ -8,11 +8,13 @@ Game.ui = Game.ui || {};
 Game.ui.debugPanel = {
 
   selectedSkill: 'musicianship', // the skill picked in the dropdown (just for this page visit, not saved)
+  selectedPerson: null,          // the person picked in the people dropdown
+  collapsed: false,              // true when the panel is folded down to just its title
 
   render: function (root, app) {
     var h = Game.ui.helpers;
     var d = Game.balance.debug;
-    var showOn = ['today', 'weeklySummary', 'dayResults', 'songs'];
+    var showOn = ['today', 'weeklySummary', 'dayResults', 'songs', 'people'];
 
     if (!app.debug || !app.state || app.state.gameOver || showOn.indexOf(app.screen) === -1) {
       root.innerHTML = '';
@@ -21,15 +23,29 @@ Game.ui.debugPanel = {
 
     var forced = app.state.debug && app.state.debug.forceNextGig;
 
+    // People you can set a relationship (or satisfaction) for.
+    var known = Object.keys(app.state.people).filter(function (id) { return app.state.people[id].status !== 'former'; });
+    if (known.indexOf(Game.ui.debugPanel.selectedPerson) === -1) Game.ui.debugPanel.selectedPerson = known[0] || null;
+    var personNow = app.state.people[Game.ui.debugPanel.selectedPerson];
+    var personOptions = known.map(function (id) {
+      return '<option value="' + id + '"' + (id === Game.ui.debugPanel.selectedPerson ? ' selected' : '') + '>' + h.escape(app.state.people[id].name) + '</option>';
+    }).join('');
+
     // The skill dropdown remembers the last skill picked.
     var selectedSkill = Game.ui.debugPanel.selectedSkill;
     var skillOptions = Object.keys(Game.content.skills).map(function (id) {
       return '<option value="' + id + '"' + (id === selectedSkill ? ' selected' : '') + '>' + Game.content.skills[id] + '</option>';
     }).join('');
 
+    if (Game.ui.debugPanel.collapsed) {
+      root.innerHTML = '<div class="debug"><button class="debug__title debug__toggle" data-action="toggleDebug">Debug ▸</button></div>';
+      h.bind(root, { toggleDebug: function () { Game.ui.debugPanel.collapsed = false; app.render(); } });
+      return;
+    }
+
     root.innerHTML =
       '<div class="debug">' +
-        '<div class="debug__title">Debug</div>' +
+        '<button class="debug__title debug__toggle" data-action="toggleDebug">Debug ▾</button>' +
         '<div class="debug__row">' +
           '<button class="btn btn--small" data-action="cashUp">+' + h.money(d.cashStep) + '</button>' +
           '<button class="btn btn--small" data-action="cashDown">-' + h.money(d.cashStep) + '</button>' +
@@ -58,6 +74,15 @@ Game.ui.debugPanel = {
           (forced ? '<button class="btn btn--small" data-action="forceClear">Normal</button>' : '') +
         '</div>' +
         '<div class="debug__row">' +
+          '<button class="btn btn--small" data-action="addContact">Add random contact</button>' +
+        '</div>' +
+        (personOptions ? '<div class="debug__row">' +
+          '<select id="debug-person" class="input input--select">' + personOptions + '</select>' +
+          '<input type="number" id="debug-person-value" class="input input--tiny" value="' + (personNow ? Math.floor(personNow.relationship) : 0) + '">' +
+          '<button class="btn btn--small" data-action="setRelationship">Rel</button>' +
+          '<button class="btn btn--small" data-action="setSatisfaction">Sat</button>' +
+        '</div>' : '') +
+        '<div class="debug__row">' +
           '<label>Buzz <input type="number" id="debug-buzz" class="input input--tiny" value="' + Math.round(app.state.cities.hometown.buzz) + '"></label>' +
           '<button class="btn btn--small" data-action="setBuzz">Set</button>' +
         '</div>' +
@@ -75,7 +100,17 @@ Game.ui.debugPanel = {
         Game.ui.debugPanel.selectedSkill = skill;
         app.applyRule(rules.setSkill(app.state, skill, Number(root.querySelector('#debug-skill-value').value)));
       },
+      toggleDebug: function () { Game.ui.debugPanel.collapsed = true; app.render(); },
       finishSong: function () { app.debugFinishSong(); },
+      addContact: function () { app.applyRule(rules.addContact(app.state)); },
+      setRelationship: function () {
+        Game.ui.debugPanel.selectedPerson = root.querySelector('#debug-person').value;
+        app.applyRule(rules.setRelationship(app.state, Game.ui.debugPanel.selectedPerson, root.querySelector('#debug-person-value').value));
+      },
+      setSatisfaction: function () {
+        Game.ui.debugPanel.selectedPerson = root.querySelector('#debug-person').value;
+        app.applyRule(rules.setSatisfaction(app.state, Game.ui.debugPanel.selectedPerson, root.querySelector('#debug-person-value').value));
+      },
       forceRough: function () { app.applyRule(rules.forceNextGig(app.state, 'rough')); },
       forceLegendary: function () { app.applyRule(rules.forceNextGig(app.state, 'legendary')); },
       forceClear: function () { app.applyRule(rules.forceNextGig(app.state, null)); },

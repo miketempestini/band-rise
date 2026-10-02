@@ -1,6 +1,6 @@
 // names.js
-// Name lists: cover song titles and words for random original song titles.
-// Everything is made up, to stay clear of real song names. (People's names come in a later phase.)
+// Name lists: cover song titles, words for random original song titles, people, and band names.
+// Everything is made up, to stay clear of real songs, people, and bands.
 
 window.Game = window.Game || {};
 Game.content = Game.content || {};
@@ -33,5 +33,26 @@ Game.content.names = {
     'Highway', 'Hearts', 'Radio', 'Kitchen Light', 'Parade', 'Motel', 'Static', 'Rain',
     'Getaway', 'Lullaby', 'Basement', 'Fireworks', 'Streetlights', 'Daydream', 'Ghosts',
     'Payday', 'Heartbeat', 'Weekend', 'Echo', 'Small Town'
+  ],
+
+  // People you meet: a random first name + last name.
+  firstNames: [
+    'Dana', 'Theo', 'Maya', 'Jules', 'Rosa', 'Eli', 'Priya', 'Marcus', 'Nina', 'Sam',
+    'Ivy', 'Owen', 'Lena', 'Dez', 'Hana', 'Carlos', 'Wren', 'Tasha', 'Felix', 'June',
+    'Ari', 'Bo', 'Kenji', 'Lou'
+  ],
+  lastNames: [
+    'Reyes', 'Park', 'Okafor', 'Lindqvist', 'Moreau', 'Bishop', 'Kowalski', 'Nguyen', 'Hale',
+    'Castillo', 'Abernathy', 'Fox', 'Delgado', 'Sato', 'Whitfield', 'Mercer', 'Quinn', 'Varga'
+  ],
+
+  // Band names are built as "The " + first word + second word, like "The Velvet Static".
+  bandNameFirst: [
+    'Velvet', 'Paper', 'Neon', 'Midnight', 'Rusty', 'Hollow', 'Electric', 'Golden', 'Crooked', 'Northern',
+    'Borrowed', 'Late', 'Quiet', 'Burning', 'Second-Hand'
+  ],
+  bandNameSecond: [
+    'Static', 'Lanterns', 'Wolves', 'Satellites', 'Motel', 'Parade', 'Daydreams', 'Engines', 'Ghosts',
+    'Streetlights', 'Radios', 'Hearts', 'Payday', 'Sparrows'
   ]
 };

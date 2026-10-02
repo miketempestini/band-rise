@@ -22,6 +22,7 @@ Game.content.gigText = {
     instrument: 'Instrument',
     tired: 'Tired',
     morale: 'Morale',
+    traits: 'Band traits',
     venueTier: 'Big room',
     luck: 'Luck',
     debug: 'Debug'

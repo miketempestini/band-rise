@@ -13,7 +13,7 @@ Game.ui.statsPanel = {
     var town = state.cities.hometown;
     var townName = Game.content.cities.hometown.name;
 
-    // Skills: whole number shown, with a thin bar filling toward the next point.
+    // Skills: whole number shown, with a thin bar showing the level out of 100.
     var skillRows = Object.keys(Game.content.skills).map(function (skill) {
       var value = p.skills[skill];
       var whole = Math.floor(value);
@@ -30,7 +30,9 @@ Game.ui.statsPanel = {
       return '<div class="skill">' +
         '<span class="skill__name">' + Game.content.skills[skill] + rustIcon + '</span>' +
         '<span class="skill__value">' + whole + '</span>' +
-        '<span class="meter meter--thin" title="' + toNext + '% of the way to ' + (whole + 1) + '"><span class="meter__fill" style="width:' + toNext + '%"></span></span>' +
+        // The bar shows the skill level out of 100. Hovering shows how close it is to the next whole point.
+        '<span class="meter meter--thin" title="' + Game.util.round1(value) + ' of ' + b.skills.max + ' · ' + toNext + '% of the way to ' + (whole + 1) + '">' +
+          '<span class="meter__fill" style="width:' + (value / b.skills.max * 100) + '%"></span></span>' +
         '</div>';
     }).join('');
 
@@ -47,6 +49,7 @@ Game.ui.statsPanel = {
         '<dt>' + townName + ' fans</dt><dd>' + town.fans.toLocaleString() + '</dd>' +
       '</dl>' +
       '<dl class="rows rows--stats">' +
+        '<dt>Band</dt><dd>' + (state.band.memberIds.length ? Game.ui.helpers.escape(state.band.name || 'Unnamed') + ' (' + (state.band.memberIds.length + 1) + ')' : 'Solo') + '</dd>' +
         '<dt>Gigs played</dt><dd>' + state.stats.gigsPlayed + '</dd>' +
         '<dt>Best result</dt><dd>' + (state.stats.bestResult ? state.stats.bestResult.charAt(0).toUpperCase() + state.stats.bestResult.slice(1) : '-') + '</dd>' +
         '<dt>Biggest crowd</dt><dd>' + state.stats.biggestCrowd + '</dd>' +

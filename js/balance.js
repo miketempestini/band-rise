@@ -244,6 +244,9 @@ Game.balance = {
     newPersonSkillNetworkingDivisor: 2,
     newPersonSkillReputationDivisor: 2,
     statMax: 100,                    // Skill, reliability, ambition, etc. go from 0 to 100
+    reliabilityRange: { min: 40, max: 95 }, // A new person's reliability (Party Animal then loses 20)
+    ambitionRange: { min: 10, max: 90 },    // A new person's ambition
+    bandNameMaxLength: 40,           // Longest band name the player can type
     maxContacts: 12,                 // Contacts list size; the coldest contact drops off when full
     startRelationship: 20,           // Relationship with a new contact
     startSatisfaction: 70,           // Satisfaction when someone joins the band
@@ -267,7 +270,7 @@ Game.balance = {
   // Personality traits
   // ---------------------------------------------------------------
   traits: {
-    workhorse:    { rehearsalTightnessBonus: 0.5, minRehearsalsPerWeek: 2 }, // +50% tightness from rehearsals
+    workhorse:    { rehearsalTightnessBonus: 0.5, minRehearsalsPerWeek: 2, tooFewRehearsals: -3 }, // +50% tightness from rehearsals; -3 satisfaction with fewer than 2 a week
     easygoing:    { weeklySatisfaction: 2 },                                  // Satisfaction drifts up 2 a week
     perfectionist:{ bandMusicianshipBonus: 5, roughGigSatisfaction: -10 },
     partyAnimal:  { gigScoreBonus: 5, reliabilityPenalty: -20 },
@@ -341,6 +344,7 @@ Game.balance = {
       practiceAllGain: 1,            // "Practice all songs": +1 to every song (and none of them fade that week)
       rehearseGain: 12,              // Rehearse with the band: +12 to each song...
       rehearseMaxSongs: 4,           // ...up to 4 songs
+      rehearseNoShowMultiplier: 0.5, // If no bandmate shows up, songs get half the rehearsal tightness
       playLiveGain: 10,              // Playing a song live (changed from Design.md's +5 at the owner's request)
       decayAfterDays: 7,             // Not played or rehearsed this long starts the slide
       decayPerWeek: -3,              // Tightness lost per week
@@ -585,7 +589,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 4,                      // Save format version, bumped when the state shape changes
+    version: 5,                      // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

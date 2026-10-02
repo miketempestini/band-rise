@@ -25,6 +25,7 @@ Game.ui.today = {
           '</div>' +
         '</section>' +
         '<aside class="dashboard__side">' +
+          Game.ui.today.bandAlertHtml(state) +
           Game.ui.statsPanel.html(state) +
           Game.ui.today.weekPanelHtml(state) +
           Game.ui.today.debtPanelHtml(state, app) +
@@ -36,6 +37,7 @@ Game.ui.today = {
       endDay: function () { app.endDay(); },
       settings: function () { app.show('settings'); },
       songs: function () { app.openSongs(); },
+      people: function () { app.openPeople(); },
       openPicker: function (event, el) { app.openPicker(el.getAttribute('data-block')); },
       focusPayBack: function () {
         var input = root.querySelector('#payback-amount');
@@ -76,7 +78,11 @@ Game.ui.today = {
         var action = Game.content.actions[row.actionId];
         title = action.name;
         var about = '';
-        if (row.songIds) {
+        if (row.personId && state.people[row.personId]) {
+          about = '<span class="block__song">with ' + h.escape(state.people[row.personId].name) + '</span>';
+        } else if (row.songIds && action.songsMax) {
+          about = '<span class="block__song">' + row.songIds.length + ' song' + (row.songIds.length === 1 ? '' : 's') + '</span>';
+        } else if (row.songIds) {
           var venue = Game.rules.gigs.openMicTonight(state);
           about = '<span class="block__song">' + (venue ? h.escape(venue.name) + ': ' : '') +
             row.songIds.map(function (id) { return state.songs[id] ? '"' + h.escape(state.songs[id].title) + '"' : ''; }).join(', ') + '</span>';
@@ -103,6 +109,22 @@ Game.ui.today = {
         energyLine +
         '</button>';
     }).join('');
+  },
+
+  // A red panel when a bandmate wants to talk (satisfaction under 30).
+  bandAlertHtml: function (state) {
+    var h = Game.ui.helpers;
+    var unhappy = Game.rules.people.needTalk(state);
+    if (!unhappy.length) return '';
+    return '<div class="panel panel--debt">' +
+      '<h3 class="panel__title">Band trouble</h3>' +
+      unhappy.map(function (m) {
+        var quitting = m.satisfaction < Game.balance.satisfaction.quitThreshold;
+        return '<p class="panel__warn">' + h.escape(m.name) + ': "We need to talk." (satisfaction ' + Math.round(m.satisfaction) + ')' +
+          (quitting ? ' Will quit this Sunday!' : '') + '</p>';
+      }).join('') +
+      '<p class="hint">Plan a Talk (+' + Game.balance.satisfaction.talkGain + ' satisfaction) from a free block.</p>' +
+      '</div>';
   },
 
   // A short note next to End Day about what happens tonight.

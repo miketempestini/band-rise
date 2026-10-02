@@ -4,7 +4,8 @@
 // A planned action is stored like any other calendar item (see Design.md's data model):
 //   state.schedule[day][block] = entryId
 //   state.entries[entryId] = { id, day, block, type: 'action', actionId, songId, status: 'planned' }
-// songId is only used by actions that need a song (Practice); songIds by actions with a set (open mic).
+// songId is only used by actions that need a song (Practice); songIds by actions with a set (open mic)
+// or a song list (Rehearse); personId by actions done with someone (Jam, Hang out, Talk).
 
 window.Game = window.Game || {};
 Game.rules = Game.rules || {};
@@ -60,6 +61,7 @@ Game.rules.actions = {
           row.actionId = actionId;
           row.songId = entry.songId || null;
           row.songIds = entry.songIds || null;
+          row.personId = entry.personId || null;
           row.problem = Game.rules.actions.affordProblem(action, energy, cash);
         }
         if (action && !row.problem) {
@@ -125,8 +127,60 @@ Game.rules.actions = {
         result.gains.gig = { venueName: venue.name, crowd: Game.rules.gigs.crowdRange(state, venue) };
       }
     }
+    if (action.needsPerson && !Game.rules.actions.peopleFor(state, actionId).length) {
+      result.ok = false;
+      result.reason = action.needsPerson === 'member'
+        ? 'You don\'t have any bandmates yet.'
+        : 'You haven\'t met anyone yet. Network or play open mics to meet people.';
+    }
+    if (action.needsBand && !state.band.memberIds.length) {
+      result.ok = false;
+      result.reason = 'You need a bandmate first. Meet people, get to know them, then Invite them on the People screen.';
+    }
+    if (action.songsMax && !Game.rules.songs.playable(state).length) {
+      result.ok = false;
+      result.reason = 'You don\'t have any finished songs yet.';
+    }
+    if (action.effects.relationship) result.gains.relationship = action.effects.relationship;
+    if (action.effects.talk) result.gains.talk = Game.balance.satisfaction.talkGain;
+    if (action.effects.rehearsal) result.gains.rehearsal = Game.balance.songs.tightness.rehearseGain;
+    if (action.effects.meet) result.gains.meetChance = Game.rules.people.meetChance(state.player.skills.networking);
+    if (action.effects.gig) result.gains.meetChance = Game.balance.people.openMicMeetChance;
     result.tired = Game.rules.energy.isTired(row.energyBefore);
     return result;
+  },
+
+  // The people an action can be done with: anyone you know (contacts and members), or members only.
+  peopleFor: function (state, actionId) {
+    var action = Game.content.actions[actionId];
+    var members = Game.rules.people.members(state);
+    if (action.needsPerson === 'member') return members;
+    return members.concat(Game.rules.people.contacts(state));
+  },
+
+  // Why a person can't be picked for an action, or null if they can.
+  personProblem: function (state, actionId, personId) {
+    var allowed = Game.rules.actions.peopleFor(state, actionId).some(function (p) { return p.id === personId; });
+    if (!allowed) return 'Pick someone you know.';
+    if (Game.content.actions[actionId].effects.talk) return Game.rules.people.talkProblem(state, personId);
+    return null;
+  },
+
+  // Why a list of songs for Rehearse isn't allowed (1 to 4 different finished songs), or null.
+  songListProblem: function (state, songIds, max) {
+    if (!Array.isArray(songIds) || songIds.length < 1 || songIds.length > max) return 'Pick 1 to ' + max + ' songs.';
+    var playable = Game.rules.songs.playable(state).map(function (song) { return song.id; });
+    for (var i = 0; i < songIds.length; i++) {
+      if (playable.indexOf(songIds[i]) === -1) return 'That song can\'t be rehearsed.';
+      if (songIds.indexOf(songIds[i]) !== i) return 'Each song only once.';
+    }
+    return null;
+  },
+
+  // The loosest songs, up to max (the suggested list for Rehearse).
+  loosestSongs: function (state, max) {
+    return Game.rules.songs.sortSongs(state, Game.rules.songs.playable(state), 'tightLow')
+      .slice(0, max).map(function (song) { return song.id; });
   },
 
   // What a Write in this block would do to the song in progress, counting earlier Write blocks today.
@@ -161,14 +215,17 @@ Game.rules.actions = {
   },
 
   // Plans an action in one of today's blocks (replacing anything planned there).
-  // songChoice: for Practice, a song id, or 'all' for Practice all songs (left out: the loosest song).
-  //             for a gig, a list of song ids for the set (left out: the suggested best set).
+  // choice: for Practice, a song id, or 'all' for Practice all songs (left out: the loosest song).
+  //         for a gig, a list of song ids for the set (left out: the suggested best set).
+  //         for Rehearse, a list of 1 to 4 song ids (left out: the loosest songs).
+  //         for Jam, Hang out, or Talk, a person id.
   // If it isn't allowed, the state comes back unchanged with the reason in the log.
   // Returns { state, log }.
   plan: function (state, block, actionId, songChoice) {
     var action = Game.content.actions[actionId];
     var songId = null;
     var songIds = null;
+    var personId = null;
     if (!action) {
       return { state: state, log: ['Unknown action.'] };
     }
@@ -176,6 +233,16 @@ Game.rules.actions = {
       songIds = Array.isArray(songChoice) ? songChoice.slice() : Game.rules.gigs.suggestSet(state, action.setSize);
       var setProblem = Game.rules.gigs.setProblem(state, songIds, action.setSize);
       if (setProblem) return { state: state, log: [setProblem] };
+    }
+    if (action.songsMax) {
+      songIds = Array.isArray(songChoice) ? songChoice.slice() : Game.rules.actions.loosestSongs(state, action.songsMax);
+      var listProblem = Game.rules.actions.songListProblem(state, songIds, action.songsMax);
+      if (listProblem) return { state: state, log: [listProblem] };
+    }
+    if (action.needsPerson) {
+      personId = songChoice;
+      var personProblem = Game.rules.actions.personProblem(state, actionId, personId);
+      if (personProblem) return { state: state, log: [personProblem] };
     }
     if (action.needsSong) {
       songId = songChoice;
@@ -193,7 +260,7 @@ Game.rules.actions = {
     var s = Game.rules.actions.clear(state, block).state;
     var id = 'e' + s.nextEntryId;
     s.nextEntryId += 1;
-    s.entries[id] = { id: id, day: s.day, block: block, type: 'action', actionId: actionId, songId: songId, songIds: songIds, status: 'planned' };
+    s.entries[id] = { id: id, day: s.day, block: block, type: 'action', actionId: actionId, songId: songId, songIds: songIds, personId: personId, status: 'planned' };
     s.schedule[s.day] = s.schedule[s.day] || {};
     s.schedule[s.day][block] = id;
     return { state: s, log: [] };
@@ -221,9 +288,10 @@ Game.rules.actions = {
 
   // Does an action during End Day: pays its costs and applies its effects.
   // If there isn't enough energy or cash by now, it's skipped.
-  // songId: the song for actions that need one (Practice). songIds: the set for a gig.
+  // songId: the song for actions that need one (Practice). songIds: the set for a gig, or Rehearse's songs.
+  // personId: who it's with (Jam, Hang out, Talk).
   // Returns { state, line, notes, skipped, finishedSongId, gig }: line is the one-line result for Day results.
-  perform: function (state, actionId, songId, songIds) {
+  perform: function (state, actionId, songId, songIds, personId) {
     var util = Game.util;
     var action = Game.content.actions[actionId];
     var s = state;
@@ -231,12 +299,16 @@ Game.rules.actions = {
     var notes = [];
 
     var problem = Game.rules.actions.affordProblem(action, s.player.energy, s.player.cash);
+    if (!problem && action.needsPerson) problem = Game.rules.actions.personProblem(s, actionId, personId);
+    if (!problem && action.needsBand && !s.band.memberIds.length) problem = 'You don\'t have a band anymore.';
     if (problem) {
       return { state: s, line: 'Skipped ' + action.name + '. ' + problem, notes: [], skipped: true };
     }
 
     var energyAtStart = s.player.energy;
     var songwritingAtStart = s.player.skills.songwriting;
+    var networkingAtStart = s.player.skills.networking;
+    var metPeople = [];
     var tired = Game.rules.energy.isTired(energyAtStart);
     var finishedSongId = null;
     var gig = null;
@@ -288,6 +360,37 @@ Game.rules.actions = {
       gig = played.gig;
       parts = [played.log[0].replace(/\.$/, '')].concat(parts);
       notes = notes.concat(played.log.slice(1));
+      // A 20% chance to meet someone at the open mic.
+      var micMeet = Game.rules.people.tryMeet(s, Game.balance.people.openMicMeetChance);
+      s = micMeet.state;
+      notes = notes.concat(micMeet.log);
+      if (micMeet.personId) metPeople.push(micMeet.personId);
+    }
+
+    // Time with someone (Jam, Hang out): relationship goes up.
+    if (action.effects.relationship) {
+      s = Game.rules.people.interact(s, personId, action.effects.relationship).state;
+      parts.push(util.signed(action.effects.relationship) + ' relationship with ' + s.people[personId].name +
+        ' (now ' + Math.floor(s.people[personId].relationship) + ')');
+    }
+
+    // Talk: +15 satisfaction for a bandmate.
+    if (action.effects.talk) {
+      s = Game.rules.people.talk(s, personId).state;
+      parts.push(util.signed(Game.balance.satisfaction.talkGain) + ' satisfaction for ' + s.people[personId].name +
+        ' (now ' + Math.round(s.people[personId].satisfaction) + ')');
+    }
+
+    // Rehearse: whoever shows up, and tightness on the chosen songs.
+    if (action.effects.rehearsal) {
+      if (Game.rules.actions.songListProblem(s, songIds, action.songsMax)) {
+        songIds = Game.rules.actions.loosestSongs(s, action.songsMax);
+      }
+      var rehearsal = Game.rules.people.rehearse(s, songIds);
+      s = rehearsal.state;
+      if (rehearsal.attended.length) parts.push(rehearsal.attended.join(' and ') + ' showed up');
+      if (rehearsal.missed.length) parts.push(rehearsal.missed.join(' and ') + ' didn\'t show');
+      parts.push(util.signed(rehearsal.gain) + ' tightness on ' + songIds.length + ' song' + (songIds.length === 1 ? '' : 's'));
     }
 
     // Song progress (Write), using Songwriting from the start of the block.
@@ -318,6 +421,15 @@ Game.rules.actions = {
       parts.push(util.signed(trained.gain) + ' ' + name + (tired ? ' (Tired: half gain)' : ''));
     });
 
+    // Network: a chance to meet someone (30% + Networking / 2, using Networking from the start of the block).
+    if (action.effects.meet) {
+      var met = Game.rules.people.tryMeet(s, Game.rules.people.meetChance(networkingAtStart));
+      s = met.state;
+      if (met.personId) metPeople.push(met.personId);
+      else parts.push('didn\'t meet anyone new');
+      notes = notes.concat(met.log);
+    }
+
     // Morale.
     if (action.effects.morale) {
       var changed = Game.rules.morale.change(s, action.effects.morale);
@@ -326,6 +438,6 @@ Game.rules.actions = {
       notes = notes.concat(changed.log);
     }
 
-    return { state: s, line: parts.join(', ') + '.', notes: notes, skipped: false, finishedSongId: finishedSongId, gig: gig };
+    return { state: s, line: parts.join(', ') + '.', notes: notes, skipped: false, finishedSongId: finishedSongId, gig: gig, metPeople: metPeople };
   }
 };

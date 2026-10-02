@@ -22,6 +22,8 @@ Game.app = {
   revealThen: 'today',  // the screen to show after the last reveal
   revealError: null,    // a problem with the typed song name, shown on the reveal screen
   songsReturnTo: 'today', // the screen the Songs screen's Back button returns to
+  peopleReturnTo: 'today', // the screen the People screen's Back button returns to
+  bandNameDraft: '',       // the band name shown in the name box on the Name your band screen
   pendingWeekSummary: false, // true when the weekly summary should follow the Day results screen
   draftCareer: null,    // a career being set up: { name, instrument, allocation } (not saved until Start)
   debug: /[?&]debug\b/.test(window.location.search), // true when the address ends in ?debug
@@ -129,15 +131,15 @@ Game.app = {
   pickAction: function (actionId) {
     var app = Game.app;
     var action = Game.content.actions[actionId];
-    if (action.setSize) {
-      // Start from the set already planned in this block, or the suggested best set.
+    if (action.setSize || action.songsMax) {
+      // Start from the songs already planned in this block, or the suggested ones.
       var entry = Game.rules.actions.plannedEntry(app.state, app.pickerBlock);
       app.pickerSet = entry && entry.actionId === actionId && entry.songIds
         ? entry.songIds.slice()
-        : Game.rules.gigs.suggestSet(app.state, action.setSize);
+        : (action.setSize ? Game.rules.gigs.suggestSet(app.state, action.setSize) : Game.rules.actions.loosestSongs(app.state, action.songsMax));
       app.pickerSongStep = actionId;
       app.render();
-    } else if (action.needsSong) {
+    } else if (action.needsSong || action.needsPerson) {
       app.pickerSongStep = actionId;
       app.render();
     } else {
@@ -161,7 +163,8 @@ Game.app = {
   // ticking another song swaps out the one picked earliest.
   toggleSetSong: function (songId) {
     var app = Game.app;
-    var size = Game.content.actions[app.pickerSongStep].setSize;
+    var stepAction = Game.content.actions[app.pickerSongStep];
+    var size = stepAction.setSize || stepAction.songsMax;
     var i = app.pickerSet.indexOf(songId);
     if (i !== -1) {
       app.pickerSet.splice(i, 1);
@@ -200,6 +203,77 @@ Game.app = {
 
   closeSongs: function () {
     Game.app.show(Game.app.songsReturnTo || 'today');
+  },
+
+  // ----- People and the band -----
+
+  openPeople: function () {
+    if (Game.app.screen !== 'people') Game.app.peopleReturnTo = Game.app.screen;
+    Game.app.show('people');
+  },
+
+  closePeople: function () {
+    var back = Game.app.peopleReturnTo;
+    Game.app.show(back && back !== 'nameBand' && back !== 'people' ? back : 'today');
+  },
+
+  // Invites a contact. The first member starts the band, so the player names it next.
+  invitePerson: function (personId) {
+    var app = Game.app;
+    var problem = Game.rules.people.inviteProblem(app.state, personId);
+    if (problem) {
+      app.notice = { kind: 'error', text: problem };
+      app.render();
+      return;
+    }
+    var result = Game.rules.people.invite(app.state, personId);
+    app.state = result.state;
+    app.autoSave();
+    if (result.firstMember) {
+      var suggested = Game.rules.people.suggestBandName(app.state);
+      app.state = suggested.state;
+      app.bandNameDraft = suggested.name;
+      app.show('nameBand');
+    } else {
+      app.notice = { kind: 'info', text: result.log.join(' ') };
+      app.render();
+    }
+  },
+
+  removePerson: function (personId) {
+    var app = Game.app;
+    var person = app.state.people[personId];
+    if (!window.confirm('Remove ' + person.name + ' from the band? Everyone else loses some satisfaction, and you lose some morale.')) return;
+    var result = Game.rules.people.remove(app.state, personId);
+    app.notice = { kind: 'info', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  suggestBandName: function () {
+    var app = Game.app;
+    var suggested = Game.rules.people.suggestBandName(app.state);
+    app.state = suggested.state;
+    app.bandNameDraft = suggested.name;
+    app.revealError = null;
+    app.autoSave();
+    app.render();
+  },
+
+  saveBandName: function (name) {
+    var app = Game.app;
+    var result = Game.rules.people.nameBand(app.state, name);
+    if (result.log.length) {
+      app.revealError = result.log.join(' ');
+      app.bandNameDraft = name;
+      app.render();
+      return;
+    }
+    app.state = result.state;
+    app.autoSave();
+    app.notice = { kind: 'info', text: 'Welcome to ' + app.state.band.name + '. Rehearse is unlocked: plan it from a free block.' };
+    app.screen = 'people';
+    app.revealError = null;
+    app.render();
   },
 
   // Shows the reveal screen for each finished song in turn, then goes to nextScreen.

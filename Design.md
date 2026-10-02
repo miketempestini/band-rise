@@ -189,7 +189,7 @@ Five skills from 0 to 100 drive almost every result. They grow fast early, slow 
 - Morale multiplier: 0.75 below 30, 1.0 from 30 to 70, 1.25 above 70.
 - Energy multiplier: 0.5 when you're Tired (energy under 25), otherwise 1.
 - Example: Practice at Musicianship 20 gives +2.5. At 80 it gives +1.
-- The game stores decimals but shows whole numbers, with a small bar filling toward the next point.
+- The game stores decimals but shows whole numbers, with a bar showing the level out of 100 (hover for progress toward the next point).
 
 ### Rust
 

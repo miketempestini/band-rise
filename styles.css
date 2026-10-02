@@ -464,3 +464,25 @@ button.block:hover { border-color: var(--accent); }
 .pick--all { border-style: dashed; }
 .sort-bar { display: flex; align-items: center; gap: 6px; margin: 14px 0 8px; font-size: 14px; }
 .list-controls { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0 16px; }
+
+/* ---------- People ---------- */
+
+.people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+.person { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.person--member { border-color: var(--accent); }
+.person__head { display: flex; justify-content: space-between; align-items: center; }
+.person__name { font-size: 18px; font-weight: bold; }
+.person__stats { display: flex; gap: 14px; font-size: 14px; color: var(--text-muted); }
+.person__stats strong { color: var(--text); }
+.person__trait { font-size: 13px; }
+.person__bar { display: grid; grid-template-columns: 90px 1fr 30px; align-items: center; gap: 8px; font-size: 13px; }
+.person__bar .meter { margin-top: 0; }
+.person__bar strong { text-align: right; }
+.meter--rel .meter__fill { background: #9ec9ff; }
+.meter--good .meter__fill { background: var(--good); }
+.meter--bad .meter__fill { background: var(--bad); }
+.pos { color: var(--good); }
+.neg { color: var(--bad); }
+.reasons { list-style: none; margin: 0; padding: 0; font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.person .actions { margin-top: 4px; }
+.debug__toggle { background: none; border: none; padding: 0; font: inherit; cursor: pointer; display: block; }

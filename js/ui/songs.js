@@ -78,6 +78,7 @@ Game.ui.songs = {
     h.bind(root, {
       back: function () { app.closeSongs(); },
       songs: function () {},
+      people: function () { app.openPeople(); },
       settings: function () { app.show('settings'); },
       focusPayBack: function () { app.closeSongs(); }
     });

@@ -64,6 +64,27 @@ Game.rules.debug = {
     return { state: done.state, log: done.log, songId: song.id };
   },
 
+  // Meets a random new contact right now.
+  addContact: function (state) {
+    return Game.rules.people.meet(state);
+  },
+
+  // Sets one person's relationship, kept between 0 and 100.
+  setRelationship: function (state, personId, value) {
+    var s = Game.util.clone(state);
+    if (!s.people[personId]) return { state: state, log: [] };
+    s.people[personId].relationship = Game.util.clamp(Number(value) || 0, 0, Game.balance.people.statMax);
+    return { state: s, log: [] };
+  },
+
+  // Sets one person's satisfaction, kept between 0 and 100.
+  setSatisfaction: function (state, personId, value) {
+    var s = Game.util.clone(state);
+    if (!s.people[personId]) return { state: state, log: [] };
+    s.people[personId].satisfaction = Game.util.clamp(Number(value) || 0, 0, Game.balance.satisfaction.max);
+    return { state: s, log: [] };
+  },
+
   // Forces the next gig's result ('rough' or 'legendary'), or clears it with null.
   forceNextGig: function (state, result) {
     var s = Game.util.clone(state);

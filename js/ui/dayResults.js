@@ -51,6 +51,7 @@ Game.ui.dayResults = {
       continue: function () { app.leaveDayResults(); },
       settings: function () { app.show('settings'); },
       songs: function () { app.openSongs(); },
+      people: function () { app.openPeople(); },
       focusPayBack: function () { app.leaveDayResults(); }
     });
   }

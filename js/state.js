@@ -61,6 +61,7 @@ Game.state = {
       songs: {},       // id: { id, title, isCover, progress, quality, tightness, lastPlayedDay, startedDay,
                        //       writtenDay, qualityParts, recording, releaseId }  (covers are added by startCareer)
       nextSongId: 1,   // used to give each new song its own id
+      nextPersonId: 1, // used to give each new person their own id
       releases: [],    // { id, type: 'single' | 'ep' | 'album', songIds, day }
       cities: Game.state.startingCities(), // id: { id, fans, buzz, unlocked, lastActivityDay }
       venues: {},      // id: { id, relationship, bannedUntilDay, pendingRequestId }

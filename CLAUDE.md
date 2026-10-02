@@ -76,7 +76,7 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, gigs, actions, career, day, debug
+5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, actions, career, day, debug
    (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
 6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
@@ -150,6 +150,19 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
 - **After End Day** the order is: gig result (crowd meter, then result) → song reveals → Day results →
   weekly summary. See `Game.app.afterDayChange` / `afterGigResult`.
 - **Debug forcing** lives in `state.debug.forceNextGig`; the result screen shows an honest "Debug" score part.
+
+## How the pieces fit (added in Phase 5)
+
+- **People** live in `state.people` (shape at the top of `js/rules/people.js`); the band is `state.band`.
+  Status is 'contact', 'member', or 'former'. Trait words are in `js/content/people.js`, trait numbers in
+  `balance.traits`.
+- **Band effects:** `Game.rules.people.bandMusicianship(state)` feeds the gig score; `traitGigBonus` is the
+  "Band traits" part; `payShares` splits any gig pay (use it for every kind of gig pay in later phases).
+  `recordGig` must be called after every gig so members get relationship, pay, and satisfaction tallies.
+- **Satisfaction** changes go through `Game.rules.people.changeSatisfaction(state, id, amount, reason)` so
+  the People screen can show why. The Sunday check is `weeklyCheck` (called from End Day before the week closes).
+- **Actions done with someone** set `needsPerson: 'anyone' | 'member'`; the entry stores `personId`.
+  Rehearse uses `songsMax` (pick 1 to 4 songs). Network has `effects.meet`.
 
 ## Saving
 

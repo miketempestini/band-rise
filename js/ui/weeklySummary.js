@@ -9,7 +9,7 @@ Game.ui.weeklySummary = {
 
   // Plain names for each money category.
   incomeLabels: { dayJob: 'Day job', tips: 'Open mic tips', debug: 'Debug cash' },
-  costLabels: { bills: 'Rent and living costs', networking: 'Going out to network', promotion: 'Promotion', debug: 'Debug' },
+  costLabels: { bills: 'Rent and living costs', networking: 'Going out to network', promotion: 'Promotion', rehearsal: 'Rehearsal room', hangOut: 'Hanging out', debug: 'Debug' },
 
   render: function (root, app) {
     var h = Game.ui.helpers;
@@ -56,6 +56,10 @@ Game.ui.weeklySummary = {
           self.listPanel('Money out', outRows, h.money(totalOut), 'Nothing went out this week.') +
         '</div>' +
         self.skillsPanel(week) +
+        (week.bandNotes && week.bandNotes.length
+          ? '<div class="panel"><h3 class="panel__title">Band this week</h3><ul class="log">' +
+              week.bandNotes.map(function (line) { return '<li>' + h.escape(line) + '</li>'; }).join('') + '</ul></div>'
+          : '') +
         '<div class="panel">' +
           '<dl class="rows rows--big">' +
             '<dt>Starting cash</dt><dd>' + h.money(week.startCash) + '</dd>' +
@@ -76,6 +80,7 @@ Game.ui.weeklySummary = {
       continue: function () { app.show('today'); },
       settings: function () { app.show('settings'); },
       songs: function () { app.openSongs(); },
+      people: function () { app.openPeople(); },
       focusPayBack: function () { app.show('today'); }
     });
   },

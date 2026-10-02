@@ -72,11 +72,14 @@ Game.ui.gigResult = {
       ['Buzz', u.signed(r.buzz) + ' <span class="muted">(now ' + Math.round(r.buzzNow) + ')</span>'],
       ['Reputation', u.signed(r.reputation) + ' <span class="muted">(now ' + u.round1(r.reputationNow) + ')</span>'],
       ['Morale', r.morale ? u.signed(r.morale) : '±0'],
-      ['Tip jar', h.money(r.tips)],
+      ['Tip jar', h.money(r.tips) + (r.band && r.band.length ? ' <span class="muted">(your share ' + h.money(r.yourTips) + ')</span>' : '')],
       ['Skills', Object.keys(r.skills).map(function (skill) {
         return u.signed(r.skills[skill]) + ' ' + Game.content.skills[skill];
       }).join(', ')]
     ];
+    if (r.band && r.band.length) {
+      rewardRows.push(['Band', h.escape(r.band.join(', ')) + ' <span class="muted">(+' + Game.balance.people.relationship.gigTogether + ' relationship each)</span>']);
+    }
     gig.songs.forEach(function (song) {
       rewardRows.push(['"' + h.escape(song.title) + '"', 'Tightness ' + Math.round(song.tightnessBefore) + ' → ' + Math.round(song.tightnessAfter)]);
     });
@@ -126,6 +129,7 @@ Game.ui.gigResult = {
       continue: function () { app.leaveGigResult(); },
       settings: function () { app.show('settings'); },
       songs: function () { app.openSongs(); },
+      people: function () { app.openPeople(); },
       focusPayBack: function () { app.leaveGigResult(); }
     });
   },
