@@ -36,10 +36,25 @@ Game.rules.debug = {
     return { state: s, log: ['Debug: energy set to ' + s.player.energy + '.'] };
   },
 
-  // Sets morale to a value, kept between 0 and the max.
+  // Sets morale to a value, kept between 0 and the max. Also updates Burned out.
   setMorale: function (state, value) {
     var s = Game.util.clone(state);
     s.player.morale = Game.util.clamp(Math.round(value) || 0, 0, Game.balance.morale.max);
-    return { state: s, log: ['Debug: morale set to ' + s.player.morale + '.'] };
+    return Game.rules.morale.updateBurnout(s);
+  },
+
+  // Sets one skill to a value, kept between 0 and the max.
+  setSkill: function (state, skill, value) {
+    var s = Game.util.clone(state);
+    s.player.skills[skill] = Game.util.clamp(Number(value) || 0, 0, Game.balance.skills.max);
+    return { state: s, log: [] };
+  },
+
+  // Sets hometown buzz, kept between 0 and the max.
+  setBuzz: function (state, value) {
+    var b = Game.balance.buzz;
+    var s = Game.util.clone(state);
+    s.cities.hometown.buzz = Game.util.clamp(Number(value) || 0, b.min, b.max);
+    return { state: s, log: [] };
   }
 };

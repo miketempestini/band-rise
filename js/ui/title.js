@@ -38,7 +38,7 @@ Game.ui.title = {
 
     h.bind(root, {
       continue: function () { app.continueGame(); },
-      newCareer: function () { app.show('newCareer'); },
+      newCareer: function () { app.draftCareer = null; app.show('newCareer'); },
       import: function () { fileInput.click(); }
     });
   }

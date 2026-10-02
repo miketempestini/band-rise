@@ -1,0 +1,51 @@
+// statsPanel.js
+// The stats panel beside the Today screen: skills, energy, morale, and hometown buzz.
+// Draw only: it reads the state and returns HTML.
+
+window.Game = window.Game || {};
+Game.ui = Game.ui || {};
+
+Game.ui.statsPanel = {
+
+  html: function (state) {
+    var b = Game.balance;
+    var p = state.player;
+    var town = state.cities.hometown;
+    var townName = Game.content.cities.hometown.name;
+
+    // Skills: whole number shown, with a thin bar filling toward the next point.
+    var skillRows = Object.keys(Game.content.skills).map(function (skill) {
+      var value = p.skills[skill];
+      var whole = Math.floor(value);
+      var toNext = Math.round((value - whole) * 100);
+      var rust = Game.rules.skills.rustStatus(state, skill);
+      var days = Game.rules.skills.daysUnused(state, skill);
+      var rustIcon = '';
+      if (rust) {
+        var tip = rust === 'rusting'
+          ? 'Rusting: unused for ' + days + ' days. Losing ' + b.skills.rustPerWeek + ' point a week until you use it.'
+          : 'Unused for ' + days + ' days. Starts rusting at ' + b.skills.rustAfterDays + '.';
+        rustIcon = ' <span class="rust rust--' + rust + '" title="' + tip + '">⚠ ' + (rust === 'rusting' ? 'Rusting' : 'Rust soon') + '</span>';
+      }
+      return '<div class="skill">' +
+        '<span class="skill__name">' + Game.content.skills[skill] + rustIcon + '</span>' +
+        '<span class="skill__value">' + whole + '</span>' +
+        '<span class="meter meter--thin" title="' + toNext + '% of the way to ' + (whole + 1) + '"><span class="meter__fill" style="width:' + toNext + '%"></span></span>' +
+        '</div>';
+    }).join('');
+
+    var energyBadge = Game.rules.energy.isTired(p.energy) ? ' <span class="badge badge--warn">Tired</span>' : '';
+    var moraleBadge = p.burnedOut ? ' <span class="badge badge--bad">Burned out</span>' : '';
+
+    return '<div class="panel">' +
+      '<h3 class="panel__title">Stats</h3>' +
+      '<div class="skills">' + skillRows + '</div>' +
+      '<dl class="rows rows--stats">' +
+        '<dt>Energy' + energyBadge + '</dt><dd>' + Math.round(p.energy) + ' / ' + b.energy.max + '</dd>' +
+        '<dt>Morale' + moraleBadge + '</dt><dd>' + Math.round(p.morale) + ' / ' + b.morale.max + '</dd>' +
+        '<dt>' + townName + ' buzz</dt><dd>' + Math.round(town.buzz) + ' / ' + b.buzz.max + '</dd>' +
+        '<dt>' + townName + ' fans</dt><dd>' + town.fans.toLocaleString() + '</dd>' +
+      '</dl>' +
+      '</div>';
+  }
+};

@@ -1,6 +1,7 @@
 // today.js
 // The Today screen (main hub): top bar, the three blocks of the day, End Day,
-// and side panels with this week's money, debt, and what happened last night.
+// and side panels with this week's money, debt, and the player's stats.
+// Clicking a free block opens the action picker on top of this screen.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
@@ -24,15 +25,17 @@ Game.ui.today = {
           '</div>' +
         '</section>' +
         '<aside class="dashboard__side">' +
+          Game.ui.statsPanel.html(state) +
           Game.ui.today.weekPanelHtml(state) +
           Game.ui.today.debtPanelHtml(state, app) +
-          Game.ui.today.lastNightHtml(state) +
         '</aside>' +
-      '</div>';
+      '</div>' +
+      (app.pickerBlock ? Game.ui.actionPicker.html(state, app.pickerBlock) : '');
 
     h.bind(root, {
       endDay: function () { app.endDay(); },
       settings: function () { app.show('settings'); },
+      openPicker: function (event, el) { app.openPicker(el.getAttribute('data-block')); },
       focusPayBack: function () {
         var input = root.querySelector('#payback-amount');
         if (input) { input.focus(); input.select(); }
@@ -44,25 +47,46 @@ Game.ui.today = {
         app.payBack(Number(root.querySelector('#payback-amount').value));
       }
     });
+
+    if (app.pickerBlock) Game.ui.actionPicker.bind(root, app);
   },
 
-  // The three block cards: locked day job, or free time.
+  // The three block cards: locked day job, a planned action, or free time.
+  // Each card shows energy before and after the block.
   blocksHtml: function (state) {
+    var h = Game.ui.helpers;
     var b = Game.balance;
-    return b.time.blocks.map(function (block) {
-      var name = Game.content.calendar.blockNames[block];
-      if (Game.rules.day.isJobBlock(state, block)) {
+    return Game.rules.actions.dayPlan(state).map(function (row) {
+      var name = Game.content.calendar.blockNames[row.block];
+      var energyLine = '<span class="block__energy">Energy ' + Math.round(row.energyBefore) + ' → ' + Math.round(row.energyAfter) +
+        (Game.rules.energy.isTired(row.energyAfter) ? ' <span class="badge badge--warn">Tired</span>' : '') + '</span>';
+
+      if (row.kind === 'job') {
         return '<div class="block block--locked">' +
           '<span class="block__time">' + name + '</span>' +
           '<span class="block__title">Day job</span>' +
           '<span class="block__detail">Locked · -' + b.energy.cost.dayJob + ' energy</span>' +
+          energyLine +
           '</div>';
       }
-      return '<div class="block block--free">' +
+
+      var title, detail;
+      if (row.kind === 'action') {
+        var action = Game.content.actions[row.actionId];
+        title = action.name;
+        detail = row.problem
+          ? '<span class="block__problem">Won\'t happen: ' + h.escape(row.problem) + '</span>'
+          : (action.moneyCost ? h.money(action.moneyCost) + ' · ' : '') + 'Click to change';
+      } else {
+        title = 'Free time';
+        detail = '+' + b.time.emptyBlockEnergy + ' energy · Click to plan';
+      }
+      return '<button class="block block--' + row.kind + '" data-action="openPicker" data-block="' + row.block + '">' +
         '<span class="block__time">' + name + '</span>' +
-        '<span class="block__title">Free time</span>' +
-        '<span class="block__detail">+' + b.time.emptyBlockEnergy + ' energy</span>' +
-        '</div>';
+        '<span class="block__title">' + title + '</span>' +
+        '<span class="block__detail">' + detail + '</span>' +
+        energyLine +
+        '</button>';
     }).join('');
   },
 
@@ -83,10 +107,12 @@ Game.ui.today = {
     var f = Game.rules.day.weekForecast(state);
     var rows = [
       ['Earned this week', h.money(f.earnedSoFar)],
-      ['Pay still coming Friday', h.money(f.upcomingPay)],
-      ['Bills due Sunday', '-' + h.money(f.bills)],
-      ['Cash after Sunday (about)', h.money(f.projectedCash)]
+      ['Pay still coming Friday', h.money(f.upcomingPay)]
     ];
+    if (f.plannedSpending > 0) rows.push(['Planned today', '-' + h.money(f.plannedSpending)]);
+    rows.push(['Bills due Sunday', '-' + h.money(f.bills)]);
+    rows.push(['Cash after Sunday (about)', h.money(f.projectedCash)]);
+
     var warning = f.projectedCash < 0
       ? '<p class="panel__warn">You\'re on track to run short. Mom and Dad will lend ' + h.money(Game.balance.debt.familyLoanAmount) + ' if you do.</p>'
       : '';
@@ -126,18 +152,6 @@ Game.ui.today = {
         '<button class="btn btn--small btn--primary" data-action="payBack"' + (most > 0 ? '' : ' disabled') + '>Pay back</button>' +
       '</div>' +
       (app.payBackMessage ? '<p class="hint">' + h.escape(app.payBackMessage) + '</p>' : '') +
-      '</div>';
-  },
-
-  // "Last night" panel: the log from the last End Day.
-  lastNightHtml: function (state) {
-    var h = Game.ui.helpers;
-    var lines = state.lastDayLog.length
-      ? state.lastDayLog.map(function (line) { return '<li>' + h.escape(line) + '</li>'; }).join('')
-      : '<li>Your first day. The job fills your morning and afternoon. Evenings are yours.</li>';
-    return '<div class="panel">' +
-      '<h3 class="panel__title">' + (state.lastDayLog.length ? 'Last night' : 'Welcome') + '</h3>' +
-      '<ul class="log">' + lines + '</ul>' +
       '</div>';
   }
 };

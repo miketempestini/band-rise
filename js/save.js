@@ -24,9 +24,37 @@ Game.save = {
     } catch (error) {
       return { ok: false, message: "That file doesn't look like a Band Rise save. It may be damaged." };
     }
+    if (data && typeof data === 'object' && typeof data.version === 'number' &&
+        data.version < Game.balance.save.version) {
+      data = Game.save.upgrade(data);
+    }
     var problem = Game.save.validate(data);
     if (problem) return { ok: false, message: problem };
     return { ok: true, state: data };
+  },
+
+  // Brings a save from an older version up to date, so old saves keep working.
+  // Anything the new version added gets filled in with its starting value from a fresh state.
+  upgrade: function (data) {
+    var fresh = Game.state.createNew(typeof data.seed === 'number' ? data.seed : 1);
+
+    // Copies over any field the old save is missing, looking inside nested objects too.
+    function fillMissing(target, source) {
+      Object.keys(source).forEach(function (key) {
+        var value = source[key];
+        var isPlainObject = value && typeof value === 'object' && !Array.isArray(value);
+        if (!(key in target)) {
+          target[key] = Game.util.clone(value);
+        } else if (isPlainObject && target[key] && typeof target[key] === 'object') {
+          fillMissing(target[key], value);
+        }
+      });
+    }
+
+    fillMissing(data, fresh);
+    delete data.lastDayLog; // version 1 field, replaced by lastDayReport in version 2
+    data.version = Game.balance.save.version;
+    return data;
   },
 
   // Checks that loaded data has the shape of a Band Rise save.

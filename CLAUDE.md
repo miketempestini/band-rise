@@ -76,8 +76,9 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js` (`money.js` before `day.js`, since End Day uses it)
-6. `js/ui/*.js` (game page only; `helpers.js` and `topbar.js` first)
+5. `js/rules/*.js`: money, energy, morale, skills, audience, actions, career, day, debug
+   (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
+6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
 
 `tests.html` loads 1 to 5, then `js/tests/test-runner.js`, then each `*.test.js` file.
@@ -90,6 +91,8 @@ When you add a new file, add its `<script>` tag to **both** `index.html` and `te
 Game.test('what this checks, in plain words', function (t) {
   t.equal(actual, expected, 'optional note');
   t.ok(somethingTrue, 'optional note');
+  t.near(decimal, 2.5, 'optional note');        // for decimals (allows tiny rounding differences)
+  t.sameContents(objectA, objectB, 'optional'); // for objects and lists
 });
 ```
 
@@ -108,6 +111,20 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
 - **Screens** have `render(root, app)`. They draw with HTML strings and connect buttons with
   `data-action="name"` + `Game.ui.helpers.bind`. They call methods on `Game.app` to change things.
 - **Debug panel:** add buttons in `js/ui/debugPanel.js`, with the logic as rules in `js/rules/debug.js`.
+
+## How the pieces fit (added in Phase 2)
+
+- **Actions** are data in `js/content/actions.js` (costs, effects, flags; numbers from balance.js).
+  To add an action: add an entry there, and if it has a new kind of effect, handle it in
+  `Game.rules.actions.perform` and in `option` (for the picker's expected effect).
+- **Planned actions** live in `state.schedule[day][block]` → `state.entries[id]`, and are removed at End Day.
+- `Game.rules.actions.dayPlan(state)` walks today's blocks in order and gives energy/cash before and after each.
+  Use it for any "can I afford this at that point in the day?" check.
+- **End Day** builds `state.lastDayReport` (`{ day, blocks: [{ block, title, lines }], overnight: [...] }`),
+  which the Day results screen draws. New nightly effects should add their lines to `report.overnight`.
+- **Morale** changes should go through `Game.rules.morale.change` so Burned out stays up to date.
+- **Skills** grow through `Game.rules.skills.train` (it also resets the rust clock).
+- **Buzz**: `Game.rules.audience.addBuzz` / `fadeBuzz`. Cities are content in `js/content/cities.js`.
 
 ## Saving
 

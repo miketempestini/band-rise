@@ -38,7 +38,7 @@ Game.rules.day = {
   },
 
   // A quick look at the rest of this week's money, for the Today screen.
-  // Returns { earnedSoFar, upcomingPay, bills, projectedCash }.
+  // Returns { earnedSoFar, upcomingPay, plannedSpending, bills, projectedCash }.
   weekForecast: function (state) {
     var b = Game.balance;
     var dow = Game.rules.day.dayOfWeek(state.day);
@@ -56,19 +56,28 @@ Game.rules.day = {
     var earnedSoFar = 0;
     for (var key in state.thisWeek.income) earnedSoFar += state.thisWeek.income[key];
 
+    // Money that today's planned actions will cost.
+    var plan = Game.rules.actions.dayPlan(state);
+    var plannedSpending = state.player.cash - plan[plan.length - 1].cashAfter;
+
     var bills = b.housing[state.player.housing].weeklyCost;
     return {
       earnedSoFar: earnedSoFar,
       upcomingPay: upcomingPay,
+      plannedSpending: plannedSpending,
       bills: bills,
-      projectedCash: state.player.cash + upcomingPay - bills
+      projectedCash: state.player.cash + upcomingPay - plannedSpending - bills
     };
   },
 
   // Ends the current day and moves to the next one.
-  // In order: work the day job, rest in empty blocks, Friday payday, Sunday bills and
-  // debt check, overnight energy recovery, then move to tomorrow.
-  // Returns { state, log, weekEnded } where weekEnded is true after Sunday night.
+  // In order:
+  //   1. Each block, Morning to Evening: the day job, a planned action, or free time.
+  //   2. End of the day: shift morale, a full day off, Exhausted.
+  //   3. Friday payday; Sunday bills, morale drift, debt check, and the week's wrap-up.
+  //   4. Overnight: energy recovers, buzz fades, then tomorrow begins and rust is checked.
+  // Returns { state, log, weekEnded }. The full report is saved in state.lastDayReport
+  // for the Day results screen: { day, blocks: [{ block, title, lines }], overnight: [lines] }.
   endDay: function (state) {
     if (state.gameOver) {
       return { state: state, log: [], weekEnded: false };
@@ -76,66 +85,134 @@ Game.rules.day = {
 
     var b = Game.balance;
     var day = Game.rules.day;
-    var money = Game.rules.money;
-    var clamp = Game.util.clamp;
-    var s = Game.util.clone(state);
-    var log = [];
+    var util = Game.util;
+    var s = util.clone(state);
     var dow = day.dayOfWeek(s.day);
+    var report = { day: s.day, blocks: [], overnight: [] };
     var weekEnded = false;
-
-    // 1. Go through the three blocks: job blocks cost energy, empty blocks restore a little.
+    var exhausted = false;
     var jobBlocks = 0;
-    var emptyBlocks = 0;
-    b.time.blocks.forEach(function (block) {
-      if (day.isJobBlock(s, block)) jobBlocks += 1;
-      else emptyBlocks += 1;
-    });
-    var energyChange = emptyBlocks * b.time.emptyBlockEnergy - jobBlocks * b.energy.cost.dayJob;
-    s.player.energy = clamp(s.player.energy + energyChange, 0, b.energy.max);
+    var didWork = false; // true if any action today counts as work (so it isn't a full day off)
 
-    // 2. A workday counts as one shift: it wears down morale and gets paid on Friday.
+    // Small helper so every change to morale also updates Burned out and records any note.
+    function changeMorale(amount, lines) {
+      var r = Game.rules.morale.change(s, amount);
+      s = r.state;
+      r.log.forEach(function (line) { lines.push(line); });
+    }
+
+    // 1. The three blocks, in order.
+    b.time.blocks.forEach(function (block) {
+      var lines = [];
+      var title;
+      var actionId = Game.rules.actions.plannedActionId(s, block);
+
+      if (day.isJobBlock(s, block)) {
+        title = 'Day job';
+        jobBlocks += 1;
+        s.player.energy = Game.rules.energy.clamp(s.player.energy - b.energy.cost.dayJob);
+        lines.push('-' + b.energy.cost.dayJob + ' energy.');
+        if (s.player.energy === 0 && !exhausted) {
+          exhausted = true;
+          lines.push('The job drained you to 0 energy. You\'re Exhausted.');
+        }
+      } else if (actionId) {
+        var done = Game.rules.actions.perform(s, actionId);
+        s = done.state;
+        title = Game.content.actions[actionId].name;
+        lines.push(done.line);
+        lines = lines.concat(done.notes);
+        if (done.skipped) {
+          title = 'Free time';
+          s.player.energy = Game.rules.energy.clamp(s.player.energy + b.time.emptyBlockEnergy);
+          lines.push('+' + b.time.emptyBlockEnergy + ' energy from free time instead.');
+        } else if (Game.content.actions[actionId].countsAsWork) {
+          didWork = true;
+        }
+      } else {
+        title = 'Free time';
+        s.player.energy = Game.rules.energy.clamp(s.player.energy + b.time.emptyBlockEnergy);
+        lines.push('+' + b.time.emptyBlockEnergy + ' energy.');
+      }
+
+      report.blocks.push({ block: block, title: title, lines: lines });
+    });
+
+    // 2. End of the day.
+    var endLines = report.overnight;
     if (jobBlocks > 0) {
       s.player.job.unpaidShifts += 1;
       s.thisWeek.shiftsWorked += 1;
-      s.player.morale = clamp(s.player.morale + b.morale.change.dayJobShift, 0, b.morale.max);
-      log.push('Worked a shift at your day job (' + b.morale.change.dayJobShift + ' morale).');
+      endLines.push('Day job shift: ' + b.morale.change.dayJobShift + ' morale.');
+      changeMorale(b.morale.change.dayJobShift, endLines);
+    } else if (!didWork) {
+      endLines.push('Full day off: +' + b.morale.change.fullDayOff + ' morale.');
+      changeMorale(b.morale.change.fullDayOff, endLines);
     }
-    if (emptyBlocks > 0) {
-      log.push('Free time: +' + (emptyBlocks * b.time.emptyBlockEnergy) + ' energy.');
+    if (exhausted) {
+      endLines.push('Exhausted: ' + b.morale.change.exhausted + ' morale, and you\'ll only recover ' + b.energy.exhaustedOvernight + ' energy tonight.');
+      changeMorale(b.morale.change.exhausted, endLines);
     }
+    s = Game.rules.actions.clearDay(s, s.day);
 
     // 3. Friday night: payday for every shift worked since the last one.
     if (dow === b.time.paydayDayOfWeek && s.player.job.unpaidShifts > 0) {
       var pay = s.player.job.unpaidShifts * b.job.payPerShift;
-      s = money.earn(s, pay, 'dayJob').state;
+      s = Game.rules.money.earn(s, pay, 'dayJob').state;
       s.player.job.unpaidShifts = 0;
-      log.push('Payday! +$' + pay.toLocaleString() + ' from your day job.');
+      endLines.push('Payday! +$' + pay.toLocaleString() + ' from your day job.');
     }
 
-    // 4. Sunday night: bills, the debt check, and closing out the week.
+    // Sunday night: bills, morale drift, the debt check, and closing out the week.
     if (dow === b.time.billsDayOfWeek) {
       var bills = b.housing[s.player.housing].weeklyCost;
-      var paid = money.spend(s, bills, 'bills');
+      var paid = Game.rules.money.spend(s, bills, 'bills');
       s = paid.state;
-      log.push('Paid $' + bills.toLocaleString() + ' for rent and living costs.');
-      log = log.concat(paid.log);
+      endLines.push('Paid $' + bills.toLocaleString() + ' for rent and living costs.');
+      paid.log.forEach(function (line) { endLines.push(line); });
+
+      var drift = Game.rules.morale.weeklyDrift(s);
+      s = drift.state;
+      drift.log.forEach(function (line) { endLines.push(line); });
 
       s = day.checkDebt(s);
       if (s.gameOver) {
-        log.push(s.gameOver.message);
+        endLines.push(s.gameOver.message);
       }
 
-      s = day.closeWeek(s);
-      weekEnded = true;
+      weekEnded = true; // the week is closed at the very end of tonight, after rust
     }
 
-    // 5. Overnight: recover energy.
-    s.player.energy = clamp(s.player.energy + b.energy.overnight, 0, b.energy.max);
-    log.push('Slept: +' + b.energy.overnight + ' energy overnight.');
+    // 4. Overnight: energy recovers and buzz fades.
+    var recovery = Game.rules.energy.overnightRecovery(exhausted);
+    var energyBefore = s.player.energy;
+    s.player.energy = Game.rules.energy.clamp(s.player.energy + recovery);
+    endLines.push('Slept: ' + util.signed(s.player.energy - energyBefore) + ' energy (now ' + Math.round(s.player.energy) + ').');
 
-    // 6. On to tomorrow.
+    var faded = Game.rules.audience.fadeBuzz(s);
+    s = faded.state;
+    faded.log.forEach(function (line) { endLines.push(line); });
+
+    // On to tomorrow, then check for rusty skills.
     s.day += 1;
-    s.lastDayLog = log;
+    var rust = Game.rules.skills.applyRust(s);
+    s = rust.state;
+    rust.log.forEach(function (line) { endLines.push(line); });
+
+    // Sunday night: save the week's totals (including tonight's skill changes) for the weekly summary.
+    if (weekEnded) {
+      s = day.closeWeek(s, day.weekNumber(report.day));
+    }
+
+    s.lastDayReport = report;
+
+    // A flat list of everything that happened, for tests and simple displays.
+    var log = [];
+    report.blocks.forEach(function (row) {
+      row.lines.forEach(function (line) { log.push(Game.content.calendar.blockNames[row.block] + ', ' + row.title + ': ' + line); });
+    });
+    log = log.concat(report.overnight);
+
     return { state: s, log: log, weekEnded: weekEnded };
   },
 
@@ -156,11 +233,14 @@ Game.rules.day = {
   },
 
   // Saves this week's totals into the ledger (for the weekly summary) and starts a fresh tally.
-  closeWeek: function (state) {
+  // week: the week number being closed.
+  closeWeek: function (state, week) {
     var s = Game.util.clone(state);
     var w = s.thisWeek;
+    // Older saves may not have the starting skills yet; then the week shows no skill changes.
+    var startSkills = w.startSkills || s.player.skills;
     s.ledger.push({
-      week: Game.rules.day.weekNumber(s.day),
+      week: week,
       startCash: w.startCash,
       endCash: s.player.cash,
       startDebt: w.startDebt,
@@ -169,9 +249,11 @@ Game.rules.day = {
       costs: w.costs,
       loans: w.loans,
       paidBack: w.paidBack,
-      shiftsWorked: w.shiftsWorked
+      shiftsWorked: w.shiftsWorked,
+      startSkills: Game.util.clone(startSkills),
+      endSkills: Game.util.clone(s.player.skills)
     });
-    s.thisWeek = Game.state.newWeek(s.player.cash, s.player.loanOwed);
+    s.thisWeek = Game.state.newWeek(s.player.cash, s.player.loanOwed, s.player.skills);
     return s;
   }
 };

@@ -18,6 +18,14 @@ Game.state = {
       seed = Game.rng.newSeed();
     }
 
+    var skills = {
+      musicianship: b.skills.start.musicianship,
+      performance: b.skills.start.performance,
+      songwriting: b.skills.start.songwriting,
+      promotion: b.skills.start.promotion,
+      networking: b.skills.start.networking
+    };
+
     return {
       version: b.save.version,
       seed: seed,          // The starting seed, kept for reference
@@ -31,13 +39,7 @@ Game.state = {
         energy: b.energy.start,
         morale: b.morale.start,
         reputation: b.reputation.start,
-        skills: {
-          musicianship: b.skills.start.musicianship,
-          performance: b.skills.start.performance,
-          songwriting: b.skills.start.songwriting,
-          promotion: b.skills.start.promotion,
-          networking: b.skills.start.networking
-        },
+        skills: skills,
         skillLastUsed: { musicianship: 0, performance: 0, songwriting: 0, promotion: 0, networking: 0 },
         job: {
           status: 'full',                // 'full' | 'part' | 'none'
@@ -47,6 +49,7 @@ Game.state = {
         },
         loanOwed: 0,                     // Total debt owed to Mom and Dad
         debtWeeksOverLimit: 0,           // Sundays in a row with debt above the game-over line
+        burnedOut: false,                // true while Burned out (morale fell below 15, until back above 25)
         housing: 'starter',
         gear: { instrumentTier: 0, homeStudio: false, van: false },
         merchStock: { shirts: 0, cds: 0 },
@@ -57,26 +60,40 @@ Game.state = {
       people: {},      // id: { id, name, role, skill, reliability, ambition, trait, relationship, satisfaction, status, metDay, lastSeenDay }
       songs: {},       // id: { id, title, isCover, progress, quality, tightness, lastPlayedDay, recording, releaseId }
       releases: [],    // { id, type: 'single' | 'ep' | 'album', songIds, day }
-      cities: {},      // id: { id, fans, buzz, unlocked, lastActivityDay }
+      cities: Game.state.startingCities(), // id: { id, fans, buzz, unlocked, lastActivityDay }
       venues: {},      // id: { id, relationship, bannedUntilDay, pendingRequestId }
       schedule: {},    // day number: { morning: entryId, afternoon: entryId, evening: entryId }
       entries: {},     // id: { id, day, block, type, actionId, venueId, songIds, personIds, deal, status }
+      nextEntryId: 1,  // used to give each new entry its own id
       inbox: [],       // { id, day, kind: 'offer' | 'event' | 'reply' | 'info', templateId, data, expiresDay, resolved }
       milestones: {},  // milestoneId: day reached
-      ledger: [],      // one entry per finished week: { week, startCash, endCash, startDebt, endDebt, income, costs, loans, paidBack, shiftsWorked }
-      thisWeek: Game.state.newWeek(b.economy.startCash, 0), // running totals for the week in progress
-      lastDayLog: [],  // what happened at the last End Day (shown on the Today screen)
+      ledger: [],      // one entry per finished week: { week, startCash, endCash, startDebt, endDebt, income, costs, loans, paidBack, shiftsWorked, startSkills, endSkills }
+      thisWeek: Game.state.newWeek(b.economy.startCash, 0, skills), // running totals for the week in progress
+      lastDayReport: null, // what happened at the last End Day: { day, blocks: [{ block, title, lines }], overnight: [lines] }
       gameOver: null,  // null while playing; { day, message } once the game has ended
       stats: { gigsPlayed: 0, bestResult: null, biggestCrowd: 0, totalEarned: 0 }
     };
   },
 
+  // The cities you start with: just the hometown, with no fans or buzz yet.
+  startingCities: function () {
+    var cities = {};
+    Object.keys(Game.content.cities).forEach(function (id) {
+      if (Game.content.cities[id].region === 'hometown') {
+        cities[id] = { id: id, fans: 0, buzz: 0, unlocked: true, lastActivityDay: 0 };
+      }
+    });
+    return cities;
+  },
+
   // Returns a fresh, empty tally for a new week.
   // income and costs hold money by category, like { dayJob: 550 } or { bills: 400 }.
-  newWeek: function (startCash, startDebt) {
+  // startSkills is a copy of the skills at the start of the week, so the summary can show what changed.
+  newWeek: function (startCash, startDebt, startSkills) {
     return {
       startCash: startCash,
       startDebt: startDebt,
+      startSkills: Game.util.clone(startSkills),
       shiftsWorked: 0,
       income: {},
       costs: {},

@@ -56,16 +56,18 @@
     t.equal(Game.rules.day.endDay(s).state.player.energy, 100, 'capped at 100');
   });
 
-  Game.test('End Day: energy can\'t drop below 0 from the job', function (t) {
+  Game.test('End Day: the job draining you to 0 makes you Exhausted (+30 overnight, -10 morale)', function (t) {
     var s = dayTestState();
     s.player.energy = 10;
-    t.equal(Game.rules.day.endDay(s).state.player.energy, 50, '10 - 40 + 5 stops at 0, then +50');
+    var after = Game.rules.day.endDay(s).state;
+    t.equal(after.player.energy, 35, '10 - 20 stops at 0, -20 more stays 0, +5 free evening, then only +30');
+    t.equal(after.player.morale, 60 - 2 - 10, 'shift -2 and Exhausted -10');
   });
 
-  Game.test('End Day: each job shift costs 2 morale; weekends cost nothing', function (t) {
+  Game.test('End Day: each job shift costs 2 morale; an empty Saturday is a full day off (+10)', function (t) {
     var week = endDays(dayTestState(), 5).state;
     t.equal(week.player.morale, 60 - 5 * 2, 'five shifts: -10');
-    t.equal(Game.rules.day.endDay(week).state.player.morale, 50, 'Saturday: no change');
+    t.equal(Game.rules.day.endDay(week).state.player.morale, 60, 'Saturday off: +10');
   });
 
   Game.test('End Day: running short on Sunday triggers a loan', function (t) {
@@ -112,6 +114,27 @@
     var sunday = endDays(s, 6).state;
     t.equal(Game.rules.day.daysUntilBills(sunday), 0, 'Sunday: due tonight');
     t.equal(Game.rules.day.weekForecast(sunday).upcomingPay, 0, 'Sunday: payday already happened');
+  });
+
+  Game.test('Weekly summary: records how each skill changed over the week', function (t) {
+    var s = dayTestState();
+    s.player.morale = 50;
+    s = endDays(s, 5).state; // to Saturday
+    s.player.energy = 100;
+    s = Game.rules.actions.plan(s, 'morning', 'practice').state;
+    var sunday = endDays(s, 2).state; // Saturday (practice) and Sunday
+    var week = sunday.ledger[0];
+    t.equal(week.startSkills.musicianship, 20, 'started the week at 20');
+    t.near(week.endSkills.musicianship - week.startSkills.musicianship, 2.5, 'Practice added 2.5');
+    t.equal(week.endSkills.networking - week.startSkills.networking, 0, 'unused skill: no change');
+    t.sameContents(sunday.thisWeek.startSkills, sunday.player.skills, 'next week starts from the new values');
+  });
+
+  Game.test('Weekly summary: the first week starts from your chosen skills', function (t) {
+    var allocation = { musicianship: 30, performance: 0, songwriting: 10, promotion: 0, networking: 10 };
+    var s = Game.rules.career.startCareer('A', 'keys', 1, allocation).state;
+    t.equal(s.thisWeek.startSkills.songwriting, 13, 'includes the instrument bonus');
+    t.equal(s.thisWeek.startSkills.musicianship, 30);
   });
 
 })();

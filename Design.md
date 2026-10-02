@@ -159,7 +159,9 @@ Take a small load from Mom and Dad for $1,000 every time your balance falls belo
 
 Five skills from 0 to 100 drive almost every result. They grow fast early, slow down later, and slip if you ignore them for two weeks.
 
-| Skill | Starts at | Grows from | What it affects |
+**Starting skills:** at New career, after picking a name and instrument, the player spends 50 points across the five skills on a skills page. Each skill gets 0 to 30 points, and all 50 must be spent before starting. Helpers: Suggested build (the "Suggested build" column below), Randomize, Reset, and -5/-1/+1/+5 buttons. The instrument's +3 bonus is added on top.
+
+| Skill | Suggested build | Grows from | What it affects |
 | --- | --- | --- | --- |
 | Musicianship | 20 | Practice, Rehearse, playing live | Gig score, recording quality |
 | Performance | 10 | Playing live | Gig score, merch sales |
@@ -586,7 +588,7 @@ A later feature: a shareable career card (fame level, days played, fans, songs, 
 
 The first 21 in-game days should take 10 to 15 minutes and end with one bandmate, one original song, and the first paid gig on the calendar.
 
-**Setup (under a minute):** title screen, then New career: enter a name and pick Guitar, Keys, or Bass. You start on a Monday with $500, energy 100, morale 60, and a full-time job.
+**Setup (under a minute):** title screen, then New career: enter a name and pick Guitar, Keys, or Bass, then spend 50 skill points. You start on a Monday with $500, energy 100, morale 60, and a full-time job.
 
 ### Week 1: Get on stage
 
@@ -755,7 +757,7 @@ Sixteen screens, most of them panels around one main Today view. The vertical sl
 | # | Screen | What it shows | What you do there | In the slice? |
 | --- | --- | --- | --- | --- |
 | 1 | Title | Game name, Continue, New career, Import save | Start or continue | Yes |
-| 2 | New career | Name and instrument | Confirm | Yes |
+| 2 | New career | Name and instrument, then a skills page to spend 50 starting points | Confirm | Yes |
 | 3 | Today (main hub) | Top bar (cash, energy, morale, reputation, date, days to rent), three block cards, inbox preview | Fill blocks, End Day | Yes |
 | 4 | Action picker | Available actions with cost, energy, and expected effect. Locked ones are greyed out with the reason | Pick an action | Yes |
 | 5 | Day results | One line per block, plus overnight changes | Continue | Yes |

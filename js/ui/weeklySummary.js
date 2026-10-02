@@ -9,7 +9,7 @@ Game.ui.weeklySummary = {
 
   // Plain names for each money category.
   incomeLabels: { dayJob: 'Day job', debug: 'Debug cash' },
-  costLabels: { bills: 'Rent and living costs', debug: 'Debug' },
+  costLabels: { bills: 'Rent and living costs', networking: 'Going out to network', promotion: 'Promotion', debug: 'Debug' },
 
   render: function (root, app) {
     var h = Game.ui.helpers;
@@ -55,6 +55,7 @@ Game.ui.weeklySummary = {
           self.listPanel('Money in', inRows, h.money(totalIn), 'Nothing came in this week.') +
           self.listPanel('Money out', outRows, h.money(totalOut), 'Nothing went out this week.') +
         '</div>' +
+        self.skillsPanel(week) +
         '<div class="panel">' +
           '<dl class="rows rows--big">' +
             '<dt>Starting cash</dt><dd>' + h.money(week.startCash) + '</dd>' +
@@ -76,6 +77,25 @@ Game.ui.weeklySummary = {
       settings: function () { app.show('settings'); },
       focusPayBack: function () { app.show('today'); }
     });
+  },
+
+  // "Skills this week": each skill's value now, and how much it went up or down this week.
+  skillsPanel: function (week) {
+    if (!week.startSkills || !week.endSkills) return ''; // weeks saved before this was added
+    var rows = Object.keys(Game.content.skills).map(function (skill) {
+      var change = Game.util.round1(week.endSkills[skill] - week.startSkills[skill]);
+      var kind = change > 0 ? 'up' : (change < 0 ? 'down' : 'same');
+      return '<div class="skill-change">' +
+        '<span class="skill-change__name">' + Game.content.skills[skill] + '</span>' +
+        '<span class="skill-change__value">' + Math.floor(week.endSkills[skill]) + '</span>' +
+        '<span class="skill-change__delta skill-change__delta--' + kind + '">' +
+          (change === 0 ? '±0' : Game.util.signed(change)) + '</span>' +
+        '</div>';
+    }).join('');
+    return '<div class="panel">' +
+      '<h3 class="panel__title">Skills this week</h3>' +
+      '<div class="skill-changes">' + rows + '</div>' +
+      '</div>';
   },
 
   // A panel with a list of label/amount rows and a total.

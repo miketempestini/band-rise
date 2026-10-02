@@ -34,6 +34,13 @@ Game.runTests = function () {
             ' but got ' + JSON.stringify(actual));
         }
       },
+      // Like equal, but for decimals: passes if the numbers are within 0.0001 of each other.
+      // (Computers store some decimals like 3.6 as 3.5999999..., so exact matching can fail.)
+      near: function (actual, expected, note) {
+        if (typeof actual !== 'number' || Math.abs(actual - expected) > 0.0001) {
+          failures.push((note ? note + ': ' : '') + 'expected about ' + expected + ' but got ' + JSON.stringify(actual));
+        }
+      },
       // Like equal, but for objects and lists: passes if both have the same contents.
       sameContents: function (actual, expected, note) {
         if (JSON.stringify(actual) !== JSON.stringify(expected)) {

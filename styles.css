@@ -64,6 +64,7 @@ body {
 .input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .input--money { width: 110px; }
 .input--tiny { width: 64px; padding: 2px 6px; }
+.input--select { width: auto; padding: 2px 6px; }
 
 .field { display: block; margin-bottom: 20px; }
 .field__label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
@@ -196,6 +197,13 @@ body {
   background: var(--panel);
 }
 .block--locked { border-style: solid; background: var(--panel-2); }
+
+/* Free and planned blocks are buttons you can click to open the action picker. */
+button.block { font: inherit; color: inherit; text-align: left; cursor: pointer; }
+button.block:hover { border-color: var(--accent); }
+.block--action { border-style: solid; border-color: var(--accent); }
+.block__energy { font-size: 13px; color: var(--text-muted); }
+.block__problem { color: var(--bad); }
 .block__time { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
 .block__title { font-size: 22px; font-weight: bold; }
 .block__detail { color: var(--text-muted); font-size: 14px; margin-top: auto; }
@@ -221,7 +229,7 @@ body {
 
 .debug {
   position: fixed;
-  right: 16px;
+  left: 16px;
   bottom: 16px;
   padding: 12px;
   background: #000;
@@ -232,3 +240,120 @@ body {
 }
 .debug__title { color: var(--accent); font-weight: bold; margin-bottom: 8px; }
 .debug__row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+
+/* ---------- Badges ---------- */
+
+.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: bold; background: var(--panel-2); color: var(--text-muted); vertical-align: middle; }
+.badge--warn { background: rgba(255, 181, 71, 0.18); color: var(--accent); }
+.badge--bad { background: rgba(255, 107, 107, 0.18); color: var(--bad); }
+
+/* ---------- Action picker (pop-up) ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 8, 16, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.modal {
+  width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.modal__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal__title { margin: 0; font-size: 22px; }
+
+.picks { display: flex; flex-direction: column; gap: 8px; }
+.pick {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.pick:hover:not(:disabled) { border-color: var(--accent); }
+.pick:disabled { opacity: 0.45; cursor: not-allowed; }
+.pick--current { border-color: var(--accent); }
+.pick__head { display: flex; justify-content: space-between; gap: 12px; }
+.pick__name { font-weight: bold; font-size: 18px; }
+.pick__costs { color: var(--text-muted); white-space: nowrap; }
+.pick__desc { color: var(--text-muted); font-size: 14px; }
+.pick__effect { color: var(--accent); font-weight: bold; }
+.pick__reason { color: var(--bad); font-size: 14px; }
+
+/* ---------- Stats panel ---------- */
+
+.skills { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.skill { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: baseline; }
+.skill__name { color: var(--text-muted); }
+.skill__value { font-weight: bold; text-align: right; }
+.skill .meter { grid-column: 1 / -1; margin-top: 0; }
+.meter--thin { height: 3px; }
+.rust { font-size: 12px; font-weight: bold; cursor: help; }
+.rust--warning { color: var(--accent); }
+.rust--rusting { color: var(--bad); }
+.rows--stats { border-top: 1px solid var(--line); padding-top: 12px; }
+
+/* ---------- Day results ---------- */
+
+.result-row {
+  display: grid;
+  grid-template-columns: 100px 140px 1fr;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.result-row:last-child { border-bottom: none; }
+.result-row__time { color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; padding-top: 2px; }
+.result-row__title { font-weight: bold; }
+.result-row__lines { display: flex; flex-direction: column; gap: 2px; }
+
+/* ---------- Skills page (New career) ---------- */
+
+.alloc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 8px; }
+.alloc-head__left { font-size: 22px; }
+.alloc-head__left strong { color: var(--accent); }
+.alloc-head__left--done strong { color: var(--good); }
+.alloc-head__helpers { display: flex; gap: 8px; flex-shrink: 0; }
+
+.alloc {
+  display: grid;
+  grid-template-columns: 1fr auto 150px;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.alloc__info { display: flex; flex-direction: column; gap: 2px; }
+.alloc__name { font-weight: bold; font-size: 18px; }
+.alloc__desc { color: var(--text-muted); font-size: 14px; }
+.alloc__controls { display: flex; align-items: center; gap: 6px; }
+.alloc__value { width: 40px; text-align: center; font-size: 22px; font-weight: bold; }
+.alloc__total { display: flex; flex-direction: column; align-items: flex-end; font-size: 14px; color: var(--text-muted); }
+.alloc__total strong { color: var(--text); font-size: 18px; }
+.alloc__bonus { color: var(--accent); font-weight: bold; }
+.step { min-width: 40px; }
+
+/* ---------- Weekly summary: skill changes ---------- */
+
+.skill-changes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.skill-change { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; background: var(--panel-2); border-radius: 8px; }
+.skill-change__name { font-size: 13px; color: var(--text-muted); }
+.skill-change__value { font-size: 22px; font-weight: bold; }
+.skill-change__delta { font-weight: bold; }
+.skill-change__delta--up { color: var(--good); }
+.skill-change__delta--down { color: var(--bad); }
+.skill-change__delta--same { color: var(--text-muted); }

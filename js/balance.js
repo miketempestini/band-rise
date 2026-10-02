@@ -143,7 +143,11 @@ Game.balance = {
   // ---------------------------------------------------------------
   skills: {
     max: 100,                        // Skills go from 0 to 100
+    // The "Suggested build" on the skills page (adds up to startingPoints).
     start: { musicianship: 20, performance: 10, songwriting: 10, promotion: 5, networking: 5 },
+    startingPoints: 50,              // Points the player spends across the five skills at New career
+    startingMaxPerSkill: 30,         // No skill can get more than this many starting points
+    startingMinPerSkill: 0,          // ...or fewer than this
     instrumentBonus: {               // Starting instrument adds +3 to one skill
       guitar: { skill: 'performance', amount: 3 },
       keys:   { skill: 'songwriting', amount: 3 },
@@ -447,8 +451,9 @@ Game.balance = {
   },
 
   buzz: {
-    max: 100,
-    fadePerDay: -2                   // Buzz fades 2 points a day
+    min: 0,                          // Buzz never goes below this
+    max: 100,                        // ...or above this
+    fadePerDay: -2                   // Buzz fades 2 points a day (overnight)
   },
 
   crowd: {
@@ -562,7 +567,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 1,                      // Save format version, bumped when the state shape changes
+    version: 2,                      // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 
