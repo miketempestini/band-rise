@@ -4,6 +4,8 @@
 // A planned action is stored like any other calendar item (see Design.md's data model):
 //   state.schedule[day][block] = entryId
 //   state.entries[entryId] = { id, day, block, type: 'action', actionId, songId, status: 'planned' }
+// Actions can be planned for today or any later day (from the Calendar). A future day is checked only for
+// what's knowable now (job blocks, shows, open mic nights); energy and cash are checked when the day comes.
 // songId is only used by actions that need a song (Practice); songIds by actions with a set (open mic)
 // or a song list (Rehearse); personId by actions done with someone (Jam, Hang out, Talk).
 
@@ -11,6 +13,26 @@ window.Game = window.Game || {};
 Game.rules = Game.rules || {};
 
 Game.rules.actions = {
+
+  // A copy of the state that looks at a different day, for planning ahead. It isn't saved anywhere:
+  // rules that read "today" read the planned day instead, and planningAhead skips energy and cash checks.
+  viewForDay: function (state, day) {
+    var view = Game.util.clone(state);
+    view.day = day;
+    view.planningAhead = day > state.day;
+    return view;
+  },
+
+  // Runs a planning rule on another day, then turns the result back into today's state.
+  onDay: function (state, day, rule) {
+    if (day === undefined || day === null || day === state.day) return rule(state);
+    var result = rule(Game.rules.actions.viewForDay(state, day));
+    if (result.state.day === day) {
+      result.state.day = state.day;
+      delete result.state.planningAhead;
+    }
+    return result;
+  },
 
   // The calendar entry planned for a block today, or null.
   plannedEntry: function (state, block) {
@@ -49,7 +71,15 @@ Game.rules.actions = {
     return b.time.blocks.map(function (block) {
       var row = { block: block, kind: 'free', actionId: null, problem: null, energyBefore: energy, cashBefore: cash };
 
-      if (Game.rules.day.isJobBlock(state, block)) {
+      var booked = Game.rules.actions.plannedEntry(state, block);
+      if (booked && booked.type === 'gig') {
+        // A booked show (a commitment): costs gig energy, unless you'd be at 0 (a no-show).
+        row.kind = 'gig';
+        row.entryId = booked.id;
+        row.venueId = booked.venueId;
+        if (energy <= 0) row.problem = 'You\'ll have no energy left: that\'s a no-show!';
+        else energy = clampEnergy(energy - b.energy.cost.gig);
+      } else if (Game.rules.day.isJobBlock(state, block)) {
         row.kind = 'job';
         energy = clampEnergy(energy - b.energy.cost.dayJob);
       } else {
@@ -90,8 +120,12 @@ Game.rules.actions = {
     if (row.kind === 'job') {
       result.ok = false;
       result.reason = 'This block is taken by your day job.';
+    } else if (row.kind === 'gig') {
+      result.ok = false;
+      result.reason = 'A show is booked in this block.';
     } else {
-      result.reason = Game.rules.actions.affordProblem(action, row.energyBefore, row.cashBefore);
+      // Planning ahead, energy and cash aren't known yet: they're checked when the day comes.
+      result.reason = state.planningAhead ? null : Game.rules.actions.affordProblem(action, row.energyBefore, row.cashBefore);
       result.ok = !result.reason;
     }
 
@@ -136,6 +170,14 @@ Game.rules.actions = {
     if (action.needsBand && !state.band.memberIds.length) {
       result.ok = false;
       result.reason = 'You need a bandmate first. Meet people, get to know them, then Invite them on the People screen.';
+    }
+    if (action.needsBooking && state.planningAhead) {
+      result.ok = false;
+      result.reason = 'Emails go out the day you plan them: use the Book screen on that day.';
+    }
+    if (action.onlyWithoutJob && state.player.job.status !== 'none') {
+      result.ok = false;
+      result.reason = 'You already have a job.';
     }
     if (action.songsMax && !Game.rules.songs.playable(state).length) {
       result.ok = false;
@@ -221,13 +263,38 @@ Game.rules.actions = {
   //         for Jam, Hang out, or Talk, a person id.
   // If it isn't allowed, the state comes back unchanged with the reason in the log.
   // Returns { state, log }.
-  plan: function (state, block, actionId, songChoice) {
+  // day: optional, to plan a later day from the Calendar (left out: today).
+  plan: function (state, block, actionId, songChoice, day) {
+    if (day !== undefined && day !== null && day !== state.day) {
+      if (day < state.day) return { state: state, log: ['That day has already passed.'] };
+      return Game.rules.actions.onDay(state, day, function (view) {
+        return Game.rules.actions.plan(view, block, actionId, songChoice);
+      });
+    }
     var action = Game.content.actions[actionId];
     var songId = null;
     var songIds = null;
     var personId = null;
+    var request = null;
     if (!action) {
       return { state: state, log: ['Unknown action.'] };
+    }
+    var existing = Game.rules.actions.plannedEntry(state, block);
+    if (existing && existing.type === 'gig') return { state: state, log: ['A show is booked in this block.'] };
+    if (action.needsBooking && state.planningAhead) {
+      return { state: state, log: ['Email a venue can only be planned for today (from the Book screen).'] };
+    }
+    if (action.needsBooking) {
+      // choice: { venueId, gigDay, deal }
+      request = songChoice || {};
+      var bookingProblem = Game.rules.booking.requestProblem(state, request.venueId, request.gigDay, request.deal);
+      if (bookingProblem) return { state: state, log: [bookingProblem] };
+      var sameVenue = Object.keys(state.entries).some(function (id) {
+        var e = state.entries[id];
+        return e.day === state.day && e.actionId === 'emailVenue' && e.block !== block && e.request.venueId === request.venueId;
+      });
+      if (sameVenue) return { state: state, log: ['You already plan to email ' + Game.content.venues[request.venueId].name + ' today.'] };
+      request = { venueId: request.venueId, gigDay: request.gigDay, deal: request.deal };
     }
     if (action.setSize) {
       songIds = Array.isArray(songChoice) ? songChoice.slice() : Game.rules.gigs.suggestSet(state, action.setSize);
@@ -260,16 +327,24 @@ Game.rules.actions = {
     var s = Game.rules.actions.clear(state, block).state;
     var id = 'e' + s.nextEntryId;
     s.nextEntryId += 1;
-    s.entries[id] = { id: id, day: s.day, block: block, type: 'action', actionId: actionId, songId: songId, songIds: songIds, personId: personId, status: 'planned' };
+    s.entries[id] = { id: id, day: s.day, block: block, type: 'action', actionId: actionId, songId: songId, songIds: songIds, personId: personId, request: request, status: 'planned',
+      plannedAhead: !!state.planningAhead };
     s.schedule[s.day] = s.schedule[s.day] || {};
     s.schedule[s.day][block] = id;
     return { state: s, log: [] };
   },
 
-  // Sets a block back to Free time. Returns { state, log }.
-  clear: function (state, block) {
+  // Sets a block back to Free time (a booked show can't be cleared this way). Returns { state, log }.
+  // day: optional, to clear a later day from the Calendar (left out: today).
+  clear: function (state, block, day) {
+    if (day !== undefined && day !== null && day !== state.day) {
+      return Game.rules.actions.onDay(state, day, function (view) { return Game.rules.actions.clear(view, block); });
+    }
     var s = Game.util.clone(state);
     var today = s.schedule[s.day];
+    if (today && today[block] && s.entries[today[block]] && s.entries[today[block]].type === 'gig') {
+      return { state: state, log: ['A show is booked in this block. Cancel it from the Calendar.'] };
+    }
     if (today && today[block]) {
       delete s.entries[today[block]];
       delete today[block];
@@ -291,7 +366,7 @@ Game.rules.actions = {
   // songId: the song for actions that need one (Practice). songIds: the set for a gig, or Rehearse's songs.
   // personId: who it's with (Jam, Hang out, Talk).
   // Returns { state, line, notes, skipped, finishedSongId, gig }: line is the one-line result for Day results.
-  perform: function (state, actionId, songId, songIds, personId) {
+  perform: function (state, actionId, songId, songIds, personId, request) {
     var util = Game.util;
     var action = Game.content.actions[actionId];
     var s = state;
@@ -365,6 +440,20 @@ Game.rules.actions = {
       s = micMeet.state;
       notes = notes.concat(micMeet.log);
       if (micMeet.personId) metPeople.push(micMeet.personId);
+    }
+
+    // Email a venue: the request goes out now; the reply comes in 1 to 3 days.
+    if (action.effects.booking) {
+      var sent = Game.rules.booking.sendRequest(s, request.venueId, request.gigDay, request.deal);
+      s = sent.state;
+      parts.push(sent.log[0].replace(/\.$/, ''));
+    }
+
+    // Look for work: 50% chance of a part-time job.
+    if (action.effects.lookForWork) {
+      var search = Game.rules.job.lookForWork(s);
+      s = search.state;
+      parts.push(search.log[0].replace(/\.$/, ''));
     }
 
     // Time with someone (Jam, Hang out): relationship goes up.

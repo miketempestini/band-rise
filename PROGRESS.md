@@ -4,6 +4,47 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 7b: Planning days ahead from the Calendar (2026-10-02)
+- On the Calendar, the selected day (today or later, within the 4-week view) lists Morning/Afternoon/Evening with
+  **Plan…**, **Change**, and **Clear**. Planning opens the same action picker as Today, titled with that day's date.
+- Only knowable things are checked ahead (job blocks, shows, open mic nights for that weekday); energy and cash are
+  checked on the day (Today flags it; if you end the day anyway it's skipped as free time).
+- Planned tasks show on Today with a "Planned ahead" tag and can still be changed or cleared.
+- Email a venue stays today-only. A show accepted into a planned block replaces the task (with a note).
+  Undoing a day off removes tasks planned in its job blocks.
+- Not built (owner chose "neither for now"): copying a day's plan to other days, clearing a whole day at once.
+- Design.md has a new "Planning ahead" section. 155 tests passing (planning.test.js is new).
+
+### Session 7: Phase 6, venues, booking, and the calendar (2026-10-02)
+- **Venues** (`js/content/venues.js`): small rooms Corner Tap (45, $60 guarantee / door / cover night),
+  The Back Room (60, $100 / door / cover night), Hollow Records in-store (40, **afternoon**, no pay);
+  clubs The Basement and Velvet Lounge and the theater The Orpheum shown **locked** with their requirements.
+- **Cover nights:** $50 flat, 5 covers only, unlock at reputation 5 + Musicianship 25 (**placeholders** in
+  balance.js). Design.md's Money in row updated.
+- **Book tab:** venues by tier with each requirement (✓/✗), booking window, deals, acceptance chance
+  (50% + 3% x (rep - required) + Networking/4 % + venue relationship/5 %, 5-95%), expected crowd, pay estimate.
+  Pick deal → date (taken dates struck out; day-job dates outlined in orange) → which block today to send it.
+- **Email a venue** (Admin, 1 block, 5 energy): the request goes out at End Day; reply 1-3 days later. One open
+  request per venue.
+- **Inbox tab** (unread count on the tab and a banner on Today): a "yes" has Accept/Decline and an answer-by date
+  (3 days, and before the show); a "no" is a note. Offers expire overnight.
+- **Calendar tab:** 4-week grid (job, days off, shows, pending requests, today's plans). Click a day: take a
+  workday off (vacation 14+ days ahead, sick today/tomorrow, skip), or manage a show (edit setlist, hire session
+  players, cancel with the penalty shown first). Planned actions can't overwrite a show.
+- **Job:** +1 standing per shift, sick -15 (unpaid), skip -25 (unpaid), vacation paid (10 a year, reset every
+  52 weeks), warning below 25 (Today panel), fired at 0. **Look for work** (no job only): 50% for part-time
+  Mon/Wed/Fri starting next Monday. Accepting an afternoon in-store on a workday asks how you'll take the day off.
+- **Booked shows** play automatically (25 energy, a commitment; at 0 energy it's a no-show) with the gig result
+  screen. Score adds the venue tier penalty and room fullness (+5 over 80% full, -5 under 25%); crowd capped at
+  capacity. Pay: guarantee, door (crowd x ticket x share), or cover night, split with the band (`payShares`).
+  Venue relationship +5 Solid+, -10 Rough.
+- **Cancellations / no-shows** per Design.md (venue, reputation, bandmates, -5 morale; no-show bans 60 days).
+- **Session players:** $75 each per show (refunded if let go), skill 40 (placeholder), tightness 50.
+- **Unlock banners:** "Cover nights unlocked" and "Small rooms unlocked" (reputation 10), shown once on Today.
+- **Navigation** moved to a row of tabs under the top bar (Today, Calendar, Inbox, Book, Songs, People, Settings).
+- **Debug:** set reputation, "Next reply: Yes", "Replies now".
+- **Saves:** version 6. **Tests:** 148 passing (booking.test.js and job.test.js are new).
+
 ### Session 6b: Skill bar fix (2026-10-02)
 - The Stats panel's skill bars now show the skill level out of 100 (they used to show progress toward the
   next whole point, which looked wrong next to the numbers). Hover a bar for the exact value and how close
@@ -159,16 +200,20 @@ A running log of what's built, what's next, and known issues. Update at the end 
   with a no-library test runner, git repo (pushed to github.com/miketempestini/band-rise, private).
 
 ## What's next
-- Phase 6 (to be defined): booked venues (small rooms at reputation 10), email a venue, booking odds, guarantee
-  or door deals, gig pay split with `payShares`, cancellations. Milestones would fit well alongside.
-- Held back on purpose: session players, co-writing, milestones, merch, recording, renaming songs,
-  "3+ on stage" rules for clubs, Talk only being offered when satisfaction is low (it's always available now).
-- Also not built yet: job standing changes, vacation days, call in sick, "Repeat yesterday" and Plan Week shortcuts.
+- Phase 7 (to be defined). Candidates from Design.md: milestones (with their unlocks), random events and offers
+  (fill-ins, overtime), recording and releasing, merch, the Shop.
+- Held back on purpose: going part-time (reputation 20 + standing 50), Hollow Records' merch bonus (needs merch),
+  the manager's auto-booking and 12-week calendar, other cities and travel.
+- Also not built yet: "Repeat yesterday" and Plan Week shortcuts.
 
 ## Known issues / open decisions
 - **Balance check:** at starting skills a cover open mic scores about 32 (22 to 42), so mostly Solid: about
   1 fan and +2 reputation a night. Two open mics a week reach reputation 10 in roughly 2.5 weeks, matching
   Design.md's first-three-weeks target.
+- **Placeholders to tune:** cover night unlock (reputation 5, Musicianship 25), session player skill 40,
+  club/theater guarantees ($250/$400/$2,000, inside Design.md's ranges).
+- **Balance to watch:** small-room crowds are only about 15 at the start (0 fans), so rooms run under 25% full
+  (-5) until you build fans. The door deal pays about $73-95 at Corner Tap vs. a $60 guarantee.
 - **Balance to watch:** a new bandmate makes every song lose 20 tightness, and with only open mics there's no
   gig money yet, so "Earned gig money" only comes from tips. A low-ambition member is easy to keep happy; a
   high-ambition one (over 70 wants 2 gigs a week) will slowly sour until booked venues arrive in Phase 6.

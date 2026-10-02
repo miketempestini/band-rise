@@ -85,6 +85,29 @@ Game.rules.debug = {
     return { state: s, log: [] };
   },
 
+  // Sets reputation (0 to 100) and announces anything it unlocks.
+  setReputation: function (state, value) {
+    var s = Game.util.clone(state);
+    s.player.reputation = Game.util.clamp(Number(value) || 0, 0, Game.balance.reputation.max);
+    return Game.rules.progress.checkUnlocks(s);
+  },
+
+  // Makes the next booking reply a yes (true), or back to normal odds (false).
+  acceptNextBooking: function (state, on) {
+    var s = Game.util.clone(state);
+    s.debug.acceptNextBooking = !!on;
+    return { state: s, log: [] };
+  },
+
+  // Venues answer every open booking request right now (instead of waiting 1 to 3 days).
+  replyNow: function (state) {
+    var s = Game.util.clone(state);
+    Object.keys(s.requests).forEach(function (id) {
+      if (s.requests[id].status === 'pending') s.requests[id].replyDay = s.day;
+    });
+    return Game.rules.booking.processReplies(s);
+  },
+
   // Forces the next gig's result ('rough' or 'legendary'), or clears it with null.
   forceNextGig: function (state, result) {
     var s = Game.util.clone(state);

@@ -26,7 +26,7 @@ Game.ui.gigResult = {
     var scale = Game.ui.gigResult.crowdScale(gig);
     root.innerHTML =
       '<section class="title-screen gig-meter">' +
-        '<p class="reveal__kicker">' + Game.ui.helpers.escape(gig.venueName) + ' · open mic</p>' +
+        '<p class="reveal__kicker">' + Game.ui.helpers.escape(gig.venueName) + ' · ' + (gig.kind === 'show' ? 'show' : 'open mic') + '</p>' +
         '<div class="gig-meter__count"><span id="crowd-count">0</span> <span class="gig-meter__unit">people</span></div>' +
         '<div class="meter meter--crowd"><span class="meter__fill" id="crowd-fill" style="width:0%"></span></div>' +
         '<p class="hint">You step up to the mic...</p>' +
@@ -72,11 +72,17 @@ Game.ui.gigResult = {
       ['Buzz', u.signed(r.buzz) + ' <span class="muted">(now ' + Math.round(r.buzzNow) + ')</span>'],
       ['Reputation', u.signed(r.reputation) + ' <span class="muted">(now ' + u.round1(r.reputationNow) + ')</span>'],
       ['Morale', r.morale ? u.signed(r.morale) : '±0'],
-      ['Tip jar', h.money(r.tips) + (r.band && r.band.length ? ' <span class="muted">(your share ' + h.money(r.yourTips) + ')</span>' : '')],
+      gig.kind === 'show'
+        ? ['Pay', h.money(r.pay) + (r.band && r.band.length ? ' <span class="muted">(your share ' + h.money(r.yourPay) + ')</span>' : '')]
+        : ['Tip jar', h.money(r.tips) + (r.band && r.band.length ? ' <span class="muted">(your share ' + h.money(r.yourTips) + ')</span>' : '')],
       ['Skills', Object.keys(r.skills).map(function (skill) {
         return u.signed(r.skills[skill]) + ' ' + Game.content.skills[skill];
       }).join(', ')]
     ];
+    if (gig.kind === 'show') {
+      rewardRows.push(['Venue relationship', u.signed(r.venueRelationship) + ' <span class="muted">(now ' + Math.round(r.venueRelationshipNow) + ')</span>']);
+      if (gig.sessionPlayers) rewardRows.push(['Session players', gig.sessionPlayers + ' (paid when hired)']);
+    }
     if (r.band && r.band.length) {
       rewardRows.push(['Band', h.escape(r.band.join(', ')) + ' <span class="muted">(+' + Game.balance.people.relationship.gigTogether + ' relationship each)</span>']);
     }
@@ -90,9 +96,9 @@ Game.ui.gigResult = {
     gig.notes.forEach(function (line) { notes.push(line); });
 
     root.innerHTML =
-      Game.ui.topbar.html(app.state) +
+      Game.ui.topbar.html(app.state, app.screen) +
       '<section class="screen screen--narrow gig-result">' +
-        '<p class="reveal__kicker">' + h.dateLabel(gig.day) + ' · open mic</p>' +
+        '<p class="reveal__kicker">' + h.dateLabel(gig.day) + ' · ' + (gig.kind === 'show' ? h.escape(Game.rules.booking.dealLabel(Game.content.venues[gig.venueId], gig.deal)) : 'open mic') + '</p>' +
         '<h1 class="screen__title gig-result__headline gig-result__headline--' + gig.result + '">' +
           h.escape(text.headlines[gig.result].replace('{venue}', gig.venueName)) + '</h1>' +
 
@@ -127,9 +133,6 @@ Game.ui.gigResult = {
     window.scrollTo(0, 0);
     h.bind(root, {
       continue: function () { app.leaveGigResult(); },
-      settings: function () { app.show('settings'); },
-      songs: function () { app.openSongs(); },
-      people: function () { app.openPeople(); },
       focusPayBack: function () { app.leaveGigResult(); }
     });
   },

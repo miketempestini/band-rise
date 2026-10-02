@@ -12,6 +12,7 @@ Game.app = {
   notice: null,         // a message to show on the title or settings screen: { kind: 'error' | 'info', text }
   payBackMessage: null, // result of the last Pay back attempt, shown in the debt panel
   pickerBlock: null,    // which block the action picker is open for ('morning' etc.), or null when closed
+  pickerDay: null,      // which day the picker is planning (null = today; a later day from the Calendar)
   pickerSongStep: null, // an action id (like 'practice') while the picker asks which song, else null
   pickerSet: [],        // songs ticked so far when picking a set (open mic)
   practiceSort: 'tightLow', // how the Practice song list is sorted (remembered while the page is open)
@@ -21,8 +22,10 @@ Game.app = {
   revealQueue: [],      // ids of finished songs still waiting for their reveal screen
   revealThen: 'today',  // the screen to show after the last reveal
   revealError: null,    // a problem with the typed song name, shown on the reveal screen
-  songsReturnTo: 'today', // the screen the Songs screen's Back button returns to
-  peopleReturnTo: 'today', // the screen the People screen's Back button returns to
+  returnTo: {},         // for each tab screen, the screen its Back button returns to
+  calendarDay: null,    // the day selected on the Calendar screen
+  bookingDraft: null,   // the booking being set up: { venueId, gigDay, deal, choosingBlock }
+  setlistDraft: null,   // songs ticked while editing a booked show's setlist
   bandNameDraft: '',       // the band name shown in the name box on the Name your band screen
   pendingWeekSummary: false, // true when the weekly summary should follow the Day results screen
   draftCareer: null,    // a career being set up: { name, instrument, allocation } (not saved until Start)
@@ -40,6 +43,7 @@ Game.app = {
       app.notice = null;
       app.payBackMessage = null;
       app.pickerBlock = null;
+      app.pickerDay = null;
       app.pickerSongStep = null;
       app.revealError = null;
     }
@@ -50,7 +54,9 @@ Game.app = {
   // Draws the current screen and the debug panel.
   render: function () {
     var app = Game.app;
-    Game.ui[app.screen].render(document.getElementById('app'), app);
+    var root = document.getElementById('app');
+    Game.ui[app.screen].render(root, app);
+    Game.ui.topbar.bind(root, app);
     Game.ui.debugPanel.render(document.getElementById('debug'), app);
   },
 
@@ -115,13 +121,22 @@ Game.app = {
   },
 
   // Opens the action picker for one of today's blocks.
-  openPicker: function (block) {
+  // day: optional, to plan a later day from the Calendar.
+  openPicker: function (block, day) {
     Game.app.pickerBlock = block;
+    Game.app.pickerDay = day === undefined || day === Game.app.state.day ? null : day;
     Game.app.render();
+  },
+
+  // The state as the picker should see it: today, or the later day being planned.
+  pickerView: function () {
+    var app = Game.app;
+    return app.pickerDay === null ? app.state : Game.rules.actions.viewForDay(app.state, app.pickerDay);
   },
 
   closePicker: function () {
     Game.app.pickerBlock = null;
+    Game.app.pickerDay = null;
     Game.app.pickerSongStep = null;
     document.onkeydown = null;
     Game.app.render();
@@ -131,9 +146,17 @@ Game.app = {
   pickAction: function (actionId) {
     var app = Game.app;
     var action = Game.content.actions[actionId];
+    if (action.needsBooking) {
+      // Emailing a venue is set up on the Booking screen (venue, date, deal, then the block).
+      app.pickerBlock = null;
+      app.pickerSongStep = null;
+      document.onkeydown = null;
+      app.navigate('booking');
+      return;
+    }
     if (action.setSize || action.songsMax) {
       // Start from the songs already planned in this block, or the suggested ones.
-      var entry = Game.rules.actions.plannedEntry(app.state, app.pickerBlock);
+      var entry = Game.rules.actions.plannedEntry(app.pickerView(), app.pickerBlock);
       app.pickerSet = entry && entry.actionId === actionId && entry.songIds
         ? entry.songIds.slice()
         : (action.setSize ? Game.rules.gigs.suggestSet(app.state, action.setSize) : Game.rules.actions.loosestSongs(app.state, action.songsMax));
@@ -186,35 +209,179 @@ Game.app = {
   planAction: function (actionId, songId) {
     var app = Game.app;
     var result = actionId
-      ? Game.rules.actions.plan(app.state, app.pickerBlock, actionId, songId)
-      : Game.rules.actions.clear(app.state, app.pickerBlock);
+      ? Game.rules.actions.plan(app.state, app.pickerBlock, actionId, songId, app.pickerDay)
+      : Game.rules.actions.clear(app.state, app.pickerBlock, app.pickerDay);
+    app.notice = result.log.length && result.state === app.state ? { kind: 'error', text: result.log.join(' ') } : null;
     app.pickerBlock = null;
+    app.pickerDay = null;
     app.pickerSongStep = null;
     document.onkeydown = null;
     app.applyRule(result);
   },
 
+  // ----- Moving between screens with the tabs -----
+
+  // Goes to a screen from the tabs, remembering where you came from (for Back buttons).
+  // Opening the Inbox marks its messages as read (after drawing them, so new ones still stand out).
+  navigate: function (screen) {
+    var app = Game.app;
+    if (screen === app.screen) return;
+    var resting = ['songReveal', 'nameBand', 'settings', screen];
+    if (resting.indexOf(app.screen) === -1) app.returnTo[screen] = app.screen;
+    if (screen === 'calendar') app.calendarDay = app.state.day;
+    if (screen === 'booking') app.bookingDraft = null;
+    app.show(screen);
+    if (screen === 'inbox' && Game.rules.booking.unreadCount(app.state)) {
+      app.state = Game.rules.booking.markAllRead(app.state).state;
+      app.autoSave();
+    }
+  },
+
+  // Back from a tab screen to wherever you came from (Today if unsure).
+  goBack: function (screen) {
+    var back = Game.app.returnTo[screen];
+    Game.app.show(back && back !== screen ? back : 'today');
+  },
+
+  // ----- Booking, inbox, and the calendar -----
+
+  // On the Booking screen: choose a venue and deal (or null to start over).
+  bookingPick: function (venueId, deal) {
+    var app = Game.app;
+    app.bookingDraft = venueId ? { venueId: venueId, deal: deal, gigDay: null } : null;
+    app.notice = null;
+    app.render();
+  },
+
+  bookingDate: function (day) {
+    Game.app.bookingDraft.gigDay = day;
+    Game.app.render();
+  },
+
+  // Plans the "Email a venue" action in a block today with the chosen venue, date, and deal.
+  sendBookingEmail: function (block) {
+    var app = Game.app;
+    var d = app.bookingDraft;
+    var result = Game.rules.actions.plan(app.state, block, 'emailVenue', { venueId: d.venueId, gigDay: d.gigDay, deal: d.deal });
+    if (result.log.length) {
+      app.notice = { kind: 'error', text: result.log.join(' ') };
+      app.render();
+      return;
+    }
+    app.bookingDraft = null;
+    app.notice = { kind: 'info', text: 'Email to ' + Game.content.venues[d.venueId].name + ' planned for this ' +
+      Game.content.calendar.blockNames[block].toLowerCase() + '. It goes out when you end the day; the reply comes 1 to 3 days later.' };
+    app.applyRule(result);
+  },
+
+  acceptOffer: function (messageId, jobChoice) {
+    var app = Game.app;
+    var result = Game.rules.booking.acceptOffer(app.state, messageId, jobChoice);
+    app.notice = { kind: result.entryId ? 'info' : 'error', text: result.log.join(' ') +
+      (result.entryId ? ' A setlist was picked for you; change it on the Calendar.' : '') };
+    app.applyRule(result);
+  },
+
+  declineOffer: function (messageId) {
+    Game.app.notice = null;
+    Game.app.applyRule(Game.rules.booking.declineOffer(Game.app.state, messageId));
+  },
+
+  // From the Calendar: remove a planned task from a block on a day.
+  calendarClear: function (day, block) {
+    var app = Game.app;
+    var result = Game.rules.actions.clear(app.state, block, day);
+    app.notice = null;
+    app.applyRule(result);
+  },
+
+  calendarSelect: function (day) {
+    Game.app.calendarDay = day;
+    Game.app.setlistDraft = null;
+    Game.app.notice = null;
+    Game.app.render();
+  },
+
+  calendarDayOff: function (day, kind) {
+    var app = Game.app;
+    var result = Game.rules.job.takeDayOff(app.state, day, kind);
+    app.notice = result.log.length ? { kind: 'error', text: result.log.join(' ') } : null;
+    app.applyRule(result);
+  },
+
+  calendarUndoDayOff: function (day) {
+    Game.app.applyRule(Game.rules.job.cancelDayOff(Game.app.state, day));
+  },
+
+  editSetlist: function (entryId) {
+    Game.app.setlistDraft = { entryId: entryId, songIds: Game.app.state.entries[entryId].songIds.slice() };
+    Game.app.setlistError = null;
+    Game.app.render();
+  },
+
+  toggleSetlistSong: function (songId) {
+    var draft = Game.app.setlistDraft;
+    var i = draft.songIds.indexOf(songId);
+    if (i === -1) draft.songIds.push(songId);
+    else draft.songIds.splice(i, 1);
+    Game.app.render();
+  },
+
+  saveSetlist: function () {
+    var app = Game.app;
+    var result = Game.rules.booking.setSetlist(app.state, app.setlistDraft.entryId, app.setlistDraft.songIds);
+    if (result.log.length) {
+      app.setlistError = result.log.join(' ');
+      app.render();
+      return;
+    }
+    app.setlistDraft = null;
+    app.setlistError = null;
+    app.applyRule(result);
+  },
+
+  changeSessionPlayers: function (entryId, change) {
+    var app = Game.app;
+    var result = Game.rules.booking.changeSessionPlayers(app.state, entryId, change);
+    app.notice = result.log.length ? { kind: 'error', text: result.log.join(' ') } : null;
+    app.applyRule(result);
+  },
+
+  cancelShow: function (entryId) {
+    var app = Game.app;
+    var e = app.state.entries[entryId];
+    var penalty = Game.rules.booking.cancelPenalty(e.day - app.state.day);
+    var msg = 'Cancel the show at ' + Game.content.venues[e.venueId].name + '? The venue loses ' + (-penalty.venueRelationship) +
+      ' relationship' + (penalty.reputation ? ', you lose ' + (-penalty.reputation) + ' reputation' : '') +
+      (penalty.bandSatisfaction ? ', and your bandmates lose ' + (-penalty.bandSatisfaction) + ' satisfaction' : '') + '.';
+    if (!window.confirm(msg)) return;
+    var result = Game.rules.booking.cancelShow(app.state, entryId);
+    app.notice = { kind: 'info', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  dismissToast: function (toastId) {
+    Game.app.applyRule(Game.rules.progress.dismissToast(Game.app.state, toastId));
+  },
+
   // ----- Songs -----
 
   openSongs: function () {
-    Game.app.songsReturnTo = Game.app.screen;
-    Game.app.show('songs');
+    Game.app.navigate('songs');
   },
 
   closeSongs: function () {
-    Game.app.show(Game.app.songsReturnTo || 'today');
+    Game.app.goBack('songs');
   },
 
   // ----- People and the band -----
 
   openPeople: function () {
-    if (Game.app.screen !== 'people') Game.app.peopleReturnTo = Game.app.screen;
-    Game.app.show('people');
+    Game.app.navigate('people');
   },
 
   closePeople: function () {
-    var back = Game.app.peopleReturnTo;
-    Game.app.show(back && back !== 'nameBand' && back !== 'people' ? back : 'today');
+    Game.app.goBack('people');
   },
 
   // Invites a contact. The first member starts the band, so the player names it next.

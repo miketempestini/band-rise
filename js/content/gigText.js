@@ -23,7 +23,8 @@ Game.content.gigText = {
     tired: 'Tired',
     morale: 'Morale',
     traits: 'Band traits',
-    venueTier: 'Big room',
+    venueTier: 'Bigger room',
+    room: 'Room fullness',
     luck: 'Luck',
     debug: 'Debug'
   },

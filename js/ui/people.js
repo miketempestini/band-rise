@@ -29,7 +29,7 @@ Game.ui.people = {
         '% chance right now) or play open mics (' + Math.round(b.people.openMicMeetChance * 100) + '%) to meet people.</p>';
 
     root.innerHTML =
-      Game.ui.topbar.html(state) +
+      Game.ui.topbar.html(state, app.screen) +
       '<section class="screen">' +
         '<div class="screen__head">' +
           '<h1 class="screen__title">People</h1>' +
@@ -53,9 +53,6 @@ Game.ui.people = {
 
     h.bind(root, {
       back: function () { app.closePeople(); },
-      people: function () {},
-      songs: function () { app.openSongs(); },
-      settings: function () { app.show('settings'); },
       focusPayBack: function () { app.closePeople(); },
       invite: function (event, el) { app.invitePerson(el.getAttribute('data-person')); },
       remove: function (event, el) { app.removePerson(el.getAttribute('data-person')); }

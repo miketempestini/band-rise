@@ -1,13 +1,15 @@
 // topbar.js
-// The bar across the top of the game screens: cash, debt, energy, morale, reputation, date, rent.
-// Draw only: it reads the state and returns HTML.
+// The bar across the top of the game screens: cash, debt, energy, morale, reputation, date, rent,
+// and below it a row of tabs to move between screens (Today, Calendar, Inbox, Book, Songs, People, Settings).
+// Draw only: it reads the state and returns HTML. Tabs use data-nav and are connected by Game.app.render.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
 
 Game.ui.topbar = {
 
-  html: function (state) {
+  // screen: the screen showing now (its tab is highlighted).
+  html: function (state, screen) {
     var h = Game.ui.helpers;
     var b = Game.balance;
     var p = state.player;
@@ -35,10 +37,32 @@ Game.ui.topbar = {
       '<div class="stat"><span class="stat__label">Reputation</span><span class="stat__value">' + Math.round(p.reputation) + '</span></div>' +
       '<div class="stat"><span class="stat__label">Date</span><span class="stat__value">' + h.dateLabel(state.day) + '</span></div>' +
       '<div class="stat' + (daysToRent === 0 ? ' stat--warn' : '') + '"><span class="stat__label">Rent</span><span class="stat__value">' + rentText + '</span></div>' +
-      '<button class="btn btn--ghost topbar__nav" data-action="songs">Songs</button>' +
-      '<button class="btn btn--ghost topbar__nav" data-action="people">People' +
-        (Game.rules.people.needTalk(state).length ? ' <span class="badge badge--bad">!</span>' : '') + '</button>' +
-      '<button class="btn btn--ghost topbar__nav" data-action="settings">Settings</button>' +
-      '</header>';
+      '</header>' +
+      Game.ui.topbar.navHtml(state, screen);
+  },
+
+  // The row of tabs. Inbox shows how many unread messages there are; People shows "!" when
+  // a bandmate wants to talk.
+  navHtml: function (state, screen) {
+    var unread = Game.rules.booking.unreadCount(state);
+    var tabs = [
+      ['today', 'Today'],
+      ['calendar', 'Calendar'],
+      ['inbox', 'Inbox' + (unread ? ' <span class="badge badge--warn">' + unread + '</span>' : '')],
+      ['booking', 'Book'],
+      ['songs', 'Songs'],
+      ['people', 'People' + (Game.rules.people.needTalk(state).length ? ' <span class="badge badge--bad">!</span>' : '')],
+      ['settings', 'Settings']
+    ];
+    return '<nav class="tabs">' + tabs.map(function (tab) {
+      return '<button class="tab' + (tab[0] === screen ? ' tab--active' : '') + '" data-nav="' + tab[0] + '">' + tab[1] + '</button>';
+    }).join('') + '</nav>';
+  },
+
+  // Connects the tabs (called after every screen draws).
+  bind: function (root, app) {
+    root.querySelectorAll('[data-nav]').forEach(function (el) {
+      el.addEventListener('click', function () { app.navigate(el.getAttribute('data-nav')); });
+    });
   }
 };

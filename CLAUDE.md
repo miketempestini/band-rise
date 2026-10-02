@@ -76,7 +76,7 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, actions, career, day, debug
+5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, actions, career, day, debug
    (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
 6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
@@ -163,6 +163,27 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   the People screen can show why. The Sunday check is `weeklyCheck` (called from End Day before the week closes).
 - **Actions done with someone** set `needsPerson: 'anyone' | 'member'`; the entry stores `personId`.
   Rehearse uses `songsMax` (pick 1 to 4 songs). Network has `effects.meet`.
+
+## How the pieces fit (added in Phase 6)
+
+- **Navigation:** the top bar has a row of tabs (`data-nav`), connected once in `Game.app.render`
+  (`Game.ui.topbar.bind`). Screens don't bind Songs/People/Settings themselves. `Game.app.navigate(screen)`
+  remembers where you came from; a screen's Back button calls `Game.app.goBack(screen)`.
+  Pass `app.screen` to `Game.ui.topbar.html(state, app.screen)` so the right tab is highlighted.
+- **Booked shows** are calendar entries with `type: 'gig'` (see `js/rules/booking.js`). They play in
+  `Game.rules.day.endDay` via `Game.rules.booking.playShow`. Planned actions can't overwrite them.
+- **Booking requests** live in `state.requests`; replies become `state.inbox` messages (`kind: 'reply'`).
+  `processReplies` / `expireOffers` run overnight.
+- **Gig pay:** `playGig(..., { deal, sessionPlayers })` pays through `Game.rules.booking.payFor` and splits with
+  `payShares`. Money categories: `tips`, `gigPay`, `sessionPlayers`, `sessionRefund`.
+- **Job:** `Game.rules.job` (scheduledOn / worksOn / paidOn, days off, standing, Look for work).
+  `isJobBlock` respects days off.
+- **Unlock banners:** `Game.rules.progress.checkUnlocks` (runs every End Day) adds to `state.toasts`;
+  add new unlocks to its list.
+- **Planning ahead:** `plan(state, block, actionId, choice, day)` and `clear(state, block, day)` take an optional
+  day. Internally they run on `Game.rules.actions.viewForDay(state, day)`, a throwaway copy where `state.day` is
+  the planned day and `planningAhead` is true (which skips energy/cash checks in `option`). Never save a view.
+  The picker draws from `Game.app.pickerView()`.
 
 ## Saving
 

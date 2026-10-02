@@ -86,11 +86,29 @@ Game.rules.gigs = {
     return b.coverFanFactor + (b.originalFanFactor - b.coverFanFactor) * share;
   },
 
+  // The average tightness the crowd hears. Session players know every song at 50, so they pull
+  // the average toward 50 by their share of the people on stage.
+  effectiveTightness: function (state, songs, sessionPlayers) {
+    var avg = songs.reduce(function (sum, song) { return sum + song.tightness; }, 0) / songs.length;
+    var extra = sessionPlayers || 0;
+    if (!extra) return avg;
+    var regulars = 1 + state.band.memberIds.length;
+    return (avg * regulars + Game.balance.people.sessionPlayerTightness * extra) / (regulars + extra);
+  },
+
   // The score parts before luck. Returns a list of { id, value }.
   // energy: your energy at the start of the gig's block (Tired is checked on this).
-  scoreParts: function (state, songs, venue, energy) {
+  // options: { sessionPlayers, crowd } for booked shows (crowd decides the room-fullness modifier).
+  scoreParts: function (state, songs, venue, energy, options) {
     var g = Game.balance.gigs;
     var p = state.player;
+    var opts = options || {};
+    var room = 0;
+    if (venue.capacity !== null && opts.crowd !== undefined) {
+      var full = opts.crowd / venue.capacity;
+      if (full > g.fullRoomThreshold) room = g.fullRoomBonus;
+      else if (full < g.emptyRoomThreshold && venue.tier > 0) room = g.emptyRoomPenalty;
+    }
     var average = function (key) {
       return songs.reduce(function (sum, song) { return sum + song[key]; }, 0) / songs.length;
     };
@@ -103,15 +121,16 @@ Game.rules.gigs = {
     if (p.morale > g.moraleHighThreshold) morale = g.highMoraleBonus;
 
     return [
-      { id: 'bandSkill', value: g.weights.bandMusicianship * Game.rules.people.bandMusicianship(state) },
+      { id: 'bandSkill', value: g.weights.bandMusicianship * Game.rules.people.bandMusicianship(state, opts.sessionPlayers) },
       { id: 'stagePresence', value: g.weights.performance * p.skills.performance },
       { id: 'songs', value: g.weights.songQuality * average('quality') },
-      { id: 'tightness', value: g.weights.tightness * average('tightness') },
+      { id: 'tightness', value: g.weights.tightness * Game.rules.gigs.effectiveTightness(state, songs, opts.sessionPlayers) },
       { id: 'instrument', value: instrumentBonus },
       { id: 'tired', value: Game.rules.energy.isTired(energy) ? g.tiredPenalty : 0 },
       { id: 'morale', value: morale },
       { id: 'traits', value: Game.rules.people.traitGigBonus(state) },
-      { id: 'venueTier', value: Game.balance.venues.tiers[venue.tier].gigScorePenalty }
+      { id: 'venueTier', value: Game.balance.venues.tiers[venue.tier].gigScorePenalty },
+      { id: 'room', value: room }
     ];
   },
 
@@ -162,8 +181,10 @@ Game.rules.gigs = {
 
   // Plays a gig and applies everything that comes from it.
   // energy: your energy at the start of the block (before the gig's energy cost).
+  // options (booked shows): { deal, sessionPlayers }.
   // Returns { state, gig, log }. The gig's full details are also saved in state.lastGig.
-  playGig: function (state, venueId, songIds, energy) {
+  playGig: function (state, venueId, songIds, energy, options) {
+    var opts = options || {};
     var b = Game.balance;
     var g = b.gigs;
     var gigs = Game.rules.gigs;
@@ -172,7 +193,7 @@ Game.rules.gigs = {
     var city = s.cities[venue.cityId];
     var rng = Game.rng.create(s.rngState);
     var songs = songIds.map(function (id) { return s.songs[id]; });
-    var averageTightness = songs.reduce(function (sum, song) { return sum + song.tightness; }, 0) / songs.length;
+    var averageTightness = gigs.effectiveTightness(s, songs, opts.sessionPlayers);
 
     // Crowd: expected crowd x a random 0.85 to 1.15, capped at the venue's capacity.
     var expected = gigs.expectedCrowd(s, venue);
@@ -180,7 +201,7 @@ Game.rules.gigs = {
     if (venue.capacity !== null) crowd = Math.min(crowd, venue.capacity);
 
     // Score: the parts, then luck (never below 0 after two Rough results in a row).
-    var parts = gigs.scoreParts(s, songs, venue, energy);
+    var parts = gigs.scoreParts(s, songs, venue, energy, { sessionPlayers: opts.sessionPlayers, crowd: crowd });
     var protectedLuck = s.player.badLuckStreak >= g.badLuckStreak;
     parts.push({ id: 'luck', value: rng.int(protectedLuck ? 0 : g.luckMin, g.luckMax) });
     var score = parts.reduce(function (sum, part) { return sum + part.value; }, 0);
@@ -237,13 +258,26 @@ Game.rules.gigs = {
       notes = m.log;
     }
 
-    // Tips: split into equal shares with the band (a Diva takes 1.5). You keep your share.
-    var yourTips = Math.round(tips * Game.rules.people.payShares(s).yourShare);
+    // Tips and show pay: split into equal shares with the band (a Diva takes 1.5). You keep your share.
+    var share = Game.rules.people.payShares(s).yourShare;
+    var yourTips = Math.round(tips * share);
     if (yourTips > 0) s = Game.rules.money.earn(s, yourTips, 'tips').state;
+    var pay = opts.deal ? Game.rules.booking.payFor(venue, opts.deal, crowd) : 0;
+    var yourPay = Math.round(pay * share);
+    if (yourPay > 0) s = Game.rules.money.earn(s, yourPay, 'gigPay').state;
+    s.stats.totalEarned += yourTips + yourPay;
     var bandNames = Game.rules.people.members(s).map(function (m) { return m.name; });
-    var bandGig = Game.rules.people.recordGig(s, result, tips);
+    var bandGig = Game.rules.people.recordGig(s, result, tips + pay);
     s = bandGig.state;
     notes = notes.concat(bandGig.log);
+
+    // Venue relationship (booked rooms): +5 after a Solid or better show, -10 after a Rough one.
+    var venueChange = 0;
+    if (venue.tier > 0) {
+      venueChange = result === 'rough' ? b.venues.relationshipAfterRoughShow : b.venues.relationshipAfterGoodShow;
+      var vs = s.venues[venueId];
+      vs.relationship = Game.util.clamp(vs.relationship + venueChange, b.venues.relationshipMin, b.venues.relationshipMax);
+    }
 
     // Each song played gets tighter and counts as played today.
     var songResults = songIds.map(function (id) {
@@ -271,6 +305,9 @@ Game.rules.gigs = {
 
     var gig = {
       day: s.day,
+      kind: venue.tier === 0 ? 'openMic' : 'show',
+      deal: opts.deal || null,
+      sessionPlayers: opts.sessionPlayers || 0,
       venueId: venueId,
       venueName: venue.name,
       songs: songResults,
@@ -293,6 +330,10 @@ Game.rules.gigs = {
         morale: moraleChange,
         tips: tips,
         yourTips: yourTips,
+        pay: pay,
+        yourPay: yourPay,
+        venueRelationship: venueChange,
+        venueRelationshipNow: s.venues[venueId].relationship,
         band: bandNames,
         skills: skillGains
       },
@@ -302,11 +343,15 @@ Game.rules.gigs = {
     s.lastGig = gig;
 
     var resultName = result.charAt(0).toUpperCase() + result.slice(1);
+    var money = '';
+    if (yourTips) money += ', $' + yourTips + ' in tips' + (bandNames.length ? ' (your share)' : '');
+    if (pay) money += ', $' + pay + ' pay' + (bandNames.length ? ' (your share $' + yourPay + ')' : '');
     return {
       state: s,
       gig: gig,
-      log: [resultName + ' set: ' + crowd + ' people, ' + (fans === 1 ? '+1 fan' : '+' + fans + ' fans') +
-        (yourTips ? ', $' + yourTips + ' in tips' + (bandNames.length ? ' (your share)' : '') : '') + '.'].concat(notes)
+      log: [resultName + (venue.tier === 0 ? ' set' : ' show at ' + venue.name) + ': ' + crowd +
+        (venue.capacity !== null ? ' of ' + venue.capacity : '') + ' people, ' +
+        (fans === 1 ? '+1 fan' : '+' + fans + ' fans') + money + '.'].concat(notes)
     };
   }
 };

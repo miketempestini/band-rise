@@ -45,7 +45,9 @@ Game.state = {
           status: 'full',                // 'full' | 'part' | 'none'
           standing: b.job.startStanding,
           vacationDaysLeft: b.job.vacationDaysPerYear,
-          unpaidShifts: 0                // Shifts worked since the last payday
+          unpaidShifts: 0,               // Shifts worked since the last payday
+          daysOff: {},                   // day number: 'vacation' | 'sick' | 'skip' (days you won't work)
+          startsDay: null                // a new job starts on this day (after Look for work)
         },
         loanOwed: 0,                     // Total debt owed to Mom and Dad
         debtWeeksOverLimit: 0,           // Sundays in a row with debt above the game-over line
@@ -64,20 +66,33 @@ Game.state = {
       nextPersonId: 1, // used to give each new person their own id
       releases: [],    // { id, type: 'single' | 'ep' | 'album', songIds, day }
       cities: Game.state.startingCities(), // id: { id, fans, buzz, unlocked, lastActivityDay }
-      venues: {},      // id: { id, relationship, bannedUntilDay, pendingRequestId }
+      venues: Game.state.startingVenues(), // id: { id, relationship, bannedUntilDay, pendingRequestId }
+      requests: {},    // booking emails: id: { id, venueId, gigDay, deal, chance, sentDay, replyDay, status }
+      nextRequestId: 1,
+      nextInboxId: 1,
+      toasts: [],      // short banners waiting to be shown on Today, like "Small rooms unlocked": { id, text }
       schedule: {},    // day number: { morning: entryId, afternoon: entryId, evening: entryId }
       entries: {},     // id: { id, day, block, type, actionId, venueId, songIds, personIds, deal, status }
       nextEntryId: 1,  // used to give each new entry its own id
-      inbox: [],       // { id, day, kind: 'offer' | 'event' | 'reply' | 'info', templateId, data, expiresDay, resolved }
+      inbox: [],       // { id, day, kind: 'offer' | 'event' | 'reply' | 'info', templateId, data, expiresDay, resolved, read }
       milestones: {},  // milestoneId: day reached
       ledger: [],      // one entry per finished week: { week, startCash, endCash, startDebt, endDebt, income, costs, loans, paidBack, shiftsWorked, startSkills, endSkills }
       thisWeek: Game.state.newWeek(b.economy.startCash, 0, skills), // running totals for the week in progress
       lastDayReport: null, // what happened at the last End Day: { day, blocks: [{ block, title, lines }], overnight: [lines] }
       gameOver: null,  // null while playing; { day, message } once the game has ended
       lastGig: null,   // the full result of the most recent gig (for the gig result screen)
-      debug: { forceNextGig: null }, // debug panel: 'rough' or 'legendary' forces the next gig's result
+      debug: { forceNextGig: null, acceptNextBooking: false }, // debug panel switches
       stats: { gigsPlayed: 0, bestResult: null, biggestCrowd: 0, totalEarned: 0 }
     };
+  },
+
+  // Every venue starts with relationship 0, not banned, and no open booking request.
+  startingVenues: function () {
+    var venues = {};
+    Object.keys(Game.content.venues).forEach(function (id) {
+      venues[id] = { id: id, relationship: Game.balance.venues.relationshipStart, bannedUntilDay: null, pendingRequestId: null };
+    });
+    return venues;
   },
 
   // The cities you start with: just the hometown, with no fans or buzz yet.

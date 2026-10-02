@@ -11,8 +11,9 @@ Game.ui.actionPicker = {
 
   // block: which block is being planned. songStepFor: an action id when picking its song(s), else null.
   // pickedSet: the songs ticked so far when picking a set (open mic).
+  // state may be a view of a later day (from the Calendar); then the title shows that day's date.
   html: function (state, block, songStepFor, pickedSet, sortBy, filter) {
-    var blockName = Game.content.calendar.blockNames[block];
+    var blockName = (state.planningAhead ? Game.rules.day.dateLabel(state.day) + ' · ' : '') + Game.content.calendar.blockNames[block];
     var stepAction = songStepFor && Game.content.actions[songStepFor];
     var body, title;
     if (stepAction && stepAction.setSize) {
@@ -59,7 +60,8 @@ Game.ui.actionPicker = {
             (a.needsSong ? ' <span class="pick__more">pick a song →</span>' : '') +
             (a.setSize ? ' <span class="pick__more">pick ' + a.setSize + ' songs →</span>' : '') +
             (a.songsMax ? ' <span class="pick__more">pick songs →</span>' : '') +
-            (a.needsPerson ? ' <span class="pick__more">pick someone →</span>' : '') + '</span>' +
+            (a.needsPerson ? ' <span class="pick__more">pick someone →</span>' : '') +
+            (a.needsBooking ? ' <span class="pick__more">opens Book →</span>' : '') + '</span>' +
           '<span class="pick__costs">' + picker.costText(a) + '</span>' +
         '</span>' +
         '<span class="pick__desc">' + a.description + '</span>' +
@@ -242,6 +244,7 @@ Game.ui.actionPicker = {
     if (g.relationship) parts.push('+' + g.relationship + ' relationship with someone you pick');
     if (g.talk) parts.push('+' + g.talk + ' satisfaction for a bandmate');
     if (g.rehearsal) parts.push('+' + g.rehearsal + ' tightness on up to ' + Game.balance.songs.tightness.rehearseMaxSongs + ' songs');
+    if (opt.action.needsBooking) parts.push('Pick a venue, date, and deal on the Book screen');
     if (g.meetChance) parts.push(Math.round(g.meetChance * 100) + '% chance to meet someone');
     if (g.buzz) parts.push(util.signed(g.buzz) + ' ' + Game.content.cities.hometown.name + ' buzz');
     Object.keys(g.skills).forEach(function (skill) {

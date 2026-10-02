@@ -41,16 +41,18 @@ Game.rules.people = {
 
   // Band musicianship = the average skill of everyone, with your Musicianship counted twice,
   // plus +5 for each Perfectionist. Solo, it's just your Musicianship.
-  bandMusicianship: function (state) {
+  // sessionPlayers: hired fill-ins for a show (each counts as a skill-40 player).
+  bandMusicianship: function (state, sessionPlayers) {
     var b = Game.balance.people;
     var members = Game.rules.people.members(state);
-    var total = state.player.skills.musicianship * b.playerMusicianshipWeight;
+    var extra = sessionPlayers || 0;
+    var total = state.player.skills.musicianship * b.playerMusicianshipWeight + extra * b.sessionPlayerSkill;
     var bonus = 0;
     members.forEach(function (m) {
       total += m.skill;
       if (m.trait === 'perfectionist') bonus += Game.balance.traits.perfectionist.bandMusicianshipBonus;
     });
-    return total / (members.length + b.playerMusicianshipWeight) + bonus;
+    return total / (members.length + b.playerMusicianshipWeight + extra) + bonus;
   },
 
   // Extra gig score from band traits: +5 for each Party Animal and each Diva.

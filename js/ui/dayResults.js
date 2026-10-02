@@ -27,7 +27,7 @@ Game.ui.dayResults = {
     }).join('');
 
     root.innerHTML =
-      Game.ui.topbar.html(state) +
+      Game.ui.topbar.html(state, app.screen) +
       '<section class="screen screen--narrow">' +
         '<h1 class="screen__title">' + h.dateLabel(report.day) + '</h1>' +
         '<div class="panel">' +
@@ -49,9 +49,6 @@ Game.ui.dayResults = {
 
     h.bind(root, {
       continue: function () { app.leaveDayResults(); },
-      settings: function () { app.show('settings'); },
-      songs: function () { app.openSongs(); },
-      people: function () { app.openPeople(); },
       focusPayBack: function () { app.leaveDayResults(); }
     });
   }

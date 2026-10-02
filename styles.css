@@ -486,3 +486,90 @@ button.block:hover { border-color: var(--accent); }
 .reasons { list-style: none; margin: 0; padding: 0; font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
 .person .actions { margin-top: 4px; }
 .debug__toggle { background: none; border: none; padding: 0; font: inherit; cursor: pointer; display: block; }
+
+/* ---------- Tabs under the top bar ---------- */
+
+.tabs { display: flex; gap: 4px; padding: 0 24px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.tab { font: inherit; color: var(--text-muted); background: none; border: none; border-bottom: 3px solid transparent; padding: 10px 14px; cursor: pointer; }
+.tab:hover { color: var(--text); }
+.tab--active { color: var(--accent); border-bottom-color: var(--accent); font-weight: bold; }
+
+/* ---------- Today: banners and show cards ---------- */
+
+.toast { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 16px;
+  border: 1px solid var(--accent); border-radius: var(--radius); background: rgba(255, 181, 71, 0.10); }
+.toast--inbox { border-color: var(--good); background: rgba(95, 211, 141, 0.08); }
+.block--show { border-style: solid; border-color: var(--good); background: rgba(95, 211, 141, 0.06); }
+
+/* ---------- Booking ---------- */
+
+.venue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; }
+.venue { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.venue--open { border-color: var(--accent); }
+.venue__head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.venue__name { font-size: 18px; font-weight: bold; }
+.venue__stats { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; color: var(--text-muted); }
+.venue__stats strong { color: var(--text); }
+.deal { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--panel); }
+.deal--chosen { border-color: var(--accent); }
+.deal--locked { opacity: 0.75; }
+.deal__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.deal__chance { color: var(--accent); font-weight: bold; }
+.deal__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; font-size: 14px; }
+.reqs { list-style: none; margin: 6px 0 0; padding: 0; font-size: 13px; }
+.booking-form { border-top: 1px dashed var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+.form-row { display: flex; flex-direction: column; gap: 6px; }
+.form-row__btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.dates { display: flex; flex-wrap: wrap; gap: 6px; }
+.date-btn { font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; }
+.date-btn:hover:not(:disabled) { border-color: var(--accent); }
+.date-btn:disabled { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+.date-btn--job { border-color: #c98a2c; }
+.date-btn--on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: bold; }
+
+/* ---------- Inbox ---------- */
+
+.message { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.message:last-child { border-bottom: none; }
+.message--new { background: rgba(255, 181, 71, 0.05); }
+.message__head { display: flex; align-items: center; gap: 8px; }
+.message__date { margin-left: auto; font-size: 13px; }
+.message p { margin: 6px 0; }
+.message__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+/* ---------- Calendar ---------- */
+
+.cal-layout { display: grid; grid-template-columns: 1fr 380px; gap: 16px; align-items: start; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal__dow { text-align: center; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); padding-bottom: 4px; }
+.cal__day { font: inherit; text-align: left; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px; min-height: 92px; display: flex; flex-direction: column; gap: 2px; cursor: pointer; min-width: 0; }
+.cal__day:hover { border-color: var(--accent); }
+.cal__day--today { border-color: var(--accent); }
+.cal__day--selected { outline: 2px solid var(--accent); }
+.cal__day--past { opacity: 0.45; }
+.cal__date { font-size: 11px; color: var(--text-muted); }
+.cal__block { font-size: 11px; padding: 1px 4px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal__block--job { background: var(--panel-2); color: var(--text-muted); }
+.cal__block--off { background: rgba(95, 211, 141, 0.15); color: var(--good); }
+.cal__block--show { background: var(--good); color: var(--accent-text); font-weight: bold; }
+.cal__block--pending { background: rgba(255, 181, 71, 0.15); color: var(--accent); }
+.cal__block--plan { background: rgba(158, 201, 255, 0.15); color: #9ec9ff; }
+.dayoff { display: flex; flex-wrap: wrap; gap: 6px; }
+.show { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
+.show__head { font-size: 17px; }
+.show__sub { margin: 12px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+.setlist { margin: 0 0 8px; padding-left: 20px; font-size: 14px; }
+.setlist-edit { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.setlist-song { font: inherit; font-size: 14px; text-align: left; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; cursor: pointer; }
+.setlist-song--on { border-color: var(--accent); }
+.setlist-song--on .check { background: var(--accent); border-color: var(--accent); }
+.session { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- Calendar: planning a day ---------- */
+
+.plan { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.plan__row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--panel-2); border-radius: 6px; }
+.plan__block { width: 80px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+.plan__task { flex: 1; font-weight: bold; }
+.plan__row .muted { flex: 1; }

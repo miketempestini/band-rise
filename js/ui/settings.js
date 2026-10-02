@@ -37,7 +37,7 @@ Game.ui.settings = {
     h.bind(root, {
       export: function () { app.exportSave(); },
       import: function () { fileInput.click(); },
-      back: function () { app.show(hasGame ? 'today' : 'title'); },
+      back: function () { if (hasGame) app.goBack('settings'); else app.show('title'); },
       title: function () { app.show('title'); }
     });
   }

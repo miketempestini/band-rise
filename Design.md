@@ -52,7 +52,7 @@ Each day has three blocks, the week runs Monday to Sunday, and you can see and b
 - Starts full-time: Monday to Friday, Morning and Afternoon. These blocks are pre-filled and locked.
 - One workday (two blocks) is a shift. It pays $110, paid Friday night, so $550 a week.
 - **Job standing** (0 to 100, starts at 60) is how your boss sees you. Work a shift: +1. Call in sick: -15. Skip without calling: -25. Below 25 you get a warning. At 0 you're fired.
-- **Vacation:** 10 days a year. Request at least 14 days ahead and there's no standing penalty. This is the main tool for a first out-of-town show.
+- **Vacation:** 10 days a year, paid. Request at least 14 days ahead and there's no standing penalty. This is the main tool for a first out-of-town show. Calling in sick is only possible for today or tomorrow (or for a booked show, decided when you accept it).
 - **Going part-time:** unlocks at reputation 20 and standing 50+. Shifts become Monday, Wednesday, Friday ($330 a week), starting next Monday.
 - **Quitting:** allowed any time. A confirm screen shows your last 4 weeks of music income next to your weekly bills. Takes effect next Monday and frees every job block.
 - **Getting a job back:** a "Look for work" action. Each try has a 50% chance to land a part-time job starting the next week.
@@ -62,6 +62,14 @@ Each day has three blocks, the week runs Monday to Sunday, and you can see and b
 - Start: 4 weeks.
 - After the Manager milestone: 12 weeks, which is what tours need.
 - Each venue tier also has its own booking window (see Venues).
+
+### Planning ahead
+
+- From the Calendar, any free block on today or a later day (within the 4-week view) can get a planned task, using the same action picker as Today. It's optional.
+- Only what's knowable is checked when planning: job blocks, booked shows, and open mic nights for that day. Energy and cash are checked on the day itself: Today flags a task that won't fit, and if you end the day anyway it's skipped as free time.
+- When the day comes, the task is already on Today (marked "Planned ahead") and can be changed or cleared.
+- Email a venue can only be planned for today (from the Book screen).
+- A show booked into a block with a planned task replaces the task. Undoing a day off removes tasks planned in its job blocks.
 
 ### Conflicts and double-booking
 
@@ -111,7 +119,7 @@ You start with $500 and save about $150 a week if you spend nothing on music, so
 | T-shirts | Sold at gigs from stock you bought | Cost $8, sell for $20 | First paid gig |
 | CDs | Sold at gigs from stock you bought | Cost $3, sell for $10 | First EP |
 | Streaming | Every Sunday, per released song | Formula below | First release |
-| Cover gig | Flat fee, per gig booked, no matter who shows up | $25 | Early game, after some reputation and musicianship skills are built up&#32; |
+| Cover gig | "Cover night" at Corner Tap or The Back Room: flat fee per gig booked, no matter who shows up. 5 songs, covers only | $50 | Reputation 5 and Musicianship 25 (placeholders) |
 
 ### Money out
 
@@ -286,7 +294,7 @@ You meet people by going out. Each has a few stats and one personality trait, an
 - Solo you can play open mics and small rooms. Clubs and bigger need 3+ people on stage.
 - Band musicianship = the average skill of everyone, with your Musicianship counted twice.
 - When someone joins, every song's tightness drops 20 while they learn it.
-- **Session players** (unlock at first paid gig): hire a fill-in for one gig at $75. No relationship needed, but they count as tightness 50 on every song.
+- **Session players**: hire a fill-in for one booked show at $75. No relationship needed. Each counts as a skill-40 player (placeholder) in band musicianship and knows every song at tightness 50, pulling the set's tightness toward 50.
 
 ### Satisfaction (checked every Sunday)
 
@@ -388,7 +396,7 @@ You start in one hometown with seven venues across four tiers. Other cities open
 | 3. Theater | The Orpheum (1,200) | 800 to 1,500 | Reputation 60, a release | 28 to 56 days | $2,000+, or 80% of door | $25 |
 | 4. Arena or festival | Bigger cities only | 5,000+ | Reputation 85, a label | Offers only | $20,000+ | $45 |
 
-Hollow Records is the odd one out: it pays nothing, but merch sells at double the normal rate. Venues are made-up names.
+Hollow Records is the odd one out: it pays nothing, but merch sells at double the normal rate, and its in-store shows are in the afternoon (so on a weekday they clash with the day job). Venues are made-up names.
 
 ### Booking a show
 

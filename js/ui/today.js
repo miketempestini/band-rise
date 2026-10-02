@@ -14,9 +14,10 @@ Game.ui.today = {
     var dow = Game.rules.day.dayOfWeek(state.day);
 
     root.innerHTML =
-      Game.ui.topbar.html(state) +
+      Game.ui.topbar.html(state, app.screen) +
       '<div class="dashboard">' +
         '<section class="dashboard__main">' +
+          Game.ui.today.toastsHtml(state) +
           '<h2 class="section-title">' + Game.content.calendar.dayNames[dow] + '\'s plan</h2>' +
           '<div class="blocks">' + Game.ui.today.blocksHtml(state) + '</div>' +
           '<div class="end-day">' +
@@ -26,6 +27,8 @@ Game.ui.today = {
         '</section>' +
         '<aside class="dashboard__side">' +
           Game.ui.today.bandAlertHtml(state) +
+          Game.ui.today.jobAlertHtml(state) +
+          Game.ui.today.upcomingHtml(state) +
           Game.ui.statsPanel.html(state) +
           Game.ui.today.weekPanelHtml(state) +
           Game.ui.today.debtPanelHtml(state, app) +
@@ -35,10 +38,10 @@ Game.ui.today = {
 
     h.bind(root, {
       endDay: function () { app.endDay(); },
-      settings: function () { app.show('settings'); },
-      songs: function () { app.openSongs(); },
-      people: function () { app.openPeople(); },
       openPicker: function (event, el) { app.openPicker(el.getAttribute('data-block')); },
+      openCalendar: function () { app.navigate('calendar'); },
+      dismissToast: function (event, el) { app.dismissToast(el.getAttribute('data-toast')); },
+      openInbox: function () { app.navigate('inbox'); },
       focusPayBack: function () {
         var input = root.querySelector('#payback-amount');
         if (input) { input.focus(); input.select(); }
@@ -64,6 +67,17 @@ Game.ui.today = {
       var energyLine = '<span class="block__energy">Energy ' + Math.round(row.energyBefore) + ' → ' + Math.round(row.energyAfter) +
         (Game.rules.energy.isTired(row.energyAfter) ? ' <span class="badge badge--warn">Tired</span>' : '') + '</span>';
 
+      if (row.kind === 'gig') {
+        var e = state.entries[row.entryId];
+        var venue = Game.content.venues[row.venueId];
+        return '<button class="block block--show" data-action="openCalendar">' +
+          '<span class="block__time">' + name + '</span>' +
+          '<span class="block__title">🎤 Show at ' + h.escape(venue.name) + '</span>' +
+          '<span class="block__detail">' + (row.problem ? '<span class="block__problem">' + h.escape(row.problem) + '</span>' :
+            h.escape(Game.rules.booking.dealLabel(venue, e.deal)) + ' · ' + e.songIds.length + ' songs · -' + b.energy.cost.gig + ' energy') + '</span>' +
+          energyLine +
+          '</button>';
+      }
       if (row.kind === 'job') {
         return '<div class="block block--locked">' +
           '<span class="block__time">' + name + '</span>' +
@@ -78,7 +92,13 @@ Game.ui.today = {
         var action = Game.content.actions[row.actionId];
         title = action.name;
         var about = '';
-        if (row.personId && state.people[row.personId]) {
+        var mine = Game.rules.actions.plannedEntry(state, row.block);
+        if (mine && mine.plannedAhead) title += ' <span class="badge">Planned ahead</span>';
+        var planned = Game.rules.actions.plannedEntry(state, row.block);
+        if (planned && planned.request) {
+          about = '<span class="block__song">to ' + h.escape(Game.content.venues[planned.request.venueId].name) +
+            ' (' + h.escape(h.dateLabel(planned.request.gigDay)) + ')</span>';
+        } else if (row.personId && state.people[row.personId]) {
           about = '<span class="block__song">with ' + h.escape(state.people[row.personId].name) + '</span>';
         } else if (row.songIds && action.songsMax) {
           about = '<span class="block__song">' + row.songIds.length + ' song' + (row.songIds.length === 1 ? '' : 's') + '</span>';
@@ -109,6 +129,41 @@ Game.ui.today = {
         energyLine +
         '</button>';
     }).join('');
+  },
+
+  // Banners for things that just unlocked (like small rooms). Each has a "Got it" button.
+  toastsHtml: function (state) {
+    var h = Game.ui.helpers;
+    var unread = Game.rules.booking.unreadCount(state);
+    var inbox = unread
+      ? '<div class="toast toast--inbox"><span>📬 You have ' + unread + ' new message' + (unread === 1 ? '' : 's') + '.</span>' +
+        '<button class="btn btn--small btn--primary" data-action="openInbox">Open Inbox</button></div>'
+      : '';
+    return inbox + state.toasts.map(function (t) {
+      return '<div class="toast"><span>🎉 ' + h.escape(t.text) + '</span>' +
+        '<button class="btn btn--small" data-action="dismissToast" data-toast="' + t.id + '">Got it</button></div>';
+    }).join('');
+  },
+
+  // A red panel when job standing is low (below 25).
+  jobAlertHtml: function (state) {
+    var job = state.player.job;
+    if (job.status === 'none' || job.standing >= Game.balance.job.warningStanding) return '';
+    return '<div class="panel panel--debt"><h3 class="panel__title">Job trouble</h3>' +
+      '<p class="panel__warn">Your boss warned you. Job standing ' + Math.round(job.standing) + ': at 0 you\'re fired. ' +
+      'Each shift you work adds +' + Game.balance.job.standingPerShift + '.</p></div>';
+  },
+
+  // The next few booked shows.
+  upcomingHtml: function (state) {
+    var h = Game.ui.helpers;
+    var shows = Game.rules.booking.upcomingShows(state).filter(function (e) { return e.day > state.day; }).slice(0, 3);
+    if (!shows.length) return '';
+    return '<div class="panel"><h3 class="panel__title">Coming up</h3><ul class="log">' + shows.map(function (e) {
+      var days = e.day - state.day;
+      return '<li>🎤 ' + h.escape(Game.content.venues[e.venueId].name) + ', ' + h.dateLabel(e.day) +
+        ' <span class="muted">(in ' + days + ' day' + (days === 1 ? '' : 's') + ')</span></li>';
+    }).join('') + '</ul></div>';
   },
 
   // A red panel when a bandmate wants to talk (satisfaction under 30).

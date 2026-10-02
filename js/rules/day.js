@@ -11,6 +11,11 @@ Game.rules.day = {
     return day % Game.balance.time.daysPerWeek;
   },
 
+  // A day as words, like "Week 2, Saturday" (used in messages and on screens).
+  dateLabel: function (day) {
+    return 'Week ' + Game.rules.day.weekNumber(day) + ', ' + Game.content.calendar.dayNames[Game.rules.day.dayOfWeek(day)];
+  },
+
   // Which week it is, starting at 1.
   weekNumber: function (day) {
     return Math.floor(day / Game.balance.time.daysPerWeek) + 1;
@@ -25,9 +30,9 @@ Game.rules.day = {
   },
 
   // True if this block of today is taken by the day job.
+  // (Not on a day you've taken off.)
   isJobBlock: function (state, block) {
-    var dow = Game.rules.day.dayOfWeek(state.day);
-    return Game.rules.day.isWorkday(state, dow) && Game.balance.job.jobBlocks.indexOf(block) !== -1;
+    return Game.rules.job.worksOn(state, state.day) && Game.balance.job.jobBlocks.indexOf(block) !== -1;
   },
 
   // How many days until bills are due. 0 means they're due tonight.
@@ -48,7 +53,7 @@ Game.rules.day = {
     if (dow <= b.time.paydayDayOfWeek) {
       var shifts = state.player.job.unpaidShifts;
       for (var d = dow; d <= b.time.paydayDayOfWeek; d++) {
-        if (Game.rules.day.isWorkday(state, d)) shifts += 1;
+        if (Game.rules.job.paidOn(state, state.day + (d - dow))) shifts += 1;
       }
       upcomingPay = shifts * b.job.payPerShift;
     }
@@ -107,9 +112,28 @@ Game.rules.day = {
       var lines = [];
       var title;
       var entry = Game.rules.actions.plannedEntry(s, block);
-      var actionId = entry ? entry.actionId : null;
+      var actionId = entry && entry.type === 'action' ? entry.actionId : null;
 
-      if (day.isJobBlock(s, block)) {
+      if (entry && entry.type === 'gig') {
+        // A booked show: a commitment, so it happens even if you're Tired. At 0 energy it's a no-show.
+        var energyAtShow = s.player.energy;
+        var show = Game.rules.booking.playShow(s, entry, energyAtShow);
+        s = show.state;
+        title = show.noShow ? 'No-show' : 'Show at ' + Game.content.venues[entry.venueId].name;
+        if (!show.noShow) {
+          report.gig = true;
+          didWork = true;
+          s.player.energy = Game.rules.energy.clamp(s.player.energy - b.energy.cost.gig);
+          lines.push(show.log[0].replace(/\.$/, '') + ', -' + b.energy.cost.gig + ' energy.');
+          lines = lines.concat(show.log.slice(1));
+          if (s.player.energy === 0 && !exhausted) {
+            exhausted = true;
+            lines.push('The show drained you to 0 energy. You\'re Exhausted.');
+          }
+        } else {
+          lines = lines.concat(show.log);
+        }
+      } else if (day.isJobBlock(s, block)) {
         title = 'Day job';
         jobBlocks += 1;
         s.player.energy = Game.rules.energy.clamp(s.player.energy - b.energy.cost.dayJob);
@@ -119,7 +143,7 @@ Game.rules.day = {
           lines.push('The job drained you to 0 energy. You\'re Exhausted.');
         }
       } else if (actionId) {
-        var done = Game.rules.actions.perform(s, actionId, entry.songId, entry.songIds, entry.personId);
+        var done = Game.rules.actions.perform(s, actionId, entry.songId, entry.songIds, entry.personId, entry.request);
         s = done.state;
         if (done.finishedSongId) report.finishedSongs.push(done.finishedSongId);
         if (done.gig) report.gig = true;
@@ -147,9 +171,17 @@ Game.rules.day = {
     if (jobBlocks > 0) {
       s.player.job.unpaidShifts += 1;
       s.thisWeek.shiftsWorked += 1;
-      endLines.push('Day job shift: ' + b.morale.change.dayJobShift + ' morale.');
+      endLines.push('Day job shift: ' + b.morale.change.dayJobShift + ' morale, +' + b.job.standingPerShift + ' job standing.');
       changeMorale(b.morale.change.dayJobShift, endLines);
-    } else if (!didWork) {
+      var standing = Game.rules.job.changeStanding(s, b.job.standingPerShift);
+      s = standing.state;
+      standing.log.forEach(function (line) { endLines.push(line); });
+    } else if (Game.rules.job.scheduledOn(s, s.day) && s.player.job.daysOff[s.day]) {
+      var off = Game.rules.job.resolveDayOff(s);
+      s = off.state;
+      off.log.forEach(function (line) { endLines.push(line); });
+    }
+    if (jobBlocks === 0 && !didWork) {
       endLines.push('Full day off: +' + b.morale.change.fullDayOff + ' morale.');
       changeMorale(b.morale.change.fullDayOff, endLines);
     }
@@ -213,6 +245,23 @@ Game.rules.day = {
     var fading = Game.rules.songs.applyFading(s);
     s = fading.state;
     fading.log.forEach(function (line) { endLines.push(line); });
+
+    // Venues answer booking emails, and offers you didn't answer in time go away.
+    var replies = Game.rules.booking.processReplies(s);
+    s = replies.state;
+    replies.log.forEach(function (line) { endLines.push(line); });
+    var expired = Game.rules.booking.expireOffers(s);
+    s = expired.state;
+    expired.log.forEach(function (line) { endLines.push(line); });
+
+    // A new year of vacation days.
+    if (s.day % b.time.daysPerYear === 0) {
+      s.player.job.vacationDaysLeft = b.job.vacationDaysPerYear;
+      endLines.push('A new year: ' + b.job.vacationDaysPerYear + ' vacation days.');
+    }
+
+    // Anything newly unlocked (like small rooms at reputation 10) gets a banner on Today.
+    s = Game.rules.progress.checkUnlocks(s).state;
 
     // Sunday night: save the week's totals (including tonight's skill changes) for the weekly summary.
     if (weekEnded) {

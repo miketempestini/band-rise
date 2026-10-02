@@ -14,7 +14,7 @@ Game.ui.debugPanel = {
   render: function (root, app) {
     var h = Game.ui.helpers;
     var d = Game.balance.debug;
-    var showOn = ['today', 'weeklySummary', 'dayResults', 'songs', 'people'];
+    var showOn = ['today', 'weeklySummary', 'dayResults', 'songs', 'people', 'booking', 'inbox', 'calendar'];
 
     if (!app.debug || !app.state || app.state.gameOver || showOn.indexOf(app.screen) === -1) {
       root.innerHTML = '';
@@ -76,6 +76,14 @@ Game.ui.debugPanel = {
         '<div class="debug__row">' +
           '<button class="btn btn--small" data-action="addContact">Add random contact</button>' +
         '</div>' +
+        '<div class="debug__row">' +
+          '<label>Reputation <input type="number" id="debug-rep" class="input input--tiny" value="' + Math.floor(app.state.player.reputation) + '"></label>' +
+          '<button class="btn btn--small" data-action="setReputation">Set</button>' +
+        '</div>' +
+        '<div class="debug__row">' +
+          '<button class="btn btn--small' + (app.state.debug.acceptNextBooking ? ' btn--primary' : '') + '" data-action="acceptNext">Next reply: Yes' + (app.state.debug.acceptNextBooking ? ' ✓' : '') + '</button>' +
+          '<button class="btn btn--small" data-action="replyNow">Replies now</button>' +
+        '</div>' +
         (personOptions ? '<div class="debug__row">' +
           '<select id="debug-person" class="input input--select">' + personOptions + '</select>' +
           '<input type="number" id="debug-person-value" class="input input--tiny" value="' + (personNow ? Math.floor(personNow.relationship) : 0) + '">' +
@@ -103,6 +111,9 @@ Game.ui.debugPanel = {
       toggleDebug: function () { Game.ui.debugPanel.collapsed = true; app.render(); },
       finishSong: function () { app.debugFinishSong(); },
       addContact: function () { app.applyRule(rules.addContact(app.state)); },
+      setReputation: function () { app.applyRule(rules.setReputation(app.state, root.querySelector('#debug-rep').value)); },
+      acceptNext: function () { app.applyRule(rules.acceptNextBooking(app.state, !app.state.debug.acceptNextBooking)); },
+      replyNow: function () { app.applyRule(rules.replyNow(app.state)); },
       setRelationship: function () {
         Game.ui.debugPanel.selectedPerson = root.querySelector('#debug-person').value;
         app.applyRule(rules.setRelationship(app.state, Game.ui.debugPanel.selectedPerson, root.querySelector('#debug-person-value').value));

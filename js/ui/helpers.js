@@ -14,8 +14,7 @@ Game.ui.helpers = {
 
   // Shows a day like "Week 1, Monday".
   dateLabel: function (day) {
-    var dow = Game.rules.day.dayOfWeek(day);
-    return 'Week ' + Game.rules.day.weekNumber(day) + ', ' + Game.content.calendar.dayNames[dow];
+    return Game.rules.day.dateLabel(day);
   },
 
   // Star rating like "★★★☆☆" for a song's quality.

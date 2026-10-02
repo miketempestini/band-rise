@@ -49,6 +49,9 @@ Game.ui.statsPanel = {
         '<dt>' + townName + ' fans</dt><dd>' + town.fans.toLocaleString() + '</dd>' +
       '</dl>' +
       '<dl class="rows rows--stats">' +
+        '<dt>Job</dt><dd>' + (p.job.status === 'none' ? 'None' : (p.job.status === 'full' ? 'Full-time' : 'Part-time') +
+          ' · standing ' + Math.round(p.job.standing)) + '</dd>' +
+        '<dt>Vacation days</dt><dd>' + p.job.vacationDaysLeft + '</dd>' +
         '<dt>Band</dt><dd>' + (state.band.memberIds.length ? Game.ui.helpers.escape(state.band.name || 'Unnamed') + ' (' + (state.band.memberIds.length + 1) + ')' : 'Solo') + '</dd>' +
         '<dt>Gigs played</dt><dd>' + state.stats.gigsPlayed + '</dd>' +
         '<dt>Best result</dt><dd>' + (state.stats.bestResult ? state.stats.bestResult.charAt(0).toUpperCase() + state.stats.bestResult.slice(1) : '-') + '</dd>' +

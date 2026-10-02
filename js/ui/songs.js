@@ -56,7 +56,7 @@ Game.ui.songs = {
     var originals = songs.filter(function (s) { return !s.isCover; }).length;
 
     root.innerHTML =
-      Game.ui.topbar.html(state) +
+      Game.ui.topbar.html(state, app.screen) +
       '<section class="screen">' +
         '<div class="screen__head">' +
           '<h1 class="screen__title">Songs</h1>' +
@@ -77,9 +77,6 @@ Game.ui.songs = {
 
     h.bind(root, {
       back: function () { app.closeSongs(); },
-      songs: function () {},
-      people: function () { app.openPeople(); },
-      settings: function () { app.show('settings'); },
       focusPayBack: function () { app.closeSongs(); }
     });
   }

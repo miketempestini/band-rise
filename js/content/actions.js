@@ -23,6 +23,8 @@
 //   onlyOpenMicNight    true if it can only be planned in the Evening on an open mic night
 //   needsPerson         'anyone' (a contact or member) or 'member': the player picks who it's with
 //   needsBand           true if you need at least one bandmate (Rehearse)
+//   needsBooking        true if it's planned from the Booking screen with a venue, date, and deal (Email a venue)
+//   onlyWithoutJob      true if it's only for when you have no job (Look for work)
 //   songsMax            pick 1 to this many songs (Rehearse)
 //                       more effects: relationship (Jam, Hang out), talk (Talk), rehearsal (Rehearse),
 //                       meet: true (Network: a chance to meet someone)
@@ -141,6 +143,36 @@ Game.content = Game.content || {};
       songsMax: b.songs.tightness.rehearseMaxSongs,
       countsAsWork: true,
       noSkillWhenBurnedOut: true
+    },
+
+    emailVenue: {
+      id: 'emailVenue',
+      name: 'Email a venue',
+      description: 'Pitch a venue for a date. The reply comes in 1 to 3 days.',
+      blocks: 1,
+      energyCost: b.energy.cost.admin,
+      moneyCost: 0,
+      moneyCategory: null,
+      requirements: {},
+      effects: { booking: true },
+      needsBooking: true,
+      countsAsWork: true,
+      noSkillWhenBurnedOut: false
+    },
+
+    lookForWork: {
+      id: 'lookForWork',
+      name: 'Look for work',
+      description: 'Hand out résumés. A 50% chance to land a part-time job (Mon/Wed/Fri).',
+      blocks: 1,
+      energyCost: b.energy.cost.admin,
+      moneyCost: 0,
+      moneyCategory: null,
+      requirements: {},
+      effects: { lookForWork: true },
+      onlyWithoutJob: true,
+      countsAsWork: true,
+      noSkillWhenBurnedOut: false
     },
 
     rest: {

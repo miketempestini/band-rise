@@ -16,6 +16,8 @@ Game.balance = {
   time: {
     blocks: ['morning', 'afternoon', 'evening'], // The three parts of each day, in order
     daysPerWeek: 7,                // Weeks run Monday to Sunday
+    daysPerYear: 364,              // 52 weeks: vacation days reset after this many days
+    calendarWeeks: 4,              // How many weeks the Calendar screen shows
     startBookingWeeks: 4,          // How far ahead you can book at the start
     managerBookingWeeks: 12,       // How far ahead you can book after getting a Manager
     emptyBlockEnergy: 5,           // Energy gained for each block left empty at End Day
@@ -41,6 +43,8 @@ Game.balance = {
     firedStanding: 0,                // At this standing, you're fired
     vacationDaysPerYear: 10,         // Vacation days you get each year
     vacationNoticeDays: 14,          // Book vacation this many days ahead for no penalty
+    sickNoticeDays: 1,               // You can only call in sick for today or up to this many days ahead
+                                     // (unless it's for a booked show, decided when you accept it)
     partTimeMinReputation: 20,       // Reputation needed to go part-time
     partTimeMinStanding: 50,         // Job standing needed to go part-time
     quitMoraleBonus: 15,             // Morale gained when you quit the day job (milestone)
@@ -76,9 +80,9 @@ Game.balance = {
     // Weekly bills (rent + living costs) come from the housing table below.
     // Starter apartment: $275 rent + $125 living costs = $400 a week.
     // Open mic tip jar: see gigs.openMicTips (it depends on how the night went)
-    coverGigFee: 25,                 // Flat fee for a cover gig
-    coverGigMinReputation: null,     // NOT DECIDED in Design.md: reputation needed for cover gigs
-    coverGigMinMusicianship: null,   // NOT DECIDED in Design.md: musicianship needed for cover gigs
+    coverGigFee: 50,                 // Flat fee for a cover night, no matter who shows up (owner's change from $25)
+    coverGigMinReputation: 5,        // PLACEHOLDER: reputation needed for cover nights
+    coverGigMinMusicianship: 25,     // PLACEHOLDER: Musicianship needed for cover nights
     rehearsalRoomPerBlock: 20,       // Rehearsal room rent per block (needed with a band)
     networkingCost: 15,              // Drinks when you go out to network
     hangOutCost: 15,                 // Cost to hang out with a contact
@@ -263,7 +267,8 @@ Game.balance = {
     minOnStageForClubs: 3,           // People on stage needed for clubs and bigger
     playerMusicianshipWeight: 2,     // Your Musicianship counts twice in band musicianship
     newMemberTightnessDrop: -20,     // Every song loses this much tightness when someone joins
-    sessionPlayerTightness: 50       // A session player counts as this tightness on every song
+    sessionPlayerTightness: 50,      // A session player counts as this tightness on every song
+    sessionPlayerSkill: 40           // PLACEHOLDER: a session player's skill (for band musicianship)
   },
 
   // ---------------------------------------------------------------
@@ -352,6 +357,7 @@ Game.balance = {
     },
     setlist: {                       // Songs needed per show type, and the cover limit (null = any)
       openMic:   { songs: 2,  coverLimit: null },
+      coverNight: { songs: 5, coversOnly: true },  // Cover nights: 5 songs, covers only
       smallRoom: { songs: 6,  coverLimit: null },
       club:      { songs: 10, coverLimit: null },
       theater:   { songs: 14, coverLimit: 2 },
@@ -411,6 +417,7 @@ Game.balance = {
     bookingMinChance: 0.05,          // Booking chance never goes below 5%...
     bookingMaxChance: 0.95,          // ...or above 95%
     replyDays: { min: 1, max: 3 },   // Venue replies arrive 1 to 3 days later
+    offerExpiryDays: 3,              // A "yes" must be accepted within this many days (and before the show)
     relationshipMin: -50,            // Venue relationship goes from -50...
     relationshipMax: 100,            // ...to 100
     relationshipStart: 0,
@@ -589,7 +596,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 5,                      // Save format version, bumped when the state shape changes
+    version: 6,                      // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 
