@@ -75,7 +75,7 @@ Game.balance = {
     startCash: 500,                  // Cash at the start of a new career
     // Weekly bills (rent + living costs) come from the housing table below.
     // Starter apartment: $275 rent + $125 living costs = $400 a week.
-    openMicTips: { min: 0, max: 20 },// Tip jar at an open mic (more on a good night)
+    // Open mic tip jar: see gigs.openMicTips (it depends on how the night went)
     coverGigFee: 25,                 // Flat fee for a cover gig
     coverGigMinReputation: null,     // NOT DECIDED in Design.md: reputation needed for cover gigs
     coverGigMinMusicianship: null,   // NOT DECIDED in Design.md: musicianship needed for cover gigs
@@ -338,9 +338,10 @@ Game.balance = {
       newOriginal: 30,               // A new original starts at this tightness
       cover: 60,                     // Covers start at this tightness
       practiceGain: 10,              // Practice alone: +10 to one song
+      practiceAllGain: 1,            // "Practice all songs": +1 to every song (and none of them fade that week)
       rehearseGain: 12,              // Rehearse with the band: +12 to each song...
       rehearseMaxSongs: 4,           // ...up to 4 songs
-      playLiveGain: 5,               // Playing a song live
+      playLiveGain: 10,              // Playing a song live (changed from Design.md's +5 at the owner's request)
       decayAfterDays: 7,             // Not played or rehearsed this long starts the slide
       decayPerWeek: -3,              // Tightness lost per week
       floor: 20                      // Tightness never drops below this from decay
@@ -512,12 +513,24 @@ Game.balance = {
     luckMin: -10,
     luckMax: 10,
     badLuckStreak: 2,                // After this many Rough results in a row, luck can't go below 0
-    results: {                       // minScore = lowest score for that result
+    resultOrder: ['rough', 'solid', 'great', 'legendary'], // worst to best
+    results: {                       // minScore = lowest score for that result (morale changes are in morale.change)
       rough:     { minScore: -Infinity, fanConversion: 0,    buzz: -5, reputation: -1 },
       solid:     { minScore: 25,        fanConversion: 0.08, buzz: 2,  reputation: 2 },
       great:     { minScore: 45,        fanConversion: 0.15, buzz: 5,  reputation: 3 },
       legendary: { minScore: 65,        fanConversion: 0.25, buzz: 10, reputation: 5 }
-    }
+    },
+    openMicTips: {                   // Tip jar dollars, random within the range, by result
+      rough:     { min: 0,  max: 5 },
+      solid:     { min: 0,  max: 20 },
+      great:     { min: 10, max: 30 },
+      legendary: { min: 20, max: 40 }
+    },
+    // The one tip on the result screen points at the biggest thing that hurt. These decide when
+    // something counts as "hurting":
+    badLuckTipAt: -4,                // luck this low or lower
+    looseSongsTipAt: 50,             // average tightness below this
+    crowdMeterSeconds: 2.5           // how long the crowd meter fills before the result shows
   },
 
   // ---------------------------------------------------------------
@@ -572,7 +585,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 3,                      // Save format version, bumped when the state shape changes
+    version: 4,                      // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

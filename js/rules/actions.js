@@ -4,7 +4,7 @@
 // A planned action is stored like any other calendar item (see Design.md's data model):
 //   state.schedule[day][block] = entryId
 //   state.entries[entryId] = { id, day, block, type: 'action', actionId, songId, status: 'planned' }
-// songId is only used by actions that need a song (Practice).
+// songId is only used by actions that need a song (Practice); songIds by actions with a set (open mic).
 
 window.Game = window.Game || {};
 Game.rules = Game.rules || {};
@@ -59,6 +59,7 @@ Game.rules.actions = {
           row.kind = 'action';
           row.actionId = actionId;
           row.songId = entry.songId || null;
+          row.songIds = entry.songIds || null;
           row.problem = Game.rules.actions.affordProblem(action, energy, cash);
         }
         if (action && !row.problem) {
@@ -111,6 +112,19 @@ Game.rules.actions = {
       result.ok = false;
       result.reason = 'You don\'t have any finished songs yet.';
     }
+    if (action.setSize && Game.rules.songs.playable(state).length < action.setSize) {
+      result.ok = false;
+      result.reason = 'You need at least ' + action.setSize + ' finished songs.';
+    }
+    if (action.onlyOpenMicNight) {
+      var venue = Game.rules.gigs.openMicTonight(state);
+      if (!venue || block !== Game.balance.time.blocks[Game.balance.time.blocks.length - 1]) {
+        result.ok = false;
+        result.reason = Game.rules.gigs.openMicSchedule();
+      } else {
+        result.gains.gig = { venueName: venue.name, crowd: Game.rules.gigs.crowdRange(state, venue) };
+      }
+    }
     result.tired = Game.rules.energy.isTired(row.energyBefore);
     return result;
   },
@@ -147,21 +161,28 @@ Game.rules.actions = {
   },
 
   // Plans an action in one of today's blocks (replacing anything planned there).
-  // songId: which song, for actions that need one (Practice). Left out, the loosest song is used.
+  // songChoice: for Practice, a song id, or 'all' for Practice all songs (left out: the loosest song).
+  //             for a gig, a list of song ids for the set (left out: the suggested best set).
   // If it isn't allowed, the state comes back unchanged with the reason in the log.
   // Returns { state, log }.
-  plan: function (state, block, actionId, songId) {
+  plan: function (state, block, actionId, songChoice) {
     var action = Game.content.actions[actionId];
+    var songId = null;
+    var songIds = null;
     if (!action) {
       return { state: state, log: ['Unknown action.'] };
     }
+    if (action.setSize) {
+      songIds = Array.isArray(songChoice) ? songChoice.slice() : Game.rules.gigs.suggestSet(state, action.setSize);
+      var setProblem = Game.rules.gigs.setProblem(state, songIds, action.setSize);
+      if (setProblem) return { state: state, log: [setProblem] };
+    }
     if (action.needsSong) {
+      songId = songChoice;
       var playable = Game.rules.songs.playable(state);
       if (!songId && playable.length) songId = Game.rules.songs.loosest(state).id;
-      var ok = playable.some(function (song) { return song.id === songId; });
+      var ok = (songId === 'all' && playable.length > 0) || playable.some(function (song) { return song.id === songId; });
       if (!ok) return { state: state, log: ['Pick a finished song to practice.'] };
-    } else {
-      songId = null;
     }
     // Check it as if the block were empty, so swapping one action for another works.
     var check = Game.rules.actions.option(Game.rules.actions.clear(state, block).state, block, actionId);
@@ -172,7 +193,7 @@ Game.rules.actions = {
     var s = Game.rules.actions.clear(state, block).state;
     var id = 'e' + s.nextEntryId;
     s.nextEntryId += 1;
-    s.entries[id] = { id: id, day: s.day, block: block, type: 'action', actionId: actionId, songId: songId, status: 'planned' };
+    s.entries[id] = { id: id, day: s.day, block: block, type: 'action', actionId: actionId, songId: songId, songIds: songIds, status: 'planned' };
     s.schedule[s.day] = s.schedule[s.day] || {};
     s.schedule[s.day][block] = id;
     return { state: s, log: [] };
@@ -200,9 +221,9 @@ Game.rules.actions = {
 
   // Does an action during End Day: pays its costs and applies its effects.
   // If there isn't enough energy or cash by now, it's skipped.
-  // songId: the song for actions that need one (Practice).
-  // Returns { state, line, notes, skipped, finishedSongId }: line is the one-line result for Day results.
-  perform: function (state, actionId, songId) {
+  // songId: the song for actions that need one (Practice). songIds: the set for a gig.
+  // Returns { state, line, notes, skipped, finishedSongId, gig }: line is the one-line result for Day results.
+  perform: function (state, actionId, songId, songIds) {
     var util = Game.util;
     var action = Game.content.actions[actionId];
     var s = state;
@@ -218,6 +239,7 @@ Game.rules.actions = {
     var songwritingAtStart = s.player.skills.songwriting;
     var tired = Game.rules.energy.isTired(energyAtStart);
     var finishedSongId = null;
+    var gig = null;
 
     // Money.
     if (action.moneyCost > 0) {
@@ -239,7 +261,11 @@ Game.rules.actions = {
     }
 
     // Song tightness (Practice). If the song is gone, the loosest song is used instead.
-    if (action.effects.tightness) {
+    if (action.effects.tightness && songId === 'all') {
+      var all = Game.rules.songs.practiceAll(s, action.allSongsGain);
+      s = all.state;
+      parts.push('+' + action.allSongsGain + ' tightness on all ' + all.count + ' songs (fading reset)');
+    } else if (action.effects.tightness) {
       if (!s.songs[songId] || s.songs[songId].quality === null) {
         var fallback = Game.rules.songs.loosest(s);
         songId = fallback ? fallback.id : null;
@@ -249,6 +275,19 @@ Game.rules.actions = {
         s = practiced.state;
         parts.push(util.signed(practiced.added) + ' tightness on "' + s.songs[songId].title + '" (now ' + Math.round(s.songs[songId].tightness) + ')');
       }
+    }
+
+    // A gig (open mic). If the set no longer works, the suggested best set is played instead.
+    if (action.effects.gig) {
+      var venue = Game.rules.gigs.openMicTonight(s);
+      if (Game.rules.gigs.setProblem(s, songIds, action.setSize)) {
+        songIds = Game.rules.gigs.suggestSet(s, action.setSize);
+      }
+      var played = Game.rules.gigs.playGig(s, venue.id, songIds, energyAtStart);
+      s = played.state;
+      gig = played.gig;
+      parts = [played.log[0].replace(/\.$/, '')].concat(parts);
+      notes = notes.concat(played.log.slice(1));
     }
 
     // Song progress (Write), using Songwriting from the start of the block.
@@ -287,6 +326,6 @@ Game.rules.actions = {
       notes = notes.concat(changed.log);
     }
 
-    return { state: s, line: parts.join(', ') + '.', notes: notes, skipped: false, finishedSongId: finishedSongId };
+    return { state: s, line: parts.join(', ') + '.', notes: notes, skipped: false, finishedSongId: finishedSongId, gig: gig };
   }
 };

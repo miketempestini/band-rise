@@ -30,7 +30,7 @@ Game.ui.today = {
           Game.ui.today.debtPanelHtml(state, app) +
         '</aside>' +
       '</div>' +
-      (app.pickerBlock ? Game.ui.actionPicker.html(state, app.pickerBlock, app.pickerSongStep) : '');
+      (app.pickerBlock ? Game.ui.actionPicker.html(state, app.pickerBlock, app.pickerSongStep, app.pickerSet, app.practiceSort, app.practiceFilter) : '');
 
     h.bind(root, {
       endDay: function () { app.endDay(); },
@@ -76,7 +76,13 @@ Game.ui.today = {
         var action = Game.content.actions[row.actionId];
         title = action.name;
         var about = '';
-        if (row.songId && state.songs[row.songId]) {
+        if (row.songIds) {
+          var venue = Game.rules.gigs.openMicTonight(state);
+          about = '<span class="block__song">' + (venue ? h.escape(venue.name) + ': ' : '') +
+            row.songIds.map(function (id) { return state.songs[id] ? '"' + h.escape(state.songs[id].title) + '"' : ''; }).join(', ') + '</span>';
+        } else if (row.songId === 'all') {
+          about = '<span class="block__song">All songs</span>';
+        } else if (row.songId && state.songs[row.songId]) {
           about = '<span class="block__song">"' + h.escape(state.songs[row.songId].title) + '"</span>';
         } else if (action.effects.songProgress) {
           var preview = Game.rules.actions.writePreview(state, row.block);
@@ -106,8 +112,10 @@ Game.ui.today = {
     if (dow === b.time.billsDayOfWeek) {
       return 'Tonight: rent and living costs of ' + Game.ui.helpers.money(b.housing[state.player.housing].weeklyCost) + ' are due, then your weekly summary.';
     }
-    if (dow === b.time.paydayDayOfWeek) return 'Tonight: payday.';
-    return 'Energy recovers overnight (+' + b.energy.overnight + ').';
+    var openMic = Game.rules.gigs.openMicTonight(state);
+    var mic = openMic ? 'Open mic tonight at ' + openMic.name + ' (plan it in the Evening). ' : '';
+    if (dow === b.time.paydayDayOfWeek) return mic + 'Tonight: payday.';
+    return mic + 'Energy recovers overnight (+' + b.energy.overnight + ').';
   },
 
   // "This week" panel: money so far and what's coming.

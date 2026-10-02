@@ -73,6 +73,8 @@ Game.state = {
       thisWeek: Game.state.newWeek(b.economy.startCash, 0, skills), // running totals for the week in progress
       lastDayReport: null, // what happened at the last End Day: { day, blocks: [{ block, title, lines }], overnight: [lines] }
       gameOver: null,  // null while playing; { day, message } once the game has ended
+      lastGig: null,   // the full result of the most recent gig (for the gig result screen)
+      debug: { forceNextGig: null }, // debug panel: 'rough' or 'legendary' forces the next gig's result
       stats: { gigsPlayed: 0, bestResult: null, biggestCrowd: 0, totalEarned: 0 }
     };
   },

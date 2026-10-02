@@ -403,3 +403,64 @@ button.block:hover { border-color: var(--accent); }
   70% { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); }
 }
+
+/* ---------- Open mic set picker ---------- */
+
+.picker-note { margin: -8px 0 12px; }
+.check { display: inline-block; width: 20px; height: 20px; margin-right: 10px; border: 2px solid var(--line); border-radius: 5px; text-align: center; line-height: 16px; font-size: 14px; color: var(--accent-text); vertical-align: middle; }
+.pick--current .check { background: var(--accent); border-color: var(--accent); }
+.tight-num { color: var(--text) !important; }
+.actions--split { justify-content: space-between; align-items: center; }
+
+/* ---------- Gig: crowd meter ---------- */
+
+.gig-meter__count { font-size: 96px; font-weight: bold; color: var(--accent); line-height: 1; margin: 16px 0; }
+.gig-meter__unit { font-size: 28px; color: var(--text-muted); }
+.meter--crowd { width: 520px; max-width: 100%; height: 18px; border-radius: 9px; margin: 8px 0 16px; }
+.gig-meter .meter--crowd .meter__fill { transition: none; }
+
+/* ---------- Gig: result ---------- */
+
+.gig-result .reveal__kicker { margin-bottom: 4px; }
+.gig-result__headline { font-size: 40px; }
+.gig-result__headline--rough { color: var(--bad); }
+.gig-result__headline--solid { color: var(--text); }
+.gig-result__headline--great { color: var(--good); }
+.gig-result__headline--legendary { color: var(--accent); }
+.gig-crowd { font-size: 18px; margin-bottom: 4px; }
+.gig-crowd strong { font-size: 28px; color: var(--accent); }
+.gig-result .meter--crowd { width: 100%; }
+
+.breakdown { display: flex; height: 54px; border-radius: 8px; overflow: hidden; background: var(--panel-2); }
+.seg { display: flex; flex-direction: column; justify-content: center; padding: 0 8px; min-width: 0; overflow: hidden; white-space: nowrap; color: var(--accent-text); border-right: 2px solid var(--panel); }
+.seg__label { font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+.seg__value { font-weight: bold; }
+.seg--bandSkill { background: #ffb547; }
+.seg--stagePresence { background: #ffc773; }
+.seg--songs { background: #ffd89e; }
+.seg--tightness { background: #ffe7c4; }
+.seg--instrument, .seg--morale { background: #5fd38d; }
+.seg--luck { background: #9ec9ff; }
+.seg--debug { background: #c9a2ff; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.chip { padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: bold; background: var(--panel-2); color: var(--text-muted); }
+.chip--bad { background: rgba(255, 107, 107, 0.18); color: var(--bad); }
+
+.scale { position: relative; margin: 18px 0 30px; }
+.scale__track { height: 8px; border-radius: 4px; background: var(--panel-2); overflow: hidden; }
+.scale__score { display: block; height: 100%; background: var(--text); }
+.scale__mark { position: absolute; top: -4px; height: 16px; border-left: 2px dashed var(--text-muted); }
+.scale__mark span { position: absolute; top: 18px; left: -30px; width: 60px; text-align: center; font-size: 11px; color: var(--text-muted); }
+.gig-score { margin: 0; font-size: 18px; }
+.panel--tip { border-color: var(--accent); background: rgba(255, 181, 71, 0.08); }
+.gig-notes { margin-top: 12px; }
+
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.chip { color: var(--text); }
+
+/* ---------- Practice: all songs + sorting ---------- */
+
+.pick--all { border-style: dashed; }
+.sort-bar { display: flex; align-items: center; gap: 6px; margin: 14px 0 8px; font-size: 14px; }
+.list-controls { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0 16px; }

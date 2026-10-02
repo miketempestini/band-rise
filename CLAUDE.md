@@ -76,7 +76,7 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, actions, career, day, debug
+5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, gigs, actions, career, day, debug
    (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
 6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
@@ -137,6 +137,19 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
 - **Finished songs** are listed in `lastDayReport.finishedSongs`; `Game.app.startReveals` shows a
   reveal screen for each before Day results.
 - **Name lists** (covers, song titles; people later) are in `js/content/names.js`.
+
+## How the pieces fit (added in Phase 4)
+
+- **Venues** are content in `js/content/venues.js`; per-tier rules (foot traffic, score penalty, ticket)
+  are in `balance.venues.tiers`.
+- **Gigs:** `Game.rules.gigs.playGig(state, venueId, songIds, energyAtStart)` does everything (crowd, score
+  parts, luck, result, fans, buzz, reputation, morale, tips, tightness, skills, stats) and saves the full
+  breakdown in `state.lastGig`. Score parts are a list of `{ id, value }`; labels and tips are in
+  `js/content/gigText.js`. To add a modifier later, add a part in `scoreParts` and a label in gigText.
+- **Actions with a set** use `setSize`; the picker's set step stores `songIds` on the entry.
+- **After End Day** the order is: gig result (crowd meter, then result) → song reveals → Day results →
+  weekly summary. See `Game.app.afterDayChange` / `afterGigResult`.
+- **Debug forcing** lives in `state.debug.forceNextGig`; the result screen shows an honest "Debug" score part.
 
 ## Saving
 

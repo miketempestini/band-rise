@@ -192,6 +192,39 @@ Game.rules.songs = {
     return { state: s, log: [], added: song.tightness - before };
   },
 
+  // "Practice all songs": every finished song gets +1 tightness (max 100) and counts as played today,
+  // which restarts its fading clock. Returns { state, log, count }.
+  practiceAll: function (state, amount) {
+    var s = Game.util.clone(state);
+    var songs = Game.rules.songs.playable(s);
+    songs.forEach(function (song) {
+      s = Game.rules.songs.practiceSong(s, song.id, amount).state;
+    });
+    return { state: s, log: [], count: songs.length };
+  },
+
+  // Keeps only some songs: 'covers', 'originals', or 'all' (everything).
+  filterSongs: function (songs, kind) {
+    if (kind === 'covers') return songs.filter(function (song) { return song.isCover; });
+    if (kind === 'originals') return songs.filter(function (song) { return !song.isCover; });
+    return songs.slice();
+  },
+
+  // Puts songs in order for a list. sortBy:
+  //   'tightLow' (loosest first), 'tightHigh' (tightest first), 'name' (A to Z),
+  //   'lastPlayed' (longest since played first).
+  // Returns a new list; the original isn't changed.
+  sortSongs: function (state, songs, sortBy) {
+    var byName = function (a, b) { return a.title.localeCompare(b.title); };
+    var compare = {
+      tightLow: function (a, b) { return a.tightness - b.tightness || byName(a, b); },
+      tightHigh: function (a, b) { return b.tightness - a.tightness || byName(a, b); },
+      name: byName,
+      lastPlayed: function (a, b) { return a.lastPlayedDay - b.lastPlayedDay || byName(a, b); }
+    }[sortBy] || byName;
+    return songs.slice().sort(compare);
+  },
+
   // Renames a song. The name can't be blank or too long.
   // If it isn't allowed, the state comes back unchanged with the reason in the log. Returns { state, log }.
   rename: function (state, songId, title) {

@@ -46,6 +46,11 @@ Game.ui.statsPanel = {
         '<dt>' + townName + ' buzz</dt><dd>' + Math.round(town.buzz) + ' / ' + b.buzz.max + '</dd>' +
         '<dt>' + townName + ' fans</dt><dd>' + town.fans.toLocaleString() + '</dd>' +
       '</dl>' +
+      '<dl class="rows rows--stats">' +
+        '<dt>Gigs played</dt><dd>' + state.stats.gigsPlayed + '</dd>' +
+        '<dt>Best result</dt><dd>' + (state.stats.bestResult ? state.stats.bestResult.charAt(0).toUpperCase() + state.stats.bestResult.slice(1) : '-') + '</dd>' +
+        '<dt>Biggest crowd</dt><dd>' + state.stats.biggestCrowd + '</dd>' +
+      '</dl>' +
       '</div>';
   }
 };

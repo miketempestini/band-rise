@@ -13,6 +13,11 @@ Game.app = {
   payBackMessage: null, // result of the last Pay back attempt, shown in the debt panel
   pickerBlock: null,    // which block the action picker is open for ('morning' etc.), or null when closed
   pickerSongStep: null, // an action id (like 'practice') while the picker asks which song, else null
+  pickerSet: [],        // songs ticked so far when picking a set (open mic)
+  practiceSort: 'tightLow', // how the Practice song list is sorted (remembered while the page is open)
+  practiceFilter: 'all',    // which songs the Practice list shows: 'all', 'covers', or 'originals'
+  gigPhase: 'meter',    // the gig result screen: 'meter' (crowd animation) then 'result'
+  gigAnimation: null,   // the running crowd meter animation (so it can be stopped)
   revealQueue: [],      // ids of finished songs still waiting for their reveal screen
   revealThen: 'today',  // the screen to show after the last reveal
   revealError: null,    // a problem with the typed song name, shown on the reveal screen
@@ -120,15 +125,51 @@ Game.app = {
     Game.app.render();
   },
 
-  // An action was clicked in the picker. Actions that need a song open the song step first.
+  // An action was clicked in the picker. Actions that need a song (or a set) open the song step first.
   pickAction: function (actionId) {
     var app = Game.app;
-    if (Game.content.actions[actionId].needsSong) {
+    var action = Game.content.actions[actionId];
+    if (action.setSize) {
+      // Start from the set already planned in this block, or the suggested best set.
+      var entry = Game.rules.actions.plannedEntry(app.state, app.pickerBlock);
+      app.pickerSet = entry && entry.actionId === actionId && entry.songIds
+        ? entry.songIds.slice()
+        : Game.rules.gigs.suggestSet(app.state, action.setSize);
+      app.pickerSongStep = actionId;
+      app.render();
+    } else if (action.needsSong) {
       app.pickerSongStep = actionId;
       app.render();
     } else {
       app.planAction(actionId);
     }
+  },
+
+  // Changes which songs the Practice list shows.
+  setPracticeFilter: function (filter) {
+    Game.app.practiceFilter = filter;
+    Game.app.render();
+  },
+
+  // Changes how the Practice song list is sorted.
+  setPracticeSort: function (sortBy) {
+    Game.app.practiceSort = sortBy;
+    Game.app.render();
+  },
+
+  // Ticks or unticks a song while picking a set. If the set is already full,
+  // ticking another song swaps out the one picked earliest.
+  toggleSetSong: function (songId) {
+    var app = Game.app;
+    var size = Game.content.actions[app.pickerSongStep].setSize;
+    var i = app.pickerSet.indexOf(songId);
+    if (i !== -1) {
+      app.pickerSet.splice(i, 1);
+    } else {
+      if (app.pickerSet.length >= size) app.pickerSet.shift();
+      app.pickerSet.push(songId);
+    }
+    app.render();
   },
 
   // From the song step back to the list of actions.
@@ -223,12 +264,38 @@ Game.app = {
     app.autoSave();
     if (showResults) {
       app.pendingWeekSummary = result.weekEnded;
-      var finished = app.state.lastDayReport.finishedSongs || [];
-      if (finished.length) app.startReveals(finished, 'dayResults'); // the new song comes first
-      else app.show('dayResults');
+      if (app.state.lastDayReport.gig) {
+        app.gigPhase = 'meter';
+        app.show('gigResult'); // the gig comes first, then any song reveal, then Day results
+      } else {
+        app.afterGigResult();
+      }
     } else {
       app.show(result.weekEnded ? 'weeklySummary' : 'today');
     }
+  },
+
+  // The crowd meter is done (or skipped): show the result.
+  finishGigMeter: function () {
+    var app = Game.app;
+    app.gigAnimation = null;
+    if (app.screen !== 'gigResult' || app.gigPhase !== 'meter') return;
+    app.gigPhase = 'result';
+    app.render();
+  },
+
+  // Leaving the gig result screen.
+  leaveGigResult: function () {
+    Game.app.gigAnimation = null;
+    Game.app.afterGigResult();
+  },
+
+  // After the gig (or right after End Day if there was none): song reveals, then Day results.
+  afterGigResult: function () {
+    var app = Game.app;
+    var finished = app.state.lastDayReport.finishedSongs || [];
+    if (finished.length) app.startReveals(finished, 'dayResults');
+    else app.show('dayResults');
   },
 
   // Leaves the Day results screen: on to the weekly summary on Sunday night, otherwise back to Today.

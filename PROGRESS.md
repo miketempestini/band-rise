@@ -4,6 +4,35 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 5b: Practice all songs + sorting (2026-10-02)
+- Practice's song step has **Practice all songs** on top: +1 tightness on every finished song
+  (`balance.songs.tightness.practiceAllGain`) and they all count as played, so none of them fade.
+  Musicianship still grows as normal. Planned as `songId: 'all'`; the block card shows "All songs".
+- Sort buttons on the Practice song list: Tightness ↑ (default), Tightness ↓, Name A–Z, Last played
+  (longest ago first). The choice is remembered while the page is open. Rule: `Game.rules.songs.sortSongs`.
+- Show toggle on the same list: All / Covers / Originals (`Game.rules.songs.filterSongs`).
+- 105 tests passing.
+
+### Session 5: Phase 4, open mics and the gig result (2026-10-02)
+- **Venues** (`js/content/venues.js`): The Rusty Nail (Tuesday open mic) and Bean There Cafe (Thursday).
+- **Play the open mic** action: Evening only, on open mic nights (other times it's greyed out with the schedule).
+  15 energy. A set step lists every finished song with tightness, quality, stars, and last played; the best 2
+  (quality + tightness) are pre-ticked. Exactly 2 must be picked; ticking a third swaps out the earliest pick.
+  Today also says "Open mic tonight at ..." on those days.
+- **Gig rule** (`js/rules/gigs.js`): crowd (expected x 0.85-1.15), score (0.35 Musicianship + 0.25 Performance +
+  0.20 avg quality + 0.20 avg tightness), modifiers (instrument tier, Tired -10, morale ±5, venue tier),
+  luck -10..+10, bad-luck protection after two Rough results.
+- **Results:** fans (conversion x originals factor 0.75-1.25 x room under the city ceiling, random rounding),
+  buzz, reputation (x venue tier multiplier, gains shrink with reputation, never below 0), morale (Rough -8,
+  Great +8, Legendary +15), tip jar (Rough $0-5, Solid $0-20, Great $10-30, Legendary $20-40), skills from
+  playing live, and **+10 tightness per song played** (owner's change; Design.md updated from +5).
+- **Gig result screen:** 2.5-second crowd meter (skippable), then headline, crowd bar, score breakdown bar with
+  a labeled legend (negatives in red), a scale showing where each result starts, the rewards, and one tip
+  for the biggest thing that hurt (tired, low morale, bad luck, loose songs).
+- **Stats:** gigs played, best result, biggest crowd (on the Stats panel). Tips show in the weekly summary.
+- **Debug:** "Next gig: Rough / Legendary" (shown as a visible "Debug" part of the score).
+- **Saves:** version 4 (adds `lastGig`, `debug`). **Tests:** 101 passing (gigs.test.js is new).
+
 ### Session 4: Phase 3, songs and songwriting (2026-10-02)
 - **Starting catalog:** 5 covers picked at random (with the saved seed) from 12 made-up titles in
   `js/content/names.js`. Quality 50, tightness 60.
@@ -99,13 +128,17 @@ A running log of what's built, what's next, and known issues. Update at the end 
   with a no-library test runner, git repo (pushed to github.com/miketempestini/band-rise, private).
 
 ## What's next
-- Phase 4 (to be defined). Natural next step from Design.md: the first open mic (setlists of 2 songs,
-  gig score, crowd, fans, tips, Performance growth, "playing live" also refreshes a song's tightness +5).
-- Held back on purpose: milestones (First open mic, First original), co-writing (needs people),
-  recording/releasing, rehearsing with a band, renaming songs later from the Songs screen.
+- Phase 5 (to be defined). Likely next from Design.md: meeting people (Network and open mics), contacts,
+  and the first bandmate; then booking small rooms once reputation reaches 10 (milestones).
+- Held back on purpose: meeting people at open mics (20%), milestones (First open mic, First original, Small rooms),
+  booked venues and gig pay, merch, room-fullness modifiers (they only matter for rooms with a capacity),
+  co-writing, recording, renaming songs from the Songs screen.
 - Also not built yet: job standing changes, vacation days, call in sick, "Repeat yesterday" and Plan Week shortcuts.
 
 ## Known issues / open decisions
+- **Balance check:** at starting skills a cover open mic scores about 32 (22 to 42), so mostly Solid: about
+  1 fan and +2 reputation a night. Two open mics a week reach reputation 10 in roughly 2.5 weeks, matching
+  Design.md's first-three-weeks target.
 - **Buzz can't build from posting alone.** One Post online adds about +1.25 at Promotion 5, but buzz fades
   2 every night, so it's gone by morning. Flyers or several posts a day are needed. Kept the Design.md numbers
   on purpose; revisit when gigs make buzz matter (options: smaller fade, bigger post bonus, or fade only above some level).

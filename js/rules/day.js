@@ -78,7 +78,7 @@ Game.rules.day = {
   //   4. Overnight: energy recovers, buzz fades, then tomorrow begins; rust and song fading are checked.
   // Returns { state, log, weekEnded }. The full report is saved in state.lastDayReport
   // for the Day results screen: { day, blocks: [{ block, title, lines }], overnight: [lines],
-  // finishedSongs: [songIds] } (finishedSongs drives the song reveal).
+  // finishedSongs: [songIds], gig: true if a gig was played } (these drive the reveal and gig result screens).
   endDay: function (state) {
     if (state.gameOver) {
       return { state: state, log: [], weekEnded: false };
@@ -89,7 +89,7 @@ Game.rules.day = {
     var util = Game.util;
     var s = util.clone(state);
     var dow = day.dayOfWeek(s.day);
-    var report = { day: s.day, blocks: [], overnight: [], finishedSongs: [] };
+    var report = { day: s.day, blocks: [], overnight: [], finishedSongs: [], gig: false };
     var weekEnded = false;
     var exhausted = false;
     var jobBlocks = 0;
@@ -119,9 +119,10 @@ Game.rules.day = {
           lines.push('The job drained you to 0 energy. You\'re Exhausted.');
         }
       } else if (actionId) {
-        var done = Game.rules.actions.perform(s, actionId, entry.songId);
+        var done = Game.rules.actions.perform(s, actionId, entry.songId, entry.songIds);
         s = done.state;
         if (done.finishedSongId) report.finishedSongs.push(done.finishedSongId);
+        if (done.gig) report.gig = true;
         title = Game.content.actions[actionId].name;
         lines.push(done.line);
         lines = lines.concat(done.notes);

@@ -105,7 +105,7 @@ You start with $500 and save about $150 a week if you spend nothing on music, so
 | --- | --- | --- | --- |
 | Day job | Per shift, paid Friday | $110 a shift | Start |
 | Overtime | Event offer for a Saturday shift | $165 | Start (random) |
-| Open mic tip jar | Small random amount | $0 to $20, more on a good night | Start |
+| Open mic tip jar | Small random amount, by result | Rough $0–5, Solid $0–20, Great $10–30, Legendary $20–40 | Start |
 | Gig, guarantee | Flat fee no matter who shows up | $50 to $100 small rooms, $200 to $500 clubs | Small rooms |
 | Gig, door deal | Your share of ticket sales | 70% of $8 tickets in small rooms | Small rooms |
 | T-shirts | Sold at gigs from stock you bought | Cost $8, sell for $20 | First paid gig |
@@ -335,7 +335,7 @@ Songs are the band's product: you write them, rehearse them until they're tight,
 ### Tightness (how well the band knows a song)
 
 - 0 to 100 per song. A new original starts at 30. Covers start at 60.
-- Practice alone: +10 to one song. Rehearse with the band ($20 room): +12 to up to 4 songs. Playing it live: +5.
+- Practice alone: +10 to one song, or "Practice all songs": +1 to every song (and none of them fade). Rehearse with the band ($20 room): +12 to up to 4 songs. Playing it live: +10.
 - Not played or rehearsed in 7 days: -3 a week, never below 20.
 - New member joins: -20 on every song.
 

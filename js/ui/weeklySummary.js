@@ -8,7 +8,7 @@ Game.ui = Game.ui || {};
 Game.ui.weeklySummary = {
 
   // Plain names for each money category.
-  incomeLabels: { dayJob: 'Day job', debug: 'Debug cash' },
+  incomeLabels: { dayJob: 'Day job', tips: 'Open mic tips', debug: 'Debug cash' },
   costLabels: { bills: 'Rent and living costs', networking: 'Going out to network', promotion: 'Promotion', debug: 'Debug' },
 
   render: function (root, app) {

@@ -200,4 +200,53 @@
     t.equal(covers(loaded.state).length, 5, 'covers added');
   });
 
+  Game.test('Practice all songs: +1 tightness on every song, and they all count as played', function (t) {
+    var s = freshState();
+    for (var i = 0; i < 5; i++) s = Game.rules.day.endDay(s).state; // Saturday
+    s.player.energy = 100;
+    var before = Game.util.clone(s.songs);
+    s = Game.rules.actions.plan(s, 'morning', 'practice', 'all').state;
+    t.equal(Game.rules.actions.plannedEntry(s, 'morning').songId, 'all', 'planned as all songs');
+    var after = Game.rules.day.endDay(s).state;
+    Game.rules.songs.playable(after).forEach(function (song) {
+      t.equal(song.tightness, before[song.id].tightness + 1, song.title + ' +1');
+      t.equal(song.lastPlayedDay, s.day, song.title + ' counts as played');
+    });
+    t.ok(after.player.skills.musicianship > s.player.skills.musicianship, 'Musicianship still grows');
+  });
+
+  Game.test('Practice all songs: keeps songs from fading', function (t) {
+    var s = freshState();
+    var id = covers(s)[0].id;
+    for (var i = 0; i < 6; i++) s = Game.rules.day.endDay(s).state; // Sunday, day 6
+    s.player.energy = 100;
+    s = Game.rules.actions.plan(s, 'morning', 'practice', 'all').state;
+    s = Game.rules.day.endDay(s).state; // day 7: would have faded without practice
+    t.equal(s.songs[id].tightness, 61, '60 + 1, no -3');
+  });
+
+  Game.test('Sorting songs: by tightness both ways, by name, and by last played', function (t) {
+    var s = freshState();
+    var list = covers(s);
+    s.songs[list[0].id].tightness = 30; s.songs[list[0].id].lastPlayedDay = 5;
+    s.songs[list[1].id].tightness = 90; s.songs[list[1].id].lastPlayedDay = -3;
+    var songs = Game.rules.songs.playable(s);
+    var sort = function (by) { return Game.rules.songs.sortSongs(s, songs, by).map(function (x) { return x.id; }); };
+    t.equal(sort('tightLow')[0], list[0].id, 'loosest first');
+    t.equal(sort('tightHigh')[0], list[1].id, 'tightest first');
+    t.equal(sort('lastPlayed')[0], list[1].id, 'longest since played first');
+    var names = Game.rules.songs.sortSongs(s, songs, 'name').map(function (x) { return x.title; });
+    t.sameContents(names, names.slice().sort(function (a, b) { return a.localeCompare(b); }), 'A to Z');
+  });
+
+  Game.test('Filtering songs: covers only, originals only, or all', function (t) {
+    var s = freshState();
+    var started = Game.rules.songs.startSong(s);
+    s = Game.rules.songs.finishSong(started.state, started.songId).state;
+    var songs = Game.rules.songs.playable(s);
+    t.equal(Game.rules.songs.filterSongs(songs, 'covers').length, 5, 'covers');
+    t.equal(Game.rules.songs.filterSongs(songs, 'originals').length, 1, 'originals');
+    t.equal(Game.rules.songs.filterSongs(songs, 'all').length, 6, 'all');
+  });
+
 })();

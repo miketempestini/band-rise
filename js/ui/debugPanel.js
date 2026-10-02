@@ -19,6 +19,8 @@ Game.ui.debugPanel = {
       return;
     }
 
+    var forced = app.state.debug && app.state.debug.forceNextGig;
+
     // The skill dropdown remembers the last skill picked.
     var selectedSkill = Game.ui.debugPanel.selectedSkill;
     var skillOptions = Object.keys(Game.content.skills).map(function (id) {
@@ -50,6 +52,12 @@ Game.ui.debugPanel = {
           '<button class="btn btn--small" data-action="finishSong">Finish song now</button>' +
         '</div>' +
         '<div class="debug__row">' +
+          '<span>Next gig:</span>' +
+          '<button class="btn btn--small' + (forced === 'rough' ? ' btn--primary' : '') + '" data-action="forceRough">Rough</button>' +
+          '<button class="btn btn--small' + (forced === 'legendary' ? ' btn--primary' : '') + '" data-action="forceLegendary">Legendary</button>' +
+          (forced ? '<button class="btn btn--small" data-action="forceClear">Normal</button>' : '') +
+        '</div>' +
+        '<div class="debug__row">' +
           '<label>Buzz <input type="number" id="debug-buzz" class="input input--tiny" value="' + Math.round(app.state.cities.hometown.buzz) + '"></label>' +
           '<button class="btn btn--small" data-action="setBuzz">Set</button>' +
         '</div>' +
@@ -68,6 +76,9 @@ Game.ui.debugPanel = {
         app.applyRule(rules.setSkill(app.state, skill, Number(root.querySelector('#debug-skill-value').value)));
       },
       finishSong: function () { app.debugFinishSong(); },
+      forceRough: function () { app.applyRule(rules.forceNextGig(app.state, 'rough')); },
+      forceLegendary: function () { app.applyRule(rules.forceNextGig(app.state, 'legendary')); },
+      forceClear: function () { app.applyRule(rules.forceNextGig(app.state, null)); },
       setBuzz: function () { app.applyRule(rules.setBuzz(app.state, Number(root.querySelector('#debug-buzz').value))); }
     });
 

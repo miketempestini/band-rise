@@ -9,15 +9,22 @@ Game.ui = Game.ui || {};
 
 Game.ui.actionPicker = {
 
-  // block: which block is being planned. songStepFor: an action id when picking its song, else null.
-  html: function (state, block, songStepFor) {
+  // block: which block is being planned. songStepFor: an action id when picking its song(s), else null.
+  // pickedSet: the songs ticked so far when picking a set (open mic).
+  html: function (state, block, songStepFor, pickedSet, sortBy, filter) {
     var blockName = Game.content.calendar.blockNames[block];
-    var body = songStepFor
-      ? Game.ui.actionPicker.songStepHtml(state, block, songStepFor)
-      : Game.ui.actionPicker.actionListHtml(state, block);
-    var title = songStepFor
-      ? blockName + ': which song will you ' + Game.content.actions[songStepFor].name.toLowerCase() + '?'
-      : blockName + ': choose an action';
+    var stepAction = songStepFor && Game.content.actions[songStepFor];
+    var body, title;
+    if (stepAction && stepAction.setSize) {
+      body = Game.ui.actionPicker.setStepHtml(state, stepAction, pickedSet || []);
+      title = blockName + ': pick ' + stepAction.setSize + ' songs for the open mic';
+    } else if (stepAction) {
+      body = Game.ui.actionPicker.songStepHtml(state, block, songStepFor, sortBy, filter);
+      title = blockName + ': which song will you ' + stepAction.name.toLowerCase() + '?';
+    } else {
+      body = Game.ui.actionPicker.actionListHtml(state, block);
+      title = blockName + ': choose an action';
+    }
 
     return '<div class="overlay" data-action="closePicker">' +
       '<div class="modal" role="dialog" aria-label="' + title + '">' +
@@ -43,7 +50,8 @@ Game.ui.actionPicker = {
         (opt.ok ? '' : ' disabled') + '>' +
         '<span class="pick__head">' +
           '<span class="pick__name">' + a.name + (isPlanned ? ' <span class="badge">Planned</span>' : '') +
-            (a.needsSong ? ' <span class="pick__more">pick a song →</span>' : '') + '</span>' +
+            (a.needsSong ? ' <span class="pick__more">pick a song →</span>' : '') +
+            (a.setSize ? ' <span class="pick__more">pick ' + a.setSize + ' songs →</span>' : '') + '</span>' +
           '<span class="pick__costs">' + picker.costText(a) + '</span>' +
         '</span>' +
         '<span class="pick__desc">' + a.description + '</span>' +
@@ -62,9 +70,10 @@ Game.ui.actionPicker = {
 
   // Step 2 (Practice): pick a finished song. Shows tightness and days since last played.
   // The loosest song is marked as suggested.
-  songStepHtml: function (state, block, actionId) {
+  songStepHtml: function (state, block, actionId, sortBy, filter) {
     var h = Game.ui.helpers;
-    var gain = Game.content.actions[actionId].effects.tightness;
+    var action = Game.content.actions[actionId];
+    var gain = action.effects.tightness;
     var entry = Game.rules.actions.plannedEntry(state, block);
     var current = entry && entry.actionId === actionId ? entry.songId : null;
     var loosest = Game.rules.songs.loosest(state);
@@ -73,7 +82,9 @@ Game.ui.actionPicker = {
     var allTied = songsList.every(function (s) { return s.tightness === songsList[0].tightness; });
     if (allTied) loosest = null;
 
-    var rows = Game.rules.songs.playable(state).map(function (song) {
+    var shown = Game.rules.songs.filterSongs(songsList, filter);
+    var sorted = Game.rules.songs.sortSongs(state, shown, sortBy);
+    var rows = sorted.length ? sorted.map(function (song) {
       var days = Game.rules.songs.daysSincePlayed(state, song);
       var after = Math.min(Game.balance.songs.tightness.max, song.tightness + gain);
       var tag = song.id === current ? ' <span class="badge">Planned</span>'
@@ -89,11 +100,74 @@ Game.ui.actionPicker = {
           '<span class="muted">' + h.daysAgo(days) + '</span>' +
         '</span>' +
         '</button>';
-    }).join('');
+    }).join('') : '<p class="hint">No ' + (filter === 'originals' ? 'finished originals' : 'covers') + ' yet.</p>';
 
-    return '<div class="picks">' + rows + '</div>' +
+    // "Practice all songs" sits on top: a small gain on every song, and none of them fade.
+    var allRow = action.allSongsGain
+      ? '<button class="pick pick--all' + (current === 'all' ? ' pick--current' : '') + '" data-action="pickSong" data-song="all">' +
+          '<span class="pick__head"><span class="pick__name">Practice all songs' +
+            (current === 'all' ? ' <span class="badge">Planned</span>' : '') + '</span>' +
+            '<span class="pick__costs">' + songsList.length + ' songs</span></span>' +
+          '<span class="pick__desc">+' + action.allSongsGain + ' tightness on every song, and resets their fading clock so none of them lose tightness.</span>' +
+        '</button>'
+      : '';
+
+    var sorts = [['tightLow', 'Tightness ↑'], ['tightHigh', 'Tightness ↓'], ['name', 'Name A–Z'], ['lastPlayed', 'Last played']];
+    var sortBar = '<div class="sort-bar"><span class="muted">Sort:</span>' + sorts.map(function (opt) {
+      return '<button class="btn btn--small' + (opt[0] === sortBy ? ' btn--primary' : '') + '" data-action="sortSongs" data-sort="' + opt[0] + '">' + opt[1] + '</button>';
+    }).join('') + '</div>';
+
+    var filters = [['all', 'All'], ['covers', 'Covers'], ['originals', 'Originals']];
+    var filterBar = '<div class="sort-bar"><span class="muted">Show:</span>' + filters.map(function (opt) {
+      return '<button class="btn btn--small' + (opt[0] === filter ? ' btn--primary' : '') + '" data-action="filterSongs" data-filter="' + opt[0] + '">' + opt[1] + '</button>';
+    }).join('') + '</div>';
+
+    return '<div class="picks">' + allRow + '</div>' +
+      '<div class="list-controls">' + filterBar + sortBar + '</div>' +
+      '<div class="picks">' + rows + '</div>' +
       '<div class="actions">' +
         '<button class="btn btn--ghost" data-action="pickerBack">← Back to actions</button>' +
+      '</div>';
+  },
+
+  // Set step (open mic): every finished song with its tightness, quality, and last played.
+  // Click songs to tick them (ticking one more than the set holds swaps out your earliest pick);
+  // the confirm button works once exactly the right number are ticked.
+  setStepHtml: function (state, action, picked) {
+    var h = Game.ui.helpers;
+    var size = action.setSize;
+    var gain = Game.balance.songs.tightness.playLiveGain;
+    var suggested = Game.rules.gigs.suggestSet(state, size);
+    var venue = Game.rules.gigs.openMicTonight(state);
+    var crowd = venue ? Game.rules.gigs.crowdRange(state, venue) : null;
+
+    var rows = Game.rules.songs.playable(state).map(function (song) {
+      var on = picked.indexOf(song.id) !== -1;
+      var days = Game.rules.songs.daysSincePlayed(state, song);
+      return '<button class="pick pick--song pick--check' + (on ? ' pick--current' : '') + '" data-action="toggleSetSong" data-song="' + song.id + '">' +
+        '<span class="pick__head">' +
+          '<span class="pick__name"><span class="check">' + (on ? '✓' : '') + '</span>' + h.escape(song.title) +
+            (suggested.indexOf(song.id) !== -1 ? ' <span class="badge badge--warn">Suggested</span>' : '') + '</span>' +
+          '<span class="pick__costs">' + (song.isCover ? 'Cover' : 'Original') + ' · ' + h.stars(song.quality) + ' ' + song.quality + '</span>' +
+        '</span>' +
+        '<span class="pick__song-stats">' +
+          '<span class="meter meter--tight"><span class="meter__fill" style="width:' + Math.round(song.tightness) + '%"></span></span>' +
+          '<span>Tightness <strong class="tight-num">' + Math.round(song.tightness) + '</strong> (+' + gain + ' if played)</span>' +
+          '<span class="muted">' + h.daysAgo(days) + '</span>' +
+        '</span>' +
+        '</button>';
+    }).join('');
+
+    return '<p class="hint picker-note">' + (venue ? venue.name + ' tonight' : '') +
+        (crowd ? ' · expected crowd ' + crowd.low + ' to ' + crowd.high : '') +
+        ' · Tighter, better songs score higher. Originals win more fans.</p>' +
+      '<div class="picks">' + rows + '</div>' +
+      '<div class="actions actions--split">' +
+        '<button class="btn btn--ghost" data-action="pickerBack">← Back to actions</button>' +
+        '<span class="hint">' + picked.length + ' of ' + size + ' picked' +
+          (picked.length === size ? ' · click another song to swap' : '') + '</span>' +
+        '<button class="btn btn--primary" data-action="confirmSet"' + (picked.length === size ? '' : ' disabled') + '>' +
+          'Play these ' + size + ' songs</button>' +
       '</div>';
   },
 
@@ -116,6 +190,7 @@ Game.ui.actionPicker = {
         : util.signed(p.added) + ' progress on ' + (p.isNew ? 'a new song' : '"' + p.title + '"') +
           ' (' + Math.round(p.from) + ' → ' + Math.round(p.to) + ')');
     }
+    if (g.gig) parts.push('Expected crowd ' + g.gig.crowd.low + ' to ' + g.gig.crowd.high + ' at ' + g.gig.venueName);
     if (g.tightness) parts.push('+' + g.tightness + ' tightness on a song you pick');
     if (g.buzz) parts.push(util.signed(g.buzz) + ' ' + Game.content.cities.hometown.name + ' buzz');
     Object.keys(g.skills).forEach(function (skill) {
@@ -138,7 +213,11 @@ Game.ui.actionPicker = {
       if (action === 'closePicker' && (target !== overlay || event.target === overlay)) app.closePicker();
       if (action === 'pickAction') app.pickAction(target.getAttribute('data-id'));
       if (action === 'pickSong') app.planAction(app.pickerSongStep, target.getAttribute('data-song'));
+      if (action === 'toggleSetSong') app.toggleSetSong(target.getAttribute('data-song'));
+      if (action === 'confirmSet') app.planAction(app.pickerSongStep, app.pickerSet.slice());
       if (action === 'pickerBack') app.pickerShowActions();
+      if (action === 'filterSongs') app.setPracticeFilter(target.getAttribute('data-filter'));
+      if (action === 'sortSongs') app.setPracticeSort(target.getAttribute('data-sort'));
       if (action === 'pickFree') app.planAction(null);
     });
     document.onkeydown = function (event) {

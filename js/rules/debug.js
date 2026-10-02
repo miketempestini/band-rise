@@ -64,6 +64,13 @@ Game.rules.debug = {
     return { state: done.state, log: done.log, songId: song.id };
   },
 
+  // Forces the next gig's result ('rough' or 'legendary'), or clears it with null.
+  forceNextGig: function (state, result) {
+    var s = Game.util.clone(state);
+    s.debug.forceNextGig = result;
+    return { state: s, log: [] };
+  },
+
   // Sets hometown buzz, kept between 0 and the max.
   setBuzz: function (state, value) {
     var b = Game.balance.buzz;
