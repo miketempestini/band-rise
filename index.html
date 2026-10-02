@@ -7,13 +7,10 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- The whole game draws inside this box. For now it just shows the title. -->
-  <main id="app">
-    <section class="title-screen">
-      <h1 class="title-screen__name">Band Rise</h1>
-      <p class="title-screen__tagline">From open mic to arena.</p>
-    </section>
-  </main>
+  <!-- The whole game draws inside this box. -->
+  <main id="app"></main>
+  <!-- The debug panel (only filled in when the address ends in ?debug). -->
+  <div id="debug"></div>
 
   <!--
     Scripts load in this exact order (see CLAUDE.md). Classic script tags only, no modules,
@@ -21,9 +18,25 @@
   -->
   <script src="js/balance.js"></script>
   <script src="js/rng.js"></script>
-  <!-- js/content/*.js files go here -->
+  <script src="js/util.js"></script>
+  <script src="js/content/calendar.js"></script>
+  <script src="js/content/skills.js"></script>
+  <script src="js/content/instruments.js"></script>
   <script src="js/state.js"></script>
-  <!-- js/rules/*.js files go here -->
-  <!-- js/ui/*.js files go here -->
+  <script src="js/save.js"></script>
+  <script src="js/rules/money.js"></script>
+  <script src="js/rules/career.js"></script>
+  <script src="js/rules/day.js"></script>
+  <script src="js/rules/debug.js"></script>
+  <script src="js/ui/helpers.js"></script>
+  <script src="js/ui/topbar.js"></script>
+  <script src="js/ui/title.js"></script>
+  <script src="js/ui/newCareer.js"></script>
+  <script src="js/ui/today.js"></script>
+  <script src="js/ui/weeklySummary.js"></script>
+  <script src="js/ui/settings.js"></script>
+  <script src="js/ui/gameOver.js"></script>
+  <script src="js/ui/debugPanel.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>

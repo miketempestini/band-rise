@@ -153,7 +153,7 @@ Freshness starts at 1 and drops 3% a week after release, never below 0.3. Exampl
 
 There's no game over. If you can't pay Sunday's bills, you take a soft setback instead (details in Open questions).
 
-Take a small load from Mom and Dad for $1,000 every time your balance falls below 0. The player can go up to $5,000 in debt. If the player is in debt, they are limited from taking certain actions, such as upgrading their house. If the player debt remains greater than $3,000 for more than 5 weeks, the game is ended, with the message of "You went broke, had to sell your guitar, and move back into your parent's house. Maybe this music thing is more of a hobby for you." and presents the player with the option to return to the title screen to start a new game.&#32;
+Take a small load from Mom and Dad for $1,000 every time your balance falls below 0. There is no limit on how far into debt the player can go: Mom and Dad keep lending $1,000 at a time whenever needed. If the player is in debt, they are limited from taking certain actions, such as upgrading their house. If the player debt remains greater than $3,000 for more than 5 weeks, the game is ended, with the message of "You went broke, had to sell your guitar, and move back into your parent's house. Maybe this music thing is more of a hobby for you." and presents the player with the option to return to the title screen to start a new game.&#32;
 
 ## Skills
 
@@ -778,7 +778,7 @@ Visual style: simple and cartoonish, with details to come. Until then, plain col
 I made these calls to keep moving. Each one is easy to change.
 
 - [ ] **Going broke.** No game over. The first missed rent triggers a family loan, paid back at $50 a week. A second miss while the loan is open moves you to a friend's couch: $100 a week, but morale can't go above 50. Or should going broke end the run?
-  - [ ] Answer: The player can go up to $5,000 in debt. If the player is in debt, they are limited from taking certain actions, such as upgrading their house. If the player debt remains greater than $3,000 for more than 5 weeks, the game is ended, with the message of "You went broke, had to sell your guitar, and move back into your parent's house. Maybe this music thing is more of a hobby for you." and presents the player with the option to return to the title screen to start a new game.
+  - [ ] Answer: There is no limit on how far into debt the player can go: Mom and Dad keep lending $1,000 at a time whenever needed. If the player is in debt, they are limited from taking certain actions, such as upgrading their house. If the player debt remains greater than $3,000 for more than 5 weeks, the game is ended, with the message of "You went broke, had to sell your guitar, and move back into your parent's house. Maybe this music thing is more of a hobby for you." and presents the player with the option to return to the title screen to start a new game.
 - [ ] **Cities.** Made-up names, or real cities with made-up venues? Real cities feel grounded; made-up ones avoid looking like real businesses.
   - [ ] Lets do made up city names with made up venues. Easier to modify and mimic.
 - [ ] **Rival bands.** Left out for now. Should they come later, competing for the same bookings?

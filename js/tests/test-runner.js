@@ -34,6 +34,12 @@ Game.runTests = function () {
             ' but got ' + JSON.stringify(actual));
         }
       },
+      // Like equal, but for objects and lists: passes if both have the same contents.
+      sameContents: function (actual, expected, note) {
+        if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+          failures.push((note ? note + ': ' : '') + 'the two objects have different contents');
+        }
+      },
       ok: function (value, note) {
         if (!value) {
           failures.push(note || 'expected something true but got ' + JSON.stringify(value));

@@ -58,7 +58,10 @@ PROGRESS.md       Running log: built, next, known issues.
 js/
   balance.js      Every tunable number, grouped by system.
   rng.js          Seeded random number generator (repeatable randomness).
+  util.js         Small helpers: clone (copy the state) and clamp (keep a number in range).
   state.js        Builds a brand-new game state (the save data shape).
+  save.js         Saving/loading: browser auto-save, export/import files, checking a save is valid.
+  main.js         Game.app: holds the current state, switches screens, runs rules, auto-saves.
   content/        Fixed game data that never gets saved: actions, venues, cities, events, names...
   rules/          One file per game system (energy.js, gigs.js, booking.js...). Plain functions.
   ui/             One file per screen (title.js, today.js, calendar.js...). Draw only.
@@ -70,12 +73,12 @@ js/
 Files must load in this order, because later files use things earlier files define:
 
 1. `js/balance.js`
-2. `js/rng.js`
+2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
-4. `js/state.js`
-5. `js/rules/*.js`
-6. `js/ui/*.js` (game page only)
-7. `js/main.js` or start-up code (game page only, when it exists)
+4. `js/state.js`, `js/save.js`
+5. `js/rules/*.js` (`money.js` before `day.js`, since End Day uses it)
+6. `js/ui/*.js` (game page only; `helpers.js` and `topbar.js` first)
+7. `js/main.js` (game page only, always last: it starts the game)
 
 `tests.html` loads 1 to 5, then `js/tests/test-runner.js`, then each `*.test.js` file.
 When you add a new file, add its `<script>` tag to **both** `index.html` and `tests.html`
@@ -91,9 +94,26 @@ Game.test('what this checks, in plain words', function (t) {
 ```
 
 Use a fixed seed in tests so results are the same every run.
+Wrap each test file in `(function () { ... })();` so its helper functions don't become globals.
+Tests that touch localStorage must pass their own key (never the real save key).
+Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) to check results.
 
-## Saving (for later phases)
+## How the pieces fit (built in Phase 1)
+
+- **Rules** return `{ state, log }`. `Game.rules.day.endDay` also returns `weekEnded`.
+- **All money** goes through `Game.rules.money.earn` / `spend` (with a category name). `spend`
+  takes family loans automatically, and both record the money for the weekly summary.
+- **Blocking actions while in debt:** add the action id to `Game.balance.debt.blockedActions`
+  and check `Game.rules.money.blockedByDebt(state, actionId)` (returns a reason or null).
+- **Screens** have `render(root, app)`. They draw with HTML strings and connect buttons with
+  `data-action="name"` + `Game.ui.helpers.bind`. They call methods on `Game.app` to change things.
+- **Debug panel:** add buttons in `js/ui/debugPanel.js`, with the logic as rules in `js/rules/debug.js`.
+
+## Saving
 
 The whole game is one plain object (see "Saved game state" in Design.md). Saving means
-storing that object in the browser's localStorage. Keep the state plain data only:
-no functions, no DOM elements, nothing that can't go through `JSON.stringify`.
+storing that object in the browser's localStorage (key in `balance.save.storageKey`).
+Keep the state plain data only: no functions, no DOM elements, nothing that can't go through `JSON.stringify`.
+When you add a field to the state, add it in `Game.state.createNew`. Save checking compares against
+it, so older saves missing the field will be refused. If that matters, bump `balance.save.version`
+and add an upgrade step in save.js.

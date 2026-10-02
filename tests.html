@@ -23,16 +23,28 @@
   <p id="summary" class="summary">Running...</p>
   <ul id="results"></ul>
 
-  <!-- Game code, same order as index.html (no ui files) -->
+  <!-- Game code, same order as index.html (no ui files, no main.js) -->
   <script src="js/balance.js"></script>
   <script src="js/rng.js"></script>
-  <!-- js/content/*.js files go here -->
+  <script src="js/util.js"></script>
+  <script src="js/content/calendar.js"></script>
+  <script src="js/content/skills.js"></script>
+  <script src="js/content/instruments.js"></script>
   <script src="js/state.js"></script>
-  <!-- js/rules/*.js files go here -->
+  <script src="js/save.js"></script>
+  <script src="js/rules/money.js"></script>
+  <script src="js/rules/career.js"></script>
+  <script src="js/rules/day.js"></script>
+  <script src="js/rules/debug.js"></script>
 
   <!-- The test runner, then one test file per system -->
   <script src="js/tests/test-runner.js"></script>
   <script src="js/tests/rng.test.js"></script>
+  <script src="js/tests/career.test.js"></script>
+  <script src="js/tests/money.test.js"></script>
+  <script src="js/tests/day.test.js"></script>
+  <script src="js/tests/save.test.js"></script>
+  <script src="js/tests/debug.test.js"></script>
 
   <script>Game.runTests();</script>
 </body>

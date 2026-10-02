@@ -73,8 +73,8 @@ Game.balance = {
   // ---------------------------------------------------------------
   economy: {
     startCash: 500,                  // Cash at the start of a new career
-    rent: 275,                       // Weekly rent at the starter apartment
-    livingCosts: 125,                // Weekly living costs (food, phone, etc.)
+    // Weekly bills (rent + living costs) come from the housing table below.
+    // Starter apartment: $275 rent + $125 living costs = $400 a week.
     openMicTips: { min: 0, max: 20 },// Tip jar at an open mic (more on a good night)
     coverGigFee: 25,                 // Flat fee for a cover gig
     coverGigMinReputation: null,     // NOT DECIDED in Design.md: reputation needed for cover gigs
@@ -128,11 +128,13 @@ Game.balance = {
   // Going broke (from the answer in Design.md's Open questions)
   // ---------------------------------------------------------------
   debt: {
-    familyLoanAmount: 1000,          // Mom and Dad lend this much each time your cash drops below 0
-    maxDebt: 5000,                   // The most you can owe
+    familyLoanAmount: 1000,          // Mom and Dad lend this much each time your cash would drop below 0
+                                     // (no limit: they keep lending until your cash is back to $0 or more)
     gameOverDebt: 3000,              // Owing more than this for too long ends the game
     gameOverWeeks: 5,                // ...for more than this many weeks in a row
-    gameOverMessage: "You went broke, had to sell your guitar, and move back into your parent's house. Maybe this music thing is more of a hobby for you."
+    gameOverMessage: "You went broke, had to sell your guitar, and move back into your parent's house. Maybe this music thing is more of a hobby for you.",
+    // Actions you can't do while you owe money. Later phases add ids here (for example 'upgradeHousing').
+    blockedActions: []
   },
 
   // ---------------------------------------------------------------
@@ -560,6 +562,15 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 1                       // Save format version, bumped when the state shape changes
+    version: 1,                      // Save format version, bumped when the state shape changes
+    storageKey: 'bandRise.save'      // The name the save is stored under in the browser
+  },
+
+  // ---------------------------------------------------------------
+  // Debug panel (only shown when the address ends in ?debug)
+  // ---------------------------------------------------------------
+  debug: {
+    cashStep: 500,                   // The +$ and -$ buttons add or remove this much
+    skipDays: 7                      // The skip button jumps this many days
   }
 };

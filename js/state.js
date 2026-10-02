@@ -4,7 +4,7 @@
 // The shape follows "Saved game state" in Design.md. Starting numbers come from balance.js.
 //
 // This file only builds the starting state. It has no game rules.
-// (For example, the +3 bonus from the starting instrument is added later by the New career rule.)
+// (The +3 bonus from the starting instrument is added by Game.rules.career.startCareer.)
 
 window.Game = window.Game || {};
 
@@ -42,9 +42,11 @@ Game.state = {
         job: {
           status: 'full',                // 'full' | 'part' | 'none'
           standing: b.job.startStanding,
-          vacationDaysLeft: b.job.vacationDaysPerYear
+          vacationDaysLeft: b.job.vacationDaysPerYear,
+          unpaidShifts: 0                // Shifts worked since the last payday
         },
-        loanOwed: 0,
+        loanOwed: 0,                     // Total debt owed to Mom and Dad
+        debtWeeksOverLimit: 0,           // Sundays in a row with debt above the game-over line
         housing: 'starter',
         gear: { instrumentTier: 0, homeStudio: false, van: false },
         merchStock: { shirts: 0, cds: 0 },
@@ -61,8 +63,25 @@ Game.state = {
       entries: {},     // id: { id, day, block, type, actionId, venueId, songIds, personIds, deal, status }
       inbox: [],       // { id, day, kind: 'offer' | 'event' | 'reply' | 'info', templateId, data, expiresDay, resolved }
       milestones: {},  // milestoneId: day reached
-      ledger: [],      // one entry per week: { week, income: {...}, costs: {...} }
+      ledger: [],      // one entry per finished week: { week, startCash, endCash, startDebt, endDebt, income, costs, loans, paidBack, shiftsWorked }
+      thisWeek: Game.state.newWeek(b.economy.startCash, 0), // running totals for the week in progress
+      lastDayLog: [],  // what happened at the last End Day (shown on the Today screen)
+      gameOver: null,  // null while playing; { day, message } once the game has ended
       stats: { gigsPlayed: 0, bestResult: null, biggestCrowd: 0, totalEarned: 0 }
+    };
+  },
+
+  // Returns a fresh, empty tally for a new week.
+  // income and costs hold money by category, like { dayJob: 550 } or { bills: 400 }.
+  newWeek: function (startCash, startDebt) {
+    return {
+      startCash: startCash,
+      startDebt: startDebt,
+      shiftsWorked: 0,
+      income: {},
+      costs: {},
+      loans: 0,        // money borrowed from Mom and Dad this week
+      paidBack: 0      // debt paid back this week
     };
   }
 };
