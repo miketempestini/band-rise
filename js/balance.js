@@ -596,8 +596,42 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 6,                      // Save format version, bumped when the state shape changes
+    version: 7,                      // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
+  },
+
+  // ---------------------------------------------------------------
+  // Random events (see js/content/events.js for each event's own numbers)
+  // ---------------------------------------------------------------
+  events: {
+    dailyChance: 0.28,               // Chance each morning that something happens (about one every 3.5 days)
+    defaultCooldownDays: 10,         // The same event won't happen again for at least this many days
+    firstOvertimeWeek: 1             // The overtime offer is guaranteed on this week's Friday
+  },
+
+  // ---------------------------------------------------------------
+  // Tutorial and the end of the first three weeks
+  // ---------------------------------------------------------------
+  tutorial: {
+    days: 3                          // Tip cards show on the first this-many days of a new career
+  },
+  slice: {
+    endDay: 21,                      // The "Three weeks in" card shows after this many days (end of week 3)
+    // Where a new player should land by then (from Design.md's "Where the player should land")
+    targets: {
+      cash:       { min: 400, max: 900 },
+      fans:       { min: 6,   max: 15 },
+      originals:  { min: 1,   max: 2 },
+      bandSize:   { min: 1,   max: 1 },  // bandmates besides you
+      reputation: { min: 10,  max: 13 }
+    }
+  },
+
+  // ---------------------------------------------------------------
+  // Time savers
+  // ---------------------------------------------------------------
+  timeSavers: {
+    maxSkipDays: 14                  // "Skip to next commitment" never skips more than this many days at once
   },
 
   // ---------------------------------------------------------------

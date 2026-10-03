@@ -26,6 +26,7 @@ Game.app = {
   calendarDay: null,    // the day selected on the Calendar screen
   bookingDraft: null,   // the booking being set up: { venueId, gigDay, deal, choosingBlock }
   setlistDraft: null,   // songs ticked while editing a booked show's setlist
+  skipResult: null,     // what "Skip to next commitment" did, for the skip summary screen
   bandNameDraft: '',       // the band name shown in the name box on the Name your band screen
   pendingWeekSummary: false, // true when the weekly summary should follow the Day results screen
   draftCareer: null,    // a career being set up: { name, instrument, allocation } (not saved until Start)
@@ -394,7 +395,7 @@ Game.app = {
       return;
     }
     var result = Game.rules.people.invite(app.state, personId);
-    app.state = result.state;
+    app.state = Game.rules.progress.checkUnlocks(result.state).state; // First bandmate milestone
     app.autoSave();
     if (result.firstMember) {
       var suggested = Game.rules.people.suggestBandName(app.state);
@@ -545,6 +546,67 @@ Game.app = {
     var next = app.pendingWeekSummary ? 'weeklySummary' : 'today';
     app.pendingWeekSummary = false;
     app.show(next);
+  },
+
+  // Leaving the weekly summary: after week 3, the one-time "Three weeks in" card; otherwise Today.
+  leaveWeeklySummary: function () {
+    var app = Game.app;
+    app.show(Game.rules.progress.sliceDue(app.state) ? 'sliceEnd' : 'today');
+  },
+
+  // Leaving the "Three weeks in" card (it won't show again). to: 'today' or 'booking'.
+  leaveSliceEnd: function (to) {
+    var app = Game.app;
+    app.state = Game.rules.progress.markSliceSeen(app.state).state;
+    app.autoSave();
+    app.show(to || 'today');
+  },
+
+  // ----- Time savers, events, and tips on Today -----
+
+  // "Skip to next commitment": ends quiet days until something needs you, then shows what happened.
+  skipAhead: function () {
+    var app = Game.app;
+    var problem = Game.rules.day.skipProblem(app.state);
+    if (problem) { app.notice = { kind: 'error', text: problem }; app.render(); return; }
+    var result = Game.rules.day.skipToNextCommitment(app.state);
+    app.skipResult = result;
+    app.state = result.state;
+    if (app.state.gameOver) { app.afterDayChange(result.last, true); return; }
+    app.autoSave();
+    app.show('skipSummary');
+  },
+
+  // From the skip summary: on to the last day's usual screens (gig result, reveals, Day results, summary).
+  leaveSkipSummary: function () {
+    var app = Game.app;
+    var last = app.skipResult.last;
+    app.skipResult = null;
+    app.afterDayChange(last, true);
+  },
+
+  repeatEvening: function () {
+    var app = Game.app;
+    var result = Game.rules.actions.repeatEvening(app.state);
+    app.notice = result.log.length ? { kind: 'error', text: result.log.join(' ') } : null;
+    app.applyRule(result);
+  },
+
+  answerEvent: function (choiceId) {
+    var app = Game.app;
+    var result = Game.rules.events.resolve(app.state, choiceId);
+    app.notice = { kind: 'info', text: result.log.join(' ') };
+    app.state = Game.rules.progress.checkUnlocks(result.state).state;
+    app.autoSave();
+    app.render();
+  },
+
+  dismissTip: function (cardId) {
+    Game.app.applyRule(Game.rules.progress.dismissTip(Game.app.state, cardId));
+  },
+
+  setTutorial: function (on) {
+    Game.app.applyRule(Game.rules.progress.setTutorial(Game.app.state, on));
   },
 
   payBack: function (amount) {

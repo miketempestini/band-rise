@@ -76,7 +76,7 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, actions, career, day, debug
+5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, actions, career, day, debug
    (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
 6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
@@ -184,6 +184,23 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   day. Internally they run on `Game.rules.actions.viewForDay(state, day)`, a throwaway copy where `state.day` is
   the planned day and `planningAhead` is true (which skips energy/cash checks in `option`). Never save a view.
   The picker draws from `Game.app.pickerView()`.
+
+## How the pieces fit (added in Phase 7)
+
+- **Events** are content in `js/content/events.js` (`when`, optional `setup`, `text`, `choices` with one `safe`
+  choice). `Game.rules.events` rolls one each morning (`roll`, at the end of End Day), describes and applies
+  effects, auto-answers with the safe choice at the next End Day, and runs temporary effects (`state.effects`:
+  `gigScore` shows as the "Setbacks" score part; `dailyEnergy` applies overnight). New effect kinds go in
+  `describe` and `apply`.
+- **Milestones**: names in `js/content/milestones.js`; live checks in `Game.rules.progress.milestoneChecks`.
+  `checkUnlocks` gives the banner and +10 morale (call it after anything that could reach one outside End Day).
+- **Tutorial** tips: `js/content/tutorial.js`; elements they point at carry `data-tour="..."`.
+- **Time savers**: `Game.rules.day.skipToNextCommitment` and `Game.rules.actions.repeatEvening`.
+- **Balance check**: `js/tests/balance.sim.js` runs on tests.html after the tests (100 runs x 21 days). Its
+  `planDay` is the "simple, sensible player"; update it when new systems change what a sensible player does.
+- **Publishing**: the game is served by GitHub Pages from the `main` branch at
+  https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
+  `.nojekyll` makes Pages serve the files as they are.
 
 ## Saving
 

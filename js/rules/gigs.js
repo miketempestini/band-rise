@@ -130,7 +130,8 @@ Game.rules.gigs = {
       { id: 'morale', value: morale },
       { id: 'traits', value: Game.rules.people.traitGigBonus(state) },
       { id: 'venueTier', value: Game.balance.venues.tiers[venue.tier].gigScorePenalty },
-      { id: 'room', value: room }
+      { id: 'room', value: room },
+      { id: 'setbacks', value: Game.rules.events.gigScoreChange(state) } // event effects like a crackling amp
     ];
   },
 
@@ -298,6 +299,8 @@ Game.rules.gigs = {
 
     // Stats.
     s.stats.gigsPlayed += 1;
+    if (venue.tier === 0) s.stats.openMicsPlayed += 1;
+    if (venue.tier > 0 && pay > 0) s.stats.paidShows += 1;
     if (!s.stats.bestResult || g.resultOrder.indexOf(result) > g.resultOrder.indexOf(s.stats.bestResult)) {
       s.stats.bestResult = result;
     }

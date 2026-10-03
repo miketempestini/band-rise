@@ -352,6 +352,39 @@ Game.rules.actions = {
     return { state: s, log: [] };
   },
 
+  // ----- Repeat yesterday's evening -----
+
+  // Tonight's evening task, saved at End Day so it can be repeated tomorrow (null if there was none,
+  // or if it can't be repeated, like emailing a venue).
+  eveningToRepeat: function (state) {
+    var blocks = Game.balance.time.blocks;
+    var entry = Game.rules.actions.plannedEntry(state, blocks[blocks.length - 1]);
+    if (!entry || entry.type !== 'action' || Game.content.actions[entry.actionId].needsBooking) return null;
+    return { actionId: entry.actionId, songId: entry.songId, songIds: entry.songIds, personId: entry.personId };
+  },
+
+  // Why yesterday's evening can't be repeated tonight, or null if it can.
+  repeatProblem: function (state) {
+    var last = state.lastEvening;
+    if (!last) return 'Nothing was planned yesterday evening.';
+    var blocks = Game.balance.time.blocks;
+    var evening = blocks[blocks.length - 1];
+    if (Game.rules.actions.plannedEntry(state, evening)) return 'Tonight already has something planned.';
+    var choice = last.personId || (last.songIds ? last.songIds : last.songId);
+    var check = Game.rules.actions.plan(state, evening, last.actionId, choice);
+    return check.log.length ? check.log[0] : null;
+  },
+
+  // Plans yesterday's evening task again tonight (same song, set, or person). Returns { state, log }.
+  repeatEvening: function (state) {
+    var problem = Game.rules.actions.repeatProblem(state);
+    if (problem) return { state: state, log: [problem] };
+    var last = state.lastEvening;
+    var blocks = Game.balance.time.blocks;
+    var choice = last.personId || (last.songIds ? last.songIds : last.songId);
+    return Game.rules.actions.plan(state, blocks[blocks.length - 1], last.actionId, choice);
+  },
+
   // Removes a finished day's plan from the calendar (called at End Day).
   clearDay: function (state, day) {
     var s = Game.util.clone(state);

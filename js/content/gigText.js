@@ -25,6 +25,7 @@ Game.content.gigText = {
     traits: 'Band traits',
     venueTier: 'Bigger room',
     room: 'Room fullness',
+    setbacks: 'Setbacks',
     luck: 'Luck',
     debug: 'Debug'
   },

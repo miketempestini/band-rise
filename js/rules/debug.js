@@ -61,7 +61,8 @@ Game.rules.debug = {
       song = s.songs[started.songId];
     }
     var done = Game.rules.songs.finishSong(s, song.id);
-    return { state: done.state, log: done.log, songId: song.id };
+    var unlocked = Game.rules.progress.checkUnlocks(done.state);
+    return { state: unlocked.state, log: done.log, songId: song.id };
   },
 
   // Meets a random new contact right now.

@@ -14,6 +14,11 @@ Game.ui.settings = {
       '<section class="screen screen--narrow">' +
         '<h1 class="screen__title">Settings</h1>' +
         h.notice(app.notice) +
+        (hasGame ? '<div class="panel">' +
+          '<h3 class="panel__title">Tutorial</h3>' +
+          '<label class="switch"><input type="checkbox" id="tips-toggle"' + (app.state.settings.tutorial ? ' checked' : '') + '>' +
+            ' Show tutorial tips on the first ' + Game.balance.tutorial.days + ' days</label>' +
+        '</div>' : '') +
         '<div class="panel">' +
           '<h3 class="panel__title">Saves</h3>' +
           '<p class="hint">The game saves itself in this browser after every day. ' +
@@ -30,6 +35,9 @@ Game.ui.settings = {
           '<button class="btn btn--ghost" data-action="title">Title screen</button>' +
         '</div>' +
       '</section>';
+
+    var tips = root.querySelector('#tips-toggle');
+    if (tips) tips.addEventListener('change', function () { app.setTutorial(tips.checked); });
 
     var fileInput = root.querySelector('#import-file');
     fileInput.addEventListener('change', function () { app.importFile(fileInput.files[0]); });

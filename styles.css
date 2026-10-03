@@ -3,17 +3,24 @@
    Colors and sizes are kept as named variables at the top so the look is easy to change in one place. */
 
 :root {
-  --bg: #1d1b26;          /* page background: dark plum */
-  --panel: #2a2736;       /* panels and cards */
-  --panel-2: #353144;     /* slightly lighter panels (locked blocks, inputs) */
-  --line: #443f55;        /* thin borders */
-  --text: #f4f1ea;        /* main text: warm off-white */
-  --text-muted: #a9a3b8;  /* secondary text */
-  --accent: #ffb547;      /* the one highlight color: stage-light amber */
-  --accent-text: #1d1b26; /* text on top of the accent color */
+  --bg: #1b1a2e;          /* page background: deep indigo night */
+  --panel: #262443;       /* panels and cards */
+  --panel-2: #312e52;     /* slightly lighter panels (locked blocks, inputs) */
+  --line: #423e6b;        /* borders */
+  --text: #f7f3ea;        /* main text: warm off-white */
+  --text-muted: #b3adcb;  /* secondary text */
+  --accent: #ffb547;      /* main highlight: stage-light amber */
+  --accent-text: #1b1a2e; /* text on top of the accent color */
+  --teal: #4fd1c5;        /* friendly second color: info, tips */
+  --pink: #ff7eb6;        /* third color: events and celebrations */
   --good: #5fd38d;        /* success / passing */
   --bad: #ff6b6b;         /* failure / warnings */
-  --radius: 10px;
+  --radius: 14px;         /* rounded, cartoon-ish corners */
+  --shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); /* chunky "cartoon" offset shadow */
+  --space-1: 8px;         /* spacing scale: use these for gaps and padding */
+  --space-2: 12px;
+  --space-3: 16px;
+  --space-4: 24px;
 }
 
 * {
@@ -25,9 +32,10 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
-  font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  /* Rounded system fonts where available (no downloads, so it works offline). */
+  font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
   font-size: 16px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 /* ---------- Buttons ---------- */
@@ -573,3 +581,85 @@ button.block:hover { border-color: var(--accent); }
 .plan__block { width: 80px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
 .plan__task { flex: 1; font-weight: bold; }
 .plan__row .muted { flex: 1; }
+
+
+/* =====================================================================
+   Visual pass (Phase 7): friendlier cards, consistent spacing, readable numbers.
+   ===================================================================== */
+
+.panel { border-width: 2px; box-shadow: var(--shadow); padding: var(--space-4); margin-bottom: var(--space-3); }
+.panel__title { font-weight: bold; letter-spacing: 1.5px; }
+.btn { border-width: 2px; border-radius: 10px; font-weight: 600; transition: transform 0.05s; }
+.btn:active:not(:disabled) { transform: translate(1px, 1px); }
+.btn--primary { box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); }
+.block { border-width: 2px; box-shadow: var(--shadow); border-radius: var(--radius); }
+.block__title { font-size: 20px; }
+.topbar { border-bottom-width: 2px; padding: var(--space-2) var(--space-4); }
+.stat__value { font-size: 20px; font-variant-numeric: tabular-nums; }
+.rows dd, .num, .skill__value { font-variant-numeric: tabular-nums; }
+.tabs { padding: 0 var(--space-4); border-bottom-width: 2px; }
+.tab { font-weight: 600; }
+.tab--active { border-bottom-width: 4px; }
+.screen__title { letter-spacing: 0.5px; }
+.modal { border-width: 2px; box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45); border-radius: 18px; }
+.pick, .venue, .deal, .person, .cal__day, .message, .setlist-song { border-radius: 12px; }
+.venue, .person { border-width: 2px; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3); }
+.notice { border-radius: 12px; border-width: 2px; }
+.badge { padding: 2px 9px; }
+.hint { line-height: 1.5; }
+.end-day { flex-wrap: wrap; gap: var(--space-2); }
+
+/* ---------- Today: event card ---------- */
+
+.event-card { border: 2px solid var(--pink); background: rgba(255, 126, 182, 0.08); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-3); }
+.event-card__title { font-size: 20px; font-weight: bold; color: var(--pink); }
+.event-card p { margin: var(--space-1) 0 var(--space-2); }
+.event-card__choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-2); }
+.choice-btn { font: inherit; text-align: left; color: var(--text); background: var(--panel); border: 2px solid var(--line);
+  border-radius: 12px; padding: var(--space-2) var(--space-3); cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
+.choice-btn:hover:not(:disabled) { border-color: var(--pink); }
+.choice-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.choice-btn span { color: var(--accent); font-weight: bold; font-size: 14px; }
+.choice-btn em { color: var(--text-muted); font-size: 12px; }
+
+/* ---------- Today: tutorial tips ---------- */
+
+.tip-card { border: 2px solid var(--teal); background: rgba(79, 209, 197, 0.08); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-3); }
+.tip-card__title { font-weight: bold; color: var(--teal); font-size: 18px; }
+.tip-card p { margin: 6px 0 var(--space-2); }
+.tip-card__actions { display: flex; gap: var(--space-1); }
+.tour-highlight { outline: 3px dashed var(--teal) !important; outline-offset: 4px; border-radius: 12px; animation: tour-pulse 1.6s ease-in-out infinite; }
+@keyframes tour-pulse { 50% { outline-color: rgba(79, 209, 197, 0.35); } }
+
+/* ---------- Banners ---------- */
+
+.toast { border-width: 2px; box-shadow: var(--shadow); }
+.toast--milestone { border-color: var(--pink); background: rgba(255, 126, 182, 0.10); font-weight: 600; }
+
+/* ---------- Career ---------- */
+
+.fame__name { font-size: 32px; font-weight: bold; color: var(--accent); }
+.fame__fans { color: var(--text-muted); margin-bottom: var(--space-1); }
+.milestone { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: var(--space-2);
+  padding: var(--space-1) var(--space-2); border-radius: 10px; margin-bottom: 6px; background: var(--panel-2); opacity: 0.7; }
+.milestone--done { opacity: 1; border: 2px solid var(--pink); }
+.milestone__num { text-align: center; font-weight: bold; }
+.milestone__name { font-weight: bold; }
+.milestone__when { font-size: 13px; }
+
+/* ---------- Three weeks in ---------- */
+
+.slice__headline { font-size: 48px; max-width: 900px; }
+.slice__sub { color: var(--text-muted); max-width: 640px; font-size: 18px; }
+.slice__panel { width: 620px; max-width: 100%; text-align: left; }
+
+/* ---------- Skip summary ---------- */
+
+.skip-days .result-row { grid-template-columns: 170px 1fr; }
+
+/* ---------- Settings ---------- */
+
+.switch { display: flex; align-items: center; gap: var(--space-1); cursor: pointer; }
+.switch input { width: 18px; height: 18px; accent-color: var(--accent); }

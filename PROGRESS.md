@@ -4,6 +4,28 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 8: Phase 7, events, tutorial, milestones, and the MVP finish line (2026-10-02)
+- **Events** (`js/content/events.js`, `js/rules/events.js`): 10 early-game events (overtime offer, crackling amp,
+  broken string, blog mention, car trouble, fill-in show, lesson request, roommate's party, sunny Saturday busking,
+  bandmate wants more rehearsal). 28% chance each morning (about one every 3.5 days), weighted, with cooldowns.
+  The first Friday's overtime offer is guaranteed (Design.md week 1). Shown as a card on Today with each choice's
+  effects spelled out; unanswered events get their safe choice at End Day. Logged in the Inbox.
+  Temporary effects: "Setbacks" part of the gig score (amp, string) and nightly energy loss (bus).
+  Overtime: Saturday becomes a paid shift ($165, paid that night). Fill-in: a show booked tomorrow, no booking odds.
+- **Milestones 1-5** with a 🏆 banner and +10 morale each (no feature locks; the old "Small rooms" banner is now
+  milestone 4). **Career tab**: fame level with progress to the next, milestones reached and coming up, lifetime stats.
+- **Tutorial**: 5 tip cards on days 1-3 (top bar, blocks, inbox/open mics, End Day, Calendar) that highlight what
+  they talk about; Got it / Turn off tips; a switch in Settings.
+- **Time savers**: "Skip to next commitment" (ends quiet days until a show/plan, event, new message, finished song,
+  gig, or the weekly summary; then a "Skipped N days" summary) and "Repeat yesterday's evening".
+- **"Three weeks in" card** after the week 3 wrap-up: your first real show countdown (or a nudge to book), and where
+  you landed vs. Design.md's targets. Shown once; play continues.
+- **Balance check** on tests.html (100 runs x 21 days, simple strategy). Results below under Known issues.
+- **Visual pass**: friendlier palette (indigo, amber, teal, pink), rounded cards with chunky offset shadows,
+  consistent spacing, tab icons, tabular numbers, rounded system fonts.
+- **Published**: repo made public; GitHub Pages on at https://miketempestini.github.io/band-rise/ (from main).
+- **Saves:** version 7. **Tests:** 174 passing (events.test.js, progress.test.js new) plus the balance check.
+
 ### Session 7b: Planning days ahead from the Calendar (2026-10-02)
 - On the Calendar, the selected day (today or later, within the 4-week view) lists Morning/Afternoon/Evening with
   **Plan…**, **Change**, and **Clear**. Planning opens the same action picker as Today, titled with that day's date.
@@ -200,13 +222,20 @@ A running log of what's built, what's next, and known issues. Update at the end 
   with a no-library test runner, git repo (pushed to github.com/miketempestini/band-rise, private).
 
 ## What's next
-- Phase 7 (to be defined). Candidates from Design.md: milestones (with their unlocks), random events and offers
-  (fill-ins, overtime), recording and releasing, merch, the Shop.
-- Held back on purpose: going part-time (reputation 20 + standing 50), Hollow Records' merch bonus (needs merch),
-  the manager's auto-booking and 12-week calendar, other cities and travel.
-- Also not built yet: "Repeat yesterday" and Plan Week shortcuts.
+- **MVP playtest**: friends play the first 21 days from the link; compare with the balance check.
+- **Balance decisions waiting on the owner** (see Known issues): bandmate odds, paid-show odds, cash.
+- After the MVP (Design.md): recording and releasing, merch and the Shop, more events and offers (residency,
+  opening slots), part-time job, milestones 6+, other cities and travel.
 
 ## Known issues / open decisions
+- **Balance check (100 runs, first 21 days, not applied yet)** vs. Design.md's targets:
+  - Cash avg $1,144 (range $1,050-1,295), target $400-900: **too high**. Partly the simulated player barely spends
+    (no flyers, few hang outs) and takes overtime. Possible fix: no change until real playtests; or raise rent.
+  - Fans avg 6.3 (4-10), target 6-15: on target, at the low edge.
+  - Originals avg 1.6 (1-2): on target. Reputation avg 12.8 (8-17): on target.
+  - Bandmates avg 0.4, target 1: **too low** (only 37% of runs get one). Suggested: people.inviteMinRelationship
+    50 -> 40, or people.relationship.jam 8 -> 10.
+  - Paid show booked or played by day 21: 69% of runs: **a bit low**. Suggested: venues.bookingBaseChance 0.50 -> 0.60.
 - **Balance check:** at starting skills a cover open mic scores about 32 (22 to 42), so mostly Solid: about
   1 fan and +2 reputation a night. Two open mics a week reach reputation 10 in roughly 2.5 weeks, matching
   Design.md's first-three-weeks target.

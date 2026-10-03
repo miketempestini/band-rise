@@ -39,6 +39,15 @@ Game.ui.inbox = {
   messageHtml: function (state, m) {
     var h = Game.ui.helpers;
     var d = m.data;
+    if (m.kind === 'event') {
+      // A record of a morning event and how you answered it.
+      return '<div class="message">' +
+        '<div class="message__head"><strong>⚡ ' + h.escape(d.title) + '</strong>' +
+          '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' +
+        '<p>' + h.escape(d.text) + '</p>' +
+        '<div class="message__foot"><span class="badge">' + h.escape(d.answer ? 'You chose: ' + d.answer : 'Waiting on Today') + '</span></div>' +
+        '</div>';
+    }
     var venue = Game.content.venues[d.venueId];
     var when = h.dateLabel(d.gigDay) + ' (' + Game.content.calendar.blockNames[venue.showBlock].toLowerCase() + ')';
     var head = d.yes

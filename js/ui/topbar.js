@@ -25,7 +25,7 @@ Game.ui.topbar = {
         '</div>';
     }
 
-    return '<header class="topbar">' +
+    return '<header class="topbar" data-tour="topbar">' +
       '<div class="topbar__who">' +
         '<span class="topbar__brand">Band Rise</span>' +
         '<span class="topbar__name">' + h.escape(p.name) + ' · ' + Game.content.instruments[p.instrument].name + '</span>' +
@@ -46,16 +46,17 @@ Game.ui.topbar = {
   navHtml: function (state, screen) {
     var unread = Game.rules.booking.unreadCount(state);
     var tabs = [
-      ['today', 'Today'],
-      ['calendar', 'Calendar'],
-      ['inbox', 'Inbox' + (unread ? ' <span class="badge badge--warn">' + unread + '</span>' : '')],
-      ['booking', 'Book'],
-      ['songs', 'Songs'],
-      ['people', 'People' + (Game.rules.people.needTalk(state).length ? ' <span class="badge badge--bad">!</span>' : '')],
-      ['settings', 'Settings']
+      ['today', '🏠 Today'],
+      ['calendar', '📅 Calendar'],
+      ['inbox', '📬 Inbox' + (unread ? ' <span class="badge badge--warn">' + unread + '</span>' : '')],
+      ['booking', '🎤 Book'],
+      ['songs', '🎵 Songs'],
+      ['people', '👥 People' + (Game.rules.people.needTalk(state).length ? ' <span class="badge badge--bad">!</span>' : '')],
+      ['career', '🏆 Career'],
+      ['settings', '⚙️ Settings']
     ];
     return '<nav class="tabs">' + tabs.map(function (tab) {
-      return '<button class="tab' + (tab[0] === screen ? ' tab--active' : '') + '" data-nav="' + tab[0] + '">' + tab[1] + '</button>';
+      return '<button class="tab' + (tab[0] === screen ? ' tab--active' : '') + '" data-nav="' + tab[0] + '" data-tour="' + tab[0] + '">' + tab[1] + '</button>';
     }).join('') + '</nav>';
   },
 

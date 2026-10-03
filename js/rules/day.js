@@ -96,6 +96,11 @@ Game.rules.day = {
     var dow = day.dayOfWeek(s.day);
     var report = { day: s.day, blocks: [], overnight: [], finishedSongs: [], gig: false };
     var weekEnded = false;
+
+    // Today's event, if you didn't answer it: the safe choice happens.
+    var unanswered = Game.rules.events.autoResolve(s);
+    s = unanswered.state;
+    var eventLines = unanswered.log;
     var exhausted = false;
     var jobBlocks = 0;
     var didWork = false; // true if any action today counts as work (so it isn't a full day off)
@@ -168,7 +173,14 @@ Game.rules.day = {
 
     // 2. End of the day.
     var endLines = report.overnight;
-    if (jobBlocks > 0) {
+    if (jobBlocks > 0 && s.player.job.extraShifts[s.day]) {
+      // An overtime shift is paid right away, at the overtime rate.
+      delete s.player.job.extraShifts[s.day];
+      s = Game.rules.money.earn(s, b.job.overtimePay, 'overtime').state;
+      s.thisWeek.shiftsWorked += 1;
+      endLines.push('Overtime shift: +$' + b.job.overtimePay + ', ' + b.morale.change.dayJobShift + ' morale.');
+      changeMorale(b.morale.change.dayJobShift, endLines);
+    } else if (jobBlocks > 0) {
       s.player.job.unpaidShifts += 1;
       s.thisWeek.shiftsWorked += 1;
       endLines.push('Day job shift: ' + b.morale.change.dayJobShift + ' morale, +' + b.job.standingPerShift + ' job standing.');
@@ -189,6 +201,8 @@ Game.rules.day = {
       endLines.push('Exhausted: ' + b.morale.change.exhausted + ' morale, and you\'ll only recover ' + b.energy.exhaustedOvernight + ' energy tonight.');
       changeMorale(b.morale.change.exhausted, endLines);
     }
+    // Remember tonight's evening task, for "Repeat yesterday's evening".
+    s.lastEvening = Game.rules.actions.eveningToRepeat(s);
     s = Game.rules.actions.clearDay(s, s.day);
 
     // 3. Friday night: payday for every shift worked since the last one.
@@ -230,10 +244,19 @@ Game.rules.day = {
     var energyBefore = s.player.energy;
     s.player.energy = Game.rules.energy.clamp(s.player.energy + recovery);
     endLines.push('Slept: ' + util.signed(s.player.energy - energyBefore) + ' energy (now ' + Math.round(s.player.energy) + ').');
+    var nightly = Game.rules.events.nightly(s);
+    s = nightly.state;
+    nightly.log.forEach(function (line) { endLines.push(line); });
 
     var faded = Game.rules.audience.fadeBuzz(s);
     s = faded.state;
     faded.log.forEach(function (line) { endLines.push(line); });
+
+    // Anything newly unlocked or achieved (like small rooms at reputation 10) gets a banner on Today
+    // (checked before the day moves forward, so it's dated the day it happened).
+    var unlocked = Game.rules.progress.checkUnlocks(s);
+    s = unlocked.state;
+    unlocked.milestoneLog.forEach(function (line) { endLines.push(line); });
 
     // On to tomorrow, then check for rusty skills.
     s.day += 1;
@@ -260,8 +283,14 @@ Game.rules.day = {
       endLines.push('A new year: ' + b.job.vacationDaysPerYear + ' vacation days.');
     }
 
-    // Anything newly unlocked (like small rooms at reputation 10) gets a banner on Today.
-    s = Game.rules.progress.checkUnlocks(s).state;
+
+    // Temporary effects that ran out, then maybe a new event for the morning.
+    var ended = Game.rules.events.expire(s);
+    s = ended.state;
+    ended.log.forEach(function (line) { endLines.push(line); });
+    s = Game.rules.events.roll(s).state;
+
+    eventLines.reverse().forEach(function (line) { endLines.unshift(line); });
 
     // Sunday night: save the week's totals (including tonight's skill changes) for the weekly summary.
     if (weekEnded) {
@@ -278,6 +307,40 @@ Game.rules.day = {
     log = log.concat(report.overnight);
 
     return { state: s, log: log, weekEnded: weekEnded };
+  },
+
+  // "Skip to next commitment": ends days one after another (with nothing planned) until something needs
+  // you: tomorrow has a show or a planned task, an event comes up, a new message arrives, a song finishes,
+  // a gig is played, or a week ends. Never more than balance.timeSavers.maxSkipDays at once.
+  // Returns { state, days: [{ day, lines }], last (the last day's endDay result), stopReason }.
+  skipToNextCommitment: function (state) {
+    var b = Game.balance;
+    var s = state;
+    var days = [];
+    var last = null;
+    var reason = 'Skipped as far as allowed.';
+    for (var i = 0; i < b.timeSavers.maxSkipDays; i++) {
+      var unreadBefore = Game.rules.booking.unreadCount(s);
+      last = Game.rules.day.endDay(s);
+      s = last.state;
+      var r = s.lastDayReport;
+      days.push({ day: r.day, lines: r.overnight.filter(function (line) { return line.indexOf('Slept') !== 0; }) });
+      if (s.gameOver) { reason = 'Game over.'; break; }
+      if (last.weekEnded) { reason = 'The week ended: time for your weekly summary.'; break; }
+      if (r.gig) { reason = 'You played a gig.'; break; }
+      if (r.finishedSongs.length) { reason = 'You finished a song.'; break; }
+      if (s.pendingEvent) { reason = 'Something came up.'; break; }
+      if (Game.rules.booking.unreadCount(s) > unreadBefore) { reason = 'You have a new message.'; break; }
+      if (s.schedule[s.day] && Object.keys(s.schedule[s.day]).length) { reason = 'Today has something planned.'; break; }
+    }
+    return { state: s, days: days, last: last, stopReason: reason };
+  },
+
+  // Why skipping ahead isn't possible right now, or null.
+  skipProblem: function (state) {
+    if (state.pendingEvent) return 'Answer today\'s event first.';
+    if (state.schedule[state.day] && Object.keys(state.schedule[state.day]).length) return 'Today has plans: use End Day.';
+    return null;
   },
 
   // Sunday check: count weeks in a row with debt above the game-over line.

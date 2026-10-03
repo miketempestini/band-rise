@@ -47,6 +47,7 @@ Game.state = {
           vacationDaysLeft: b.job.vacationDaysPerYear,
           unpaidShifts: 0,               // Shifts worked since the last payday
           daysOff: {},                   // day number: 'vacation' | 'sick' | 'skip' (days you won't work)
+          extraShifts: {},               // day number: true for an overtime shift (a Saturday you agreed to work)
           startsDay: null                // a new job starts on this day (after Look for work)
         },
         loanOwed: 0,                     // Total debt owed to Mom and Dad
@@ -82,7 +83,13 @@ Game.state = {
       gameOver: null,  // null while playing; { day, message } once the game has ended
       lastGig: null,   // the full result of the most recent gig (for the gig result screen)
       debug: { forceNextGig: null, acceptNextBooking: false }, // debug panel switches
-      stats: { gigsPlayed: 0, bestResult: null, biggestCrowd: 0, totalEarned: 0 }
+      stats: { gigsPlayed: 0, bestResult: null, biggestCrowd: 0, totalEarned: 0, openMicsPlayed: 0, paidShows: 0 },
+      pendingEvent: null, // today's event waiting for an answer: { eventId, day, data }
+      eventHistory: {},   // eventId: the last day it happened (for cooldowns)
+      effects: [],        // temporary effects: { id, kind: 'gigScore' | 'dailyEnergy', amount, untilDay, label }
+      lastEvening: null,  // yesterday's evening task, for "Repeat yesterday's evening"
+      settings: { tutorial: true },
+      tutorialSeen: {},   // tip card id: true once dismissed
     };
   },
 

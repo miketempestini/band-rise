@@ -77,7 +77,7 @@ Game.ui.weeklySummary = {
       '</section>';
 
     h.bind(root, {
-      continue: function () { app.show('today'); },
+      continue: function () { app.leaveWeeklySummary(); },
       focusPayBack: function () { app.show('today'); }
     });
   },

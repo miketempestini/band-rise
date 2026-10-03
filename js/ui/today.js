@@ -17,13 +17,17 @@ Game.ui.today = {
       Game.ui.topbar.html(state, app.screen) +
       '<div class="dashboard">' +
         '<section class="dashboard__main">' +
+          h.notice(app.notice) +
+          Game.ui.today.tipHtml(state) +
           Game.ui.today.toastsHtml(state) +
+          Game.ui.today.eventHtml(state) +
           '<h2 class="section-title">' + Game.content.calendar.dayNames[dow] + '\'s plan</h2>' +
-          '<div class="blocks">' + Game.ui.today.blocksHtml(state) + '</div>' +
-          '<div class="end-day">' +
+          '<div class="blocks" data-tour="blocks">' + Game.ui.today.blocksHtml(state) + '</div>' +
+          '<div class="end-day" data-tour="endDay">' +
             '<button class="btn btn--primary btn--big" data-action="endDay">End Day</button>' +
-            '<span class="hint">' + Game.ui.today.tonightHint(state) + '</span>' +
+            Game.ui.today.timeSaversHtml(state) +
           '</div>' +
+          '<p class="hint">' + Game.ui.today.tonightHint(state) + '</p>' +
         '</section>' +
         '<aside class="dashboard__side">' +
           Game.ui.today.bandAlertHtml(state) +
@@ -42,6 +46,11 @@ Game.ui.today = {
       openCalendar: function () { app.navigate('calendar'); },
       dismissToast: function (event, el) { app.dismissToast(el.getAttribute('data-toast')); },
       openInbox: function () { app.navigate('inbox'); },
+      skipAhead: function () { app.skipAhead(); },
+      repeatEvening: function () { app.repeatEvening(); },
+      answerEvent: function (event, el) { app.answerEvent(el.getAttribute('data-choice')); },
+      dismissTip: function (event, el) { app.dismissTip(el.getAttribute('data-tip')); },
+      tipsOff: function () { app.setTutorial(false); },
       focusPayBack: function () {
         var input = root.querySelector('#payback-amount');
         if (input) { input.focus(); input.select(); }
@@ -55,6 +64,51 @@ Game.ui.today = {
     });
 
     if (app.pickerBlock) Game.ui.actionPicker.bind(root, app);
+
+    // Highlight whatever the current tip card is talking about.
+    var tip = Game.rules.progress.tutorialCard(state);
+    var target = tip && document.querySelector('[data-tour="' + tip.target + '"]');
+    if (target) target.classList.add('tour-highlight');
+  },
+
+  // Today's event: what happened and the choices, each with its effects spelled out.
+  eventHtml: function (state) {
+    var h = Game.ui.helpers;
+    var pending = state.pendingEvent;
+    if (!pending) return '';
+    var event = Game.content.events[pending.eventId];
+    var buttons = Game.rules.events.choices(state).map(function (c) {
+      return '<button class="choice-btn' + (c.safe ? ' choice-btn--safe' : '') + '" data-action="answerEvent" data-choice="' + c.id + '"' +
+        (c.problem ? ' disabled title="' + h.escape(c.problem) + '"' : '') + '>' +
+        '<strong>' + h.escape(c.label) + '</strong><span>' + h.escape(c.description) + '</span>' +
+        (c.safe ? '<em>Happens if you don\'t answer</em>' : '') + '</button>';
+    }).join('');
+    return '<div class="event-card"><div class="event-card__title">⚡ ' + h.escape(event.title) + '</div>' +
+      '<p>' + h.escape(event.text(state, pending.data)) + '</p>' +
+      '<div class="event-card__choices">' + buttons + '</div></div>';
+  },
+
+  // A tutorial tip card (first few days only), with "Got it" and "Turn off tips".
+  tipHtml: function (state) {
+    var h = Game.ui.helpers;
+    var tip = Game.rules.progress.tutorialCard(state);
+    if (!tip) return '';
+    return '<div class="tip-card"><div class="tip-card__title">💡 ' + h.escape(tip.title) + '</div>' +
+      '<p>' + h.escape(tip.text) + '</p>' +
+      '<div class="tip-card__actions"><button class="btn btn--small btn--primary" data-action="dismissTip" data-tip="' + tip.id + '">Got it</button>' +
+      '<button class="btn btn--small btn--ghost" data-action="tipsOff">Turn off tips</button></div></div>';
+  },
+
+  // "Skip to next commitment" and "Repeat yesterday's evening".
+  timeSaversHtml: function (state) {
+    var h = Game.ui.helpers;
+    var skipProblem = Game.rules.day.skipProblem(state);
+    var repeatProblem = Game.rules.actions.repeatProblem(state);
+    var last = state.lastEvening;
+    return '<button class="btn" data-action="skipAhead"' + (skipProblem ? ' disabled title="' + h.escape(skipProblem) + '"' : '') +
+        ' title="Ends quiet days until a show, a planned task, an event, a message, or the weekly summary">⏩ Skip to next commitment</button>' +
+      (last ? '<button class="btn" data-action="repeatEvening"' + (repeatProblem ? ' disabled title="' + h.escape(repeatProblem) + '"' : '') + '>' +
+        '🔁 Repeat yesterday\'s evening (' + h.escape(Game.content.actions[last.actionId].name) + ')</button>' : '');
   },
 
   // The three block cards: locked day job, a planned action, or free time.
@@ -140,7 +194,7 @@ Game.ui.today = {
         '<button class="btn btn--small btn--primary" data-action="openInbox">Open Inbox</button></div>'
       : '';
     return inbox + state.toasts.map(function (t) {
-      return '<div class="toast"><span>🎉 ' + h.escape(t.text) + '</span>' +
+      return '<div class="toast' + (t.milestone ? ' toast--milestone' : '') + '"><span>' + (t.milestone ? '🏆 ' : '🎉 ') + h.escape(t.text) + '</span>' +
         '<button class="btn btn--small" data-action="dismissToast" data-toast="' + t.id + '">Got it</button></div>';
     }).join('');
   },

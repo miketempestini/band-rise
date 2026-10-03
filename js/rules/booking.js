@@ -295,6 +295,29 @@ Game.rules.booking = {
     return { state: s, log: ['Booked: ' + venue.name + ', ' + Game.rules.day.dateLabel(m.data.gigDay) + '.'].concat(log), entryId: id };
   },
 
+  // A fill-in show (from an event): booked straight onto the calendar with the venue's guarantee,
+  // no booking odds. A task planned in that block gives way. Returns { state, log, entryId }.
+  bookFillIn: function (state, venueId, day) {
+    var venue = Game.content.venues[venueId];
+    var s = Game.util.clone(state);
+    var log = [];
+    var plannedId = s.schedule[day] && s.schedule[day][venue.showBlock];
+    if (plannedId && s.entries[plannedId] && s.entries[plannedId].type === 'action') {
+      log.push('The show replaces your planned ' + Game.content.actions[s.entries[plannedId].actionId].name + '.');
+      delete s.entries[plannedId];
+    }
+    var id = 'e' + s.nextEntryId;
+    s.nextEntryId += 1;
+    s.entries[id] = {
+      id: id, day: day, block: venue.showBlock, type: 'gig', venueId: venueId, deal: 'guarantee',
+      songIds: Game.rules.booking.suggestSetlist(s, venue, 'guarantee'), sessionPlayers: 0, status: 'booked', fillIn: true
+    };
+    s.schedule[day] = s.schedule[day] || {};
+    s.schedule[day][venue.showBlock] = id;
+    log.unshift('Booked: fill-in show at ' + venue.name + ', ' + Game.rules.day.dateLabel(day) + '. Check the setlist on the Calendar.');
+    return { state: s, log: log, entryId: id };
+  },
+
   // Declines an offer (no penalty). Returns { state, log }.
   declineOffer: function (state, messageId) {
     var s = Game.util.clone(state);

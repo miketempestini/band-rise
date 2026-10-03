@@ -10,6 +10,7 @@ Game.rules.job = {
   // True if your job expects you on this day (before any day off is counted).
   scheduledOn: function (state, day) {
     var job = state.player.job;
+    if (job.status !== 'none' && job.extraShifts && job.extraShifts[day]) return true; // an overtime shift
     if (job.startsDay !== null && day < job.startsDay) return false;
     return Game.rules.day.isWorkday(state, Game.rules.day.dayOfWeek(day));
   },
@@ -61,6 +62,12 @@ Game.rules.job = {
     if (kind === 'vacation') s.player.job.vacationDaysLeft += 1;
     delete s.player.job.daysOff[day];
     // Tasks you planned in the job blocks that day can't happen now that you're working.
+    return Game.rules.job.dropPlansInJobBlocks(s, day);
+  },
+
+  // Removes tasks planned in the job blocks on a day you'll now be working. Returns { state, log }.
+  dropPlansInJobBlocks: function (state, day) {
+    var s = Game.util.clone(state);
     var log = [];
     var plan = s.schedule[day] || {};
     Game.balance.job.jobBlocks.forEach(function (block) {

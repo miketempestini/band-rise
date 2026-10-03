@@ -15,6 +15,12 @@
     .test { padding: 8px 12px; margin-bottom: 4px; background: var(--panel); border-left: 4px solid; white-space: pre; }
     .test--pass { border-color: var(--good); }
     .test--fail { border-color: var(--bad); color: var(--bad); }
+    .balance { margin-top: 40px; font-family: inherit; }
+    .balance h2 { color: var(--accent); }
+    .sim { border-collapse: collapse; width: 100%; max-width: 1000px; }
+    .sim th, .sim td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    .sim tr.ok td:last-child, .balance .ok { color: var(--good); }
+    .sim tr.off td:last-child { color: var(--bad); font-weight: bold; }
     .test__detail { margin-top: 4px; padding-left: 24px; color: var(--text-muted); white-space: normal; }
   </style>
 </head>
@@ -22,6 +28,7 @@
   <h1>Band Rise Tests</h1>
   <p id="summary" class="summary">Running...</p>
   <ul id="results"></ul>
+  <section id="balance" class="balance"><p class="summary">Running the balance check...</p></section>
 
   <!-- Game code, same order as index.html (no ui files, no main.js) -->
   <script src="js/balance.js"></script>
@@ -36,6 +43,9 @@
   <script src="js/content/venues.js"></script>
   <script src="js/content/gigText.js"></script>
   <script src="js/content/people.js"></script>
+  <script src="js/content/events.js"></script>
+  <script src="js/content/milestones.js"></script>
+  <script src="js/content/tutorial.js"></script>
   <script src="js/state.js"></script>
   <script src="js/save.js"></script>
   <script src="js/rules/money.js"></script>
@@ -49,6 +59,7 @@
   <script src="js/rules/job.js"></script>
   <script src="js/rules/booking.js"></script>
   <script src="js/rules/progress.js"></script>
+  <script src="js/rules/events.js"></script>
   <script src="js/rules/actions.js"></script>
   <script src="js/rules/career.js"></script>
   <script src="js/rules/day.js"></script>
@@ -72,7 +83,17 @@
   <script src="js/tests/booking.test.js"></script>
   <script src="js/tests/job.test.js"></script>
   <script src="js/tests/planning.test.js"></script>
+  <script src="js/tests/events.test.js"></script>
+  <script src="js/tests/progress.test.js"></script>
 
-  <script>Game.runTests();</script>
+  <script src="js/tests/balance.sim.js"></script>
+
+  <script>
+    Game.runTests();
+    // The balance check runs right after the tests (it takes a few seconds).
+    setTimeout(function () {
+      Game.balanceSim.render(document.getElementById('balance'), 100, Game.balance.slice.endDay);
+    }, 50);
+  </script>
 </body>
 </html>
