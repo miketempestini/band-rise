@@ -124,7 +124,7 @@ Game.balance = {
   streaming: {
     payPerFan: 0.02,                 // Dollars per fan per song per week, before quality and freshness
     freshnessStart: 1,               // A new release starts at full freshness
-    freshnessDropPerWeek: 0.03,      // Freshness drops 3% a week after release
+    freshnessDropPerWeek: 0.03,      // Freshness drops 3% a week after release (x 0.97 each week)
     freshnessMin: 0.3                // Freshness never drops below this
   },
 
@@ -370,7 +370,9 @@ Game.balance = {
   // recording quality = 0.5 x song quality + 0.25 x band musicianship + 0.25 x tightness + studio bonus
   // ---------------------------------------------------------------
   recording: {
-    bookAheadDays: 2,                // Studio time must be booked this many days ahead
+    bookAheadDays: 10,               // Studio time must be booked at least this many days ahead (owner's change from 2)
+    bookAheadMaxDays: 28,            // ...and at most this far ahead (the 4-week calendar)
+    maxBlocksPerBooking: 3,          // One booking can reserve up to this many blocks on one day
     songsPerBlock: 1,                // One song recorded per studio block
     songQualityWeight: 0.5,
     bandMusicianshipWeight: 0.25,
@@ -379,7 +381,7 @@ Game.balance = {
       home: { cost: 0,    oneTimeCost: 300, bonus: 0,  qualityCap: 40 },  // Needs the First recording milestone
       demo: { cost: 75,   bonus: 0 },                                      // Needs nothing
       pro:  { cost: 250,  bonus: 10, minReputation: 40 },
-      top:  { cost: 1000, bonus: 20 }                                      // Needs a label deal
+      top:  { cost: 1000, bonus: 20, needsLabel: true }                    // Needs a label deal
     }
   },
 
@@ -596,7 +598,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 7,                      // Save format version, bumped when the state shape changes
+    version: 8,                      // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

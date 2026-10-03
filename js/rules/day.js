@@ -138,6 +138,18 @@ Game.rules.day = {
         } else {
           lines = lines.concat(show.log);
         }
+      } else if (entry && entry.type === 'studio') {
+        // Booked studio time: a commitment. Records the song and pays the studio for the block.
+        title = 'Studio: ' + Game.content.studios[entry.studio].name;
+        didWork = true;
+        var rec = Game.rules.recording.record(s, entry.songId, entry.studio);
+        s = rec.state;
+        s.player.energy = Game.rules.energy.clamp(s.player.energy - b.energy.cost.studio);
+        lines.push(rec.log[0].replace(/\.$/, '') + ', -' + b.energy.cost.studio + ' energy.');
+        if (s.player.energy === 0 && !exhausted) {
+          exhausted = true;
+          lines.push('The session drained you to 0 energy. You\'re Exhausted.');
+        }
       } else if (day.isJobBlock(s, block)) {
         title = 'Day job';
         jobBlocks += 1;
@@ -215,6 +227,10 @@ Game.rules.day = {
 
     // Sunday night: bills, morale drift, the debt check, and closing out the week.
     if (dow === b.time.billsDayOfWeek) {
+      // Streaming money comes in first, so it can help cover the bills.
+      var streaming = Game.rules.recording.payStreaming(s);
+      s = streaming.state;
+      streaming.log.forEach(function (line) { endLines.push(line); });
       var bills = b.housing[s.player.housing].weeklyCost;
       var paid = Game.rules.money.spend(s, bills, 'bills');
       s = paid.state;

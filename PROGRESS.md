@@ -4,6 +4,29 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 9: Phase 8, recording, releases, and merch (2026-10-03)
+- **Studio time** (Book screen, new Studio section): Demo ($75/block), Pro ($250, +10, reputation 40), Top ($1,000,
+  +20, needs a label: shown locked). Book 10-28 days ahead (owner's change from 2), 1-3 blocks on one day, one
+  original per block, using an Admin block today; sessions land on the Calendar at End Day and are commitments
+  (20 energy, paid per block on the day). Job blocks need a day off (vacation/sick/skip). Cancel is free.
+- **Home setup** ($300 in the Shop after the first recording): "Record at home" action in any free block, free,
+  capped at quality 40.
+- **Recording quality** = 0.5 x song quality + 0.25 x band musicianship + 0.25 x tightness + studio bonus. Better take
+  kept. Songs screen shows recording quality, studio, and release.
+- **Releases** (Songs screen, instant): Single/EP/Album with a preview; buzz (avg quality/10 x 1/1.5/2, halved within
+  4 weeks of the last release) and fans (city fans x 5% x avg/50) in every city with fans; reputation + avg/20.
+- **Streaming** every Sunday night (before bills): total fans x 0.02 x quality/100 x freshness (x0.97 a week, min 0.3).
+  Its own "Streaming" line in the weekly summary; Songs screen shows next Sunday's estimate.
+- **Shop tab**: T-shirts (25 for $200, after the first paid gig), CDs (50 for $150, after the first EP), home setup.
+- **Merch sales** at every gig (open mics too): 1/3/6/9% per person per item by result, double at Hollow Records, stops
+  when stock runs out ("sold out!"), all yours. Gig result and weekly summary show it.
+- **Social ads** ($50, +8 buzz x (1 + Promotion/100)) unlock with the first release.
+- **Milestones 6 (First recording) and 7 (First release)**, +10 morale each.
+- **Debug:** "Record next session", "+1 week streaming".
+- Fixed during testing: Today and the Calendar assumed every booking request was a venue email (crashed on a studio
+  booking).
+- **Saves:** version 8. **Tests:** 186 passing (recording.test.js new); balance check unchanged.
+
 ### Session 8: Phase 7, events, tutorial, milestones, and the MVP finish line (2026-10-02)
 - **Events** (`js/content/events.js`, `js/rules/events.js`): 10 early-game events (overtime offer, crackling amp,
   broken string, blog mention, car trouble, fill-in show, lesson request, roommate's party, sunny Saturday busking,
@@ -222,12 +245,16 @@ A running log of what's built, what's next, and known issues. Update at the end 
   with a no-library test runner, git repo (pushed to github.com/miketempestini/band-rise, private).
 
 ## What's next
-- **MVP playtest**: friends play the first 21 days from the link; compare with the balance check.
-- **Balance decisions waiting on the owner** (see Known issues): bandmate odds, paid-show odds, cash.
-- After the MVP (Design.md): recording and releasing, merch and the Shop, more events and offers (residency,
-  opening slots), part-time job, milestones 6+, other cities and travel.
+- Phase 9 (to be defined). Candidates from Design.md: the rest of the Shop (instrument upgrades, van, housing), part-time
+  job and quitting (milestones 8 and 11), more events and offers (opening slots, residencies), other cities and travel.
+- Balance decisions still waiting on the owner (bandmate odds, paid-show odds, cash): see Known issues.
+- The balance check's simulated player doesn't record, release, or buy merch yet; update `planDay` when tuning the mid-game.
 
 ## Known issues / open decisions
+- **Streaming is small early on by design**: at ~100 fans an EP pays about $2 a week. It only matters with hundreds of
+  fans, matching Design.md's example (500 fans, 3 songs, $15).
+- **Early recordings are weak**: a first original (quality ~35) with low tightness records at about 30 at the Demo
+  studio. Rehearsing a song before recording it helps the most (tightness is a quarter of the score).
 - **Balance check (100 runs, first 21 days, not applied yet)** vs. Design.md's targets:
   - Cash avg $1,144 (range $1,050-1,295), target $400-900: **too high**. Partly the simulated player barely spends
     (no flyers, few hang outs) and takes overtime. Possible fix: no change until real playtests; or raise rent.

@@ -147,7 +147,7 @@ You start with $500 and save about $150 a week if you spend nothing on music, so
 
 ### Merch sales at a gig
 
-Each person in the crowd has a small chance to buy each item you have in stock: 1% on a Rough night, 3% Solid, 6% Great, 9% Legendary. Sales stop when stock runs out.
+Each person in the crowd has a small chance to buy each item you have in stock: 1% on a Rough night, 3% Solid, 6% Great, 9% Legendary (double at Hollow Records). Sales stop when stock runs out. This includes open mics. Stock is bought in the Shop.
 
 ### Streaming
 
@@ -155,7 +155,7 @@ Each person in the crowd has a small chance to buy each item you have in stock: 
 \text{weekly pay per song} = \text{total fans} \times 0.02 \times \frac{\text{recording quality}}{100} \times \text{freshness}
 ```
 
-Freshness starts at 1 and drops 3% a week after release, never below 0.3. Example: 500 fans and 3 new songs at quality 50 pay about $15 a week. Later, 10,000 fans and 20 older songs at quality 70 pay about $1,400 a week.
+Freshness starts at 1 and drops 3% a week after release (x 0.97 each week), never below 0.3. Streaming is paid on Sunday night before the bills. Example: 500 fans and 3 new songs at quality 50 pay about $15 a week. Later, 10,000 fans and 20 older songs at quality 70 pay about $1,400 a week.
 
 ### Going broke
 
@@ -361,7 +361,8 @@ You need enough songs to fill the set before you can book it. The game suggests 
 
 ### Recording
 
-- Book studio time 2+ days ahead (an Admin action). One song per block.
+- Book studio time 10 to 28 days ahead (an Admin action, from the Book screen). One song per block, up to 3 blocks per booking, paid per block on the day. Cancelling is free. With the home setup, "Record at home" works in any free block, no booking.
+- Re-recording a song keeps the better recording. Only originals can be recorded.
 
 | Studio | Cost | Quality bonus | Needs |
 | --- | --- | --- | --- |
@@ -376,7 +377,7 @@ You need enough songs to fill the set before you can book it. The game suggests 
 
 ### Releasing
 
-- Release a Single (1 recorded song), an EP (3 to 5), or an Album (8 to 12).
+- Release a Single (1 recorded song), an EP (3 to 5), or an Album (8 to 12), instantly from the Songs screen.
 - Buzz on release, in every city where you have fans: (average recording quality / 10) x size bonus. Size bonus is 1 for a Single, 1.5 for an EP, 2 for an Album.
 - New fans on release, per city: that city's fans x 5% x (average recording quality / 50).
 - Streaming money starts the next Sunday. CDs unlock with your first EP.

@@ -8,8 +8,8 @@ Game.ui = Game.ui || {};
 Game.ui.weeklySummary = {
 
   // Plain names for each money category.
-  incomeLabels: { dayJob: 'Day job', tips: 'Open mic tips', gigPay: 'Gig pay (your share)', sessionRefund: 'Session players refunded', debug: 'Debug cash' },
-  costLabels: { bills: 'Rent and living costs', networking: 'Going out to network', promotion: 'Promotion', rehearsal: 'Rehearsal room', hangOut: 'Hanging out', sessionPlayers: 'Session players', debug: 'Debug' },
+  incomeLabels: { dayJob: 'Day job', tips: 'Open mic tips', gigPay: 'Gig pay (your share)', streaming: 'Streaming', merch: 'Merch sales', overtime: 'Overtime', events: 'Odd jobs and luck', sessionRefund: 'Session players refunded', debug: 'Debug cash' },
+  costLabels: { bills: 'Rent and living costs', networking: 'Going out to network', promotion: 'Promotion', rehearsal: 'Rehearsal room', hangOut: 'Hanging out', sessionPlayers: 'Session players', studio: 'Studio time', merchStock: 'Merch stock', gear: 'Gear', events: 'Surprise costs', debug: 'Debug' },
 
   render: function (root, app) {
     var h = Game.ui.helpers;

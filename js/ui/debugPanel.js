@@ -14,7 +14,7 @@ Game.ui.debugPanel = {
   render: function (root, app) {
     var h = Game.ui.helpers;
     var d = Game.balance.debug;
-    var showOn = ['today', 'weeklySummary', 'dayResults', 'songs', 'people', 'booking', 'inbox', 'calendar', 'career'];
+    var showOn = ['today', 'weeklySummary', 'dayResults', 'songs', 'people', 'booking', 'inbox', 'calendar', 'career', 'shop'];
 
     if (!app.debug || !app.state || app.state.gameOver || showOn.indexOf(app.screen) === -1) {
       root.innerHTML = '';
@@ -66,6 +66,8 @@ Game.ui.debugPanel = {
         '</div>' +
         '<div class="debug__row">' +
           '<button class="btn btn--small" data-action="finishSong">Finish song now</button>' +
+          '<button class="btn btn--small" data-action="recordNow">Record next session</button>' +
+          '<button class="btn btn--small" data-action="streamNow">+1 week streaming</button>' +
         '</div>' +
         '<div class="debug__row">' +
           '<span>Next gig:</span>' +
@@ -110,6 +112,8 @@ Game.ui.debugPanel = {
       },
       toggleDebug: function () { Game.ui.debugPanel.collapsed = true; app.render(); },
       finishSong: function () { app.debugFinishSong(); },
+      recordNow: function () { app.applyRule(rules.recordNextSession(app.state)); },
+      streamNow: function () { app.applyRule(rules.streamingNow(app.state)); },
       addContact: function () { app.applyRule(rules.addContact(app.state)); },
       setReputation: function () { app.applyRule(rules.setReputation(app.state, root.querySelector('#debug-rep').value)); },
       acceptNext: function () { app.applyRule(rules.acceptNextBooking(app.state, !app.state.debug.acceptNextBooking)); },

@@ -56,6 +56,7 @@ Game.ui.calendar = {
       cancelSetlist: function () { app.setlistDraft = null; app.render(); },
       session: function (e, el) { app.changeSessionPlayers(el.getAttribute('data-entry'), Number(el.getAttribute('data-change'))); },
       cancelShow: function (e, el) { app.cancelShow(el.getAttribute('data-entry')); },
+      cancelStudio: function (e, el) { app.cancelStudio(el.getAttribute('data-entry')); },
       planBlock: function (e, el) { app.openPicker(el.getAttribute('data-block'), Number(el.getAttribute('data-day'))); },
       clearBlock: function (e, el) { app.calendarClear(Number(el.getAttribute('data-day')), el.getAttribute('data-block')); }
     });
@@ -67,6 +68,7 @@ Game.ui.calendar = {
     var plan = state.schedule[day];
     var entry = plan && plan[block] && state.entries[plan[block]];
     if (entry && entry.type === 'gig') return { text: '🎤 ' + Game.content.venues[entry.venueId].name, kind: 'show' };
+    if (entry && entry.type === 'studio') return { text: '🎙️ ' + Game.content.studios[entry.studio].name, kind: 'studio' };
     if (entry && entry.type === 'action') return { text: Game.content.actions[entry.actionId].name, kind: 'plan' };
     var waiting = Game.rules.booking.blockTaken(state, day, block);
     if (waiting) return { text: '? ' + waiting.replace('Waiting to hear from ', ''), kind: 'pending' };
@@ -143,6 +145,10 @@ Game.ui.calendar = {
       var right;
       if (info.kind === 'job') right = '<span class="muted">Day job</span>';
       else if (info.kind === 'show') right = '<span class="muted">Show (see below)</span>';
+      else if (info.kind === 'studio') {
+        right = '<span class="plan__task">🎙️ ' + h.escape(Game.content.studios[entry.studio].name) + ': "' + h.escape(state.songs[entry.songId].title) + '"</span>' +
+          '<button class="btn btn--small btn--ghost" data-action="cancelStudio" data-entry="' + entry.id + '">Cancel</button>';
+      }
       else if (entry && entry.type === 'action') {
         right = '<span class="plan__task">' + h.escape(Game.ui.calendar.taskLabel(state, entry)) + '</span>' +
           '<button class="btn btn--small" data-action="planBlock" data-day="' + day + '" data-block="' + block + '">Change</button>' +
@@ -165,7 +171,8 @@ Game.ui.calendar = {
     if (e.songId === 'all') return name + ': all songs';
     if (e.songId && state.songs[e.songId]) return name + ': ' + state.songs[e.songId].title;
     if (e.songIds && e.songIds.length) return name + ' (' + e.songIds.length + ' songs)';
-    if (e.request) return name + ': ' + Game.content.venues[e.request.venueId].name;
+    if (e.request && e.request.venueId) return name + ': ' + Game.content.venues[e.request.venueId].name;
+    if (e.request && e.request.studio) return name + ': ' + Game.content.studios[e.request.studio].name;
     return name;
   },
 

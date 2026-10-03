@@ -79,6 +79,11 @@ Game.rules.actions = {
         row.venueId = booked.venueId;
         if (energy <= 0) row.problem = 'You\'ll have no energy left: that\'s a no-show!';
         else energy = clampEnergy(energy - b.energy.cost.gig);
+      } else if (booked && booked.type === 'studio') {
+        // Booked studio time (a commitment): costs studio energy.
+        row.kind = 'studio';
+        row.entryId = booked.id;
+        energy = clampEnergy(energy - b.energy.cost.studio);
       } else if (Game.rules.day.isJobBlock(state, block)) {
         row.kind = 'job';
         energy = clampEnergy(energy - b.energy.cost.dayJob);
@@ -123,6 +128,9 @@ Game.rules.actions = {
     } else if (row.kind === 'gig') {
       result.ok = false;
       result.reason = 'A show is booked in this block.';
+    } else if (row.kind === 'studio') {
+      result.ok = false;
+      result.reason = 'Studio time is booked in this block.';
     } else {
       // Planning ahead, energy and cash aren't known yet: they're checked when the day comes.
       result.reason = state.planningAhead ? null : Game.rules.actions.affordProblem(action, row.energyBefore, row.cashBefore);
@@ -174,6 +182,18 @@ Game.rules.actions = {
     if (action.needsBooking && state.planningAhead) {
       result.ok = false;
       result.reason = 'Emails go out the day you plan them: use the Book screen on that day.';
+    }
+    if (action.needsHomeStudio && !state.player.gear.homeStudio) {
+      result.ok = false;
+      result.reason = 'Buy the home recording setup in the Shop first.';
+    }
+    if (action.songFilter === 'originals' && !Game.rules.recording.recordable(state).length) {
+      result.ok = false;
+      result.reason = 'You need a finished original to record.';
+    }
+    if (action.needsRelease && !state.releases.length) {
+      result.ok = false;
+      result.reason = 'Unlocks with your first release.';
     }
     if (action.onlyWithoutJob && state.player.job.status !== 'none') {
       result.ok = false;
@@ -281,10 +301,16 @@ Game.rules.actions = {
     }
     var existing = Game.rules.actions.plannedEntry(state, block);
     if (existing && existing.type === 'gig') return { state: state, log: ['A show is booked in this block.'] };
+    if (existing && existing.type === 'studio') return { state: state, log: ['Studio time is booked in this block.'] };
     if (action.needsBooking && state.planningAhead) {
-      return { state: state, log: ['Email a venue can only be planned for today (from the Book screen).'] };
+      return { state: state, log: [action.name + ' can only be planned for today (from the Book screen).'] };
     }
-    if (action.needsBooking) {
+    if (action.needsBooking === 'studio') {
+      // choice: { studio, day, sessions: [{ block, songId }], jobChoice }
+      var studioProblem = Game.rules.recording.requestProblem(state, songChoice);
+      if (studioProblem) return { state: state, log: [studioProblem] };
+      request = Game.util.clone(songChoice);
+    } else if (action.needsBooking) {
       // choice: { venueId, gigDay, deal }
       request = songChoice || {};
       var bookingProblem = Game.rules.booking.requestProblem(state, request.venueId, request.gigDay, request.deal);
@@ -313,10 +339,12 @@ Game.rules.actions = {
     }
     if (action.needsSong) {
       songId = songChoice;
-      var playable = Game.rules.songs.playable(state);
-      if (!songId && playable.length) songId = Game.rules.songs.loosest(state).id;
-      var ok = (songId === 'all' && playable.length > 0) || playable.some(function (song) { return song.id === songId; });
-      if (!ok) return { state: state, log: ['Pick a finished song to practice.'] };
+      var playable = Game.rules.actions.songsFor(state, actionId);
+      if (!songId && playable.length) {
+        songId = Game.rules.songs.sortSongs(state, playable, 'tightLow')[0].id;
+      }
+      var ok = (songId === 'all' && action.allSongsGain && playable.length > 0) || playable.some(function (song) { return song.id === songId; });
+      if (!ok) return { state: state, log: [action.songFilter === 'originals' ? 'Pick a finished original.' : 'Pick a finished song to practice.'] };
     }
     // Check it as if the block were empty, so swapping one action for another works.
     var check = Game.rules.actions.option(Game.rules.actions.clear(state, block).state, block, actionId);
@@ -342,14 +370,21 @@ Game.rules.actions = {
     }
     var s = Game.util.clone(state);
     var today = s.schedule[s.day];
-    if (today && today[block] && s.entries[today[block]] && s.entries[today[block]].type === 'gig') {
-      return { state: state, log: ['A show is booked in this block. Cancel it from the Calendar.'] };
+    if (today && today[block] && s.entries[today[block]] && s.entries[today[block]].type !== 'action') {
+      return { state: state, log: ['Something is booked in this block. Cancel it from the Calendar.'] };
     }
     if (today && today[block]) {
       delete s.entries[today[block]];
       delete today[block];
     }
     return { state: s, log: [] };
+  },
+
+  // The songs an action that needs a song can use (Record at home: originals only).
+  songsFor: function (state, actionId) {
+    var action = Game.content.actions[actionId];
+    var songs = Game.rules.songs.playable(state);
+    return action.songFilter === 'originals' ? songs.filter(function (s) { return !s.isCover; }) : songs;
   },
 
   // ----- Repeat yesterday's evening -----
@@ -473,6 +508,27 @@ Game.rules.actions = {
       s = micMeet.state;
       notes = notes.concat(micMeet.log);
       if (micMeet.personId) metPeople.push(micMeet.personId);
+    }
+
+    // Book studio time: the sessions go on the calendar now.
+    if (action.effects.studioBooking) {
+      var studio = Game.rules.recording.bookSessions(s, request);
+      s = studio.state;
+      parts.push(studio.log[0].replace(/\.$/, ''));
+      notes = notes.concat(studio.log.slice(1));
+    }
+
+    // Record at home: free, quality capped at 40.
+    if (action.effects.recordHome) {
+      if (!s.songs[songId] || s.songs[songId].isCover) {
+        var first = Game.rules.recording.recordable(s)[0];
+        songId = first ? first.id : null;
+      }
+      if (songId) {
+        var rec = Game.rules.recording.record(s, songId, 'home');
+        s = rec.state;
+        parts.push(rec.log[0].replace(/\.$/, ''));
+      }
     }
 
     // Email a venue: the request goes out now; the reply comes in 1 to 3 days.

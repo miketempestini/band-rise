@@ -87,7 +87,7 @@ Game.ui.actionPicker = {
     var entry = Game.rules.actions.plannedEntry(state, block);
     var current = entry && entry.actionId === actionId ? entry.songId : null;
     var loosest = Game.rules.songs.loosest(state);
-    var songsList = Game.rules.songs.playable(state);
+    var songsList = Game.rules.actions.songsFor(state, actionId);
     // Only call out the loosest song when the songs aren't all equally tight.
     var allTied = songsList.every(function (s) { return s.tightness === songsList[0].tightness; });
     if (allTied) loosest = null;

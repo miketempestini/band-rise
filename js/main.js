@@ -27,6 +27,8 @@ Game.app = {
   bookingDraft: null,   // the booking being set up: { venueId, gigDay, deal, choosingBlock }
   setlistDraft: null,   // songs ticked while editing a booked show's setlist
   skipResult: null,     // what "Skip to next commitment" did, for the skip summary screen
+  studioDraft: null,    // a studio booking being set up: { studio, day, sessions: { block: songId }, jobChoice }
+  releaseDraft: { type: 'single', songIds: [] }, // a release being put together on the Songs screen
   bandNameDraft: '',       // the band name shown in the name box on the Name your band screen
   pendingWeekSummary: false, // true when the weekly summary should follow the Day results screen
   draftCareer: null,    // a career being set up: { name, instrument, allocation } (not saved until Start)
@@ -230,7 +232,7 @@ Game.app = {
     var resting = ['songReveal', 'nameBand', 'settings', screen];
     if (resting.indexOf(app.screen) === -1) app.returnTo[screen] = app.screen;
     if (screen === 'calendar') app.calendarDay = app.state.day;
-    if (screen === 'booking') app.bookingDraft = null;
+    if (screen === 'booking') { app.bookingDraft = null; app.studioDraft = null; }
     app.show(screen);
     if (screen === 'inbox' && Game.rules.booking.unreadCount(app.state)) {
       app.state = Game.rules.booking.markAllRead(app.state).state;
@@ -257,6 +259,76 @@ Game.app = {
   bookingDate: function (day) {
     Game.app.bookingDraft.gigDay = day;
     Game.app.render();
+  },
+
+  // ----- Studio time (on the Book screen) -----
+
+  studioPick: function (studio) {
+    var app = Game.app;
+    app.studioDraft = studio ? { studio: studio, day: null, sessions: {}, jobChoice: null } : null;
+    app.notice = null;
+    app.render();
+  },
+
+  studioDate: function (day) {
+    Game.app.studioDraft.day = day;
+    Game.app.studioDraft.sessions = {};
+    Game.app.studioDraft.jobChoice = null;
+    Game.app.render();
+  },
+
+  studioSong: function (block, songId) {
+    var draft = Game.app.studioDraft;
+    if (songId) draft.sessions[block] = songId;
+    else delete draft.sessions[block];
+    Game.app.render();
+  },
+
+  studioJobChoice: function (kind) {
+    Game.app.studioDraft.jobChoice = kind;
+    Game.app.render();
+  },
+
+  // Plans "Book studio time" in a block today with the chosen studio, day, and songs.
+  sendStudioBooking: function (block) {
+    var app = Game.app;
+    var d = app.studioDraft;
+    var sessions = Object.keys(d.sessions).map(function (b) { return { block: b, songId: d.sessions[b] }; });
+    var request = { studio: d.studio, day: d.day, sessions: sessions, jobChoice: d.jobChoice };
+    var result = Game.rules.actions.plan(app.state, block, 'bookStudio', request);
+    if (result.log.length) {
+      app.notice = { kind: 'error', text: result.log.join(' ') };
+      app.render();
+      return;
+    }
+    app.studioDraft = null;
+    app.notice = { kind: 'info', text: 'Studio booking planned for this ' + Game.content.calendar.blockNames[block].toLowerCase() +
+      '. The sessions go on your Calendar when you end the day.' };
+    app.applyRule(result);
+  },
+
+  // ----- The Shop and releases -----
+
+  buyItem: function (itemId) {
+    var app = Game.app;
+    var result = Game.rules.merch.buy(app.state, itemId);
+    app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  releaseMusic: function (type, songIds) {
+    var app = Game.app;
+    var result = Game.rules.recording.release(app.state, type, songIds);
+    var ok = result.state !== app.state;
+    app.notice = { kind: ok ? 'info' : 'error', text: result.log.join(' ') };
+    if (ok) {
+      app.releaseDraft = { type: 'single', songIds: [] };
+      app.state = Game.rules.progress.checkUnlocks(result.state).state; // First release milestone
+      app.autoSave();
+      app.render();
+    } else {
+      app.render();
+    }
   },
 
   // Plans the "Email a venue" action in a block today with the chosen venue, date, and deal.
@@ -357,6 +429,14 @@ Game.app = {
       (penalty.bandSatisfaction ? ', and your bandmates lose ' + (-penalty.bandSatisfaction) + ' satisfaction' : '') + '.';
     if (!window.confirm(msg)) return;
     var result = Game.rules.booking.cancelShow(app.state, entryId);
+    app.notice = { kind: 'info', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  cancelStudio: function (entryId) {
+    var app = Game.app;
+    if (!window.confirm('Cancel this studio session? It\'s free: studios only charge when you record.')) return;
+    var result = Game.rules.recording.cancelSession(app.state, entryId);
     app.notice = { kind: 'info', text: result.log.join(' ') };
     app.applyRule(result);
   },

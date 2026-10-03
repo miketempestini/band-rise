@@ -25,6 +25,10 @@
 //   needsBand           true if you need at least one bandmate (Rehearse)
 //   needsBooking        true if it's planned from the Booking screen with a venue, date, and deal (Email a venue)
 //   onlyWithoutJob      true if it's only for when you have no job (Look for work)
+//   needsBooking: 'studio'  planned from the Book screen's Studio section (Book studio time)
+//   needsHomeStudio     true if you need the home recording setup (Record at home)
+//   songFilter          'originals' to only offer original songs in the song step
+//   needsRelease        true if it unlocks with your first release (Social ads)
 //   songsMax            pick 1 to this many songs (Rehearse)
 //                       more effects: relationship (Jam, Hang out), talk (Talk), rehearsal (Rehearse),
 //                       meet: true (Network: a chance to meet someone)
@@ -156,6 +160,53 @@ Game.content = Game.content || {};
       requirements: {},
       effects: { booking: true },
       needsBooking: true,
+      countsAsWork: true,
+      noSkillWhenBurnedOut: false
+    },
+
+    bookStudio: {
+      id: 'bookStudio',
+      name: 'Book studio time',
+      description: 'Book a studio 10+ days ahead to record your originals.',
+      blocks: 1,
+      energyCost: b.energy.cost.admin,
+      moneyCost: 0,
+      moneyCategory: null,
+      requirements: {},
+      effects: { studioBooking: true },
+      needsBooking: 'studio',
+      countsAsWork: true,
+      noSkillWhenBurnedOut: false
+    },
+
+    recordHome: {
+      id: 'recordHome',
+      name: 'Record at home',
+      description: 'Record an original on your home setup. Free, but quality tops out at ' + b.recording.studios.home.qualityCap + '.',
+      blocks: 1,
+      energyCost: b.energy.cost.studio,
+      moneyCost: 0,
+      moneyCategory: null,
+      requirements: {},
+      effects: { recordHome: true },
+      needsSong: true,
+      songFilter: 'originals',
+      needsHomeStudio: true,
+      countsAsWork: true,
+      noSkillWhenBurnedOut: false
+    },
+
+    socialAds: {
+      id: 'socialAds',
+      name: 'Social ads',
+      description: 'Pay for ads in your feed. Bigger buzz than posting.',
+      blocks: 1,
+      energyCost: b.energy.cost.promote,
+      moneyCost: b.promotion.socialAds.cost,
+      moneyCategory: 'promotion',
+      requirements: {},
+      effects: { skills: b.skills.baseGain.promote, buzz: 'socialAds' },
+      needsRelease: true,
       countsAsWork: true,
       noSkillWhenBurnedOut: false
     },

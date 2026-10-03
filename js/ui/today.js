@@ -132,6 +132,16 @@ Game.ui.today = {
           energyLine +
           '</button>';
       }
+      if (row.kind === 'studio') {
+        var se = state.entries[row.entryId];
+        return '<button class="block block--show" data-action="openCalendar">' +
+          '<span class="block__time">' + name + '</span>' +
+          '<span class="block__title">🎙️ ' + h.escape(Game.content.studios[se.studio].name) + '</span>' +
+          '<span class="block__detail">Recording "' + h.escape(state.songs[se.songId].title) + '" · ' +
+            h.money(b.recording.studios[se.studio].cost) + ' · -' + b.energy.cost.studio + ' energy</span>' +
+          energyLine +
+          '</button>';
+      }
       if (row.kind === 'job') {
         return '<div class="block block--locked">' +
           '<span class="block__time">' + name + '</span>' +
@@ -149,9 +159,13 @@ Game.ui.today = {
         var mine = Game.rules.actions.plannedEntry(state, row.block);
         if (mine && mine.plannedAhead) title += ' <span class="badge">Planned ahead</span>';
         var planned = Game.rules.actions.plannedEntry(state, row.block);
-        if (planned && planned.request) {
+        if (planned && planned.request && planned.request.venueId) {
           about = '<span class="block__song">to ' + h.escape(Game.content.venues[planned.request.venueId].name) +
             ' (' + h.escape(h.dateLabel(planned.request.gigDay)) + ')</span>';
+        } else if (planned && planned.request && planned.request.studio) {
+          about = '<span class="block__song">' + h.escape(Game.content.studios[planned.request.studio].name) + ', ' +
+            planned.request.sessions.length + ' song' + (planned.request.sessions.length === 1 ? '' : 's') +
+            ' (' + h.escape(h.dateLabel(planned.request.day)) + ')</span>';
         } else if (row.personId && state.people[row.personId]) {
           about = '<span class="block__song">with ' + h.escape(state.people[row.personId].name) + '</span>';
         } else if (row.songIds && action.songsMax) {

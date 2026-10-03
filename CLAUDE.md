@@ -76,7 +76,7 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, actions, career, day, debug
+5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, actions, career, day, debug
    (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
 6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
@@ -198,6 +198,10 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
 - **Time savers**: `Game.rules.day.skipToNextCommitment` and `Game.rules.actions.repeatEvening`.
 - **Balance check**: `js/tests/balance.sim.js` runs on tests.html after the tests (100 runs x 21 days). Its
   `planDay` is the "simple, sensible player"; update it when new systems change what a sensible player does.
+- **Recording (Phase 8)**: `Game.rules.recording` (studio requests and sessions, recording quality, releases,
+  streaming). Studio sessions are calendar entries with `type: 'studio'` (commitments like shows; the action
+  picker can't overwrite them). Booking requests can be venue emails (`request.venueId`) or studio bookings
+  (`request.studio`): check which before reading their fields. `Game.rules.merch` runs the Shop and gig sales.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

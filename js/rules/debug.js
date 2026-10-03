@@ -109,6 +109,26 @@ Game.rules.debug = {
     return Game.rules.booking.processReplies(s);
   },
 
+  // Records the next booked studio session right now (and takes it off the calendar).
+  recordNextSession: function (state) {
+    var e = Game.rules.recording.nextSession(state);
+    if (!e) return { state: state, log: ['No studio time booked.'] };
+    var r = Game.rules.recording.record(state, e.songId, e.studio);
+    var s = r.state;
+    delete s.entries[e.id];
+    delete s.schedule[e.day][e.block];
+    return Game.rules.progress.checkUnlocks(s);
+  },
+
+  // Pays one week of streaming money right now.
+  streamingNow: function (state) {
+    var s = Game.util.clone(state);
+    s.day += 1; // count releases made today
+    var r = Game.rules.recording.payStreaming(s);
+    r.state.day = state.day;
+    return r;
+  },
+
   // Forces the next gig's result ('rough' or 'legendary'), or clears it with null.
   forceNextGig: function (state, result) {
     var s = Game.util.clone(state);

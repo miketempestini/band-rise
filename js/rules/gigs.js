@@ -272,6 +272,11 @@ Game.rules.gigs = {
     s = bandGig.state;
     notes = notes.concat(bandGig.log);
 
+    // Merch: some of the crowd buys a shirt or a CD (if you have stock). Merch money is all yours.
+    var merch = Game.rules.merch.sellAtGig(s, crowd, result, venueId);
+    s = merch.state;
+    s.stats.totalEarned += merch.revenue;
+
     // Venue relationship (booked rooms): +5 after a Solid or better show, -10 after a Rough one.
     var venueChange = 0;
     if (venue.tier > 0) {
@@ -336,6 +341,7 @@ Game.rules.gigs = {
         pay: pay,
         yourPay: yourPay,
         venueRelationship: venueChange,
+        merch: { sold: merch.sold, revenue: merch.revenue, soldOut: merch.soldOut },
         venueRelationshipNow: s.venues[venueId].relationship,
         band: bandNames,
         skills: skillGains
@@ -349,6 +355,7 @@ Game.rules.gigs = {
     var money = '';
     if (yourTips) money += ', $' + yourTips + ' in tips' + (bandNames.length ? ' (your share)' : '');
     if (pay) money += ', $' + pay + ' pay' + (bandNames.length ? ' (your share $' + yourPay + ')' : '');
+    if (merch.revenue) money += ', $' + merch.revenue + ' in merch';
     return {
       state: s,
       gig: gig,

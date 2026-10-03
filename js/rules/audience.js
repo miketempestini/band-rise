@@ -15,6 +15,7 @@ Game.rules.audience = {
     var skill = state.player.skills.promotion;
     if (kind === 'postOnline') return p.postOnline.buzzBase + skill / p.postOnline.buzzSkillDivisor;
     if (kind === 'flyers') return p.flyers.buzz * (1 + skill / p.paidSkillDivisor);
+    if (kind === 'socialAds') return p.socialAds.buzz * (1 + skill / p.paidSkillDivisor);
     throw new Error('Unknown promotion kind: ' + kind);
   },
 

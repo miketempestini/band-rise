@@ -19,7 +19,11 @@ Game.rules.progress = {
       return Object.keys(s.people).some(function (id) { return s.people[id].joinedDay !== null; });
     },
     smallRooms: function (s) { return s.player.reputation >= Game.balance.milestones.smallRoomsReputation; },
-    firstPaidGig: function (s) { return s.stats.paidShows >= 1; }
+    firstPaidGig: function (s) { return s.stats.paidShows >= 1; },
+    firstRecording: function (s) {
+      return Object.keys(s.songs).some(function (id) { return !!s.songs[id].recording; });
+    },
+    firstRelease: function (s) { return s.releases.length >= 1; }
   },
 
   // Other unlocks that get a banner but aren't milestones.
@@ -42,7 +46,9 @@ Game.rules.progress = {
   milestoneExtra: {
     smallRooms: ' You can now book real shows at Corner Tap, The Back Room, and Hollow Records. Open Book to send an email.',
     firstBandmate: ' Rehearse is unlocked.',
-    firstPaidGig: ' You got paid to play. The music is starting to pay its way.'
+    firstPaidGig: ' You got paid to play. T-shirts are now in the Shop.',
+    firstRecording: ' The home recording setup is now in the Shop, and you can release music from the Songs screen.',
+    firstRelease: ' Streaming money starts next Sunday, and Social ads are unlocked.'
   },
 
   // Records anything newly reached (in state.milestones) and queues its banner.

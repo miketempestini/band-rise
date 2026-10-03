@@ -90,6 +90,7 @@ Game.rules.booking = {
     var plan = state.schedule[day];
     var entry = plan && plan[block] && state.entries[plan[block]];
     if (entry && entry.type === 'gig') return 'Show booked at ' + Game.content.venues[entry.venueId].name;
+    if (entry && entry.type === 'studio') return 'Studio time booked';
     var pending = Object.keys(state.requests).map(function (id) { return state.requests[id]; }).filter(function (r) {
       return r.status === 'pending' && r.gigDay === day && Game.content.venues[r.venueId].showBlock === block;
     })[0];
