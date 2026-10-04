@@ -380,7 +380,7 @@ Game.rules.travel = {
     if (!state.cities[cityId].unlocked) return { problem: tr.cityUnlockProblem(state, cityId) || 'That city isn\'t open to you yet.', jobDays: [] };
     var van = tr.vanProblem(state, venueId, day);
     if (van) return { problem: van, jobDays: [] };
-    var added = tr.addShow(state, venueId, day, deal || 'guarantee', null);
+    var added = tr.addShow(state, venueId, day, deal || 'door', null);
     if (added.problems.length) return { problem: added.problems[0], jobDays: [] };
     return { problem: null, jobDays: added.jobDays };
   },
@@ -392,7 +392,7 @@ Game.rules.travel = {
     var b = Game.balance.travel;
     var c = tr.check(state, venueId, day, deal);
     if (c.problem) return { problem: c.problem, legs: [], gas: 0, hotelNights: 0, hotelCost: 0, energy: 0, jobDays: [] };
-    var s = tr.addShow(state, venueId, day, deal || 'guarantee', null);
+    var s = tr.addShow(state, venueId, day, deal || 'door', null);
     var trip = Object.keys(s.state.trips).map(function (id) { return s.state.trips[id]; })
       .filter(function (x) { return x.showIds.indexOf(s.entryId) !== -1; })[0];
     var legs = tr.tripLegs(s.state, trip);

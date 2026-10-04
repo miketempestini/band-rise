@@ -52,8 +52,8 @@ Game.balanceSim = {
     if (s.player.reputation >= Game.balance.milestones.smallRoomsReputation && !hasShow && !waiting) {
       for (var d = 7; d <= 14; d++) {
         if (Game.rules.day.dayOfWeek(s.day + d) === 5 &&
-            !Game.rules.booking.requestProblem(s, 'backRoom', s.day + d, 'guarantee')) {
-          var sent = Game.rules.booking.emailVenue(s, 'backRoom', s.day + d, 'guarantee'); // no block needed
+            !Game.rules.booking.requestProblem(s, 'backRoom', s.day + d, 'door')) {
+          var sent = Game.rules.booking.emailVenue(s, 'backRoom', s.day + d, 'door'); // no block needed
           if (sent.state !== s) s = sent.state;
           break;
         }
@@ -204,14 +204,14 @@ Game.balanceSim = {
     });
 
     // Once clubs unlock, email one for a Saturday 14-28 days out (if nothing's booked or pending there).
-    var clubOk = !Game.rules.booking.requestProblem(s, 'basement', s.day + 14, 'guarantee') ||
+    var clubOk = !Game.rules.booking.requestProblem(s, 'basement', s.day + 14, 'door') ||
       Game.rules.booking.requirements(s, Game.content.venues.basement, 'guarantee').every(function (r) { return r.met; });
     if (clubOk && !s.venues.basement.pendingRequestId) {
       var upcomingClub = Game.rules.booking.upcomingShows(s).some(function (e) { return Game.content.venues[e.venueId].tier === 2; });
       if (!upcomingClub) {
         for (var d = 14; d <= 28; d++) {
-          if (Game.rules.day.dayOfWeek(s.day + d) === 5 && !Game.rules.booking.requestProblem(s, 'basement', s.day + d, 'guarantee')) {
-            var r = Game.rules.booking.emailVenue(s, 'basement', s.day + d, 'guarantee'); // no block needed
+          if (Game.rules.day.dayOfWeek(s.day + d) === 5 && !Game.rules.booking.requestProblem(s, 'basement', s.day + d, 'door')) {
+            var r = Game.rules.booking.emailVenue(s, 'basement', s.day + d, 'door'); // no block needed
             if (r.state !== s) s = r.state;
             break;
           }

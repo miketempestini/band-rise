@@ -44,19 +44,19 @@
   Game.test('Booking: requirements, the 7-14 day window, and one open request per venue', function (t) {
     var s = bookable();
     s.player.reputation = 9;
-    t.ok(Game.rules.booking.requestProblem(s, 'backRoom', s.day + 7, 'guarantee'), 'reputation 9: small rooms locked');
+    t.ok(Game.rules.booking.requestProblem(s, 'backRoom', s.day + 7, 'door'), 'reputation 9: small rooms locked');
     s.player.reputation = 12;
-    t.ok(Game.rules.booking.requestProblem(s, 'backRoom', s.day + 6, 'guarantee'), '6 days out: too soon');
-    t.ok(Game.rules.booking.requestProblem(s, 'backRoom', s.day + 15, 'guarantee'), '15 days out: too far');
-    t.equal(Game.rules.booking.requestProblem(s, 'backRoom', s.day + 10, 'guarantee'), null, '10 days out: OK');
-    s = Game.rules.booking.sendRequest(s, 'backRoom', s.day + 10, 'guarantee').state;
+    t.ok(Game.rules.booking.requestProblem(s, 'backRoom', s.day + 6, 'door'), '6 days out: too soon');
+    t.ok(Game.rules.booking.requestProblem(s, 'backRoom', s.day + 15, 'door'), '15 days out: too far');
+    t.equal(Game.rules.booking.requestProblem(s, 'backRoom', s.day + 10, 'door'), null, '10 days out: OK');
+    s = Game.rules.booking.sendRequest(s, 'backRoom', s.day + 10, 'door').state;
     t.ok(Game.rules.booking.requestProblem(s, 'backRoom', s.day + 11, 'door'), 'second request to the same venue refused');
-    t.ok(Game.rules.booking.requestProblem(s, 'basement', s.day + 20, 'guarantee'), 'clubs are locked');
+    t.ok(Game.rules.booking.requestProblem(s, 'basement', s.day + 20, 'door'), 'clubs are locked');
   });
 
   Game.test('Booking: the reply comes 1 to 3 days later, as an offer that expires', function (t) {
     var s = bookable(4);
-    s = Game.rules.booking.sendRequest(s, 'backRoom', s.day + 10, 'guarantee').state;
+    s = Game.rules.booking.sendRequest(s, 'backRoom', s.day + 10, 'door').state;
     var req = s.requests[Object.keys(s.requests)[0]];
     t.ok(req.replyDay - s.day >= 1 && req.replyDay - s.day <= 3, 'reply in ' + (req.replyDay - s.day) + ' days');
     s.debug.acceptNextBooking = true;
@@ -71,13 +71,21 @@
 
   Game.test('Booking: accepting puts the show on the calendar with a suggested setlist', function (t) {
     var s = bookable();
-    var b = booked(s, 'backRoom', s.day + 10, 'guarantee');
+    var b = booked(s, 'backRoom', s.day + 10, 'door');
     var e = b.state.entries[b.entryId];
     t.equal(e.type, 'gig');
     t.equal(e.block, 'evening');
     t.equal(e.songIds.length, 6, 'small room: 6 songs');
     t.equal(b.state.schedule[s.day + 10].evening, b.entryId, 'on the calendar');
     t.ok(Game.rules.booking.blockTaken(b.state, s.day + 10, 'evening'), 'that block is now taken');
+  });
+
+  Game.test('Booking deals: only the door, cover nights, and in-stores (no flat fee)', function (t) {
+    var s = bookable();
+    t.sameContents(Game.rules.booking.dealsFor(Game.content.venues.backRoom), ['door', 'coverNight'], 'The Back Room');
+    t.sameContents(Game.rules.booking.dealsFor(Game.content.venues.hollowRecords), ['inStore'], 'Hollow Records');
+    t.sameContents(Game.rules.booking.dealsFor(Game.content.venues.copperPint), ['door'], 'out of town: the door');
+    t.equal(Game.rules.booking.requestProblem(s, 'backRoom', s.day + 10, 'guarantee'), 'Pick a deal.', 'a flat fee can\'t be requested');
   });
 
   Game.test('Pay: guarantee is flat; door is crowd x ticket x share; cover night is $50', function (t) {
@@ -96,7 +104,7 @@
     s.people[met.personId].skill = 20;
     s.people[met.personId].trait = 'easygoing';
     s = Game.rules.people.invite(s, met.personId).state;
-    var show = booked(s, 'backRoom', s.day + 10, 'guarantee');
+    var show = booked(s, 'backRoom', s.day + 10, 'door');
     var e = show.state.entries[show.entryId];
     var before = show.state.player.cash;
     show.state.day = e.day;
@@ -132,29 +140,30 @@
     t.equal(r2.state.venues.backRoom.relationship, -5);
   });
 
-  Game.test('Booked shows play at End Day and pay out', function (t) {
+  Game.test('Booked shows play at End Day and pay their share of the door', function (t) {
     var s = bookable(5);
-    var show = booked(s, 'backRoom', s.day + 7, 'guarantee');
+    var show = booked(s, 'backRoom', s.day + 7, 'door');
     s = show.state;
     for (var i = 0; i < 7; i++) s = Game.rules.day.endDay(s).state;
     var cash = s.player.cash;
     var r = Game.rules.day.endDay(s).state;
     t.ok(r.lastDayReport.gig, 'the show was played');
     t.equal(r.lastGig.venueName, 'The Back Room');
-    t.equal(r.thisWeek.income.gigPay, 100, 'paid $100 as gig pay');
+    var tier = Game.balance.venues.tiers[1];
+    t.equal(r.thisWeek.income.gigPay, Math.round(r.lastGig.crowd * tier.ticket * tier.doorShare), 'paid the door: crowd x $8 x 70%');
     t.ok(!r.entries[show.entryId], 'off the calendar after');
   });
 
   Game.test('Cancelling: 7+ days ahead costs venue -10 only; under 7 days also costs reputation and band', function (t) {
     var s = bookable();
-    var early = booked(s, 'backRoom', s.day + 10, 'guarantee');
+    var early = booked(s, 'backRoom', s.day + 10, 'door');
     var r = Game.rules.booking.cancelShow(early.state, early.entryId).state;
     t.equal(r.venues.backRoom.relationship, -10, 'venue -10');
     t.equal(r.player.reputation, 12, 'reputation unchanged');
     t.equal(r.player.morale, early.state.player.morale - 5, 'morale -5');
     t.ok(!r.entries[early.entryId], 'off the calendar');
 
-    var late = booked(s, 'backRoom', s.day + 10, 'guarantee');
+    var late = booked(s, 'backRoom', s.day + 10, 'door');
     late.state.day += 5; // now only 5 days ahead
     var r2 = Game.rules.booking.cancelShow(late.state, late.entryId).state;
     t.equal(r2.venues.backRoom.relationship, -20, 'venue -20');
@@ -168,14 +177,14 @@
     s.people[met.personId].relationship = 60;
     s.people[met.personId].skill = 20;
     s = Game.rules.people.invite(s, met.personId).state;
-    var show = booked(s, 'backRoom', s.day + 10, 'guarantee');
+    var show = booked(s, 'backRoom', s.day + 10, 'door');
     var r = Game.rules.booking.playShow(show.state, show.state.entries[show.entryId], 0);
     t.ok(r.noShow, 'no-show');
     t.equal(r.state.venues.backRoom.relationship, -40, 'venue -40');
     t.equal(r.state.venues.backRoom.bannedUntilDay, show.state.day + 60, 'banned 60 days');
     t.equal(r.state.player.reputation, 4, 'reputation -8');
     t.equal(r.state.people[met.personId].satisfaction, 60, 'bandmate -10');
-    t.ok(Game.rules.booking.requestProblem(r.state, 'backRoom', r.state.day + 10, 'guarantee').indexOf('won\'t book') !== -1, 'can\'t book while banned');
+    t.ok(Game.rules.booking.requestProblem(r.state, 'backRoom', r.state.day + 10, 'door').indexOf('won\'t book') !== -1, 'can\'t book while banned');
   });
 
   Game.test('Cover nights: need reputation 5 and Musicianship 25, pay $50, and are covers only', function (t) {
@@ -185,7 +194,7 @@
     t.ok(Game.rules.booking.requestProblem(s, 'cornerTap', s.day + 8, 'coverNight'), 'Musicianship 24: locked');
     s.player.skills.musicianship = 25;
     t.equal(Game.rules.booking.requestProblem(s, 'cornerTap', s.day + 8, 'coverNight'), null, 'unlocked before small rooms');
-    t.ok(Game.rules.booking.requestProblem(s, 'cornerTap', s.day + 8, 'guarantee'), 'regular shows still need 10');
+    t.ok(Game.rules.booking.requestProblem(s, 'cornerTap', s.day + 8, 'door'), 'regular shows still need 10');
     var show = booked(s, 'cornerTap', s.day + 8, 'coverNight');
     var e = show.state.entries[show.entryId];
     t.equal(e.songIds.length, 5, '5 songs');
@@ -196,7 +205,7 @@
 
   Game.test('Session players: $75 each, count as skill 40 and tightness 50, refunded if let go', function (t) {
     var s = bookable();
-    var show = booked(s, 'backRoom', s.day + 10, 'guarantee');
+    var show = booked(s, 'backRoom', s.day + 10, 'door');
     var cash = show.state.player.cash;
     var r = Game.rules.booking.changeSessionPlayers(show.state, show.entryId, 1).state;
     t.equal(r.player.cash, cash - 75, '$75');
@@ -225,7 +234,7 @@
 
   Game.test('Booking: the picker can\'t overwrite a booked show', function (t) {
     var s = bookable();
-    var show = booked(s, 'backRoom', s.day + 7, 'guarantee');
+    var show = booked(s, 'backRoom', s.day + 7, 'door');
     var st = show.state;
     st.day += 7;
     t.equal(Game.rules.actions.option(st, 'evening', 'rest').ok, false, 'block is taken');

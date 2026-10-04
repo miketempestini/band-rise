@@ -5,7 +5,8 @@
 // A booked show is a calendar entry:
 //   state.entries[id] = { id, day, block, type: 'gig', venueId, deal, songIds, sessionPlayers, status: 'booked' }
 //   state.schedule[day][block] = id
-// A deal is 'guarantee', 'door', 'coverNight', or 'inStore' (booked by email), 'opening' or 'residency'
+// A deal is 'door', 'coverNight', or 'inStore' (booked by email), 'guarantee' (a fill-in show, from an event:
+// the venue's usual flat fee; venues can't be emailed for a flat fee), 'opening' or 'residency'
 // (from offers; those entries also carry a flat fee), or 'openMic' (an out-of-town open mic you signed up for).
 // Out-of-town shows also get travel booked around them (see Game.rules.travel).
 
@@ -26,9 +27,11 @@ Game.rules.booking = {
     });
   },
 
-  // The deals a venue offers, in a fixed order.
+  // The deals you can email a venue for, in a fixed order. Shows are booked for a share of the door
+  // (owner's change: no flat-fee bookings), plus cover nights and in-stores where a venue has them.
+  // A venue's flat fee (deals.guarantee) is still what it pays for fill-ins and residencies.
   dealsFor: function (venue) {
-    return ['guarantee', 'door', 'coverNight', 'inStore'].filter(function (deal) { return venue.deals[deal]; });
+    return ['door', 'coverNight', 'inStore'].filter(function (deal) { return venue.deals[deal]; });
   },
 
   // How many songs a show needs, and whether they must all be covers.
@@ -147,7 +150,7 @@ Game.rules.booking = {
   requestProblem: function (state, venueId, gigDay, deal) {
     var venue = Game.content.venues[venueId];
     if (!venue || venue.tier === 0) return 'Pick a venue.';
-    if (!venue.deals[deal]) return 'Pick a deal.';
+    if (Game.rules.booking.dealsFor(venue).indexOf(deal) === -1) return 'Pick a deal.';
     var vs = state.venues[venueId];
     if (vs.bannedUntilDay !== null && state.day < vs.bannedUntilDay) {
       return venue.name + ' won\'t book you until ' + Game.rules.day.dateLabel(vs.bannedUntilDay) + ' (you didn\'t show up).';

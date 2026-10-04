@@ -118,7 +118,7 @@ You start with $500 and save about $150 a week if you spend nothing on music, so
 | Day job | Per shift, paid Friday | $110 a shift | Start |
 | Overtime | Event offer for a Saturday shift | $165 | Start (random) |
 | Open mic tip jar | Small random amount, by result | Rough $0–5, Solid $0–20, Great $10–30, Legendary $20–40 | Start |
-| Gig, guarantee | Flat fee no matter who shows up | $50 to $100 small rooms, $200 to $500 clubs | Small rooms |
+| Gig, guarantee | A venue's flat fee, no matter who shows up. Not something you can book: only fill-ins (and residencies) pay it | $50 to $100 small rooms, $200 to $500 clubs | Fill-in events, residencies |
 | Gig, door deal | Your share of ticket sales | 70% of $8 tickets in small rooms | Small rooms |
 | T-shirts | Sold at gigs from stock you bought | Cost $8, sell for $20 | First paid gig |
 | CDs | Sold at gigs from stock you bought | Cost $3, sell for $10 | First EP |
@@ -396,16 +396,16 @@ You start in one hometown with seven venues across four tiers. Other cities open
 | Tier | Hometown venues | Capacity | Needs | Book ahead | Pay | Ticket |
 | --- | --- | --- | --- | --- | --- | --- |
 | 0. Open mic | The Rusty Nail (Tue), Bean There Cafe (Thu) | No cap | Nothing | Sign up that day | Tip jar | Free |
-| 1. Small room | Corner Tap (45), The Back Room (60), Hollow Records in-store (40) | 40 to 60 | Reputation 10 | 7 to 14 days | $50 to $100, or 70% of door | $8 |
-| 2. Club | The Basement (200), Velvet Lounge (300) | 150 to 300 | Reputation 30, 3+ on stage | 14 to 28 days | $200 to $500, or 75% of door | $12 |
-| 3. Theater | The Orpheum (1,200) | 800 to 1,500 | Reputation 60, a release | 28 to 56 days | $2,000+, or 80% of door | $25 |
+| 1. Small room | Corner Tap (45), The Back Room (60), Hollow Records in-store (40) | 40 to 60 | Reputation 10 | 7 to 14 days | 70% of door (a $50 to $100 flat fee only for fill-ins and residencies) | $8 |
+| 2. Club | The Basement (200), Velvet Lounge (300) | 150 to 300 | Reputation 30, 3+ on stage | 14 to 28 days | 75% of door ($200 to $500 flat for fill-ins and residencies) | $12 |
+| 3. Theater | The Orpheum (1,200) | 800 to 1,500 | Reputation 60, a release | 28 to 56 days | 80% of door ($2,000+ flat for residencies) | $25 |
 | 4. Arena or festival | Bigger cities only | 5,000+ | Reputation 85, a label | Offers only | $20,000+ | $45 |
 
 Hollow Records is the odd one out: it pays nothing, but merch sells at double the normal rate, and its in-store shows are in the afternoon (so on a weekday they clash with the day job). Venues are made-up names.
 
 ### Booking a show
 
-- **Email a venue** (no block, 5 energy, as many as you like): pick the city, the venue, a date inside its window, and a deal (guarantee or door) if it offers both. Out of town, each date shows the trip it would take.
+- **Email a venue** (no block, 5 energy, as many as you like): pick the city, the venue, a date inside its window, and a deal: a share of the door, or a cover night or in-store where the venue has one. Venues can't be booked for a flat fee (owner's change). Out of town, each date shows the trip it would take.
 - Before you send, the screen shows your odds and the expected crowd:
 
 ```latex
@@ -455,7 +455,7 @@ Each city keeps its own fans, buzz, an open mic , and 2 to 4 venues. Each city a
 | Port Aurelia | International | 450,000 | Aurelia Beach Bar (Fri) | Club Solana, Teatro Aurelia, Aurelia Stadium |
 | Valmora | International | 400,000 | Valmora Lounge (Thu) | The Blue Door, Valmora Opera House, Valmora Festival Grounds |
 
-Out of town, small rooms and clubs offer a guarantee or the door (cover nights and in-stores are hometown only), and theaters need a release. Opening slots, residencies, and fill-ins stay in the hometown. National and International cities are locked until the manager, label, and flights arrive.
+Out of town, small rooms, clubs, and theaters book for a share of the door (cover nights and in-stores are hometown only), and theaters need a release. Opening slots, residencies, and fill-ins stay in the hometown. National and International cities are locked until the manager, label, and flights arrive.
 
 ### Tours
 
@@ -650,7 +650,7 @@ The first 21 in-game days should take 10 to 15 minutes and end with one bandmate
 | Day | What happens | Player's choice | Feeling |
 | --- | --- | --- | --- |
 | Early week | Reputation passes 10. Milestone: "Small rooms unlocked." | None | A door opens |
-| Same day | Email The Back Room for a Saturday 12+ days out. The screen shows about 58% odds and an expected crowd of 15 to 22. | Which date; $75 guarantee or 70% of the door | Nervous about the odds |
+| Same day | Email The Back Room for a Saturday 12+ days out. The screen shows about 58% odds and an expected crowd of 15 to 22. | Which date; 70% of the door or a cover night | Nervous about the odds |
 | 2 days later | Reply arrives. A yes goes on the calendar. A no suggests trying Corner Tap. | Try again or wait | Relief or a setback |
 | Mid week | Dana's relationship reaches 50. Invite her to the band, and she says yes. Name the band. Rehearse unlocks, and every song drops 20 tightness. | Band name | "We're a band now." |
 | Rest of week | With a show on the calendar, flyers, posts, and rehearsals suddenly matter. | Promote, rehearse, or save money | Something to work toward |

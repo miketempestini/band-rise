@@ -76,7 +76,7 @@
     var started = Game.rules.songs.startSong(s);
     s = Game.rules.songs.finishSong(started.state, started.songId).state;
     s = Game.rules.actions.plan(s, 'evening', 'practice', null, 10).state;
-    s = Game.rules.booking.sendRequest(s, 'backRoom', 10, 'guarantee').state;
+    s = Game.rules.booking.sendRequest(s, 'backRoom', 10, 'door').state;
     s.debug.acceptNextBooking = true;
     s = Game.rules.debug.replyNow(s).state;
     var r = Game.rules.booking.acceptOffer(s, s.inbox[0].id, null);

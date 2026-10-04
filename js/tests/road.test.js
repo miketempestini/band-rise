@@ -122,7 +122,7 @@
   Game.test('Travel: accepting an out-of-town offer asks how to take workdays off, then books the show and the trip', function (t) {
     var s = roadState();
     s.cities.portEllery.unlocked = true;
-    s = Game.rules.booking.sendRequest(s, 'rustyAnchor', 9, 'guarantee').state;
+    s = Game.rules.booking.sendRequest(s, 'rustyAnchor', 9, 'door').state;
     s.debug.acceptNextBooking = true;
     s = Game.rules.debug.replyNow(s).state;
     var m = s.inbox[s.inbox.length - 1];
@@ -342,15 +342,15 @@
   Game.test('Email a venue: no block needed, 5 energy each, as many venues as you like; too tired is refused', function (t) {
     var s = roadState();
     var e = s.player.energy;
-    var r1 = Game.rules.booking.emailVenue(s, 'backRoom', 12, 'guarantee');
+    var r1 = Game.rules.booking.emailVenue(s, 'backRoom', 12, 'door');
     t.ok(r1.state.venues.backRoom.pendingRequestId, 'sent');
     t.equal(r1.state.player.energy, e - Game.balance.energy.cost.email, '-5 energy');
     t.equal(Object.keys(r1.state.schedule[0] || {}).length, 0, 'no block used');
-    var r2 = Game.rules.booking.emailVenue(r1.state, 'cornerTap', 11, 'guarantee');
+    var r2 = Game.rules.booking.emailVenue(r1.state, 'cornerTap', 11, 'door');
     t.ok(r2.state.venues.cornerTap.pendingRequestId, 'a second venue the same day');
     var tired = Game.util.clone(s);
     tired.player.energy = Game.balance.energy.cost.email - 1;
-    t.ok(Game.rules.booking.emailVenue(tired, 'backRoom', 12, 'guarantee').log[0].indexOf('tired') !== -1, 'too tired');
+    t.ok(Game.rules.booking.emailVenue(tired, 'backRoom', 12, 'door').log[0].indexOf('tired') !== -1, 'too tired');
   });
 
   // ----- Saving -----

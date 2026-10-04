@@ -4,6 +4,13 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 12b: Door deals only (2026-10-04)
+- Owner's change: venues can't be booked for a flat fee anymore. Emailing a venue offers a share of the door, plus cover
+  nights (Corner Tap, The Back Room) and in-stores (Hollow Records) where a venue has them. A venue's flat fee is still
+  what it pays for fill-in events and residencies (and opening slots keep their own fee).
+- Balance check: day 21 unchanged; day 90 cash about $2,850 (was $2,680), since the door pays more as crowds grow.
+- **Tests:** 265 passing.
+
 ### Session 12: Phase 11, on the road (2026-10-04)
 - **14 made-up cities** (cities.js), each with its own fans, buzz, fan ceiling, and open mic:
   - Near: Harlow Falls, Cedar Junction. Mid: Port Ellery, Ashford Springs.

@@ -62,13 +62,13 @@
     var duo = withBand(['easygoing']);
     var s = withSongs(duo.state, 10);
     s.player.reputation = 30;
-    t.ok(Game.rules.booking.requestProblem(s, 'basement', s.day + 20, 'guarantee').indexOf('on stage') !== -1, 'a duo can\'t book a club');
+    t.ok(Game.rules.booking.requestProblem(s, 'basement', s.day + 20, 'door').indexOf('on stage') !== -1, 'a duo can\'t book a club');
     var trio = withBand(['easygoing', 'easygoing']);
     var t3 = withSongs(trio.state, 10);
     t3.player.reputation = 29;
-    t.ok(Game.rules.booking.requestProblem(t3, 'basement', t3.day + 20, 'guarantee'), 'reputation 29: locked');
+    t.ok(Game.rules.booking.requestProblem(t3, 'basement', t3.day + 20, 'door'), 'reputation 29: locked');
     t3.player.reputation = 30;
-    t.equal(Game.rules.booking.requestProblem(t3, 'basement', t3.day + 20, 'guarantee'), null, 'trio at reputation 30: OK');
+    t.equal(Game.rules.booking.requestProblem(t3, 'basement', t3.day + 20, 'door'), null, 'trio at reputation 30: OK');
     t.equal(Game.rules.booking.setFor(Game.content.venues.basement, 'guarantee').size, 10, '10-song set');
   });
 
