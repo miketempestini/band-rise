@@ -22,9 +22,9 @@ Game.ui.actionPicker = {
     } else if (stepAction && stepAction.songsMax) {
       body = Game.ui.actionPicker.setStepHtml(state, stepAction, pickedSet || []);
       title = blockName + ': pick up to ' + stepAction.songsMax + ' songs to rehearse';
-    } else if (stepAction && stepAction.needsPerson) {
+    } else if (stepAction && (stepAction.needsPerson || stepAction.optionalCoWriter)) {
       body = Game.ui.actionPicker.personStepHtml(state, block, songStepFor);
-      title = blockName + ': who will you ' + stepAction.name.toLowerCase() + ' with?';
+      title = stepAction.optionalCoWriter ? blockName + ': write alone or with a bandmate?' : blockName + ': who will you ' + stepAction.name.toLowerCase() + ' with?';
     } else if (stepAction) {
       body = Game.ui.actionPicker.songStepHtml(state, block, songStepFor, sortBy, filter);
       title = blockName + ': which song will you ' + stepAction.name.toLowerCase() + '?';
@@ -214,7 +214,14 @@ Game.ui.actionPicker = {
         (problem ? '<span class="pick__reason">' + h.escape(problem) + '</span>' : '') +
         '</button>';
     }).join('');
-    return '<div class="picks">' + rows + '</div>' +
+    // Write: a "Write alone" choice first; a co-writer adds their skill / 10 to progress and quality.
+    var alone = action.optionalCoWriter
+      ? '<button class="pick pick--all' + (entry && entry.actionId === actionId && !current ? ' pick--current' : '') + '" data-action="pickPerson" data-person="">' +
+          '<span class="pick__head"><span class="pick__name">Write alone</span></span>' +
+          '<span class="pick__desc">Bandmates with relationship ' + Game.balance.people.coWriteMinRelationship +
+            '+ can co-write: they add their skill / 10 to progress and to the song\'s quality.</span></button>'
+      : '';
+    return '<div class="picks">' + alone + rows + '</div>' +
       '<div class="actions">' +
         '<button class="btn btn--ghost" data-action="pickerBack">← Back to actions</button>' +
       '</div>';
@@ -268,7 +275,7 @@ Game.ui.actionPicker = {
       if (action === 'pickAction') app.pickAction(target.getAttribute('data-id'));
       if (action === 'pickSong') app.planAction(app.pickerSongStep, target.getAttribute('data-song'));
       if (action === 'toggleSetSong') app.toggleSetSong(target.getAttribute('data-song'));
-      if (action === 'pickPerson') app.planAction(app.pickerSongStep, target.getAttribute('data-person'));
+      if (action === 'pickPerson') app.planAction(app.pickerSongStep, target.getAttribute('data-person') || null);
       if (action === 'confirmSet') app.planAction(app.pickerSongStep, app.pickerSet.slice());
       if (action === 'pickerBack') app.pickerShowActions();
       if (action === 'filterSongs') app.setPracticeFilter(target.getAttribute('data-filter'));

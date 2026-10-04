@@ -29,6 +29,7 @@
 //   needsHomeStudio     true if you need the home recording setup (Record at home)
 //   songFilter          'originals' to only offer original songs in the song step
 //   needsRelease        true if it unlocks with your first release (Social ads)
+//   optionalCoWriter    true if a bandmate (relationship 40+) can write with you (Write)
 //   songsMax            pick 1 to this many songs (Rehearse)
 //                       more effects: relationship (Jam, Hang out), talk (Talk), rehearsal (Rehearse),
 //                       meet: true (Network: a chance to meet someone)
@@ -68,6 +69,7 @@ Game.content = Game.content || {};
       moneyCategory: null,
       requirements: {},
       effects: { skills: b.skills.baseGain.write, songProgress: true },
+      optionalCoWriter: true,
       countsAsWork: true,
       noSkillWhenBurnedOut: true
     },

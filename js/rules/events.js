@@ -64,6 +64,22 @@ Game.rules.events = {
       var p = state.people[effects.satisfaction.personId];
       parts.push(u.signed(effects.satisfaction.amount) + ' satisfaction' + (p ? ' for ' + p.name : ''));
     }
+    if (effects.satisfaction2) {
+      var p2 = state.people[effects.satisfaction2.personId];
+      parts.push(u.signed(effects.satisfaction2.amount) + ' satisfaction' + (p2 ? ' for ' + p2.name : ''));
+    }
+    if (effects.satisfactionAll) parts.push(u.signed(effects.satisfactionAll) + ' satisfaction for everyone');
+    if (effects.relationshipAll) parts.push(u.signed(effects.relationshipAll) + ' relationship with every bandmate');
+    if (effects.reliability) {
+      var pr = state.people[effects.reliability.personId];
+      parts.push(u.signed(effects.reliability.amount) + ' reliability' + (pr ? ' for ' + pr.name : ''));
+    }
+    if (effects.bigShare) {
+      var ps = state.people[effects.bigShare.personId];
+      parts.push((ps ? ps.name : 'They') + ' takes ' + effects.bigShare.shares + ' shares of gig pay from now on');
+    }
+    if (effects.sessionForShow) parts.push('a session player covers tomorrow\'s show (-$' + Game.balance.economy.sessionPlayerFee + ')');
+    if (effects.songProgress) parts.push('+' + effects.songProgress + ' progress on your song');
     return parts.length ? parts.join(' · ') : 'Nothing changes';
   },
 
@@ -167,9 +183,41 @@ Game.rules.events = {
       s = booked.state;
       log = log.concat(booked.log);
     }
-    if (effects.satisfaction && s.people[effects.satisfaction.personId] && s.people[effects.satisfaction.personId].status === 'member') {
+    var isMember = function (id) { return id && s.people[id] && s.people[id].status === 'member'; };
+    if (effects.satisfaction && isMember(effects.satisfaction.personId)) {
       s = Game.rules.people.changeSatisfaction(s, effects.satisfaction.personId, effects.satisfaction.amount,
-        effects.satisfaction.amount > 0 ? 'You promised more rehearsals' : 'You brushed off their idea').state;
+        effects.satisfaction.reason || (effects.satisfaction.amount > 0 ? 'You backed them up' : 'You brushed them off')).state;
+    }
+    if (effects.satisfaction2 && isMember(effects.satisfaction2.personId)) {
+      s = Game.rules.people.changeSatisfaction(s, effects.satisfaction2.personId, effects.satisfaction2.amount,
+        effects.satisfaction2.reason || 'You took the other side').state;
+    }
+    if (effects.satisfactionAll) {
+      Game.rules.people.members(s).forEach(function (m) {
+        s = Game.rules.people.changeSatisfaction(s, m.id, effects.satisfactionAll, effects.reason || 'Band life').state;
+      });
+    }
+    if (effects.relationshipAll) {
+      Game.rules.people.members(s).forEach(function (m) { s = Game.rules.people.interact(s, m.id, effects.relationshipAll).state; });
+    }
+    if (effects.reliability && isMember(effects.reliability.personId)) {
+      var person = s.people[effects.reliability.personId];
+      person.reliability = Game.util.clamp(person.reliability + effects.reliability.amount, 0, b.people.statMax);
+    }
+    if (effects.bigShare && isMember(effects.bigShare.personId)) s.people[effects.bigShare.personId].shares = effects.bigShare.shares;
+    if (effects.sessionForShow && s.entries[effects.sessionForShow]) {
+      s = Game.rules.booking.changeSessionPlayers(s, effects.sessionForShow, 1).state;
+    }
+    if (effects.songProgress) {
+      // Adds progress to the song in progress (starting one if needed). It stops just short of finished,
+      // so the song is completed (and revealed) by your next Write block.
+      var writing = Game.rules.songs.inProgress(s);
+      if (!writing) {
+        var started = Game.rules.songs.startSong(s);
+        s = started.state;
+        writing = s.songs[started.songId];
+      }
+      s.songs[writing.id].progress = Math.min(b.songs.progressToFinish - 1, s.songs[writing.id].progress + effects.songProgress);
     }
     return { state: s, log: log };
   },

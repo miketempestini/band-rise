@@ -82,12 +82,23 @@
     t.equal(s.player.badLuckStreak, 0, 'reset');
   });
 
-  Game.test('Reputation: gains shrink as reputation climbs; losses do not', function (t) {
+  Game.test('Reputation: gains shrink as reputation climbs (x (1 - reputation / 110)); losses do not', function (t) {
     var change = Game.rules.gigs.reputationChange;
-    t.near(change(0, 2, 0), 2, 'Solid at reputation 0: +2');
-    t.near(change(75, 2, 0), 1, 'Solid at reputation 75: +1');
-    t.near(change(75, -1, 0), -1, 'Rough at 75: still -1');
+    t.near(change(0, 2, 0), 2, 'Solid open mic at reputation 0: +2');
     t.near(change(0, 2, 1), 3, 'tier 1 room: x1.5');
+    t.near(change(55, 2, 2), 2 * 2 * 0.5, 'Solid club at reputation 55: +4 x half = +2');
+    t.near(change(75, -1, 0), -1, 'Rough at 75: still -1');
+  });
+
+  Game.test('Reputation: open mics give half once small rooms unlock, then nothing once clubs unlock', function (t) {
+    var change = Game.rules.gigs.reputationChange;
+    t.near(change(9, 2, 0), 2 * (1 - 9 / 110), 'reputation 9: full');
+    t.near(change(10, 2, 0), 2 * 0.5 * (1 - 10 / 110), 'reputation 10: half');
+    t.equal(change(30, 2, 0), 0, 'reputation 30: nothing from open mics');
+    t.ok(change(30, 2, 1) > 0, 'small rooms still count at 30');
+    t.equal(change(60, 2, 1), 0, 'reputation 60: nothing from small rooms');
+    t.ok(change(60, 2, 2) > 0, 'clubs still count at 60');
+    t.ok(Game.rules.gigs.outgrownNote(30, 0).indexOf('outgrown') !== -1, 'the result says why');
   });
 
   Game.test('Fans: fractions round randomly (1.4 means 1 fan, with a 40% chance of a second)', function (t) {
@@ -125,7 +136,7 @@
     var r = play(s);
     t.equal(r.gig.result, 'legendary');
     t.equal(r.gig.rewards.buzz, 10, 'buzz');
-    t.near(r.state.player.reputation, 5, 'reputation');
+    t.near(r.state.player.reputation, 5, 'reputation (at 0: no shrinking)');
     t.equal(r.state.player.morale, 65, 'morale');
     t.ok(r.gig.rewards.tips >= 20 && r.gig.rewards.tips <= 40, 'tips ' + r.gig.rewards.tips);
     t.equal(r.state.thisWeek.income.tips, r.gig.rewards.tips, 'tips show in the weekly summary');

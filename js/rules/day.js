@@ -289,6 +289,13 @@ Game.rules.day = {
     var replies = Game.rules.booking.processReplies(s);
     s = replies.state;
     replies.log.forEach(function (line) { endLines.push(line); });
+    // Residency counter-offers get their answers, and new opening slots or residencies may arrive.
+    var counters = Game.rules.offers.processCounters(s);
+    s = counters.state;
+    counters.log.forEach(function (line) { endLines.push(line); });
+    var offers = Game.rules.offers.roll(s);
+    s = offers.state;
+    offers.log.forEach(function (line) { endLines.push(line); });
     var expired = Game.rules.booking.expireOffers(s);
     s = expired.state;
     expired.log.forEach(function (line) { endLines.push(line); });

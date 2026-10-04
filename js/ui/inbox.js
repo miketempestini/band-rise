@@ -1,6 +1,7 @@
 // inbox.js
-// The Inbox screen: replies from venues. A "yes" is an offer with Accept or Decline and an answer-by date.
-// If the show lands on your day job, Accept asks how you'll take the day off.
+// The Inbox screen: replies from venues, opening slot offers, residency contracts, and event records.
+// Open offers have Accept (or Review contract) and Decline, and an answer-by date.
+// If a show lands on your day job, Accept asks how you'll take the day off.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
@@ -12,8 +13,9 @@ Game.ui.inbox = {
     var state = app.state;
     var self = Game.ui.inbox;
     var messages = state.inbox.slice().reverse(); // newest first
-    var open = messages.filter(function (m) { return !m.resolved && m.data.yes; });
-    var rest = messages.filter(function (m) { return !(!m.resolved && m.data.yes); });
+    var isOpen = function (m) { return !m.resolved && (m.data.yes || m.kind === 'opening' || m.kind === 'residency'); };
+    var open = messages.filter(isOpen);
+    var rest = messages.filter(function (m) { return !isOpen(m); });
 
     root.innerHTML =
       Game.ui.topbar.html(state, app.screen) +
@@ -32,13 +34,53 @@ Game.ui.inbox = {
       back: function () { app.goBack('inbox'); },
       focusPayBack: function () { app.goBack('inbox'); },
       accept: function (e, el) { app.acceptOffer(el.getAttribute('data-id'), el.getAttribute('data-job') || null); },
-      decline: function (e, el) { app.declineOffer(el.getAttribute('data-id')); }
+      decline: function (e, el) { app.declineOffer(el.getAttribute('data-id')); },
+      acceptOpening: function (e, el) { app.acceptOpening(el.getAttribute('data-id')); },
+      reviewContract: function (e, el) { app.openContract(el.getAttribute('data-id')); }
     });
+  },
+
+  // An opening slot or residency offer.
+  offerHtml: function (state, m) {
+    var h = Game.ui.helpers;
+    var d = m.data;
+    var venue = Game.content.venues[d.venueId];
+    var head, body, buttons = '';
+    if (m.kind === 'opening') {
+      head = '🎸 ' + venue.name + ' wants you to open!';
+      body = 'A touring band is headlining on ' + h.dateLabel(d.day) + '. You\'d play a ' + Game.balance.offers.openingSlot.setSize +
+        '-song opening set to their crowd (' + Math.round(Game.balance.offers.openingSlot.crowdShare.min * 100) + '-' +
+        Math.round(Game.balance.offers.openingSlot.crowdShare.max * 100) + '% of ' + venue.capacity + ' people) for $' + d.fee +
+        '. Fans come from their crowd at half the usual rate.';
+      if (!m.resolved) {
+        buttons = '<button class="btn btn--small btn--primary" data-action="acceptOpening" data-id="' + m.id + '">Accept</button> ' +
+          '<button class="btn btn--small" data-action="decline" data-id="' + m.id + '">Decline</button>';
+      }
+    } else {
+      var terms = d.signed || d;
+      head = '📜 Residency offer from ' + venue.name;
+      body = terms.weeks + ' ' + Game.content.calendar.dayNames[terms.weekday] + ' nights at $' + terms.rate + ' a night, starting at least a week from now.' +
+        (d.counter && !m.resolved ? ' Your counter-offer: ' + d.counter.weeks + ' ' + Game.content.calendar.dayNames[d.counter.weekday] +
+          's at $' + d.counter.rate + ' (' + (d.counter.status === 'pending' ? 'answer tomorrow' : 'they said no') + ').' : '');
+      if (!m.resolved) {
+        buttons = '<button class="btn btn--small btn--primary" data-action="reviewContract" data-id="' + m.id + '">Review contract</button> ' +
+          '<button class="btn btn--small" data-action="decline" data-id="' + m.id + '">Decline</button>';
+      }
+    }
+    var status = m.resolved
+      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired' }[m.resolved] || m.resolved) + '</span>'
+      : '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>';
+    return '<div class="message' + (m.read ? '' : ' message--new') + '">' +
+      '<div class="message__head"><strong class="pos">' + h.escape(head) + '</strong>' + (m.read ? '' : ' <span class="badge badge--warn">New</span>') +
+        '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' +
+      '<p>' + h.escape(body) + '</p>' +
+      '<div class="message__foot">' + buttons + ' ' + status + '</div></div>';
   },
 
   messageHtml: function (state, m) {
     var h = Game.ui.helpers;
     var d = m.data;
+    if (m.kind === 'opening' || m.kind === 'residency') return Game.ui.inbox.offerHtml(state, m);
     if (m.kind === 'event') {
       // A record of a morning event and how you answered it.
       return '<div class="message">' +

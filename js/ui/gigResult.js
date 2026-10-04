@@ -104,7 +104,7 @@ Game.ui.gigResult = {
     root.innerHTML =
       Game.ui.topbar.html(app.state, app.screen) +
       '<section class="screen screen--narrow gig-result">' +
-        '<p class="reveal__kicker">' + h.dateLabel(gig.day) + ' · ' + (gig.kind === 'show' ? h.escape(Game.rules.booking.dealLabel(Game.content.venues[gig.venueId], gig.deal)) : 'open mic') + '</p>' +
+        '<p class="reveal__kicker">' + h.dateLabel(gig.day) + ' · ' + (gig.kind === 'show' ? h.escape(Game.rules.booking.dealLabel(Game.content.venues[gig.venueId], gig.deal, gig.fee)) : 'open mic') + '</p>' +
         '<h1 class="screen__title gig-result__headline gig-result__headline--' + gig.result + '">' +
           h.escape(text.headlines[gig.result].replace('{venue}', gig.venueName)) + '</h1>' +
 

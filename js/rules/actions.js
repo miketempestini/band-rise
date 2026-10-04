@@ -77,7 +77,8 @@ Game.rules.actions = {
         row.kind = 'gig';
         row.entryId = booked.id;
         row.venueId = booked.venueId;
-        if (energy <= 0) row.problem = 'You\'ll have no energy left: that\'s a no-show!';
+        var why = Game.rules.booking.noShowReason(state, booked, energy);
+        if (why) row.problem = 'No-show unless you fix it: ' + why;
         else energy = clampEnergy(energy - b.energy.cost.gig);
       } else if (booked && booked.type === 'studio') {
         // Booked studio time (a commitment): costs studio energy.
@@ -216,7 +217,7 @@ Game.rules.actions = {
   peopleFor: function (state, actionId) {
     var action = Game.content.actions[actionId];
     var members = Game.rules.people.members(state);
-    if (action.needsPerson === 'member') return members;
+    if (action.needsPerson === 'member' || action.optionalCoWriter) return members;
     return members.concat(Game.rules.people.contacts(state));
   },
 
@@ -225,6 +226,11 @@ Game.rules.actions = {
     var allowed = Game.rules.actions.peopleFor(state, actionId).some(function (p) { return p.id === personId; });
     if (!allowed) return 'Pick someone you know.';
     if (Game.content.actions[actionId].effects.talk) return Game.rules.people.talkProblem(state, personId);
+    if (Game.content.actions[actionId].optionalCoWriter) {
+      var need = Game.balance.people.coWriteMinRelationship;
+      var p = state.people[personId];
+      if (p.relationship < need) return 'Co-writing needs relationship ' + need + ' (you have ' + Math.floor(p.relationship) + ').';
+    }
     return null;
   },
 
@@ -331,6 +337,11 @@ Game.rules.actions = {
       songIds = Array.isArray(songChoice) ? songChoice.slice() : Game.rules.actions.loosestSongs(state, action.songsMax);
       var listProblem = Game.rules.actions.songListProblem(state, songIds, action.songsMax);
       if (listProblem) return { state: state, log: [listProblem] };
+    }
+    if (action.optionalCoWriter && songChoice) {
+      personId = songChoice;
+      var coProblem = Game.rules.actions.personProblem(state, actionId, personId);
+      if (coProblem) return { state: state, log: [coProblem] };
     }
     if (action.needsPerson) {
       personId = songChoice;
@@ -573,7 +584,10 @@ Game.rules.actions = {
 
     // Song progress (Write), using Songwriting from the start of the block.
     if (action.effects.songProgress) {
-      var written = Game.rules.songs.write(s, songwritingAtStart);
+      var coWriterId = personId && !Game.rules.actions.personProblem(s, actionId, personId) ? personId : null;
+      if (coWriterId) s = Game.rules.people.interact(s, coWriterId, 0).state;
+      var written = Game.rules.songs.write(s, songwritingAtStart, coWriterId);
+      if (coWriterId) parts.push('co-written with ' + s.people[coWriterId].name);
       s = written.state;
       if (written.finished) {
         finishedSongId = written.songId;

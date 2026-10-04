@@ -73,7 +73,8 @@ Game.rules.people = {
     var shares = {};
     var total = bp.playerShares;
     members.forEach(function (m) {
-      shares[m.id] = m.trait === 'diva' ? bp.divaShares : bp.memberShares;
+      // A member may have negotiated a bigger share (an event); a Diva wants 1.5 anyway.
+      shares[m.id] = m.shares || (m.trait === 'diva' ? bp.divaShares : bp.memberShares);
       total += shares[m.id];
     });
     Object.keys(shares).forEach(function (id) { shares[id] = shares[id] / total; });

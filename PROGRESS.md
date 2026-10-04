@@ -4,6 +4,35 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 10b: Reputation made harder to gain (2026-10-04)
+- All three suggestions applied (owner's call): gains shrink faster (x (1 - reputation / 110), was 150); open mics give
+  half once small rooms unlock; gigs more than one tier below your highest unlocked tier give no reputation (clubs
+  unlocked: no reputation from open mics; theaters unlocked: none from small rooms). Losses still count in full.
+  The gig result explains it ("You've outgrown open mics..."). Design.md updated.
+- Balance check after the change: reputation at day 21 averages 11.9 (73% of runs on target, was 47%); reputation 30
+  around day 47 (was 38); first headlining club show around day 69 (was 64, 98% of runs); reputation at day 90 averages
+  55 (38-69), was 87 (63-100).
+
+### Session 10: Phase 9, a bigger band and the club circuit (2026-10-04)
+- **Bigger band**: up to 4 bandmates (from Phase 5); clashes checked between every pair (tested).
+- **Clubs**: The Basement and Velvet Lounge need reputation 30 and a real 3-piece band to book (session players don't
+  count, owner's call); 10-song sets. On the night a club also needs 3 on stage: session players can cover a missing
+  member, otherwise it's a no-show. Today warns ahead of time.
+- **Co-writing**: Write's second step offers "Write alone" or a bandmate with relationship 40+; they add skill/10 to each
+  block's progress, and the best co-writer adds skill/10 to the finished song's quality (shown on the reveal).
+- **Opening slots** (Inbox): from reputation 10, 1% + reputation/20 % + Networking/40 % a day. Club, 3-10 days out,
+  $50-150, headliner's crowd (60-90% of the room), fans at half rate, 6-song set, no 3-on-stage rule.
+- **Residency contracts** (Inbox → Review contract): offered on Mondays by a venue with relationship 15+ (reputation 20+).
+  4 weekly nights at the venue's guarantee; crowd never below half the room. Sign as offered, or make one counter-offer
+  (night, ±25% rate, 3-6 weeks) with the odds shown first; the answer arrives next morning; a no leaves the original
+  terms signable.
+- **Milestone 9: Full band** (3 on stage), +10 morale.
+- **8 band-life events**: argument, side project, bigger share (they take 1.5 shares from then on), gear stolen, sick before
+  a show (session player covers), noise complaint, song idea (+15 progress), late-night hang.
+- **Balance check, days 22-90** (50 runs) added to tests.html; the simulated player now grows the band, co-writes, writes
+  toward a 10-song set, takes opening slots and residencies, and books clubs. Results under Known issues.
+- **Saves:** version 9. **Tests:** 200 passing (band.test.js new).
+
 ### Session 9: Phase 8, recording, releases, and merch (2026-10-03)
 - **Studio time** (Book screen, new Studio section): Demo ($75/block), Pro ($250, +10, reputation 40), Top ($1,000,
   +20, needs a label: shown locked). Book 10-28 days ahead (owner's change from 2), 1-3 blocks on one day, one
@@ -245,12 +274,18 @@ A running log of what's built, what's next, and known issues. Update at the end 
   with a no-library test runner, git repo (pushed to github.com/miketempestini/band-rise, private).
 
 ## What's next
-- Phase 9 (to be defined). Candidates from Design.md: the rest of the Shop (instrument upgrades, van, housing), part-time
-  job and quitting (milestones 8 and 11), more events and offers (opening slots, residencies), other cities and travel.
-- Balance decisions still waiting on the owner (bandmate odds, paid-show odds, cash): see Known issues.
-- The balance check's simulated player doesn't record, release, or buy merch yet; update `planDay` when tuning the mid-game.
+- **Decide on mid-game reputation** (see Known issues) before building theaters (reputation 60) and beyond.
+- Phase 10 candidates from Design.md: Shop gear (instrument upgrades, van, housing), part-time job and quitting
+  (milestones 8 and 11), other cities and travel (milestone 10), the manager.
+- Earlier balance decisions still waiting on the owner (bandmate odds, paid-show odds, cash).
 
 ## Known issues / open decisions
+- **90-day balance check (after the reputation change):** reputation 30 around day 47; first headlining club show around
+  day 69; reputation at day 90 about 55 (38-69), so a few runs reach theater level (60) by day 90 while fans are still
+  only ~150. Watch this when other cities arrive (they'll be the main way to keep growing reputation).
+  Cash builds to about $3,500 by day 90 (the simulated player barely spends).
+- **Players may stall before clubs**: clubs need 10-song sets, and nothing in the game says so until you look at Book.
+  Worth a tip or a Today hint later.
 - **Streaming is small early on by design**: at ~100 fans an EP pays about $2 a week. It only matters with hundreds of
   fans, matching Design.md's example (500 fans, 3 songs, $15).
 - **Early recordings are weak**: a first original (quality ~35) with low tightness records at about 30 at the Demo

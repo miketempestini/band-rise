@@ -147,11 +147,36 @@ Game.rules.gigs = {
 
   // Reputation change from a gig: base x (1 + venue tier x 0.5).
   // Gains shrink as you climb (x (1 - reputation / 150)). Losses don't shrink.
+  // Gains also stop for rooms you've outgrown: more than one tier below the highest tier your reputation has
+  // unlocked gives nothing, and open mics give half once small rooms are unlocked. Losses always count in full.
   reputationChange: function (reputation, base, tier) {
     var r = Game.balance.reputation;
     var change = base * (1 + tier * r.tierMultiplier);
-    if (change > 0) change *= (1 - reputation / r.diminishingDivisor);
-    return change;
+    if (change <= 0) return change;
+    var unlocked = Game.rules.gigs.unlockedTier(reputation);
+    if (unlocked - tier > r.outgrownTierGap) return 0;
+    if (tier === 0 && unlocked >= 1) change *= r.openMicAfterSmallRooms;
+    return Math.max(0, change * (1 - reputation / r.diminishingDivisor));
+  },
+
+  // The highest venue tier your reputation has unlocked (0 open mics, 1 small rooms, 2 clubs, 3 theaters, 4 arenas).
+  unlockedTier: function (reputation) {
+    var tiers = Game.balance.venues.tiers;
+    var best = 0;
+    Object.keys(tiers).forEach(function (t) {
+      if (reputation >= tiers[t].minReputation) best = Math.max(best, Number(t));
+    });
+    return best;
+  },
+
+  // A short note when a room no longer gives (full) reputation at your level, or null.
+  outgrownNote: function (reputation, tier) {
+    var r = Game.balance.reputation;
+    var unlocked = Game.rules.gigs.unlockedTier(reputation);
+    var name = Game.balance.venues.tiers[tier].name.toLowerCase() + 's';
+    if (unlocked - tier > r.outgrownTierGap) return 'You\'ve outgrown ' + name + ': they don\'t add to your reputation anymore. Aim for bigger rooms (and soon, other cities).';
+    if (tier === 0 && unlocked >= 1) return 'Open mics give half the reputation now that you play small rooms.';
+    return null;
   },
 
   // Turns a fraction of a fan into whole fans: 1.4 means 1 fan, with a 40% chance of a second.
@@ -199,6 +224,8 @@ Game.rules.gigs = {
     // Crowd: expected crowd x a random 0.85 to 1.15, capped at the venue's capacity.
     var expected = gigs.expectedCrowd(s, venue);
     var crowd = Math.max(0, Math.round(expected * rng.range(b.crowd.randomMin, b.crowd.randomMax)));
+    if (opts.crowdShare) crowd = Math.round(venue.capacity * rng.range(opts.crowdShare.min, opts.crowdShare.max)); // an opener plays to the headliner's crowd
+    if (opts.crowdFloor) crowd = Math.max(crowd, Math.round(venue.capacity * opts.crowdFloor)); // residency regulars
     if (venue.capacity !== null) crowd = Math.min(crowd, venue.capacity);
 
     // Score: the parts, then luck (never below 0 after two Rough results in a row).
@@ -228,7 +255,7 @@ Game.rules.gigs = {
 
     // Fans: crowd x conversion x originals factor x room left under the city's fan ceiling.
     var ceiling = Game.content.cities[venue.cityId].fanCeiling;
-    var rawFans = crowd * outcome.fanConversion * gigs.originalsFactor(songs) * Math.max(0, 1 - city.fans / ceiling);
+    var rawFans = crowd * outcome.fanConversion * (opts.fanRate === undefined ? 1 : opts.fanRate) * gigs.originalsFactor(songs) * Math.max(0, 1 - city.fans / ceiling);
     var fans = gigs.roundFans(rng, rawFans);
 
     // Tip jar.
@@ -247,6 +274,7 @@ Game.rules.gigs = {
     // Reputation (never below 0 or above the max).
     var repBefore = s.player.reputation;
     var repChange = gigs.reputationChange(repBefore, outcome.reputation, venue.tier);
+    var outgrown = outcome.reputation > 0 ? gigs.outgrownNote(repBefore, venue.tier) : null;
     s.player.reputation = Game.util.clamp(repBefore + repChange, 0, b.reputation.max);
 
     // Morale.
@@ -263,7 +291,7 @@ Game.rules.gigs = {
     var share = Game.rules.people.payShares(s).yourShare;
     var yourTips = Math.round(tips * share);
     if (yourTips > 0) s = Game.rules.money.earn(s, yourTips, 'tips').state;
-    var pay = opts.deal ? Game.rules.booking.payFor(venue, opts.deal, crowd) : 0;
+    var pay = opts.deal ? Game.rules.booking.payFor(venue, opts.deal, crowd, opts.fee) : 0;
     var yourPay = Math.round(pay * share);
     if (yourPay > 0) s = Game.rules.money.earn(s, yourPay, 'gigPay').state;
     s.stats.totalEarned += yourTips + yourPay;
@@ -315,6 +343,7 @@ Game.rules.gigs = {
       day: s.day,
       kind: venue.tier === 0 ? 'openMic' : 'show',
       deal: opts.deal || null,
+      fee: opts.fee || null,
       sessionPlayers: opts.sessionPlayers || 0,
       venueId: venueId,
       venueName: venue.name,
@@ -347,7 +376,7 @@ Game.rules.gigs = {
         skills: skillGains
       },
       tipId: gigs.pickTip(parts, averageTightness),
-      notes: notes
+      notes: outgrown ? notes.concat([outgrown]) : notes
     };
     s.lastGig = gig;
 

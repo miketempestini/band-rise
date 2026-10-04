@@ -29,6 +29,8 @@ Game.app = {
   skipResult: null,     // what "Skip to next commitment" did, for the skip summary screen
   studioDraft: null,    // a studio booking being set up: { studio, day, sessions: { block: songId }, jobChoice }
   releaseDraft: { type: 'single', songIds: [] }, // a release being put together on the Songs screen
+  contractId: null,     // the residency offer being reviewed
+  contractTerms: null,  // the terms you're editing on the contract screen: { weekday, rate, weeks }
   bandNameDraft: '',       // the band name shown in the name box on the Name your band screen
   pendingWeekSummary: false, // true when the weekly summary should follow the Day results screen
   draftCareer: null,    // a career being set up: { name, instrument, allocation } (not saved until Start)
@@ -165,7 +167,8 @@ Game.app = {
         : (action.setSize ? Game.rules.gigs.suggestSet(app.state, action.setSize) : Game.rules.actions.loosestSongs(app.state, action.songsMax));
       app.pickerSongStep = actionId;
       app.render();
-    } else if (action.needsSong || action.needsPerson) {
+    } else if (action.needsSong || action.needsPerson ||
+               (action.optionalCoWriter && app.pickerView().band.memberIds.length)) {
       app.pickerSongStep = actionId;
       app.render();
     } else {
@@ -352,6 +355,47 @@ Game.app = {
     var result = Game.rules.booking.acceptOffer(app.state, messageId, jobChoice);
     app.notice = { kind: result.entryId ? 'info' : 'error', text: result.log.join(' ') +
       (result.entryId ? ' A setlist was picked for you; change it on the Calendar.' : '') };
+    app.applyRule(result);
+  },
+
+  // ----- Opening slots and residency contracts -----
+
+  acceptOpening: function (messageId) {
+    var app = Game.app;
+    var result = Game.rules.offers.acceptOpening(app.state, messageId);
+    app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  openContract: function (messageId) {
+    var app = Game.app;
+    var m = app.state.inbox.filter(function (x) { return x.id === messageId; })[0];
+    app.contractId = messageId;
+    app.contractTerms = { weekday: m.data.weekday, rate: m.data.rate, weeks: m.data.weeks };
+    app.show('contract');
+  },
+
+  contractSet: function (field, value) {
+    Game.app.contractTerms[field] = value;
+    Game.app.render();
+  },
+
+  signContract: function () {
+    var app = Game.app;
+    var m = app.state.inbox.filter(function (x) { return x.id === app.contractId; })[0];
+    var result = Game.rules.offers.signResidency(app.state, app.contractId, { weekday: m.data.weekday, rate: m.data.rate, weeks: m.data.weeks });
+    if (result.state === app.state) { app.notice = { kind: 'error', text: result.log.join(' ') }; app.render(); return; }
+    app.state = result.state;
+    app.autoSave();
+    app.show('calendar');
+    app.notice = { kind: 'info', text: 'Signed! ' + result.log.join(' ') };
+    app.render();
+  },
+
+  proposeContract: function () {
+    var app = Game.app;
+    var result = Game.rules.offers.counterResidency(app.state, app.contractId, app.contractTerms);
+    app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
     app.applyRule(result);
   },
 

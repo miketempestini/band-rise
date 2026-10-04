@@ -438,7 +438,40 @@ Game.balance = {
     sessionWorkMinReputation: null,          // NOT DECIDED in Design.md
     sessionWorkBlocks: null,                 // NOT DECIDED in Design.md ("a few slots")
     sessionWorkStreamingShare: null,         // NOT DECIDED in Design.md ("a small percentage")
-    residencyWeeks: 4                        // A residency is a weekly night for a month
+    residencyWeeks: 4,                       // A residency is a weekly night for a month
+
+    // Opening slots: play before a touring band at a club. Chance each morning (from reputation 10):
+    //   1% + reputation / 20 % + Networking / 40 %   (reputation 20, Networking 20: 2.5% a day)
+    openingSlot: {
+      minReputation: 10,
+      baseChance: 0.01,
+      reputationDivisor: 20,
+      networkingDivisor: 40,
+      daysAhead: { min: 3, max: 10 },      // the show is this many days away
+      crowdShare: { min: 0.6, max: 0.9 },  // the headliner's crowd fills this much of the room
+      setSize: 6,                          // an opening set is 6 songs (no 3-on-stage rule)
+      expiryDays: 2                        // answer within this many days
+    },
+
+    // Residencies: a contract for a weekly night at one venue, offered (on Mondays) by a venue that likes you.
+    residency: {
+      minReputation: 20,
+      minRelationship: 15,                 // the venue's relationship with you
+      weeklyChance: 0.25,                  // chance each Monday that an eligible venue offers one
+      startDaysAhead: 7,                   // the first night is at least this many days away
+      crowdFloor: 0.5,                     // regulars come back: the crowd never drops below half the room
+      expiryDays: 3,                       // answer within this many days
+      // Negotiating (one counter-offer per contract; the answer comes the next morning):
+      minWeeks: 3,
+      maxWeeks: 6,
+      maxRateChange: 0.25,                 // ask for up to 25% more (or less) per night
+      dayChangePenalty: 0.10,              // a different night: -10% chance
+      ratePenaltyPerPercent: 0.02,         // each 1% more money: -2% chance
+      lengthPenaltyPerWeek: 0.05,          // each week longer or shorter: -5% chance
+      relationshipBonusDivisor: 2,         // + venue relationship / 2 % chance
+      minChance: 0.05,
+      maxChance: 0.95
+    }
   },
 
   // ---------------------------------------------------------------
@@ -492,7 +525,10 @@ Game.balance = {
     max: 100,
     start: 0,
     tierMultiplier: 0.5,             // Gig reputation x (1 + venue tier x 0.5)
-    diminishingDivisor: 150          // Gains x (1 - reputation / 150); losses not reduced
+    diminishingDivisor: 110,         // Gains x (1 - reputation / 110); losses not reduced (owner's change from 150)
+    // "Outgrowing" rooms (owner's change, so reputation is hard to gain and bigger rooms and other cities matter):
+    outgrownTierGap: 1,              // Gigs more than this many tiers below the highest tier you've unlocked give no reputation
+    openMicAfterSmallRooms: 0.5      // Once small rooms are unlocked, open mics give only half the reputation
   },
 
   // ---------------------------------------------------------------
@@ -598,7 +634,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 8,                      // Save format version, bumped when the state shape changes
+    version: 9,                      // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

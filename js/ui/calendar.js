@@ -218,7 +218,7 @@ Game.ui.calendar = {
 
     return '<div class="show">' +
       '<div class="show__head">🎤 <strong>' + h.escape(venue.name) + '</strong> · ' + Game.content.calendar.blockNames[e.block] + '</div>' +
-      '<p class="muted">' + h.escape(Game.rules.booking.dealLabel(venue, e.deal)) + '</p>' +
+      '<p class="muted">' + h.escape(Game.rules.booking.dealLabel(venue, e.deal, e.fee)) + '</p>' +
       '<h4 class="show__sub">Setlist</h4>' + setlist +
       '<h4 class="show__sub">Session players</h4>' +
       '<div class="session">' +

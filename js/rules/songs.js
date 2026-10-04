@@ -119,7 +119,9 @@ Game.rules.songs = {
   // and finishes it if progress reaches 100.
   // songwriting: the Songwriting skill at the start of the block.
   // Returns { state, songId, added, progress, finished, log }.
-  write: function (state, songwriting) {
+  // coWriterId: optional bandmate writing with you (relationship 40+): adds their skill / 10 to progress,
+  // and the best co-writer's skill / 10 is added to the song's quality when it's finished.
+  write: function (state, songwriting, coWriterId) {
     var b = Game.balance.songs;
     var s = state;
     var song = Game.rules.songs.inProgress(s);
@@ -131,6 +133,12 @@ Game.rules.songs = {
     s = Game.util.clone(s);
     var added = Game.rules.songs.progressPerBlock(songwriting);
     var target = s.songs[song.id];
+    var coWriter = coWriterId && s.people[coWriterId];
+    if (coWriter) {
+      added += coWriter.skill / b.coWriterProgressDivisor;
+      target.coWriters = target.coWriters || {};
+      target.coWriters[coWriterId] = coWriter.skill;
+    }
     target.progress = Math.min(b.progressToFinish, target.progress + added);
 
     var result = { state: s, songId: song.id, added: added, progress: target.progress, finished: false, log: [] };
@@ -156,12 +164,22 @@ Game.rules.songs = {
       base: b.qualityBase,
       songwriting: b.qualitySongwritingWeight * s.player.skills.songwriting,
       luck: rng.int(0, b.qualityRandomMax),
-      mood: s.player.morale > b.qualityHighMoraleThreshold ? b.qualityHighMoraleBonus : 0
+      mood: s.player.morale > b.qualityHighMoraleThreshold ? b.qualityHighMoraleBonus : 0,
+      coWriter: 0,
+      coWriterName: null
     };
+    // The best co-writer on this song adds their skill / 10.
+    Object.keys(song.coWriters || {}).forEach(function (id) {
+      var bonus = song.coWriters[id] / b.coWriterQualityDivisor;
+      if (bonus > parts.coWriter) {
+        parts.coWriter = bonus;
+        parts.coWriterName = s.people[id] ? s.people[id].name : 'your co-writer';
+      }
+    });
     s.rngState = rng.getState();
 
     song.progress = b.progressToFinish;
-    song.quality = Math.round(parts.base + parts.songwriting + parts.luck + parts.mood);
+    song.quality = Math.round(parts.base + parts.songwriting + parts.luck + parts.mood + parts.coWriter);
     song.qualityParts = parts;
     song.writtenDay = s.day;
     song.lastPlayedDay = s.day;

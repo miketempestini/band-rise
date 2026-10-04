@@ -5,7 +5,8 @@
 // A booked show is a calendar entry:
 //   state.entries[id] = { id, day, block, type: 'gig', venueId, deal, songIds, sessionPlayers, status: 'booked' }
 //   state.schedule[day][block] = id
-// A deal is 'guarantee', 'door', 'coverNight', or 'inStore'.
+// A deal is 'guarantee', 'door', 'coverNight', or 'inStore' (booked by email), or 'opening' or 'residency'
+// (from offers; those entries also carry a flat fee).
 
 window.Game = window.Game || {};
 Game.rules = Game.rules || {};
@@ -29,6 +30,7 @@ Game.rules.booking = {
   setFor: function (venue, deal) {
     var lists = Game.balance.songs.setlist;
     if (deal === 'coverNight') return { size: lists.coverNight.songs, coversOnly: true };
+    if (deal === 'opening') return { size: Game.balance.offers.openingSlot.setSize, coversOnly: false, coverLimit: null };
     var byTier = { 1: lists.smallRoom, 2: lists.club, 3: lists.theater, 4: lists.arena };
     return { size: byTier[venue.tier].songs, coversOnly: false, coverLimit: byTier[venue.tier].coverLimit };
   },
@@ -142,8 +144,10 @@ Game.rules.booking = {
   // What a show pays (before splitting with the band).
   //   guarantee: the flat fee     door: crowd x ticket price x door share
   //   coverNight: the cover-night fee     inStore: nothing
-  payFor: function (venue, deal, crowd) {
+  //   opening, residency: the agreed fee (passed in)
+  payFor: function (venue, deal, crowd, fee) {
     var tier = Game.balance.venues.tiers[venue.tier];
+    if (deal === 'opening' || deal === 'residency') return fee || 0;
     if (deal === 'guarantee') return venue.deals.guarantee;
     if (deal === 'door') return Math.round(crowd * tier.ticket * tier.doorShare);
     if (deal === 'coverNight') return Game.balance.economy.coverGigFee;
@@ -151,8 +155,10 @@ Game.rules.booking = {
   },
 
   // A plain description of a deal, like "$60 guarantee" or "70% of the door ($8 tickets)".
-  dealLabel: function (venue, deal) {
+  dealLabel: function (venue, deal, fee) {
     var tier = Game.balance.venues.tiers[venue.tier];
+    if (deal === 'opening') return 'Opening slot: $' + fee + ' flat, their crowd';
+    if (deal === 'residency') return 'Residency: $' + fee + ' a night';
     if (deal === 'guarantee') return '$' + venue.deals.guarantee + ' guarantee';
     if (deal === 'door') return Math.round(tier.doorShare * 100) + '% of the door ($' + tier.ticket + ' tickets)';
     if (deal === 'coverNight') return 'Cover night: $' + Game.balance.economy.coverGigFee + ' flat, covers only';
@@ -163,6 +169,19 @@ Game.rules.booking = {
   cancelPenalty: function (daysAhead) {
     var c = Game.balance.cancellations;
     return daysAhead >= c.earlyNoticeDays ? c.early : c.late;
+  },
+
+  // Why a booked show would be a no-show, or null: no energy left, or (clubs and bigger) not enough
+  // people on stage, counting session players. Openers don't need a full band.
+  noShowReason: function (state, entry, energy) {
+    if (energy <= 0) return 'you had no energy left.';
+    var venue = Game.content.venues[entry.venueId];
+    var needed = Game.balance.venues.tiers[venue.tier].minOnStage;
+    var onStage = 1 + state.band.memberIds.length + (entry.sessionPlayers || 0);
+    if (entry.deal !== 'opening' && onStage < needed) {
+      return 'the room needs ' + needed + ' on stage and you only had ' + onStage + '.';
+    }
+    return null;
   },
 
   // ----- Changing things (each returns a new state) -----
@@ -416,19 +435,26 @@ Game.rules.booking = {
 
   // Plays a booked show in its block (called at End Day). At 0 energy it's a no-show.
   // energy: your energy at the start of the block. Returns { state, gig, log, noShow }.
+  // Clubs and bigger also need enough people on stage on the night (session players can cover); an opener doesn't.
   playShow: function (state, entry, energy) {
-    if (energy <= 0) {
+    var why = Game.rules.booking.noShowReason(state, entry, energy);
+    if (why) {
       var penalty = Game.rules.booking.applyPenalty(state, entry.venueId, 'noShow');
       return { state: penalty.state, gig: null, noShow: true,
-        log: ['No-show at ' + Game.content.venues[entry.venueId].name + ': you had no energy left. '].concat(penalty.log) };
+        log: ['No-show at ' + Game.content.venues[entry.venueId].name + ': ' + why + ' '].concat(penalty.log) };
     }
     var venue = Game.content.venues[entry.venueId];
     var songIds = entry.songIds;
     if (Game.rules.booking.setlistProblem(state, venue, entry.deal, songIds)) {
       songIds = Game.rules.booking.suggestSetlist(state, venue, entry.deal);
     }
-    var played = Game.rules.gigs.playGig(state, entry.venueId, songIds, energy,
-      { deal: entry.deal, sessionPlayers: entry.sessionPlayers });
+    var o = Game.balance.offers;
+    var played = Game.rules.gigs.playGig(state, entry.venueId, songIds, energy, {
+      deal: entry.deal, sessionPlayers: entry.sessionPlayers, fee: entry.fee,
+      crowdShare: entry.deal === 'opening' ? o.openingSlot.crowdShare : null,     // the headliner's crowd
+      fanRate: entry.deal === 'opening' ? o.openingSlotFanRate : 1,               // their fans, at half the rate
+      crowdFloor: entry.deal === 'residency' ? o.residency.crowdFloor : null      // regulars come back
+    });
     return { state: played.state, gig: played.gig, log: played.log, noShow: false };
   }
 };

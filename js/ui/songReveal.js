@@ -55,7 +55,8 @@ Game.ui.songReveal = {
     if (!p) return '';
     var r = Game.util.round1;
     var line = 'Base ' + p.base + ' + Songwriting ' + r(p.songwriting) + ' + luck ' + p.luck +
-      (p.mood ? ' + good mood ' + p.mood : '') + ' = ' + song.quality + '.';
+      (p.mood ? ' + good mood ' + p.mood : '') +
+      (p.coWriter ? ' + co-writer ' + p.coWriterName + ' ' + r(p.coWriter) : '') + ' = ' + song.quality + '.';
     if (p.luck >= Game.balance.songs.luckyRoll) line += ' Lucky night!';
     else if (p.luck <= Game.balance.songs.unluckyRoll) line += ' Not much luck this time.';
     if (!p.mood) line += ' (Morale over ' + Game.balance.songs.qualityHighMoraleThreshold + ' adds +' + Game.balance.songs.qualityHighMoraleBonus + '.)';

@@ -291,7 +291,7 @@ You meet people by going out. Each has a few stats and one personality trait, an
 ### Band rules
 
 - Up to 4 members besides you.
-- Solo you can play open mics and small rooms. Clubs and bigger need 3+ people on stage.
+- Solo you can play open mics and small rooms. Clubs and bigger need 3+ people on stage: a real 3-piece band to book (session players don't count), and 3 on stage on the night (session players can cover a missing member, or it's a no-show).
 - Band musicianship = the average skill of everyone, with your Musicianship counted twice.
 - When someone joins, every song's tightness drops 20 while they learn it.
 - **Session players**: hire a fill-in for one booked show at $75. No relationship needed. Each counts as a skill-40 player (placeholder) in band musicianship and knows every song at tightness 50, pulling the set's tightness toward 50.
@@ -416,8 +416,8 @@ Hollow Records is the odd one out: it pays nothing, but merch sells at double th
 ### Offers that come to you
 
 - **Fill-in:** "A band dropped out. Can you play tomorrow?" Short notice, no booking odds, a quick reputation boost.
-- **Opening slot:** play a bigger room to another band's crowd. A $50 to $150 flat fee. New fans come from their crowd at half the normal rate. Odds of this happening increase with higher reputation and networking.&#32;
-- **Residency** (later): a weekly night at one venue for a month, for steady pay and steady fans.
+- **Opening slot:** play a club to a touring band's crowd (60-90% of the room). A $50 to $150 flat fee and a 6-song set, with no 3-on-stage rule. New fans come from their crowd at half the normal rate. From reputation 10, the chance of an offer each morning is 1% + reputation / 20 % + Networking / 40 % (about 2.5% a day at reputation 20 and Networking 20).&#32;
+- **Residency**: a contract for a weekly night at one venue (4 weeks at the venue's guarantee), offered on Mondays by a venue that likes you (relationship 15+) once you're at reputation 20+. Regulars come back: the crowd never drops below half the room. Before signing you can make one counter-offer: a different night, up to 25% more or less money, or 3 to 6 weeks. Each change lowers the chance they agree (a different night -10%, each 1% more money -2%, each week of difference -5%; plus venue relationship / 2 %). The answer comes the next morning; if it's no, the original terms can still be signed.
 - **Session work: **If your musicianship and reputation is high enough, you can get an offer to sit in on a recording session for another band. Takes a few slots of time to commit to since you'll need to be in the studio a few times. Pay is between a $100 and $200 flat fee per session. In addition, you get partial credit for the songwriting, so you get a small percentage of the streaming money from the song once its released.&#32;
 
 ### Geography
@@ -475,7 +475,8 @@ Each city tracks fans (people who stick around) and buzz (how hot you are right 
 
 - Unlocks venues, cities, bandmates, and offers. Never fades on its own.
 - Changes after each gig (base values in Gig resolution), multiplied by (1 + venue tier x 0.5). Bigger rooms count for more.
-- Gains shrink as you climb: multiply any gain by (1 - reputation / 150). Losses are not reduced.
+- Gains shrink as you climb: multiply any gain by (1 - reputation / 110). Losses are not reduced.
+- You outgrow rooms: once small rooms are unlocked (reputation 10), open mics give half the reputation. Gigs more than one tier below the highest tier you've unlocked give no reputation at all (at reputation 30, open mics give none; at 60, small rooms give none). Losses still count. Reputation is meant to be hard to gain, so growing it means bigger rooms and, later, other cities.
 - A release adds average recording quality / 20.
 - Cancellations and no-shows cost reputation (see Time and calendar).
 

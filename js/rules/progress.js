@@ -23,7 +23,8 @@ Game.rules.progress = {
     firstRecording: function (s) {
       return Object.keys(s.songs).some(function (id) { return !!s.songs[id].recording; });
     },
-    firstRelease: function (s) { return s.releases.length >= 1; }
+    firstRelease: function (s) { return s.releases.length >= 1; },
+    fullBand: function (s) { return 1 + s.band.memberIds.length >= Game.balance.milestones.fullBandOnStage; }
   },
 
   // Other unlocks that get a banner but aren't milestones.
@@ -48,7 +49,8 @@ Game.rules.progress = {
     firstBandmate: ' Rehearse is unlocked.',
     firstPaidGig: ' You got paid to play. T-shirts are now in the Shop.',
     firstRecording: ' The home recording setup is now in the Shop, and you can release music from the Songs screen.',
-    firstRelease: ' Streaming money starts next Sunday, and Social ads are unlocked.'
+    firstRelease: ' Streaming money starts next Sunday, and Social ads are unlocked.',
+    fullBand: ' Clubs open up once your reputation reaches 30.'
   },
 
   // Records anything newly reached (in state.milestones) and queues its banner.
@@ -130,7 +132,7 @@ Game.rules.progress = {
         inRange: values[id] >= t[id].min && values[id] <= t[id].max };
     });
     var paid = Game.rules.booking.upcomingShows(state).filter(function (e) {
-      return Game.rules.booking.payFor(Game.content.venues[e.venueId], e.deal, 0) > 0 || e.deal === 'door';
+      return Game.rules.booking.payFor(Game.content.venues[e.venueId], e.deal, 0, e.fee) > 0 || e.deal === 'door';
     })[0];
     return {
       rows: rows,

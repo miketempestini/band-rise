@@ -174,5 +174,132 @@ Game.balanceSim = {
       (notes.length ? '<h3>Suggested balance.js changes (not applied)</h3><ul>' + notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>'
         : '<p class="ok">Everything lands on target on average.</p>');
     return summary;
+  },
+
+  // ----- The longer check: days 22 to 90 (Phase 9) -----
+
+  // The same simple player, plus: grows to a trio (and more), co-writes, takes opening slots and
+  // residencies, and books clubs (14-28 days out) once they unlock. Plays first, then this.
+  planLongDay: function (s) {
+    var sim = Game.balanceSim;
+    var A = Game.rules.actions;
+
+    // Accept opening slots and sign residencies as offered.
+    s.inbox.forEach(function (m) {
+      if (m.resolved) return;
+      if (m.kind === 'opening') s = Game.rules.offers.acceptOpening(s, m.id).state;
+      if (m.kind === 'residency') s = Game.rules.offers.signResidency(s, m.id, { weekday: m.data.weekday, rate: m.data.rate, weeks: m.data.weeks }).state;
+    });
+
+    // Grow the band: invite anyone who'd say yes until there are 3 bandmates.
+    Game.rules.people.contacts(s).forEach(function (p) {
+      if (s.band.memberIds.length < 3 && !Game.rules.people.inviteProblem(s, p.id)) {
+        s = Game.rules.people.invite(s, p.id).state;
+        if (!s.band.name) s = Game.rules.people.nameBand(s, 'The Sim Band').state;
+      }
+    });
+
+    // Once clubs unlock, email one for a Saturday 14-28 days out (if nothing's booked or pending there).
+    var clubOk = !Game.rules.booking.requestProblem(s, 'basement', s.day + 14, 'guarantee') ||
+      Game.rules.booking.requirements(s, Game.content.venues.basement, 'guarantee').every(function (r) { return r.met; });
+    if (clubOk && !s.venues.basement.pendingRequestId) {
+      var upcomingClub = Game.rules.booking.upcomingShows(s).some(function (e) { return Game.content.venues[e.venueId].tier === 2; });
+      if (!upcomingClub) {
+        for (var d = 14; d <= 28; d++) {
+          if (Game.rules.day.dayOfWeek(s.day + d) === 5 && !Game.rules.booking.requestProblem(s, 'basement', s.day + d, 'guarantee')) {
+            var r = A.plan(s, Game.rules.day.dayOfWeek(s.day) >= 5 ? 'morning' : 'evening', 'emailVenue',
+              { venueId: 'basement', gigDay: s.day + d, deal: 'guarantee' });
+            if (!r.log.length) return r.state;
+            break;
+          }
+        }
+      }
+    }
+
+    s = sim.planDay(s);
+
+    // Clubs need a 10-song set: until there are 10 songs, swap Practice and Network for Write.
+    var clubSet = Game.rules.booking.setFor(Game.content.venues.basement, 'guarantee').size;
+    if (Game.rules.songs.playable(s).length < clubSet) {
+      Game.balance.time.blocks.forEach(function (block) {
+        var planned = A.plannedEntry(s, block);
+        if (planned && (planned.actionId === 'practice' || planned.actionId === 'network')) {
+          var w = A.plan(s, block, 'write');
+          if (!w.log.length) s = w.state;
+        }
+      });
+    }
+
+    // Co-write: if Write is planned and a bandmate is close enough, write together.
+    Game.balance.time.blocks.forEach(function (block) {
+      var e = A.plannedEntry(s, block);
+      if (!e || e.actionId !== 'write' || e.personId) return;
+      var partner = Game.rules.people.members(s).filter(function (m) { return !A.personProblem(s, 'write', m.id); })[0];
+      if (partner) {
+        var again = A.plan(s, block, 'write', partner.id);
+        if (!again.log.length) s = again.state;
+      }
+    });
+    return s;
+  },
+
+  // Plays one career to day 90 and records when things happened.
+  playLong: function (seed, days) {
+    var s = Game.rules.career.startCareer('Sim', ['guitar', 'keys', 'bass'][seed % 3], seed).state;
+    var when = { rep30: null, trio: null, firstClub: null };
+    var openings = 0, residencyShows = 0;
+    for (var i = 0; i < days && !s.gameOver; i++) {
+      s = Game.balanceSim.planLongDay(s);
+      s = Game.rules.day.endDay(s).state;
+      if (when.rep30 === null && s.player.reputation >= 30) when.rep30 = s.day;
+      if (when.trio === null && s.band.memberIds.length >= 2) when.trio = s.day;
+      if (s.lastDayReport.gig && s.lastGig) {
+        var tier = Game.content.venues[s.lastGig.venueId].tier;
+        if (tier === 2 && s.lastGig.deal !== 'opening' && when.firstClub === null) when.firstClub = s.lastGig.day;
+        if (s.lastGig.deal === 'opening') openings += 1;
+        if (s.lastGig.deal === 'residency') residencyShows += 1;
+      }
+    }
+    return {
+      rep30: when.rep30, trio: when.trio, firstClub: when.firstClub,
+      cash: s.player.cash, fans: Game.rules.progress.totalFans(s), reputation: s.player.reputation,
+      bandSize: s.band.memberIds.length, openings: openings, residencyShows: residencyShows, debt: s.player.loanOwed
+    };
+  },
+
+  // Runs the longer check and draws its report.
+  renderLong: function (el, runs, days) {
+    var all = [];
+    for (var seed = 1; seed <= runs; seed++) all.push(Game.balanceSim.playLong(seed, days));
+    var round = function (v) { return Math.round(v * 10) / 10; };
+    var stat = function (key) {
+      var hit = all.map(function (r) { return r[key]; }).filter(function (v) { return v !== null; });
+      if (!hit.length) return { share: 0, text: 'never' };
+      var avg = hit.reduce(function (a, b) { return a + b; }, 0) / hit.length;
+      return { share: hit.length / all.length, text: 'day ' + round(avg) + ' (range ' + Math.min.apply(null, hit) + ' to ' + Math.max.apply(null, hit) + ')' };
+    };
+    var avgOf = function (key) {
+      var list = all.map(function (r) { return r[key]; });
+      return round(list.reduce(function (a, b) { return a + b; }, 0) / list.length) + ' (range ' + round(Math.min.apply(null, list)) + ' to ' + round(Math.max.apply(null, list)) + ')';
+    };
+    var milestones = [['rep30', 'Reputation 30'], ['trio', 'A 3-piece band'], ['firstClub', 'First club show (headlining)']];
+    var rows = milestones.map(function (m) {
+      var st = stat(m[0]);
+      return '<tr><td>' + m[1] + '</td><td>' + Math.round(st.share * 100) + '% of runs</td><td>' + st.text + '</td></tr>';
+    }).join('');
+    var totals = [['cash', 'Cash at day ' + days + ' ($)'], ['fans', 'Fans'], ['reputation', 'Reputation'], ['bandSize', 'Bandmates'],
+      ['openings', 'Opening slots played'], ['residencyShows', 'Residency nights played'], ['debt', 'Debt ($)']].map(function (m) {
+      return '<tr><td>' + m[1] + '</td><td colspan="2">' + avgOf(m[0]) + '</td></tr>';
+    }).join('');
+    var club = stat('firstClub');
+    var note = club.share < 0.5
+      ? 'Fewer than half the runs headline a club by day ' + days + '. If clubs should arrive sooner, consider lowering venues.tiers[2].minReputation (30) or raising reputation gains (gigs.results.*.reputation).'
+      : 'Most runs reach clubs by day ' + days + '.';
+    el.innerHTML += '<h2>Balance check: days 22 to ' + days + ', ' + runs + ' runs (how fast players reach clubs)</h2>' +
+      '<p class="muted">The same simple player, plus: grows to a trio, writes (and co-writes) until it has the 10 songs a club set needs, takes opening slots and residencies, and emails The Basement once clubs unlock.</p>' +
+      '<table class="sim"><thead><tr><th>When</th><th>Reached by day ' + days + '</th><th>Average day</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<table class="sim" style="margin-top:16px"><thead><tr><th>At day ' + days + '</th><th colspan="2">Average</th></tr></thead><tbody>' + totals + '</tbody></table>' +
+      '<p>' + note + '</p>';
+    return all;
   }
 };

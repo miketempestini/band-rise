@@ -63,6 +63,7 @@
   <script src="js/rules/events.js"></script>
   <script src="js/rules/recording.js"></script>
   <script src="js/rules/merch.js"></script>
+  <script src="js/rules/offers.js"></script>
   <script src="js/rules/actions.js"></script>
   <script src="js/rules/career.js"></script>
   <script src="js/rules/day.js"></script>
@@ -89,6 +90,7 @@
   <script src="js/tests/events.test.js"></script>
   <script src="js/tests/progress.test.js"></script>
   <script src="js/tests/recording.test.js"></script>
+  <script src="js/tests/band.test.js"></script>
 
   <script src="js/tests/balance.sim.js"></script>
 
@@ -97,6 +99,7 @@
     // The balance check runs right after the tests (it takes a few seconds).
     setTimeout(function () {
       Game.balanceSim.render(document.getElementById('balance'), 100, Game.balance.slice.endDay);
+      Game.balanceSim.renderLong(document.getElementById('balance'), 50, 90);
     }, 50);
   </script>
 </body>
