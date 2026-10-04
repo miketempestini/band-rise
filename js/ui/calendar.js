@@ -80,6 +80,8 @@ Game.ui.calendar = {
       show: function () { return '🎤 ' + Game.content.venues[c.entry.venueId].name; },
       studio: function () { return '🎙️ ' + Game.content.studios[c.entry.studio].name; },
       sessionWork: function () { return '🎧 ' + state.sessionWork[c.entry.workId].bandName; },
+      travel: function () { return '🚐 ' + (c.entry.to === 'hometown' ? 'Home' : Game.content.cities[c.entry.to].name); },
+      away: function () { return 'On the road'; },
       plan: function () { return Game.content.actions[c.entry.actionId].name; },
       pending: function () { return '? ' + c.reason.replace('Waiting to hear from ', ''); },
       off: function () { return 'Off (' + c.offKind + ')'; },
@@ -151,6 +153,10 @@ Game.ui.calendar = {
       var right;
       if (info.kind === 'job') right = '<span class="muted">Day job</span>';
       else if (info.kind === 'show') right = '<span class="muted">Show (see below)</span>';
+      else if (info.kind === 'travel') {
+        right = '<span class="plan__task">🚐 ' + (entry.to === 'hometown' ? 'Driving home from ' + h.escape(Game.content.cities[entry.from].name)
+          : 'Travel to ' + h.escape(Game.content.cities[entry.to].name)) + '</span><span class="muted">-' + Game.balance.travel.energyPerBlock + ' energy</span>';
+      }
       else if (info.kind === 'sessionWork') {
         var work = state.sessionWork[entry.workId];
         right = '<span class="plan__task">🎧 Session work: ' + h.escape(work.bandName) + ', "' + h.escape(work.songTitle) + '" (+' + h.money(work.fee) + ')</span>' +
@@ -165,7 +171,7 @@ Game.ui.calendar = {
           '<button class="btn btn--small" data-action="planBlock" data-day="' + day + '" data-block="' + block + '">Change</button>' +
           '<button class="btn btn--small btn--ghost" data-action="clearBlock" data-day="' + day + '" data-block="' + block + '">Clear</button>';
       } else {
-        right = '<span class="muted">Free time</span>' +
+        right = '<span class="muted">' + (info.kind === 'away' ? 'On the road (' + Game.rules.actions.roadActionsText() + ')' : 'Free time') + '</span>' +
           '<button class="btn btn--small btn--primary" data-action="planBlock" data-day="' + day + '" data-block="' + block + '">Plan…</button>';
       }
       return '<div class="plan__row"><span class="plan__block">' + name + '</span>' + right + '</div>';
@@ -227,8 +233,22 @@ Game.ui.calendar = {
       (penalty.bandSatisfaction ? ', bandmates ' + penalty.bandSatisfaction + ' satisfaction' : '') +
       ', morale ' + b.morale.change.cancelGig + '.';
 
+    // Out of town: the trip this show is part of.
+    var trip = Object.keys(state.trips).map(function (id) { return state.trips[id]; }).filter(function (x) { return x.showIds.indexOf(e.id) !== -1; })[0];
+    var tripText = '';
+    if (trip) {
+      var tr = Game.rules.travel;
+      var legs = tr.tripLegs(state, trip);
+      tripText = '<p class="hint">🚐 Trip: ' + legs.map(function (leg) {
+        return Game.content.cities[leg.from].name + ' → ' + Game.content.cities[leg.to].name + ' (' + h.dateLabel(tr.slotDay(leg.slots[0])) + ' ' +
+          Game.content.calendar.blockNames[tr.slotBlock(leg.slots[0])].toLowerCase() + ')';
+      }).join(', ') + ' · gas ' + h.money(legs.reduce(function (sum, leg) { return sum + tr.legGas(leg.from, leg.to); }, 0)) +
+        ' · ' + tr.tripNights(trip) + ' hotel night' + (tr.tripNights(trip) === 1 ? '' : 's') + (trip.needsVan ? ' · needs a van' : '') + '</p>';
+    }
+
     return '<div class="show">' +
-      '<div class="show__head">🎤 <strong>' + h.escape(venue.name) + '</strong> · ' + Game.content.calendar.blockNames[e.block] + '</div>' +
+      '<div class="show__head">🎤 <strong>' + h.escape(venue.name) + '</strong>' + (venue.cityId !== 'hometown' ? ', ' + h.escape(Game.content.cities[venue.cityId].name) : '') +
+        ' · ' + Game.content.calendar.blockNames[e.block] + '</div>' + tripText +
       '<p class="muted">' + h.escape(Game.rules.booking.dealLabel(venue, e.deal, e.fee)) + '</p>' +
       '<h4 class="show__sub">Setlist</h4>' + setlist +
       '<h4 class="show__sub">Session players</h4>' +

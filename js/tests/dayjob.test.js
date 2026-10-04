@@ -334,14 +334,14 @@
 
   // ----- Saving -----
 
-  Game.test('Save: a version 9 save loads as version 10 with the new job, session work, and template fields', function (t) {
+  Game.test('Save: a version 9 save loads as the current version with the new job, session work, and template fields', function (t) {
     var old = Game.util.clone(freshState());
     old.version = 9;
     delete old.player.job.pending; delete old.player.job.quitDay;
     delete old.sessionWork; delete old.nextSessionWorkId; delete old.weekTemplates; delete old.nextTemplateId;
     var loaded = Game.save.parse(JSON.stringify(old));
     t.ok(loaded.ok, 'loaded: ' + loaded.message);
-    t.equal(loaded.state.version, 10);
+    t.equal(loaded.state.version, Game.balance.save.version);
     t.equal(loaded.state.player.job.pending, null, 'no job change waiting');
     t.equal(loaded.state.player.job.quitDay, null);
     t.sameContents(loaded.state.sessionWork, {}, 'no session work yet');

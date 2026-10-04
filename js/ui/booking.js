@@ -1,7 +1,8 @@
 // booking.js (screen)
-// The Booking screen: venues grouped by tier. Each shows its requirements (met or not), booking window,
-// deals, acceptance chance, and expected crowd. Pick a venue and deal, then a date, then which block
-// today you'll spend emailing them (it's an Admin action). The reply comes 1 to 3 days later.
+// The Booking screen: a tab for each city, then that city's venues grouped by tier. Each shows its
+// requirements (met or not), booking window, deals, acceptance chance, and expected crowd. Pick a venue
+// and deal, then a date, then send the email (no block needed, a little energy). The reply comes 1 to 3
+// days later. Out of town, each date shows the trip it would take, and open mics are a quick sign-up.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
@@ -13,10 +14,23 @@ Game.ui.booking = {
     var state = app.state;
     var self = Game.ui.booking;
     var tiers = Game.balance.venues.tiers;
+    var cityId = app.bookingCity || 'hometown';
+    var city = Game.content.cities[cityId];
+    var home = cityId === 'hometown';
+
+    // City tabs: every city you can drive to (locked ones say why on the Map).
+    var cityTabs = Object.keys(Game.content.cities).filter(function (id) {
+      return Game.rules.travel.regionOrder.indexOf(Game.content.cities[id].region) !== -1;
+    }).map(function (id) {
+      var open = state.cities[id].unlocked;
+      return '<button class="btn btn--small' + (id === cityId ? ' btn--primary' : '') + '" data-action="city" data-city="' + id + '"' +
+        (open ? '' : ' disabled title="' + h.escape(Game.rules.travel.cityUnlockProblem(state, id) || '') + '"') + '>' +
+        (open ? '' : '🔒 ') + h.escape(Game.content.cities[id].name) + '</button>';
+    }).join('');
 
     // Venues grouped by tier.
     var groups = {};
-    Game.rules.booking.venues().forEach(function (v) {
+    Game.rules.booking.venues(cityId).forEach(function (v) {
       groups[v.tier] = groups[v.tier] || [];
       groups[v.tier].push(v);
     });
@@ -37,8 +51,13 @@ Game.ui.booking = {
           '<button class="btn" data-action="back">← Back</button>' +
         '</div>' +
         h.notice(app.notice) +
+        '<div class="sort-bar">' + cityTabs + '</div>' +
         self.waitingHtml(state) +
-        self.studioHtml(state, app) +
+        (home ? self.studioHtml(state, app)
+          : '<p class="hint">' + h.escape(city.name) + ' · ' + Game.rules.travel.legBlocks('hometown', cityId) + ' travel block' +
+              (Game.rules.travel.legBlocks('hometown', cityId) === 1 ? '' : 's') + ' each way · $' + Game.balance.travel.gasRoundTrip[city.region] +
+              ' gas round trip · fans ' + state.cities[cityId].fans.toLocaleString() + ' · buzz ' + Math.round(state.cities[cityId].buzz) +
+              '. Travel is booked for you when you accept a show.</p>' + self.openMicHtml(state, app, cityId)) +
         sections +
       '</section>';
 
@@ -47,7 +66,11 @@ Game.ui.booking = {
       focusPayBack: function () { app.goBack('booking'); },
       pickDeal: function (e, el) { app.bookingPick(el.getAttribute('data-venue'), el.getAttribute('data-deal')); },
       pickDate: function (e, el) { app.bookingDate(Number(el.getAttribute('data-day'))); },
-      sendIn: function (e, el) { app.sendBookingEmail(el.getAttribute('data-block')); },
+      sendEmail: function () { app.sendBookingEmail(); },
+      city: function (e, el) { app.bookingCitySelect(el.getAttribute('data-city')); },
+      openMicPick: function (e, el) { app.openMicPick(el.getAttribute('data-venue'), Number(el.getAttribute('data-day'))); },
+      openMicCancel: function () { app.openMicPick(null); },
+      openMicSignUp: function () { app.signUpOpenMic(); },
       cancelDraft: function () { app.bookingPick(null, null); },
       studioPick: function (e, el) { app.studioPick(el.getAttribute('data-studio')); },
       studioDate: function (e, el) { app.studioDate(Number(el.getAttribute('data-day'))); },
@@ -60,6 +83,74 @@ Game.ui.booking = {
     root.querySelectorAll('input[name="studio-dayoff"]').forEach(function (radio) {
       radio.addEventListener('change', function () { app.studioJobChoice(radio.value); });
     });
+    root.querySelectorAll('input[name="openmic-dayoff"]').forEach(function (radio) {
+      radio.addEventListener('change', function () { app.openMicJobChoice(radio.value); });
+    });
+  },
+
+  // An out-of-town open mic: pick one of its nights and sign up (no email, no odds). Travel is booked for you.
+  openMicHtml: function (state, app, cityId) {
+    var h = Game.ui.helpers;
+    var tr = Game.rules.travel;
+    var venue = Object.keys(Game.content.venues).map(function (id) { return Game.content.venues[id]; })
+      .filter(function (v) { return v.cityId === cityId && v.tier === 0; })[0];
+    if (!venue) return '';
+    var draft = app.openMicDraft && app.openMicDraft.venueId === venue.id ? app.openMicDraft : null;
+    var dates = tr.openMicDates(state, venue.id).map(function (d) {
+      var label = Game.content.calendar.dayNames[Game.rules.day.dayOfWeek(d)].slice(0, 3) + ' W' + Game.rules.day.weekNumber(d);
+      var taken = Game.rules.booking.blockTaken(state, d, venue.showBlock, true) || tr.check(state, venue.id, d, 'openMic').problem;
+      return '<button class="date-btn' + (draft && draft.day === d ? ' date-btn--on' : '') + '" data-action="openMicPick" data-venue="' + venue.id +
+        '" data-day="' + d + '"' + (taken ? ' disabled title="' + h.escape(taken) + '"' : '') + '>' + label + '</button>';
+    }).join('');
+    var form = '';
+    if (draft) {
+      var preview = tr.preview(state, venue.id, draft.day, 'openMic');
+      var problem = tr.openMicProblem(state, venue.id, draft.day, draft.jobChoice);
+      form = Game.ui.booking.tripHtml(preview) +
+        (preview.jobDays.length ? Game.ui.booking.dayOffChoiceHtml(state, preview.jobDays, draft.jobChoice, 'openmic-dayoff') : '') +
+        '<div class="actions actions--left"><button class="btn btn--primary btn--small" data-action="openMicSignUp"' + (problem ? ' disabled' : '') + '>Sign up</button>' +
+          '<button class="btn btn--ghost btn--small" data-action="openMicCancel">Never mind</button>' +
+          (problem && !(preview.jobDays.length && !draft.jobChoice) ? ' <span class="pick__reason">' + h.escape(problem) + '</span>' : '') + '</div>';
+    }
+    return '<div class="panel">' +
+      '<h3 class="panel__title">🎤 Open mic: ' + h.escape(venue.name) + ' · ' + Game.content.calendar.dayNames[venue.openMicDay] + ' evenings</h3>' +
+      '<p class="hint">No email, no odds: just sign up for a night (' + Game.balance.travel.openMicSignupDays.min + ' to ' +
+        Game.balance.travel.openMicSignupDays.max + ' days ahead) and play ' + Game.balance.songs.setlist.openMic.songs + ' songs. A cheap way to win your first fans here.</p>' +
+      '<div class="dates">' + dates + '</div>' + (draft ? '<div class="booking-form">' + form + '</div>' : '') +
+      '</div>';
+  },
+
+  // A trip preview: each leg, gas, hotel nights, and the energy the driving takes.
+  tripHtml: function (preview) {
+    var h = Game.ui.helpers;
+    var tr = Game.rules.travel;
+    if (preview.problem) return '<p class="pick__reason">' + h.escape(preview.problem) + '</p>';
+    var when = function (t) {
+      return Game.content.calendar.dayNames[Game.rules.day.dayOfWeek(tr.slotDay(t))].slice(0, 3) + ' W' + Game.rules.day.weekNumber(tr.slotDay(t)) +
+        ' ' + Game.content.calendar.blockNames[tr.slotBlock(t)].toLowerCase();
+    };
+    var legs = preview.legs.map(function (leg) {
+      return '<li>🚐 ' + h.escape(Game.content.cities[leg.from].name) + ' → ' + h.escape(Game.content.cities[leg.to].name) + ': ' +
+        leg.slots.map(when).join(', ') + '</li>';
+    }).join('');
+    return '<div class="trip"><strong>The trip' + (preview.showCount > 1 ? ' (with your other show' + (preview.showCount > 2 ? 's' : '') + ' nearby)' : '') + '</strong>' +
+      '<ul class="log">' + legs + '</ul>' +
+      '<p class="hint">Gas ' + h.money(preview.gas) + ' · ' + preview.hotelNights + ' hotel night' + (preview.hotelNights === 1 ? '' : 's') +
+        ' (' + h.money(preview.hotelCost) + ') · ' + preview.energy + ' energy of driving' +
+        (preview.jobDays.length ? ' · needs ' + preview.jobDays.map(function (d) { return h.dateLabel(d); }).join(', ') + ' off work' : '') + '</p></div>';
+  },
+
+  // Radio buttons for how to take workdays off for a trip (vacation, sick, or skip).
+  dayOffChoiceHtml: function (state, days, chosen, name) {
+    var h = Game.ui.helpers;
+    return '<div class="form-row"><span class="muted">That\'s during your day job. Take ' + (days.length === 1 ? 'the day' : 'those days') + ' off:</span><div class="form-row__btns">' +
+      [['vacation', 'Vacation day' + (days.length > 1 ? 's' : '')], ['sick', 'Call in sick (' + Game.balance.job.sickDayPenalty + (days.length > 1 ? ' each' : '') + ')'],
+        ['skip', 'Skip work (' + Game.balance.job.skipPenalty + (days.length > 1 ? ' each' : '') + ')']].map(function (k) {
+        var problem = null;
+        days.forEach(function (d) { problem = problem || Game.rules.job.dayOffProblem(state, d, k[0], true); });
+        return '<label class="switch"><input type="radio" name="' + name + '" value="' + k[0] + '"' + (chosen === k[0] ? ' checked' : '') +
+          (problem ? ' disabled' : '') + '> ' + k[1] + (problem ? ' <span class="muted">(' + h.escape(problem) + ')</span>' : '') + '</label>';
+      }).join('') + '</div></div>';
   },
 
   // The Studio section: pick a studio, a day 10+ days ahead, and a song for up to 3 blocks that day.
@@ -158,7 +249,7 @@ Game.ui.booking = {
       '</div>';
   },
 
-  // Requests you're waiting on, and emails planned for today.
+  // Requests you're waiting on.
   waitingHtml: function (state) {
     var h = Game.ui.helpers;
     var lines = [];
@@ -167,13 +258,6 @@ Game.ui.booking = {
       if (r.status !== 'pending') return;
       lines.push('Waiting to hear from <strong>' + h.escape(Game.content.venues[r.venueId].name) + '</strong> about ' +
         h.dateLabel(r.gigDay) + ' (reply by ' + h.dateLabel(r.replyDay) + ', ' + Math.round(r.chance * 100) + '% chance).');
-    });
-    Object.keys(state.entries).forEach(function (id) {
-      var e = state.entries[id];
-      if (e.actionId === 'emailVenue' && e.day === state.day) {
-        lines.push('Email to <strong>' + h.escape(Game.content.venues[e.request.venueId].name) + '</strong> planned for this ' +
-          Game.content.calendar.blockNames[e.block].toLowerCase() + ' (about ' + h.dateLabel(e.request.gigDay) + '). It goes out when you end the day.');
-      }
     });
     if (!lines.length) return '';
     return '<div class="panel"><h3 class="panel__title">Waiting on</h3><ul class="log">' +
@@ -189,10 +273,6 @@ Game.ui.booking = {
     var crowd = Game.rules.gigs.crowdRange(state, venue);
     var tier = Game.balance.venues.tiers[venue.tier];
     var banned = vs.bannedUntilDay !== null && state.day < vs.bannedUntilDay;
-    var plannedToday = Object.keys(state.entries).some(function (id) {
-      var e = state.entries[id];
-      return e.actionId === 'emailVenue' && e.day === state.day && e.request.venueId === venue.id;
-    });
 
     var deals = booking.dealsFor(venue).map(function (deal) {
       var reqs = booking.requirements(state, venue, deal);
@@ -201,7 +281,7 @@ Game.ui.booking = {
       var pay;
       if (deal === 'door') pay = '$' + booking.payFor(venue, 'door', crowd.low) + ' to $' + booking.payFor(venue, 'door', crowd.high) + ' at the expected crowd';
       else pay = h.money(booking.payFor(venue, deal, 0));
-      var blocked = !allMet || banned || vs.pendingRequestId || plannedToday;
+      var blocked = !allMet || banned || vs.pendingRequestId;
       var chosen = draft && draft.deal === deal;
       return '<div class="deal' + (chosen ? ' deal--chosen' : '') + (allMet ? '' : ' deal--locked') + '">' +
         '<div class="deal__head"><strong>' + h.escape(booking.dealLabel(venue, deal)) + '</strong>' +
@@ -219,7 +299,6 @@ Game.ui.booking = {
     var status = '';
     if (banned) status = '<p class="panel__warn">Won\'t book you until ' + h.dateLabel(vs.bannedUntilDay) + ' (no-show).</p>';
     else if (vs.pendingRequestId) status = '<p class="hint">Request sent. Waiting for their reply.</p>';
-    else if (plannedToday) status = '<p class="hint">You plan to email them today.</p>';
 
     return '<div class="venue' + (draft ? ' venue--open' : '') + '">' +
       '<div class="venue__head"><span class="venue__name">' + h.escape(venue.name) + '</span>' +
@@ -233,12 +312,14 @@ Game.ui.booking = {
       '</div>';
   },
 
-  // Step 2 and 3 of a request: pick a date, then which block today to send the email in.
+  // Step 2 and 3 of a request: pick a date (out of town, see the trip it would take), then send the email.
   formHtml: function (state, app, venue, draft) {
     var h = Game.ui.helpers;
+    var away = venue.cityId !== 'hometown';
     var dates = Game.rules.booking.bookingDates(state, venue).map(function (d) {
       var label = Game.content.calendar.dayNames[Game.rules.day.dayOfWeek(d.day)].slice(0, 3) + ' W' + Game.rules.day.weekNumber(d.day);
-      var clash = d.free && Game.rules.booking.clashesWithJob(state, d.day, venue.showBlock);
+      var clash = d.free && (away ? Game.rules.travel.check(state, venue.id, d.day, draft.deal).jobDays.length > 0
+        : Game.rules.booking.clashesWithJob(state, d.day, venue.showBlock));
       return '<button class="date-btn' + (draft.gigDay === d.day ? ' date-btn--on' : '') + (clash ? ' date-btn--job' : '') + '"' +
         ' data-action="pickDate" data-day="' + d.day + '"' + (d.free ? '' : ' disabled') +
         ' title="' + h.escape(d.free ? (clash ? 'During your day job: you\'d need a day off' : h.dateLabel(d.day)) : d.why) + '">' + label + '</button>';
@@ -246,23 +327,18 @@ Game.ui.booking = {
 
     var send = '';
     if (draft.gigDay !== null && draft.gigDay !== undefined) {
-      var blocks = Game.balance.time.blocks.map(function (block) {
-        var opt = Game.rules.actions.option(Game.rules.actions.clear(state, block).state, block, 'emailVenue');
-        var current = Game.rules.actions.plannedEntry(state, block);
-        var busy = current && current.type === 'gig';
-        var ok = opt.ok && !busy;
-        return '<button class="btn btn--small' + (ok ? ' btn--primary' : '') + '" data-action="sendIn" data-block="' + block + '"' +
-          (ok ? '' : ' disabled title="' + h.escape(opt.reason || 'A show is booked then') + '"') + '>' +
-          Game.content.calendar.blockNames[block] + (current && ok ? ' (replaces ' + h.escape(Game.content.actions[current.actionId].name) + ')' : '') + '</button>';
-      }).join('');
-      send = '<div class="form-row"><span class="muted">Send the email in which block today? (' +
-        Game.content.actions.emailVenue.energyCost + ' energy)</span><div class="form-row__btns">' + blocks + '</div></div>';
+      var cost = Game.balance.energy.cost.email;
+      var tired = state.player.energy < cost;
+      send = (away ? Game.ui.booking.tripHtml(Game.rules.travel.preview(state, venue.id, draft.gigDay, draft.deal)) : '') +
+        '<div class="form-row"><button class="btn btn--primary btn--small" data-action="sendEmail"' + (tired ? ' disabled' : '') + '>Send the email (-' + cost + ' energy)</button>' +
+        '<span class="hint">' + (tired ? 'You\'re too tired to write an email.' : 'No block needed: email as many venues as you like today.') + '</span></div>';
     }
 
     return '<div class="booking-form">' +
       '<div class="form-row"><span class="muted">Pick a date (' + Game.content.calendar.blockNames[venue.showBlock].toLowerCase() + ' show):</span>' +
         '<div class="dates">' + dates + '</div>' +
-        '<span class="hint">Orange dates fall on your day job: accepting would need a vacation day, a sick day, or skipping work.</span></div>' +
+        '<span class="hint">Orange dates ' + (away ? 'need time off work for the trip' : 'fall on your day job') +
+          ': accepting would need a vacation day, a sick day, or skipping work.</span></div>' +
       send +
       '<div class="actions actions--left"><button class="btn btn--ghost btn--small" data-action="cancelDraft">Never mind</button></div>' +
       '</div>';

@@ -56,7 +56,8 @@ Game.state = {
         debtWeeksOverLimit: 0,           // Sundays in a row with debt above the game-over line
         burnedOut: false,                // true while Burned out (morale fell below 15, until back above 25)
         housing: 'starter',
-        gear: { instrumentTier: 0, homeStudio: false, van: false },
+        gear: { instrumentTier: 0, homeStudio: false, van: null }, // van: null, or { kind, shows, worn } (see Game.rules.travel)
+        roadDays: 0,                     // Days in a row you've spent away from home (road fatigue from day 5)
         merchStock: { shirts: 0, cds: 0 },
         badLuckStreak: 0
       },
@@ -86,7 +87,10 @@ Game.state = {
       gameOver: null,  // null while playing; { day, message } once the game has ended
       lastGig: null,   // the full result of the most recent gig (for the gig result screen)
       debug: { forceNextGig: null, acceptNextBooking: false }, // debug panel switches
-      stats: { gigsPlayed: 0, bestResult: null, biggestCrowd: 0, totalEarned: 0, openMicsPlayed: 0, paidShows: 0 },
+      stats: { gigsPlayed: 0, bestResult: null, biggestCrowd: 0, totalEarned: 0, openMicsPlayed: 0, paidShows: 0,
+               outOfTownShowDays: [], // the day of every out-of-town show you've played (for tours)
+               citiesPlayed: {},      // cityId: shows played there
+               vansBought: 0 },
       pendingEvent: null, // today's event waiting for an answer: { eventId, day, data }
       eventHistory: {},   // eventId: the last day it happened (for cooldowns)
       effects: [],        // temporary effects: { id, kind: 'gigScore' | 'dailyEnergy', amount, untilDay, label }
@@ -94,6 +98,8 @@ Game.state = {
       sessionWork: {},    // id: { id, bandName, songTitle, fee, quality, bandFans, sessions, played, missed,
                           //       status: 'booked' | 'done' | 'cancelled', releaseDay, announced }
       nextSessionWorkId: 1,
+      trips: {},          // trips out of town: id: { id, showIds, cities, startT, endT, needsVan } (see Game.rules.travel)
+      nextTripId: 1,
       weekTemplates: [],  // saved Plan Week templates: { id, name, evenings: { dayOfWeek: { actionId, choice } } }
       nextTemplateId: 1,
       settings: { tutorial: true },
@@ -110,13 +116,11 @@ Game.state = {
     return venues;
   },
 
-  // The cities you start with: just the hometown, with no fans or buzz yet.
+  // Every city, with no fans or buzz yet. Only the hometown starts unlocked.
   startingCities: function () {
     var cities = {};
     Object.keys(Game.content.cities).forEach(function (id) {
-      if (Game.content.cities[id].region === 'hometown') {
-        cities[id] = { id: id, fans: 0, buzz: 0, unlocked: true, lastActivityDay: 0 };
-      }
+      cities[id] = { id: id, fans: 0, buzz: 0, unlocked: Game.content.cities[id].region === 'hometown', lastActivityDay: 0 };
     });
     return cities;
   },

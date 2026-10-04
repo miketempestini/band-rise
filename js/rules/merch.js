@@ -1,6 +1,6 @@
 // merch.js
-// Rules for the Shop (merch stock and the home recording setup) and selling merch at gigs.
-// Numbers are in balance.merch (prices, pack sizes, buy rates) and balance.recording.studios.home.
+// Rules for the Shop (merch stock, the home recording setup, and vans) and selling merch at gigs.
+// Numbers are in balance.merch (prices, pack sizes, buy rates), balance.recording.studios.home, and balance.vans.
 
 window.Game = window.Game || {};
 Game.rules = Game.rules || {};
@@ -29,7 +29,24 @@ Game.rules.merch = {
         unlocked: state.milestones.firstRecording !== undefined, why: 'Unlocks after your first recording.',
         owned: state.player.gear.homeStudio
       }
-    ];
+    ].concat(Game.rules.merch.vanItems(state));
+  },
+
+  // The three vans: { id: 'van-beater', ..., kind }. Unlocked by milestone 10 (On the road).
+  // Buying a van replaces the one you have (no trade-in).
+  vanItems: function (state) {
+    var vans = Game.balance.vans;
+    var current = state.player.gear.van;
+    return Object.keys(vans).map(function (kind) {
+      var v = vans[kind];
+      return {
+        id: 'van-' + kind, kind: kind, name: Game.content.vans[kind].name, price: v.price,
+        detail: Game.content.vans[kind].blurb + ' ' + (v.maxShows === null ? 'Never breaks down.' : 'Lasts ' + v.maxShows + ' out-of-town shows.') +
+          (current ? ' (Replaces your ' + Game.content.vans[current.kind].name.toLowerCase() + ', no trade-in.)' : ''),
+        unlocked: state.milestones.onTheRoad !== undefined, why: 'Unlocks with milestone 10, On the road (reputation ' + Game.balance.milestones.onTheRoadReputation + ').',
+        owned: !!current && current.kind === kind && !current.worn
+      };
+    });
   },
 
   // Buys an item from the Shop. Merch is paid up front. Returns { state, log }.
@@ -40,7 +57,13 @@ Game.rules.merch = {
     if (item.owned) return { state: state, log: ['You already have one.'] };
     if (state.player.cash < item.price) return { state: state, log: ['That costs $' + item.price + ' (you have $' + Math.floor(state.player.cash) + ').'] };
     var m = Game.balance.merch;
-    var s = Game.rules.money.spend(state, item.price, itemId === 'homeStudio' ? 'gear' : 'merchStock').state;
+    var s = Game.rules.money.spend(state, item.price, itemId === 'homeStudio' || item.kind ? 'gear' : 'merchStock').state;
+    if (item.kind) {
+      s.player.gear.van = { kind: item.kind, shows: 0, worn: false };
+      s.stats.vansBought += 1;
+      // A first van is milestone 12 (Wheels), and may open the Far cities.
+      return { state: Game.rules.progress.checkUnlocks(s).state, log: ['Bought a ' + item.name.toLowerCase() + ' for $' + item.price.toLocaleString() + '.'] };
+    }
     if (itemId === 'shirts') s.player.merchStock.shirts += m.shirt.packSize;
     if (itemId === 'cds') s.player.merchStock.cds += m.cd.packSize;
     if (itemId === 'homeStudio') s.player.gear.homeStudio = true;

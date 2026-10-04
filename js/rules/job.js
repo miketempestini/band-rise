@@ -238,12 +238,14 @@ Game.rules.job = {
     return Game.rules.job.dropPlansInJobBlocks(s, day);
   },
 
-  // True if a booked show or studio session sits in that day's job blocks (so the day off is needed).
+  // True if a booked show, studio session, session work, or a trip (travelling or being away) sits in that
+  // day's job blocks (so the day off is needed).
   dayOffNeeded: function (state, day) {
     var plan = state.schedule[day] || {};
     return Game.balance.job.jobBlocks.some(function (block) {
       var e = plan[block] && state.entries[plan[block]];
-      return !!e && (e.type === 'gig' || e.type === 'studio' || e.type === 'sessionWork');
+      return (!!e && (e.type === 'gig' || e.type === 'studio' || e.type === 'sessionWork' || e.type === 'travel')) ||
+        !!Game.rules.travel.tripAt(state, day, block);
     });
   },
 

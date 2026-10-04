@@ -76,7 +76,7 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, offers, sessionWork, actions, planWeek, career, day, debug
+5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, offers, sessionWork, travel, actions, planWeek, career, day, debug
    (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
 6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
@@ -220,10 +220,17 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   in `balance.job.musicIncomeCategories`). Milestones 8 and 11 are live; `progress.milestoneMorale` gives quitting +15.
 - **Session work (Phase 10)**: `Game.rules.sessionWork` (offers in the Inbox, kind `sessionWork`; jobs in
   `state.sessionWork`; calendar entries `type: 'sessionWork'`, commitments like studio time; Sunday "Session credits").
-  Entry types are now `'action' | 'gig' | 'studio' | 'sessionWork'`: anything that treats a booked block as taken
-  must handle all three booked kinds.
+  Entry types are now `'action' | 'gig' | 'studio' | 'sessionWork' | 'travel'`: anything that treats a booked block
+  as taken must handle every booked kind.
 - **Plan week (Phase 10)**: `Game.rules.planWeek` (applyWeek, templates in `state.weekTemplates`). It plans through
   `actions.plan`, so every normal check applies.
+- **On the road (Phase 11)**: `Game.rules.travel`. Out-of-town shows get travel entries (`type: 'travel'`) and a
+  trip in `state.trips`; call `travel.addShow` to book one, and `travel.rebuild` after any out-of-town show changes
+  (trips that have started are fixed). `travel.check(state, venueId, day)` says if a date works and which workdays
+  it needs off. `booking.blockTaken(..., ignoreAway)` also reports travel and "On the road"; `travel.tripAt` says if
+  you're away. Actions you can do away are marked `onTheRoad` in actions.js. Cities and their venues are content;
+  their fan ceilings and venue fees are in balance.js. Fan gains go through the ceiling (`audience.addFans`).
+- **Emailing a venue** is `booking.emailVenue` (instant, 5 energy, no block). There's no "Email a venue" action now.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

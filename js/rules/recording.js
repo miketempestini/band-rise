@@ -209,8 +209,9 @@ Game.rules.recording = {
     var rng = Game.rng.create(s.rngState);
     var gained = 0;
     Object.keys(preview.fansPerCity).forEach(function (id) {
-      var n = Game.rules.gigs.roundFans(rng, preview.fansPerCity[id]);
-      s.cities[id].fans += n;
+      var added = Game.rules.audience.addFans(s, id, Game.rules.gigs.roundFans(rng, preview.fansPerCity[id])); // capped at the fan ceiling
+      s = added.state;
+      var n = added.added;
       s.cities[id].lastActivityDay = s.day;
       gained += n;
       s = Game.rules.audience.addBuzz(s, id, preview.buzz).state;

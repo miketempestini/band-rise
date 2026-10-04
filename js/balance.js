@@ -70,8 +70,22 @@ Game.balance = {
   travel: {
     blocksEachWay: { near: 1, mid: 2, far: 3 }, // Travel blocks each way (far = a full day)
     energyPerBlock: 15,                         // Energy cost for each travel block
-    hotelPerNight: 80,                          // Cost of a hotel night out of town
-    gasRoundTrip: { near: 40, mid: 80, far: 150 } // Gas cost for a round trip
+    hotelPerNight: 80,                          // Cost of a hotel night out of town (one price for the whole band)
+    gasRoundTrip: { near: 40, mid: 80, far: 150 }, // Gas cost for a round trip; each one-way leg costs half
+    // Back-to-back shows: if your next out-of-town show is within this many days (or going home in between
+    // doesn't fit), you drive straight on to the next city instead of going home.
+    chainWithinDays: 2,
+    openMicSignupDays: { min: 1, max: 14 }      // Out-of-town open mics: sign up for a night this many days ahead
+  },
+
+  // ---------------------------------------------------------------
+  // Vans (in the Shop from milestone 10, On the road). Needed for Far cities with a band, and for tours.
+  // maxShows: how many out-of-town shows it lasts before breaking down for good (null = never).
+  // ---------------------------------------------------------------
+  vans: {
+    beater: { price: 1500,  maxShows: 10 },
+    used:   { price: 3000,  maxShows: 30 },
+    new:    { price: 12000, maxShows: null }
   },
 
   // ---------------------------------------------------------------
@@ -88,7 +102,6 @@ Game.balance = {
     rehearsalRoomPerBlock: 20,       // Rehearsal room rent per block (needed with a band)
     networkingCost: 15,              // Drinks when you go out to network
     hangOutCost: 15,                 // Cost to hang out with a contact
-    vanCost: 3000,                   // Used van (needed for Far cities with a band, and tours)
     productionCost: { min: 500, max: 5000 }, // Sound and lights per show at theaters and bigger
     surpriseBill: { min: 40, max: 300 },     // Random bills like a broken string or car trouble
     instrumentUpgrades: [            // Instrument tiers you can buy, in order
@@ -196,6 +209,7 @@ Game.balance = {
       gig: 25,
       studio: 20,
       sessionWork: 20,               // A session on another band's recording
+    email: 5,                      // Emailing a venue (no block needed: send as many as you like)
       practice: 15,
       rehearse: 15,
       openMic: 15,
@@ -421,7 +435,26 @@ Game.balance = {
       backRoom: 100,
       basement: 250,
       velvetLounge: 400,
-      orpheum: 2000
+      orpheum: 2000,
+      // Near
+      copperPint: 70, millStreetHall: 80, theDepot: 300,
+      railyardTavern: 60, grayFox: 90, signalHouse: 250,
+      // Mid
+      rustyAnchor: 100, lighthouseBallroom: 450, tidewaterClub: 300,
+      wineCellar: 80, theAvalon: 350, brickworks: 250,
+      // Far
+      dustySaloon: 100, theForge: 500, redstoneGrand: 2000,
+      theBoathouse: 80, pinewoodHall: 400, theLyric: 2000,
+      backAlleyBar: 100, neonGarden: 500, unionStation: 350, thePalace: 2500,
+      surfShack: 70, pierNine: 400, bayfrontTheater: 2200,
+      // National (locked for now)
+      clubMeridian: 500, halstonTheater: 3000, halstonArena: 25000,
+      crescentClub: 450, crescentTheater: 2800, crescentArena: 22000,
+      theKingsway: 400, royalTheater: 2500, kingsportColiseum: 20000,
+      // International (locked for now)
+      lindenCellar: 500, lindenbergHall: 3000, lindenbergArena: 25000,
+      clubSolana: 450, teatroAurelia: 2800, aureliaStadium: 30000,
+      blueDoor: 400, valmoraOpera: 3000, valmoraFestival: 30000
     },
     // Booking chance = 50% + 3% x (reputation - required) + Networking / 4 % + venue relationship / 5 %
     bookingBaseChance: 0.50,
@@ -527,10 +560,13 @@ Game.balance = {
     midMinReputation: 40,            // Mid cities: reputation 40 and a first Near show
     farMinReputation: 50,            // Far cities: reputation 50 and a van
     venuesPerCity: { min: 2, max: 4 },
-    fanCeiling: {                    // Most fans a city can ever have
+    fanCeilings: {                   // Most fans each city can ever have
       hometown: 50000,
-      near: { min: 20000, max: 40000 },
-      national: 500000
+      harlowFalls: 30000, cedarJunction: 25000,                              // Near
+      portEllery: 50000, ashfordSprings: 45000,                              // Mid
+      redstone: 80000, lakeVarden: 70000, bellmontCity: 100000, sableBay: 90000, // Far
+      newHalston: 500000, crescentCity: 400000, kingsport: 350000,           // National
+      lindenberg: 500000, portAurelia: 450000, valmora: 400000               // International
     }
   },
 
@@ -679,7 +715,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 10,                     // Save format version, bumped when the state shape changes
+    version: 11,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

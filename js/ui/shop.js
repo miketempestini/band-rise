@@ -14,7 +14,7 @@ Game.ui.shop = {
     var m = Game.balance.merch;
 
     var cards = Game.rules.merch.shopItems(state).map(function (item) {
-      var icon = { shirts: '👕', cds: '💿', homeStudio: '🎛️' }[item.id];
+      var icon = item.kind ? '🚐' : { shirts: '👕', cds: '💿', homeStudio: '🎛️' }[item.id];
       var button;
       if (item.owned) button = '<span class="badge badge--warn">Owned</span>';
       else if (!item.unlocked) button = '<span class="pick__reason">🔒 ' + h.escape(item.why) + '</span>';

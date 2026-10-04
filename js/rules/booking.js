@@ -5,8 +5,9 @@
 // A booked show is a calendar entry:
 //   state.entries[id] = { id, day, block, type: 'gig', venueId, deal, songIds, sessionPlayers, status: 'booked' }
 //   state.schedule[day][block] = id
-// A deal is 'guarantee', 'door', 'coverNight', or 'inStore' (booked by email), or 'opening' or 'residency'
-// (from offers; those entries also carry a flat fee).
+// A deal is 'guarantee', 'door', 'coverNight', or 'inStore' (booked by email), 'opening' or 'residency'
+// (from offers; those entries also carry a flat fee), or 'openMic' (an out-of-town open mic you signed up for).
+// Out-of-town shows also get travel booked around them (see Game.rules.travel).
 
 window.Game = window.Game || {};
 Game.rules = Game.rules || {};
@@ -15,10 +16,14 @@ Game.rules.booking = {
 
   // ----- Looking things up (these never change the state) -----
 
-  // Bookable venues (everything except open mics), by tier.
-  venues: function () {
+  // Venues you can email (everything except open mics and arenas, which only come as offers).
+  // cityId: optional, just one city's venues.
+  venues: function (cityId) {
     var all = Game.content.venues;
-    return Object.keys(all).map(function (id) { return all[id]; }).filter(function (v) { return v.tier > 0; });
+    var tiers = Game.balance.venues.tiers;
+    return Object.keys(all).map(function (id) { return all[id]; }).filter(function (v) {
+      return v.tier > 0 && tiers[v.tier].bookAhead && (!cityId || v.cityId === cityId);
+    });
   },
 
   // The deals a venue offers, in a fixed order.
@@ -58,6 +63,11 @@ Game.rules.booking = {
       reqs.push({ text: onStageNeeded + '+ on stage (you have ' + onStage + ')', met: onStage >= onStageNeeded });
     }
     if (venue.requiresRelease) reqs.push({ text: 'A release', met: state.releases.length > 0 });
+    if (venue.cityId !== 'hometown') {
+      var city = Game.content.cities[venue.cityId];
+      reqs.push({ text: city.name + ' unlocked' + (state.cities[venue.cityId].unlocked ? '' : ' (' + Game.rules.travel.cityUnlockProblem(state, venue.cityId) + ')'),
+        met: state.cities[venue.cityId].unlocked });
+    }
     var set = Game.rules.booking.setFor(venue, deal);
     var songs = Game.rules.songs.playable(state).filter(function (s) { return !set.coversOnly || s.isCover; }).length;
     reqs.push({ text: set.size + (set.coversOnly ? ' covers' : ' songs') + ' for the set (you have ' + songs + ')', met: songs >= set.size });
@@ -77,23 +87,30 @@ Game.rules.booking = {
   },
 
   // The days you can ask for: inside the venue's booking window. Each is { day, free, why }.
+  // Out of town, a date also has to fit the travel (see Game.rules.travel.check).
   bookingDates: function (state, venue) {
     var w = Game.balance.venues.tiers[venue.tier].bookAhead;
+    var away = venue.cityId !== 'hometown';
     var dates = [];
     for (var d = state.day + w.min; d <= state.day + w.max; d++) {
-      var taken = Game.rules.booking.blockTaken(state, d, venue.showBlock);
+      var taken = Game.rules.booking.blockTaken(state, d, venue.showBlock, away);
+      if (!taken && away) taken = Game.rules.travel.check(state, venue.id, d).problem;
       dates.push({ day: d, free: !taken, why: taken });
     }
     return dates;
   },
 
-  // Why a block is already taken (a show or a pending request for it), or null if it's free.
-  blockTaken: function (state, day, block) {
+  // Why a block is already taken (a show, studio time, session work, travel, being away on a trip, or a
+  // pending request or offer for it), or null if it's free. ignoreAway: true to skip the "away on a trip"
+  // check (used for out-of-town shows, which can join a trip).
+  blockTaken: function (state, day, block, ignoreAway) {
     var plan = state.schedule[day];
     var entry = plan && plan[block] && state.entries[plan[block]];
     if (entry && entry.type === 'gig') return 'Show booked at ' + Game.content.venues[entry.venueId].name;
     if (entry && entry.type === 'studio') return 'Studio time booked';
     if (entry && entry.type === 'sessionWork') return 'Session work booked';
+    if (entry && entry.type === 'travel') return 'Travelling';
+    if (!ignoreAway && Game.rules.travel.tripAt(state, day, block)) return 'On the road';
     var pending = Object.keys(state.requests).map(function (id) { return state.requests[id]; }).filter(function (r) {
       return r.status === 'pending' && r.gigDay === day && Game.content.venues[r.venueId].showBlock === block;
     })[0];
@@ -106,14 +123,17 @@ Game.rules.booking = {
   },
 
   // What's in one block of a day (for the Calendar grid). Returns one of:
-  //   { kind: 'show' | 'studio' | 'sessionWork' | 'plan', entry }   something booked or planned there
+  //   { kind: 'show' | 'studio' | 'sessionWork' | 'travel' | 'plan', entry }   something booked or planned there
+  //   { kind: 'away', trip }                        free, but you're away on a trip
   //   { kind: 'pending', reason }                   held for a booking reply or an offer (reason from blockTaken)
   //   { kind: 'job' } or { kind: 'off', offKind }   a day-job block (or a day off: 'vacation', 'sick', 'skip')
   //   { kind: 'free' }
   blockContents: function (state, day, block) {
     var plan = state.schedule[day];
     var entry = plan && plan[block] && state.entries[plan[block]];
-    if (entry) return { kind: { gig: 'show', studio: 'studio', sessionWork: 'sessionWork', action: 'plan' }[entry.type], entry: entry };
+    if (entry) return { kind: { gig: 'show', studio: 'studio', sessionWork: 'sessionWork', travel: 'travel', action: 'plan' }[entry.type], entry: entry };
+    var trip = Game.rules.travel.tripAt(state, day, block);
+    if (trip) return { kind: 'away', trip: trip };
     var waiting = Game.rules.booking.blockTaken(state, day, block);
     if (waiting) return { kind: 'pending', reason: waiting };
     if (Game.rules.job.scheduledOn(state, day) && Game.balance.job.jobBlocks.indexOf(block) !== -1) {
@@ -181,6 +201,7 @@ Game.rules.booking = {
     if (deal === 'guarantee') return '$' + venue.deals.guarantee + ' guarantee';
     if (deal === 'door') return Math.round(tier.doorShare * 100) + '% of the door ($' + tier.ticket + ' tickets)';
     if (deal === 'coverNight') return 'Cover night: $' + Game.balance.economy.coverGigFee + ' flat, covers only';
+    if (deal === 'openMic') return 'Open mic: tip jar, new fans';
     return 'In-store: no pay, good for fans';
   },
 
@@ -205,7 +226,21 @@ Game.rules.booking = {
 
   // ----- Changing things (each returns a new state) -----
 
-  // Sends a booking email (called at End Day when the Email a venue block happens).
+  // Emails a venue right now (no block needed: send as many as you like). Costs a little energy.
+  // The reply comes 1 to 3 days later. Returns { state, log }.
+  emailVenue: function (state, venueId, gigDay, deal) {
+    var cost = Game.balance.energy.cost.email;
+    var problem = Game.rules.booking.requestProblem(state, venueId, gigDay, deal);
+    if (problem) return { state: state, log: [problem] };
+    if (state.player.energy < cost) return { state: state, log: ['You\'re too tired to write an email (it takes ' + cost + ' energy).'] };
+    var sent = Game.rules.booking.sendRequest(state, venueId, gigDay, deal);
+    var s = sent.state;
+    s.player.energy = Game.rules.energy.clamp(s.player.energy - cost);
+    return { state: s, log: [sent.log[0].replace(/\.$/, '') + ' (-' + cost + ' energy). The reply comes in ' +
+      Game.balance.venues.replyDays.min + ' to ' + Game.balance.venues.replyDays.max + ' days.'] };
+  },
+
+  // Sends a booking email (Game.rules.booking.emailVenue is what the player uses: it also costs energy).
   // The reply comes 1 to 3 days later. Returns { state, log }.
   sendRequest: function (state, venueId, gigDay, deal) {
     var problem = Game.rules.booking.requestProblem(state, venueId, gigDay, deal);
@@ -275,13 +310,16 @@ Game.rules.booking = {
   },
 
   // Why you can't accept an offer, or null if you can.
-  // jobChoice: 'vacation' | 'sick' | 'skip' when the show lands on a work block, else null.
+  // jobChoice: 'vacation' | 'sick' | 'skip' when the show (or its trip) lands on work hours, else null.
   acceptProblem: function (state, messageId, jobChoice) {
     var m = state.inbox.filter(function (x) { return x.id === messageId; })[0];
     if (!m || m.resolved || !m.data.yes) return 'That offer isn\'t open.';
     var venue = Game.content.venues[m.data.venueId];
-    var taken = Game.rules.booking.blockTaken(Game.rules.booking.withoutMessage(state, messageId), m.data.gigDay, venue.showBlock);
+    var without = Game.rules.booking.withoutMessage(state, messageId);
+    var away = venue.cityId !== 'hometown';
+    var taken = Game.rules.booking.blockTaken(without, m.data.gigDay, venue.showBlock, away);
     if (taken) return taken + ' that day.';
+    if (away) return Game.rules.travel.jobProblem(state, Game.rules.travel.check(without, venue.id, m.data.gigDay, m.data.deal), jobChoice);
     if (Game.rules.booking.clashesWithJob(state, m.data.gigDay, venue.showBlock)) {
       if (!jobChoice) return 'This show is during your day job. Choose a vacation day, calling in sick, or skipping work.';
       return Game.rules.job.dayOffProblem(state, m.data.gigDay, jobChoice, true);
@@ -294,6 +332,17 @@ Game.rules.booking = {
     var s = Game.util.clone(state);
     s.inbox = s.inbox.filter(function (m) { return m.id !== messageId; });
     return s;
+  },
+
+  // The workdays accepting an offer would need off: the show's day for a hometown show on work hours,
+  // or every workday an out-of-town trip keeps you away.
+  offerJobDays: function (state, messageId) {
+    var m = state.inbox.filter(function (x) { return x.id === messageId; })[0];
+    var venue = Game.content.venues[m.data.venueId];
+    if (venue.cityId !== 'hometown') {
+      return Game.rules.travel.check(Game.rules.booking.withoutMessage(state, messageId), venue.id, m.data.gigDay, m.data.deal).jobDays;
+    }
+    return Game.rules.booking.clashesWithJob(state, m.data.gigDay, venue.showBlock) ? [m.data.gigDay] : [];
   },
 
   // True if a show in this block would land on a day-job block.
@@ -309,6 +358,14 @@ Game.rules.booking = {
     var s = Game.util.clone(state);
     var m = s.inbox.filter(function (x) { return x.id === messageId; })[0];
     var venue = Game.content.venues[m.data.venueId];
+    if (venue.cityId !== 'hometown') {
+      // Out of town: the show and its travel go on the calendar together.
+      var added = Game.rules.travel.addShow(s, venue.id, m.data.gigDay, m.data.deal, jobChoice);
+      s = added.state;
+      s.inbox.forEach(function (x) { if (x.id === messageId) { x.resolved = 'accepted'; x.read = true; } });
+      return { state: s, log: ['Booked: ' + venue.name + ' in ' + Game.content.cities[venue.cityId].name + ', ' + Game.rules.day.dateLabel(m.data.gigDay) +
+        '. Travel is on your Calendar.'].concat(added.log), entryId: added.entryId };
+    }
     if (Game.rules.booking.clashesWithJob(s, m.data.gigDay, venue.showBlock)) {
       s = Game.rules.job.takeDayOff(s, m.data.gigDay, jobChoice, true).state;
       m = s.inbox.filter(function (x) { return x.id === messageId; })[0];
@@ -447,8 +504,24 @@ Game.rules.booking = {
     if (e.sessionPlayers) s = Game.rules.money.earn(s, e.sessionPlayers * Game.balance.economy.sessionPlayerFee, 'sessionRefund').state;
     delete s.entries[entryId];
     delete s.schedule[e.day][e.block];
-    // Give back a day off taken for the show (unless a studio session that day still needs it).
-    if (s.player.job.daysOff[e.day] && !Game.rules.job.dayOffNeeded(s, e.day)) s = Game.rules.job.cancelDayOff(s, e.day).state;
+    // The days this show kept you away (its trip, if it's out of town), to give back days off it needed.
+    var tr = Game.rules.travel;
+    var trip = Object.keys(s.trips).map(function (id) { return s.trips[id]; }).filter(function (x) { return x.showIds.indexOf(entryId) !== -1; })[0];
+    var days = [e.day];
+    if (trip) {
+      for (var d = tr.slotDay(trip.startT); d <= tr.slotDay(trip.endT); d++) days.push(d);
+      if (tr.started(s, trip)) {
+        trip.showIds = trip.showIds.filter(function (id) { return id !== entryId; }); // the trip goes ahead as planned
+      } else {
+        var rebuilt = tr.rebuild(s);
+        if (rebuilt.problems.length) trip.showIds = trip.showIds.filter(function (id) { return id !== entryId; });
+        else s = rebuilt.state;
+      }
+    }
+    // Give back a day off taken for it (unless something else that day still needs it).
+    days.forEach(function (d) {
+      if (d >= s.day && s.player.job.daysOff[d] && !Game.rules.job.dayOffNeeded(s, d)) s = Game.rules.job.cancelDayOff(s, d).state;
+    });
     var penalty = Game.rules.booking.applyPenalty(s, e.venueId, which);
     return { state: penalty.state, log: ['Cancelled the show at ' + Game.content.venues[e.venueId].name + '. '].concat(penalty.log) };
   },
@@ -475,6 +548,7 @@ Game.rules.booking = {
       fanRate: entry.deal === 'opening' ? o.openingSlotFanRate : 1,               // their fans, at half the rate
       crowdFloor: entry.deal === 'residency' ? o.residency.crowdFloor : null      // regulars come back
     });
-    return { state: played.state, gig: played.gig, log: played.log, noShow: false };
+    var after = Game.rules.travel.afterShow(played.state, entry); // out of town: tours, unlocks, your van
+    return { state: after.state, gig: played.gig, log: played.log.concat(after.log), noShow: false };
   }
 };

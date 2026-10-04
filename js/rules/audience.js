@@ -1,6 +1,7 @@
 // audience.js
-// Rules for fans and buzz in each city. (Fans start changing once gigs arrive.)
-// Buzz is how hot you are right now: it goes up with promotion and fades every day.
+// Rules for fans and buzz in each city.
+// Fans stick around (but fade if you go quiet in a city, and never pass the city's fan ceiling).
+// Buzz is how hot you are right now: it goes up with promotion and gigs and fades every day.
 
 window.Game = window.Game || {};
 Game.rules = Game.rules || {};
@@ -25,6 +26,34 @@ Game.rules.audience = {
     var s = Game.util.clone(state);
     s.cities[cityId].buzz = Game.util.clamp(s.cities[cityId].buzz + amount, b.min, b.max);
     return { state: s, log: [] };
+  },
+
+  // Adds fans to a city, never above its fan ceiling (the most fans it can ever have). Returns { state, added }.
+  addFans: function (state, cityId, amount) {
+    var s = Game.util.clone(state);
+    var city = s.cities[cityId];
+    var before = city.fans;
+    city.fans = Math.max(0, Math.min(Game.content.cities[cityId].fanCeiling, city.fans + amount));
+    return { state: s, added: city.fans - before };
+  },
+
+  // Sunday night: every city with fans but no show or release for 30 days loses 2% of its fans
+  // (fractions round randomly, like fan gains). Returns { state, log }.
+  fadeFans: function (state) {
+    var f = Game.balance.fans;
+    var s = Game.util.clone(state);
+    var rng = Game.rng.create(s.rngState);
+    var log = [];
+    Object.keys(s.cities).forEach(function (id) {
+      var city = s.cities[id];
+      if (city.fans <= 0 || s.day - city.lastActivityDay < f.fadeAfterDays) return;
+      var lost = Math.min(city.fans, Game.rules.gigs.roundFans(rng, city.fans * f.fadePerWeek));
+      if (!lost) return;
+      city.fans -= lost;
+      log.push(Game.content.cities[id].name + ': -' + lost + ' fan' + (lost === 1 ? '' : 's') + ' (no show or release there in ' + f.fadeAfterDays + '+ days).');
+    });
+    s.rngState = rng.getState();
+    return { state: s, log: log };
   },
 
   // Overnight: buzz fades 2 points in every city, never below 0. Returns { state, log }.

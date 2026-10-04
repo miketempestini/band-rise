@@ -9,7 +9,7 @@ Game.rules.progress = {
 
   // ----- Milestones and unlocks -----
 
-  // The checks for the milestones that are live so far (1 to 9 and 11).
+  // The checks for the milestones that are live so far (1 to 13).
   milestoneChecks: {
     firstOpenMic: function (s) { return s.stats.openMicsPlayed >= 1; },
     firstOriginal: function (s) {
@@ -29,6 +29,9 @@ Game.rules.progress = {
       return s.player.job.status === 'full' && s.player.reputation >= j.partTimeMinReputation && s.player.job.standing >= j.partTimeMinStanding;
     },
     quitJob: function (s) { return s.player.job.quitDay !== null; },
+    onTheRoad: function (s) { return s.player.reputation >= Game.balance.milestones.onTheRoadReputation; },
+    wheels: function (s) { return s.stats.vansBought > 0; },
+    firstTour: function (s) { return Game.rules.travel.playedTour(s); },
     fullBand: function (s) { return 1 + s.band.memberIds.length >= Game.balance.milestones.fullBandOnStage; }
   },
 
@@ -57,6 +60,10 @@ Game.rules.progress = {
     firstRelease: ' Streaming money starts next Sunday, and Social ads are unlocked.',
     partTime: ' You can go part-time (' + Game.rules.job.workdayNames('part') + '): click Job in the Stats panel, or Day job on the Calendar.',
     quitJob: ' Every weekday block is yours now.',
+    onTheRoad: ' Near cities are open (' + Object.keys(Game.content.cities).filter(function (id) { return Game.content.cities[id].region === 'near'; })
+      .map(function (id) { return Game.content.cities[id].name; }).join(' and ') + '), and vans are in the Shop. See the Map.',
+    wheels: ' You can tour now (3+ out-of-town shows in ' + Game.balance.tours.withinDays + ' days), and Far cities can take the band.',
+    firstTour: ' Real road warriors.',
     fullBand: ' Clubs open up once your reputation reaches ' + Game.balance.venues.tiers[2].minReputation + '.'
   },
 
@@ -67,6 +74,9 @@ Game.rules.progress = {
     var s = Game.util.clone(state);
     var log = [];
     var milestoneLog = [];
+    var cities = Game.rules.travel.updateCityUnlocks(s); // Near, Mid, and Far cities open as you qualify
+    s = cities.state;
+    log = log.concat(cities.log);
     progress.unlocks().forEach(function (u) {
       if (s.milestones[u.id] === undefined && u.reached(s)) {
         s.milestones[u.id] = s.day;

@@ -130,10 +130,12 @@ Game.ui.inbox = {
         '</div>';
     }
     var venue = Game.content.venues[d.venueId];
+    var away = venue.cityId !== 'hometown';
+    var place = h.escape(venue.name) + (away ? ' (' + h.escape(Game.content.cities[venue.cityId].name) + ')' : '');
     var when = h.dateLabel(d.gigDay) + ' (' + Game.content.calendar.blockNames[venue.showBlock].toLowerCase() + ')';
     var head = d.yes
-      ? '<strong class="pos">✓ ' + h.escape(venue.name) + ' said yes!</strong>'
-      : '<strong class="neg">✗ ' + h.escape(venue.name) + ' said no.</strong>';
+      ? '<strong class="pos">✓ ' + place + ' said yes!</strong>'
+      : '<strong class="neg">✗ ' + place + ' said no.</strong>';
     var body = d.yes
       ? 'Show on ' + when + '. Deal: ' + h.escape(Game.rules.booking.dealLabel(venue, d.deal)) + '.'
       : 'They passed on ' + when + ' (you had a ' + Math.round(d.chance * 100) + '% chance). Try another venue, or ask again with more reputation.';
@@ -143,11 +145,15 @@ Game.ui.inbox = {
     if (m.resolved) {
       status = '<span class="badge">' + { accepted: 'Accepted', declined: 'Declined', expired: 'Expired' }[m.resolved] + '</span>';
     } else if (d.yes) {
-      var clash = Game.rules.booking.clashesWithJob(state, d.gigDay, venue.showBlock);
-      if (clash) {
-        var choices = [['vacation', 'Accept, use a vacation day'], ['sick', 'Accept, call in sick that day (' + Game.balance.job.sickDayPenalty + ' standing)'],
-          ['skip', 'Accept, skip work (' + Game.balance.job.skipPenalty + ' standing)']];
-        buttons = '<p class="hint">This show is during your day job (' + h.dateLabel(d.gigDay) + '). How will you take the day off?</p>' +
+      var jobDays = Game.rules.booking.offerJobDays(state, m.id);
+      var many = jobDays.length > 1;
+      if (away) buttons = Game.ui.booking.tripHtml(Game.rules.travel.preview(Game.rules.booking.withoutMessage(state, m.id), venue.id, d.gigDay, d.deal));
+      if (jobDays.length) {
+        var choices = [['vacation', 'Accept, use ' + (many ? jobDays.length + ' vacation days' : 'a vacation day')],
+          ['sick', 'Accept, call in sick (' + Game.balance.job.sickDayPenalty + ' standing' + (many ? ' each' : '') + ')'],
+          ['skip', 'Accept, skip work (' + Game.balance.job.skipPenalty + ' standing' + (many ? ' each' : '') + ')']];
+        buttons += '<p class="hint">' + (away ? 'The trip keeps you away from your day job on ' : 'This show is during your day job (') +
+          jobDays.map(function (x) { return h.dateLabel(x); }).join(', ') + (away ? '' : ')') + '. How will you take ' + (many ? 'those days' : 'the day') + ' off?</p>' +
           choices.map(function (c) {
             var problem = Game.rules.booking.acceptProblem(state, m.id, c[0]);
             return '<button class="btn btn--small' + (problem ? '' : ' btn--primary') + '" data-action="accept" data-id="' + m.id + '" data-job="' + c[0] + '"' +
@@ -155,7 +161,7 @@ Game.ui.inbox = {
           }).join(' ');
       } else {
         var problem = Game.rules.booking.acceptProblem(state, m.id, null);
-        buttons = '<button class="btn btn--small btn--primary" data-action="accept" data-id="' + m.id + '"' + (problem ? ' disabled' : '') + '>Accept</button>' +
+        buttons += '<button class="btn btn--small btn--primary" data-action="accept" data-id="' + m.id + '"' + (problem ? ' disabled' : '') + '>Accept</button>' +
           (problem ? ' <span class="pick__reason">' + h.escape(problem) + '</span>' : '');
       }
       buttons += ' <button class="btn btn--small" data-action="decline" data-id="' + m.id + '">Decline</button>';

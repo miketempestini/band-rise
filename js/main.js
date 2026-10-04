@@ -24,7 +24,9 @@ Game.app = {
   revealError: null,    // a problem with the typed song name, shown on the reveal screen
   returnTo: {},         // for each tab screen, the screen its Back button returns to
   calendarDay: null,    // the day selected on the Calendar screen
-  bookingDraft: null,   // the booking being set up: { venueId, gigDay, deal, choosingBlock }
+  bookingDraft: null,   // the booking being set up: { venueId, gigDay, deal }
+  bookingCity: 'hometown', // which city the Book screen shows
+  openMicDraft: null,   // an out-of-town open mic sign-up being set up: { venueId, day, jobChoice }
   setlistDraft: null,   // songs ticked while editing a booked show's setlist
   skipResult: null,     // what "Skip to next commitment" did, for the skip summary screen
   studioDraft: null,    // a studio booking being set up: { studio, day, sessions: { block: songId }, jobChoice }
@@ -238,7 +240,7 @@ Game.app = {
     var resting = ['songReveal', 'nameBand', 'settings', screen];
     if (resting.indexOf(app.screen) === -1) app.returnTo[screen] = app.screen;
     if (screen === 'calendar') app.calendarDay = app.state.day;
-    if (screen === 'booking') { app.bookingDraft = null; app.studioDraft = null; }
+    if (screen === 'booking') { app.bookingDraft = null; app.studioDraft = null; app.openMicDraft = null; }
     app.show(screen);
     if (screen === 'inbox' && Game.rules.booking.unreadCount(app.state)) {
       app.state = Game.rules.booking.markAllRead(app.state).state;
@@ -337,20 +339,47 @@ Game.app = {
     }
   },
 
-  // Plans the "Email a venue" action in a block today with the chosen venue, date, and deal.
-  sendBookingEmail: function (block) {
+  // Emails the chosen venue right now (no block needed; it costs a little energy).
+  sendBookingEmail: function () {
     var app = Game.app;
     var d = app.bookingDraft;
-    var result = Game.rules.actions.plan(app.state, block, 'emailVenue', { venueId: d.venueId, gigDay: d.gigDay, deal: d.deal });
-    if (result.log.length) {
-      app.notice = { kind: 'error', text: result.log.join(' ') };
-      app.render();
-      return;
-    }
+    var result = Game.rules.booking.emailVenue(app.state, d.venueId, d.gigDay, d.deal);
+    var sent = result.state !== app.state;
+    if (sent) app.bookingDraft = null;
+    app.notice = { kind: sent ? 'info' : 'error', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  // The Book screen's city tabs (and the Map's "Book here").
+  bookingCitySelect: function (cityId) {
+    var app = Game.app;
+    app.bookingCity = cityId;
     app.bookingDraft = null;
-    app.notice = { kind: 'info', text: 'Email to ' + Game.content.venues[d.venueId].name + ' planned for this ' +
-      Game.content.calendar.blockNames[block].toLowerCase() + '. It goes out when you end the day; the reply comes ' +
-      Game.balance.venues.replyDays.min + ' to ' + Game.balance.venues.replyDays.max + ' days later.' };
+    app.openMicDraft = null;
+    app.notice = null;
+    if (app.screen === 'booking') app.render();
+    else app.navigate('booking');
+  },
+
+  // Out-of-town open mics: pick the night (and how to take work off), then sign up.
+  openMicPick: function (venueId, day) {
+    Game.app.openMicDraft = venueId ? { venueId: venueId, day: day, jobChoice: null } : null;
+    Game.app.notice = null;
+    Game.app.render();
+  },
+
+  openMicJobChoice: function (kind) {
+    Game.app.openMicDraft.jobChoice = kind;
+    Game.app.render();
+  },
+
+  signUpOpenMic: function () {
+    var app = Game.app;
+    var d = app.openMicDraft;
+    var result = Game.rules.travel.signUpOpenMic(app.state, d.venueId, d.day, d.jobChoice);
+    var ok = result.state !== app.state;
+    if (ok) app.openMicDraft = null;
+    app.notice = { kind: ok ? 'info' : 'error', text: result.log.join(' ') };
     app.applyRule(result);
   },
 

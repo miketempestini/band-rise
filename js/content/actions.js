@@ -25,6 +25,7 @@
 //   needsBand           true if you need at least one bandmate (Rehearse)
 //   needsBooking        true if it's planned from the Booking screen with a venue, date, and deal (Email a venue)
 //   onlyWithoutJob      true if it's only for when you have no job (Look for work)
+//   onTheRoad           true if you can do it while away on a trip (Practice, Write, Rest, Post online, Talk)
 //   needsBooking: 'studio'  planned from the Book screen's Studio section (Book studio time)
 //   needsHomeStudio     true if you need the home recording setup (Record at home)
 //   songFilter          'originals' to only offer original songs in the song step
@@ -55,6 +56,7 @@ Game.content = Game.content || {};
       effects: { skills: b.skills.baseGain.practice, tightness: b.songs.tightness.practiceGain },
       needsSong: true,
       allSongsGain: b.songs.tightness.practiceAllGain,
+      onTheRoad: true,
       countsAsWork: true,
       noSkillWhenBurnedOut: true
     },
@@ -70,6 +72,7 @@ Game.content = Game.content || {};
       requirements: {},
       effects: { skills: b.skills.baseGain.write, songProgress: true },
       optionalCoWriter: true,
+      onTheRoad: true,
       countsAsWork: true,
       noSkillWhenBurnedOut: true
     },
@@ -131,6 +134,7 @@ Game.content = Game.content || {};
       requirements: {},
       effects: { talk: true },
       needsPerson: 'member',
+      onTheRoad: true,
       countsAsWork: true,
       noSkillWhenBurnedOut: false
     },
@@ -149,21 +153,6 @@ Game.content = Game.content || {};
       songsMax: b.songs.tightness.rehearseMaxSongs,
       countsAsWork: true,
       noSkillWhenBurnedOut: true
-    },
-
-    emailVenue: {
-      id: 'emailVenue',
-      name: 'Email a venue',
-      description: 'Pitch a venue for a date. The reply comes in ' + b.venues.replyDays.min + ' to ' + b.venues.replyDays.max + ' days.',
-      blocks: 1,
-      energyCost: b.energy.cost.admin,
-      moneyCost: 0,
-      moneyCategory: null,
-      requirements: {},
-      effects: { booking: true },
-      needsBooking: true,
-      countsAsWork: true,
-      noSkillWhenBurnedOut: false
     },
 
     bookStudio: {
@@ -239,6 +228,7 @@ Game.content = Game.content || {};
       moneyCategory: null,
       requirements: {},
       effects: { energy: b.energy.restGain, morale: b.morale.change.rest },
+      onTheRoad: true,
       countsAsWork: false,
       noSkillWhenBurnedOut: false
     },
@@ -267,6 +257,7 @@ Game.content = Game.content || {};
       moneyCategory: 'promotion',
       requirements: {},
       effects: { skills: b.skills.baseGain.promote, buzz: 'postOnline' },
+      onTheRoad: true,
       countsAsWork: true,
       noSkillWhenBurnedOut: false
     },

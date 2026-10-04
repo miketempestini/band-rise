@@ -53,9 +53,8 @@ Game.balanceSim = {
       for (var d = 7; d <= 14; d++) {
         if (Game.rules.day.dayOfWeek(s.day + d) === 5 &&
             !Game.rules.booking.requestProblem(s, 'backRoom', s.day + d, 'guarantee')) {
-          var before = s;
-          s = tryPlan(s, weekend ? 'morning' : 'evening', 'emailVenue', { venueId: 'backRoom', gigDay: s.day + d, deal: 'guarantee' });
-          if (s !== before) return s; // the email uses this block (the rest of the day stays simple)
+          var sent = Game.rules.booking.emailVenue(s, 'backRoom', s.day + d, 'guarantee'); // no block needed
+          if (sent.state !== s) s = sent.state;
           break;
         }
       }
@@ -212,9 +211,8 @@ Game.balanceSim = {
       if (!upcomingClub) {
         for (var d = 14; d <= 28; d++) {
           if (Game.rules.day.dayOfWeek(s.day + d) === 5 && !Game.rules.booking.requestProblem(s, 'basement', s.day + d, 'guarantee')) {
-            var r = A.plan(s, Game.rules.day.dayOfWeek(s.day) >= 5 ? 'morning' : 'evening', 'emailVenue',
-              { venueId: 'basement', gigDay: s.day + d, deal: 'guarantee' });
-            if (!r.log.length) return r.state;
+            var r = Game.rules.booking.emailVenue(s, 'basement', s.day + d, 'guarantee'); // no block needed
+            if (r.state !== s) s = r.state;
             break;
           }
         }

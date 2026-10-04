@@ -25,7 +25,7 @@ Game.rules.offers = {
 
   // Clubs: where opening slots happen (the tier is in balance.offers.openingSlot.venueTier).
   clubs: function () {
-    return Game.rules.booking.venues().filter(function (v) { return v.tier === Game.balance.offers.openingSlot.venueTier; });
+    return Game.rules.booking.venues('hometown').filter(function (v) { return v.tier === Game.balance.offers.openingSlot.venueTier; });
   },
 
   // ----- Residencies -----
@@ -34,7 +34,7 @@ Game.rules.offers = {
   residencyVenues: function (state) {
     var r = Game.balance.offers.residency;
     if (state.player.reputation < r.minReputation) return [];
-    return Game.rules.booking.venues().filter(function (v) {
+    return Game.rules.booking.venues('hometown').filter(function (v) {
       var vs = state.venues[v.id];
       return v.deals.guarantee && vs.relationship >= r.minRelationship &&
         Game.rules.booking.requirements(state, v, 'guarantee').every(function (q) { return q.met; });

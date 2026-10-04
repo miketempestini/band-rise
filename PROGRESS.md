@@ -4,6 +4,39 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 12: Phase 11, on the road (2026-10-04)
+- **14 made-up cities** (cities.js), each with its own fans, buzz, fan ceiling, and open mic:
+  - Near: Harlow Falls, Cedar Junction. Mid: Port Ellery, Ashford Springs.
+  - Far: Redstone, Lake Varden, Bellmont City, Sable Bay.
+  - National (locked): New Halston, Crescent City, Kingsport. International (locked): Lindenberg, Port Aurelia, Valmora.
+- **Venues:** every city has an open mic plus 2 to 4 venues with made-up names, listed in a new table in Design.md.
+  Fan ceilings and venue fees live in balance.js.
+- **Unlocks:** Near at reputation 25 (milestone 10); Mid at reputation 40 plus a Near show; Far at reputation 50 plus a
+  van. Mid and Far get a banner. National and International show what they need (manager/label, a nationwide tour).
+- **Travel**: accepting an out-of-town show books its travel around it.
+  - Each one-way leg is the blocks right before the show and right after it (Near 1, Mid 2, Far 3).
+  - Shows within 2 days of each other (or too close to go home) chain into one trip, city to city.
+  - Gas is half the round trip per leg; a hotel is $80 for each night away; each travel block costs 15 energy.
+  - Workdays the trip touches need days off (asked on Accept).
+  - While away you can only Practice, Write, Rest, Post online, or Talk.
+  - At 0 energy when it's time to leave (or without a van the trip needs), every show on the trip is a no-show.
+  - Cancelling a show rebuilds the trip and gives back days off.
+- **Book screen**: a tab per city; each date shows its trip (legs, gas, hotel nights, energy, days off).
+  Out-of-town open mics are a quick sign-up (no email, no odds).
+- **Emailing a venue (owner's change)**: no block needed. It's sent right away, costs 5 energy, and you can email as many
+  venues as you like. The "Email a venue" action is gone.
+- **Vans** (Shop, from milestone 10): Beater $1,500 (10 out-of-town shows), Used $3,000 (30), New $12,000 (never breaks).
+  A worn-out van gets you home, then breaks down for good. Needed for Far cities with a band, and for tours.
+- **Tours**: 3+ out-of-town shows within 10 days need a van; bandmates +2 satisfaction per tour show; road fatigue
+  -3 morale a day from day 5 away.
+- **Fans fade** 2% a week in any city with no show or release for 30 days (Sunday night). Gigs and releases never push a
+  city past its fan ceiling.
+- **Map tab**: ring map (Millbrook, then Near, Mid, Far), your van, and a card per city (travel, gas, fans out of the
+  ceiling, buzz, venues, what's needed). "Book here" opens that city on the Book screen.
+- **Milestones 10 (On the road), 12 (Wheels), 13 (First tour)** are live.
+- **Saves:** version 11. **Tests:** 264 passing (road.test.js new). Balance checks still email venues the way a player
+  would (now without using a block); the simulated player doesn't travel yet.
+
 ### Session 11: Phase 10, the day job arc (2026-10-04)
 - **Day job screen** (click Job in the Stats panel, or 💼 Day job on the Calendar): schedule, pay, standing, vacation days.
 - **Going part-time** at reputation 20 and job standing 50+: Monday, Wednesday, Friday ($330 a week), starting next
@@ -338,11 +371,17 @@ No gameplay numbers changed: the balance checks give the same results as before.
   with a no-library test runner, git repo (pushed to github.com/miketempestini/band-rise, private).
 
 ## What's next
-- Phase 11 candidates from Design.md: Shop gear (instrument upgrades, van, housing), other cities and travel
-  (milestone 10, On the road), the manager.
-- Earlier balance decisions are settled: the owner chose not to change the invite threshold or the booking odds.
+- Phase 12 candidates from Design.md: Shop gear (instrument upgrades, housing), the manager (milestone 14: auto-booking,
+  12-week calendar, press push), theaters (milestone 15), the label (milestone 16, National cities, flights).
+- Milestone 13's reward, "bigger opening slots", isn't built (opening slots are hometown-only for now; owner's pick).
+- Promotion (flyers, social ads) still only reaches the hometown; out-of-town buzz comes from gigs and releases.
+- The balance checks could add a simulated player who plays Near cities, to see how fast fans grow out of town.
 
 ## Known issues / open decisions
+- **Trips that have started are fixed**: cancelling a show mid-trip keeps the travel as planned (you still drive the route).
+- **Chaining is simple**: a city-to-city leg uses the longer of the two cities' distances (there's no real map distance).
+- **Out-of-town reputation follows the usual "outgrown" rule**: at reputation 30+ an out-of-town open mic gives no
+  reputation (it's for fans).
 - **Session credits are small by design** (about $3-4 a week per song). They matter after several jobs. Watch them
   once real playtests show how many offers a player takes.
 - **Quitting early leaves no fallback but Look for work**: going back to full-time isn't in Design.md.

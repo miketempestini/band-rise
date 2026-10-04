@@ -44,8 +44,8 @@
     t.ok(Game.rules.actions.plan(s, 'morning', 'practice', null, 2).log.length > 0, 'Wednesday morning is the day job');
     t.equal(Game.rules.actions.plan(s, 'evening', 'openMic', null, 8).log.length, 0, 'next Tuesday evening: open mic OK');
     t.ok(Game.rules.actions.plan(s, 'evening', 'openMic', null, 9).log.length > 0, 'next Wednesday: no open mic');
-    t.ok(Game.rules.actions.plan(s, 'evening', 'emailVenue', { venueId: 'backRoom', gigDay: 20, deal: 'guarantee' }, 3).log.length > 0,
-      'emails can\'t be planned ahead');
+    t.ok(Game.rules.actions.plan(s, 'evening', 'bookStudio', { studio: 'demo', day: 20, sessions: [] }, 3).log.length > 0,
+      'booking studio time can\'t be planned ahead');
     t.ok(Game.rules.actions.plan(s, 'evening', 'practice', null, -1).log.length > 0, 'past days refused');
   });
 

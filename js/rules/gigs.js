@@ -21,7 +21,7 @@ Game.rules.gigs = {
     var venues = Game.content.venues;
     var ids = Object.keys(venues);
     for (var i = 0; i < ids.length; i++) {
-      if (venues[ids[i]].openMicDay === dow) return venues[ids[i]];
+      if (venues[ids[i]].openMicDay === dow && venues[ids[i]].cityId === 'hometown') return venues[ids[i]];
     }
     return null;
   },
@@ -30,7 +30,7 @@ Game.rules.gigs = {
   // "Open mics: Tuesday evening at The Rusty Nail, Thursday evening at Bean There Cafe."
   openMicSchedule: function () {
     var venues = Game.content.venues;
-    var nights = Object.keys(venues).filter(function (id) { return venues[id].openMicDay !== undefined; })
+    var nights = Object.keys(venues).filter(function (id) { return venues[id].openMicDay !== undefined && venues[id].cityId === 'hometown'; })
       .map(function (id) {
         return Game.content.calendar.dayNames[venues[id].openMicDay] + ' evening at ' + venues[id].name;
       });
@@ -256,7 +256,7 @@ Game.rules.gigs = {
     // Fans: crowd x conversion x originals factor x room left under the city's fan ceiling.
     var ceiling = Game.content.cities[venue.cityId].fanCeiling;
     var rawFans = crowd * outcome.fanConversion * (opts.fanRate === undefined ? 1 : opts.fanRate) * gigs.originalsFactor(songs) * Math.max(0, 1 - city.fans / ceiling);
-    var fans = gigs.roundFans(rng, rawFans);
+    var fans = Math.min(gigs.roundFans(rng, rawFans), Math.max(0, ceiling - city.fans)); // never past the fan ceiling
 
     // Tip jar.
     var tipRange = g.openMicTips[result];

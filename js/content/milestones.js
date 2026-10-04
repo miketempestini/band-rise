@@ -1,6 +1,6 @@
 // milestones.js
 // The career milestones from Design.md, in order. Fixed data, never saved.
-// Milestones 1 to 9 and 11 are live so far (their checks are in js/rules/progress.js); the rest show on the
+// Milestones 1 to 13 are live so far (their checks are in js/rules/progress.js); the rest show on the
 // Career screen as what's ahead.
 
 window.Game = window.Game || {};

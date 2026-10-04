@@ -701,3 +701,26 @@ button.block:hover { border-color: var(--accent); }
 .plan__row + .plan__row { margin-top: 6px; }
 .plan__row--past { opacity: 0.5; }
 .plan-week__select { max-width: 220px; }
+
+/* ---------- Phase 11: the Map, trips, and travel ---------- */
+
+.map-layout { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: var(--space-3); align-items: start; }
+.map { width: 100%; height: auto; display: block; }
+.map__ring { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 5; }
+.map__city circle { fill: var(--accent); stroke: var(--bg); stroke-width: 2; }
+.map__city text { fill: var(--text); font-size: 11px; font-family: inherit; }
+.map__city--locked circle { fill: var(--panel-2); stroke: var(--line); }
+.map__city--locked text { fill: var(--text-muted); }
+
+.city-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-2); }
+.city { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: var(--space-2); }
+.city--locked { opacity: 0.7; }
+.city__head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+
+.trip { background: var(--panel-2); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+.trip .log { margin: 6px 0; }
+
+/* Travel and "on the road" on the Calendar grid. */
+.cal__block--travel { background: rgba(255, 181, 71, 0.18); color: var(--accent); font-weight: bold; }
+.cal__block--away { background: rgba(255, 181, 71, 0.08); color: var(--text-muted); font-style: italic; }
+.block--travel { border-style: solid; border-color: var(--accent); background: rgba(255, 181, 71, 0.06); }

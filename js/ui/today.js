@@ -153,6 +153,17 @@ Game.ui.today = {
           energyLine +
           '</button>';
       }
+      if (row.kind === 'travel') {
+        var te = state.entries[row.entryId];
+        return '<button class="block block--travel" data-action="openCalendar">' +
+          '<span class="block__time">' + name + '</span>' +
+          '<span class="block__title">🚐 ' + (te.to === 'hometown' ? 'Driving home from ' + h.escape(Game.content.cities[te.from].name)
+            : 'Travel to ' + h.escape(Game.content.cities[te.to].name)) + '</span>' +
+          '<span class="block__detail">' + (te.legStart ? 'Gas ' + h.money(Game.rules.travel.legGas(te.from, te.to)) + ' · ' : '') +
+            '-' + b.travel.energyPerBlock + ' energy</span>' +
+          energyLine +
+          '</button>';
+      }
       if (row.kind === 'job') {
         return '<div class="block block--locked">' +
           '<span class="block__time">' + name + '</span>' +
@@ -198,8 +209,8 @@ Game.ui.today = {
           ? '<span class="block__problem">Won\'t happen: ' + h.escape(row.problem) + '</span>'
           : about + (action.moneyCost ? h.money(action.moneyCost) + ' · ' : '') + 'Click to change';
       } else {
-        title = 'Free time';
-        detail = '+' + b.time.emptyBlockEnergy + ' energy · Click to plan';
+        title = row.away ? 'On the road' : 'Free time';
+        detail = '+' + b.time.emptyBlockEnergy + ' energy · ' + (row.away ? Game.rules.actions.roadActionsText() : 'Click to plan');
       }
       return '<button class="block block--' + row.kind + '" data-action="openPicker" data-block="' + row.block + '">' +
         '<span class="block__time">' + name + '</span>' +

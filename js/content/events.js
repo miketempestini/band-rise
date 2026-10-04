@@ -49,7 +49,7 @@ Game.content = Game.content || {};
         var showThere = b.job.jobBlocks.some(function (block) {
           return plan[block] && s.entries[plan[block]] && s.entries[plan[block]].type === 'gig';
         });
-        return dow(s) === n.overtime.dayOfWeek && s.player.job.status !== 'none' && !Game.rules.job.scheduledOn(s, sat) && !showThere;
+        return dow(s) === n.overtime.dayOfWeek && s.player.job.status !== 'none' && !Game.rules.job.scheduledOn(s, sat) && !showThere && !Game.rules.travel.awayOnDay(s, sat);
       },
       text: function () {
         return 'Your boss stops you on the way out: "Can you pick up a shift tomorrow? Saturday, morning and afternoon."';

@@ -94,10 +94,17 @@ Game.rules.actions = {
           energy = clampEnergy(energy - b.energy.cost.sessionWork);
           cash += state.sessionWork[booked.workId].fee;
         }
+      } else if (booked && booked.type === 'travel') {
+        // Travel to or from an out-of-town show (a commitment): costs travel energy, and gas at the start of a leg.
+        row.kind = 'travel';
+        row.entryId = booked.id;
+        energy = clampEnergy(energy - b.travel.energyPerBlock);
+        if (booked.legStart) cash -= Game.rules.travel.legGas(booked.from, booked.to);
       } else if (Game.rules.day.isJobBlock(state, block)) {
         row.kind = 'job';
         energy = clampEnergy(energy - b.energy.cost.dayJob);
       } else {
+        if (Game.rules.travel.tripAt(state, state.day, block)) row.away = true; // free, but out of town
         var entry = Game.rules.actions.plannedEntry(state, block);
         var actionId = entry && entry.actionId;
         var action = actionId && Game.content.actions[actionId];
@@ -124,6 +131,20 @@ Game.rules.actions = {
     });
   },
 
+  // Why an action can't be done in this block because you're away on a trip, or null.
+  // On the road you can only Practice, Write, Rest, Post online, or Talk (actions marked onTheRoad).
+  awayProblem: function (state, block, actionId) {
+    if (!Game.rules.travel.tripAt(state, state.day, block) || Game.content.actions[actionId].onTheRoad) return null;
+    return 'You\'re on the road then: only ' + Game.rules.actions.roadActionsText() + '.';
+  },
+
+  // The actions you can do on the road, in words, like "Practice, Write, Rest, Post online, or Talk".
+  roadActionsText: function () {
+    var names = Object.keys(Game.content.actions).filter(function (id) { return Game.content.actions[id].onTheRoad; })
+      .map(function (id) { return Game.content.actions[id].name; });
+    return names.slice(0, -1).join(', ') + ', or ' + names[names.length - 1];
+  },
+
   // Everything the action picker needs to show one action for one block.
   // Returns { action, ok, reason, gains: { skills: { name: amount }, energy, morale, buzz }, burnedOutWarning }.
   option: function (state, block, actionId) {
@@ -141,6 +162,15 @@ Game.rules.actions = {
     } else if (row.kind === 'studio') {
       result.ok = false;
       result.reason = 'Studio time is booked in this block.';
+    } else if (row.kind === 'sessionWork') {
+      result.ok = false;
+      result.reason = 'Session work is booked in this block.';
+    } else if (row.kind === 'travel') {
+      result.ok = false;
+      result.reason = 'You\'re travelling then.';
+    } else if (Game.rules.actions.awayProblem(state, block, actionId)) {
+      result.ok = false;
+      result.reason = Game.rules.actions.awayProblem(state, block, actionId);
     } else {
       // Planning ahead, energy and cash aren't known yet: they're checked when the day comes.
       result.reason = state.planningAhead ? null : Game.rules.actions.affordProblem(action, row.energyBefore, row.cashBefore);
@@ -327,6 +357,9 @@ Game.rules.actions = {
     if (existing && existing.type === 'gig') return { state: state, log: ['A show is booked in this block.'] };
     if (existing && existing.type === 'studio') return { state: state, log: ['Studio time is booked in this block.'] };
     if (existing && existing.type === 'sessionWork') return { state: state, log: ['Session work is booked in this block.'] };
+    if (existing && existing.type === 'travel') return { state: state, log: ['You\'re travelling then.'] };
+    var awayProblem = Game.rules.actions.awayProblem(state, block, actionId);
+    if (awayProblem) return { state: state, log: [awayProblem] };
     if (action.needsBooking && state.planningAhead) {
       return { state: state, log: [action.name + ' can only be planned for today (from the Book screen).'] };
     }
@@ -335,17 +368,6 @@ Game.rules.actions = {
       var studioProblem = Game.rules.recording.requestProblem(state, songChoice);
       if (studioProblem) return { state: state, log: [studioProblem] };
       request = Game.util.clone(songChoice);
-    } else if (action.needsBooking) {
-      // choice: { venueId, gigDay, deal }
-      request = songChoice || {};
-      var bookingProblem = Game.rules.booking.requestProblem(state, request.venueId, request.gigDay, request.deal);
-      if (bookingProblem) return { state: state, log: [bookingProblem] };
-      var sameVenue = Object.keys(state.entries).some(function (id) {
-        var e = state.entries[id];
-        return e.day === state.day && e.actionId === 'emailVenue' && e.block !== block && e.request.venueId === request.venueId;
-      });
-      if (sameVenue) return { state: state, log: ['You already plan to email ' + Game.content.venues[request.venueId].name + ' today.'] };
-      request = { venueId: request.venueId, gigDay: request.gigDay, deal: request.deal };
     }
     if (action.setSize) {
       songIds = Array.isArray(songChoice) ? songChoice.slice() : Game.rules.gigs.suggestSet(state, action.setSize);
@@ -559,13 +581,6 @@ Game.rules.actions = {
         s = rec.state;
         parts.push(rec.log[0].replace(/\.$/, ''));
       }
-    }
-
-    // Email a venue: the request goes out now; the reply comes in 1 to 3 days.
-    if (action.effects.booking) {
-      var sent = Game.rules.booking.sendRequest(s, request.venueId, request.gigDay, request.deal);
-      s = sent.state;
-      parts.push(sent.log[0].replace(/\.$/, ''));
     }
 
     // Look for work: 50% chance of a part-time job.

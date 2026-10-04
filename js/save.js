@@ -60,6 +60,9 @@ Game.save = {
       data = Game.rules.songs.addStartingCovers(data).state;
     }
 
+    // Version 11 turned "do you have a van" (true/false) into the van itself (or null).
+    if (data.player.gear.van === false || data.player.gear.van === true) data.player.gear.van = null;
+
     data.version = Game.balance.save.version;
     return data;
   },

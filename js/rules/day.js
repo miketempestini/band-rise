@@ -152,6 +152,25 @@ Game.rules.day = {
           exhausted = true;
           lines.push('The session drained you to 0 energy. You\'re Exhausted.');
         }
+      } else if (entry && entry.type === 'travel') {
+        // Travel to or from an out-of-town show. Leaving home at 0 energy (or without a van the trip needs)
+        // means you don't go: every show on that trip is a no-show.
+        var travel = Game.rules.travel.travelBlock(s, entry, s.player.energy);
+        s = travel.state;
+        if (travel.stranded) {
+          title = 'Stayed home';
+          lines = lines.concat(travel.log);
+        } else {
+          title = entry.to === 'hometown' ? 'Driving home' : 'Travel to ' + Game.content.cities[entry.to].name;
+          didWork = true;
+          s.player.energy = Game.rules.energy.clamp(s.player.energy - b.travel.energyPerBlock);
+          lines = lines.concat(travel.log);
+          lines.push('-' + b.travel.energyPerBlock + ' energy.');
+          if (s.player.energy === 0 && !exhausted) {
+            exhausted = true;
+            lines.push('The drive drained you to 0 energy. You\'re Exhausted.');
+          }
+        }
       } else if (entry && entry.type === 'sessionWork') {
         // Session work on another band's recording: a commitment. At 0 energy you miss it.
         title = 'Session work: ' + s.sessionWork[entry.workId].bandName;
@@ -231,6 +250,10 @@ Game.rules.day = {
       endLines.push('Exhausted: ' + b.morale.change.exhausted + ' morale, and you\'ll only recover ' + b.energy.exhaustedOvernight + ' energy tonight.');
       changeMorale(b.morale.change.exhausted, endLines);
     }
+    // On the road: a hotel if you're away tonight, and road fatigue from day 5.
+    var road = Game.rules.travel.nightly(s);
+    s = road.state;
+    road.log.forEach(function (line) { endLines.push(line); });
     // Remember tonight's evening task, for "Repeat yesterday's evening".
     s.lastEvening = Game.rules.actions.eveningToRepeat(s);
     s = Game.rules.actions.clearDay(s, s.day);
@@ -257,6 +280,11 @@ Game.rules.day = {
       s = paid.state;
       endLines.push('Paid $' + bills.toLocaleString() + ' for rent and living costs.');
       paid.log.forEach(function (line) { endLines.push(line); });
+
+      // Cities you haven't played (or released music) in for 30 days lose some fans.
+      var faded = Game.rules.audience.fadeFans(s);
+      s = faded.state;
+      faded.log.forEach(function (line) { endLines.push(line); });
 
       var drift = Game.rules.morale.weeklyDrift(s);
       s = drift.state;

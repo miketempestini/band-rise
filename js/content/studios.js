@@ -17,6 +17,13 @@ Game.content.studios = {
 
 })();
 
+// The three vans in the Shop. Prices and how long they last are in balance.vans.
+Game.content.vans = {
+  beater: { id: 'beater', name: 'Beater van', blurb: 'Rust, a sticky door, and a lot of miles. It runs... for now.' },
+  used:   { id: 'used',   name: 'Used van',   blurb: 'A solid old touring van with plenty of life left.' },
+  new:    { id: 'new',    name: 'New van',    blurb: 'Brand new, with a warranty. It won\'t let you down.' }
+};
+
 Game.content.merch = {
   shirts: { id: 'shirts', name: 'T-shirts', unit: 'shirt' },
   cds:    { id: 'cds',    name: 'CDs',      unit: 'CD' }

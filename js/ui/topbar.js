@@ -50,6 +50,7 @@ Game.ui.topbar = {
       ['calendar', '📅 Calendar'],
       ['inbox', '📬 Inbox' + (unread ? ' <span class="badge badge--warn">' + unread + '</span>' : '')],
       ['booking', '🎤 Book'],
+      ['map', '🗺️ Map'],
       ['songs', '🎵 Songs'],
       ['people', '👥 People' + (Game.rules.people.needTalk(state).length ? ' <span class="badge badge--bad">!</span>' : '')],
       ['shop', '🛒 Shop'],

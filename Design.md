@@ -68,7 +68,7 @@ Each day has three blocks, the week runs Monday to Sunday, and you can see and b
 - From the Calendar, any free block on today or a later day (within the 4-week view) can get a planned task, using the same action picker as Today. It's optional.
 - Only what's knowable is checked when planning: job blocks, booked shows, and open mic nights for that day. Energy and cash are checked on the day itself: Today flags a task that won't fit, and if you end the day anyway it's skipped as free time.
 - When the day comes, the task is already on Today (marked "Planned ahead") and can be changed or cleared.
-- Email a venue can only be planned for today (from the Book screen).
+- Emailing a venue doesn't take a block: it's sent right away from the Book screen, costs 5 energy, and you can email as many venues as you like in a day.
 - A show booked into a block with a planned task replaces the task. Undoing a day off removes tasks planned in its job blocks.
 
 ### Conflicts and double-booking
@@ -88,9 +88,13 @@ A no-show happens automatically when you can't make it: you're in another city, 
 
 ### Travel
 
-- Every city has a distance: Near is 1 block each way, Mid is 2 blocks, Far is a full day.
-- Booking an out-of-town gig books the travel blocks for you. Example: a Near gig on Saturday means travel Saturday afternoon, play Saturday evening, drive back Sunday morning.
-- Each travel block costs 15 energy. A hotel is $80 a night.
+- Every city has a distance: Near is 1 block each way, Mid is 2 blocks, Far is a full day (3 blocks).
+- Booking an out-of-town gig books the travel blocks for you: the blocks right before the show, and right after it. Example: a Near gig on Saturday means travel Saturday afternoon, play Saturday evening, drive back Sunday morning.
+- Each travel block costs 15 energy. Gas is half the round trip for each one-way leg, paid as you set off. A hotel is $80 a night (one price for the whole band) for every night away.
+- If the trip touches work hours, accepting asks how you'll take those days off (vacation, sick, or skip).
+- While you're away you can only Practice, Write, Rest, Post online, or Talk. Hometown things (open mics, studio, networking, hometown shows) wait until you're back.
+- If you can't leave (0 energy when it's time to go, or the trip needs a van you don't have), every show on that trip is a no-show.
+- Out-of-town open mics: no email and no odds. Sign up for one of its nights (1 to 14 days ahead) from the Book screen, and the travel is booked.
 
 ### Weekly rhythm
 
@@ -134,7 +138,7 @@ You start with $500 and save about $150 a week if you spend nothing on music, so
 | Going out to network | $15 a time | Drinks at bars and venues |
 | Gas | $40, $80, $150 round trip | Near, Mid, Far cities |
 | Hotel | $80 a night | Out-of-town stays |
-| Van | $3,000 used | Needed for Far cities with a band, and for tours |
+| Van | Beater $1,500 (lasts 10 out-of-town shows), Used $3,000 (30 shows), New $12,000 (never breaks down) | Needed for Far cities with a band, and for tours. A worn-out van gets you home, then it's gone |
 | Merch stock | $200 for 25 shirts, $150 for 50 CDs | Paid up front |
 | Production | $500 to $5,000 a show | Sound and lights at theaters and bigger |
 | Surprise bills | $40 to $300 | Random events like a broken string or car trouble |
@@ -226,7 +230,7 @@ Energy limits what you can do today; morale limits how well you do it over weeks
 | Play an open mic | 15 |
 | Travel (per block) | 15 |
 | Write, Network, Hang out | 10 |
-| Promote, Admin (email venues, book studio) | 5 |
+| Promote, Admin (book studio), each venue email | 5 |
 | Rest | gives back 25 |
 
 A workday plus an evening gig costs 65, and you get 50 back overnight. You can do that about three days in a row before you show up Tired.
@@ -401,7 +405,7 @@ Hollow Records is the odd one out: it pays nothing, but merch sells at double th
 
 ### Booking a show
 
-- **Email a venue** (Admin, 1 block): pick the venue, a date inside its window, and a deal (guarantee or door) if it offers both.
+- **Email a venue** (no block, 5 energy, as many as you like): pick the city, the venue, a date inside its window, and a deal (guarantee or door) if it offers both. Out of town, each date shows the trip it would take.
 - Before you send, the screen shows your odds and the expected crowd:
 
 ```latex
@@ -433,10 +437,30 @@ Hollow Records is the odd one out: it pays nothing, but merch sells at double th
 
 Each city keeps its own fans, buzz, an open mic , and 2 to 4 venues. Each city also has a fan ceiling: 50,000 for the hometown, 20,000 to 40,000 for nearby cities, up to 500,000 for big national cities.
 
+| City | Region | Fan ceiling | Open mic | Venues |
+| --- | --- | --- | --- | --- |
+| Millbrook (hometown) | Hometown | 50,000 | The Rusty Nail (Tue), Bean There Cafe (Thu) | See Venue tiers |
+| Harlow Falls | Near | 30,000 | The Lantern Room (Wed) | The Copper Pint (50), Mill Street Hall (55), The Depot (club, 220) |
+| Cedar Junction | Near | 25,000 | Junction Coffee Co. (Fri) | Railyard Tavern (45), The Gray Fox (60), Signal House (club, 180) |
+| Port Ellery | Mid | 50,000 | Harbor Lights Cafe (Mon) | The Rusty Anchor (60), Lighthouse Ballroom (club, 300), Tidewater Club (club, 200) |
+| Ashford Springs | Mid | 45,000 | Springhouse Coffee (Wed) | The Wine Cellar (50), The Avalon (club, 250), Brickworks (club, 180) |
+| Redstone | Far | 80,000 | Red Rock Coffee (Tue) | The Dusty Saloon (60), The Forge (club, 300), Redstone Grand (theater, 1,000) |
+| Lake Varden | Far | 70,000 | Loon Cafe (Thu) | The Boathouse (50), Pinewood Hall (club, 250), The Lyric (theater, 900) |
+| Bellmont City | Far | 100,000 | Night Owl Lounge (Mon) | Back Alley Bar (60), Neon Garden (club, 300), Union Station Club (club, 200), The Palace (theater, 1,500) |
+| Sable Bay | Far | 90,000 | Driftwood Cafe (Fri) | The Surf Shack (45), Pier 9 (club, 250), Bayfront Theater (theater, 1,200) |
+| New Halston | National | 500,000 | The Velvet Mic (Tue) | Club Meridian, The Halston Theater, Halston Arena |
+| Crescent City | National | 400,000 | Moonlight Coffee (Thu) | The Crescent Club, Crescent Theater, Crescent Arena |
+| Kingsport | National | 350,000 | Dockside Mic (Wed) | The Kingsway, Royal Theater, Kingsport Coliseum |
+| Lindenberg | International | 500,000 | Cafe Linde (Tue) | The Linden Cellar, Lindenberg Concert Hall, Lindenberg Arena |
+| Port Aurelia | International | 450,000 | Aurelia Beach Bar (Fri) | Club Solana, Teatro Aurelia, Aurelia Stadium |
+| Valmora | International | 400,000 | Valmora Lounge (Thu) | The Blue Door, Valmora Opera House, Valmora Festival Grounds |
+
+Out of town, small rooms and clubs offer a guarantee or the door (cover nights and in-stores are hometown only), and theaters need a release. Opening slots, residencies, and fill-ins stay in the hometown. National and International cities are locked until the manager, label, and flights arrive.
+
 ### Tours
 
 - A tour is 3+ out-of-town shows within 10 days. It needs a van, plus vacation days or no day job.
-- Back-to-back cities chain travel and show in one day where the distance allows.
+- Back-to-back cities chain travel and show in one day where the distance allows: if your next out-of-town show is within 2 days (or there's no time to go home in between), you drive straight on from city to city. A city-to-city leg uses the longer of the two cities' distances.
 - Road fatigue: from day 5 on the road, morale drops 3 a day. Bandmates gain 2 satisfaction per tour show.
 
 ## Audience, buzz and reputation
