@@ -4,6 +4,35 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 11: Phase 10, the day job arc (2026-10-04)
+- **Day job screen** (click Job in the Stats panel, or 💼 Day job on the Calendar): schedule, pay, standing, vacation days.
+- **Going part-time** at reputation 20 and job standing 50+: Monday, Wednesday, Friday ($330 a week), starting next
+  Monday. The Calendar shows the new schedule right away. Days off that aren't needed anymore are dropped (vacation days
+  given back).
+- **Quitting**: a confirm screen with your last 4 finished weeks of music income next to each week's bills, the average,
+  your bills now, the job pay you'd give up, and a plain verdict ("Music covers about 30% of your bills..."). The job ends
+  next Monday; this week's shifts are still paid.
+- **"Never mind"** cancels a part-time or quit change before Monday (owner's pick). It's refused if you've since booked
+  something during work hours.
+- **Milestones 8 (Part-time, +10 morale) and 11 (Quit the day job, +15 morale)** are live.
+- **Session work** (numbers approved and added to Design.md):
+  - Offers arrive in the Inbox once Musicianship is 40+ and reputation 20+ (4% a morning, one at a time).
+  - Each job is 3 sessions over 2 to 4 days, 3 to 10 days out, never in work hours. Each session pays $100-200, costs 20
+    energy, and gives +1.5 Musicianship.
+  - The band releases the song 2-6 weeks later; play every session and you get 10% of its streaming every Sunday as
+    "Session credits". A release note lands in the Inbox.
+  - Sessions show on Today and the Calendar; cancel the rest of a job from the Calendar.
+- **Plan week** (🗓️ on the Calendar): the 7 evenings of this week or any of the next 3.
+  - Pick a task for each and "Apply to all 7 evenings". Default picks: loosest song, suggested set, closest contact,
+    writing alone. "Change picks…" opens the normal picker. Evenings that can't be set are listed with why.
+  - **Week templates**: save a week's evenings under a name (up to 5; the same name replaces) and apply to any week. A
+    saved pick that no longer works falls back to the default.
+- **Debug:** "Session work offer" and "Release session songs".
+- **Balance check (90 days)**: the simulated player now goes part-time as soon as it can (around day 37) and takes
+  session work (about 2 jobs by day 90). Day 90: cash about $2,600 (was $3,500), reputation about 60 (was 55), first
+  club show still around day 69.
+- **Saves:** version 10. **Tests:** 242 passing (dayjob.test.js new).
+
 ### Session 10c: Rules review clean-up (2026-10-04)
 A check of the whole project against CLAUDE.md, then fixes for everything found (owner's OK; "built ahead" items left as they are).
 No gameplay numbers changed: the balance checks give the same results as before.
@@ -309,12 +338,15 @@ No gameplay numbers changed: the balance checks give the same results as before.
   with a no-library test runner, git repo (pushed to github.com/miketempestini/band-rise, private).
 
 ## What's next
-- **Decide on mid-game reputation** (see Known issues) before building theaters (reputation 60) and beyond.
-- Phase 10 candidates from Design.md: Shop gear (instrument upgrades, van, housing), part-time job and quitting
-  (milestones 8 and 11), other cities and travel (milestone 10), the manager.
-- Earlier balance decisions still waiting on the owner (bandmate odds, paid-show odds, cash).
+- Phase 11 candidates from Design.md: Shop gear (instrument upgrades, van, housing), other cities and travel
+  (milestone 10, On the road), the manager.
+- Earlier balance decisions are settled: the owner chose not to change the invite threshold or the booking odds.
 
 ## Known issues / open decisions
+- **Session credits are small by design** (about $3-4 a week per song). They matter after several jobs. Watch them
+  once real playtests show how many offers a player takes.
+- **Quitting early leaves no fallback but Look for work**: going back to full-time isn't in Design.md.
+- **Plan week only covers evenings** (as Design.md says). Weekend mornings and afternoons are still planned one at a time.
 - **90-day balance check (after the reputation change):** reputation 30 around day 47; first headlining club show around
   day 69; reputation at day 90 about 55 (38-69), so a few runs reach theater level (60) by day 90 while fans are still
   only ~150. Watch this when other cities arrive (they'll be the main way to keep growing reputation).
@@ -325,7 +357,7 @@ No gameplay numbers changed: the balance checks give the same results as before.
   fans, matching Design.md's example (500 fans, 3 songs, $15).
 - **Early recordings are weak**: a first original (quality ~35) with low tightness records at about 30 at the Demo
   studio. Rehearsing a song before recording it helps the most (tightness is a quarter of the score).
-- **Balance check (100 runs, first 21 days, not applied yet)** vs. Design.md's targets:
+- **Balance check (100 runs, first 21 days)** vs. Design.md's targets. The owner chose not to apply the suggested changes below (2026-10-04):
   - Cash avg $1,144 (range $1,050-1,295), target $400-900: **too high**. Partly the simulated player barely spends
     (no flyers, few hang outs) and takes overtime. Possible fix: no change until real playtests; or raise rent.
   - Fans avg 6.3 (4-10), target 6-15: on target, at the low edge.
@@ -358,7 +390,6 @@ No gameplay numbers changed: the balance checks give the same results as before.
 - Older saves will be refused if a later phase adds new state fields without a version bump (the upgrade step
   in save.js fills in missing fields automatically when the version goes up).
 - With no cap on debt, cash never goes below $0: Mom and Dad always cover the gap.
-- Design.md still has no numbers for these (they're `null` in balance.js): cover gig unlock (reputation and
-  musicianship), and session work (requirements, studio blocks, streaming share).
+- Design.md still has no numbers for the cover gig unlock (reputation and musicianship; placeholders in balance.js).
 - Not decided: whether or how family loans get paid back automatically (for now only by hand with Pay back).
 - Far travel is stored as 3 blocks each way ("a full day").

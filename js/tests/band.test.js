@@ -210,12 +210,12 @@
     t.equal(s.player.cash, cash - 75, '$75');
   });
 
-  Game.test('Save: a version 8 save loads as version 9', function (t) {
+  Game.test('Save: a version 8 save loads as the current version', function (t) {
     var old = Game.util.clone(freshState());
     old.version = 8;
     var loaded = Game.save.parse(JSON.stringify(old));
     t.ok(loaded.ok, 'loaded: ' + loaded.message);
-    t.equal(loaded.state.version, 9);
+    t.equal(loaded.state.version, Game.balance.save.version);
   });
 
 })();

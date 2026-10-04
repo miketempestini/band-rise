@@ -85,6 +85,15 @@ Game.rules.actions = {
         row.kind = 'studio';
         row.entryId = booked.id;
         energy = clampEnergy(energy - b.energy.cost.studio);
+      } else if (booked && booked.type === 'sessionWork') {
+        // Session work on another band's recording (a commitment): costs session energy, pays its fee.
+        row.kind = 'sessionWork';
+        row.entryId = booked.id;
+        if (energy <= 0) row.problem = 'You\'ll miss this session at 0 energy (no pay, no streaming share).';
+        else {
+          energy = clampEnergy(energy - b.energy.cost.sessionWork);
+          cash += state.sessionWork[booked.workId].fee;
+        }
       } else if (Game.rules.day.isJobBlock(state, block)) {
         row.kind = 'job';
         energy = clampEnergy(energy - b.energy.cost.dayJob);
@@ -317,6 +326,7 @@ Game.rules.actions = {
     var existing = Game.rules.actions.plannedEntry(state, block);
     if (existing && existing.type === 'gig') return { state: state, log: ['A show is booked in this block.'] };
     if (existing && existing.type === 'studio') return { state: state, log: ['Studio time is booked in this block.'] };
+    if (existing && existing.type === 'sessionWork') return { state: state, log: ['Session work is booked in this block.'] };
     if (action.needsBooking && state.planningAhead) {
       return { state: state, log: [action.name + ' can only be planned for today (from the Book screen).'] };
     }

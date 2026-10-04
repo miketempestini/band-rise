@@ -1,18 +1,185 @@
 // job.js
 // Rules for the day job: which days you work, days off (vacation, calling in sick, skipping),
-// job standing (how your boss sees you), getting fired, and finding work again.
+// job standing (how your boss sees you), getting fired, finding work again, and (Phase 10)
+// going part-time or quitting. Both changes start next Monday: until then they wait in job.pending.
 
 window.Game = window.Game || {};
 Game.rules = Game.rules || {};
 
 Game.rules.job = {
 
+  // Your job on a given day: 'full', 'part', or 'none'. A change you asked for (going part-time or
+  // quitting) counts from the Monday it starts, so the Calendar already shows it.
+  statusOn: function (state, day) {
+    var job = state.player.job;
+    if (job.pending && day >= job.pending.day) return job.pending.status;
+    return job.status;
+  },
+
   // True if your job expects you on this day (before any day off is counted).
   scheduledOn: function (state, day) {
     var job = state.player.job;
-    if (job.status !== 'none' && job.extraShifts && job.extraShifts[day]) return true; // an overtime shift
+    var status = Game.rules.job.statusOn(state, day);
+    if (status !== 'none' && job.extraShifts && job.extraShifts[day]) return true; // an overtime shift
     if (job.startsDay !== null && day < job.startsDay) return false;
-    return Game.rules.day.isWorkday(state, Game.rules.day.dayOfWeek(day));
+    return Game.rules.day.isWorkday(state, Game.rules.day.dayOfWeek(day), status);
+  },
+
+  // ----- Going part-time and quitting (Phase 10) -----
+
+  // The first day of next week (a Monday). On a Monday, that's a week from today.
+  nextMonday: function (state) {
+    var t = Game.balance.time;
+    return state.day + (t.daysPerWeek - Game.rules.day.dayOfWeek(state.day));
+  },
+
+  // Why you can't go part-time right now, or null if you can.
+  partTimeProblem: function (state) {
+    var b = Game.balance.job;
+    var job = state.player.job;
+    if (job.status !== 'full') return 'Only a full-time job can go part-time.';
+    if (job.pending) return 'You already asked for a change starting ' + Game.rules.day.dateLabel(job.pending.day) + '.';
+    if (state.player.reputation < b.partTimeMinReputation) {
+      return 'Needs reputation ' + b.partTimeMinReputation + ' (you have ' + Math.floor(state.player.reputation) + ').';
+    }
+    if (job.standing < b.partTimeMinStanding) {
+      return 'Needs job standing ' + b.partTimeMinStanding + ' (you have ' + Math.round(job.standing) + ').';
+    }
+    return null;
+  },
+
+  // Asks to go part-time (Monday, Wednesday, Friday) from next Monday. Returns { state, log }.
+  goPartTime: function (state) {
+    var problem = Game.rules.job.partTimeProblem(state);
+    if (problem) return { state: state, log: [problem] };
+    return Game.rules.job.setPending(state, 'part',
+      'You\'re going part-time from ' + Game.rules.day.dateLabel(Game.rules.job.nextMonday(state)) + '.');
+  },
+
+  // Why you can't quit right now, or null if you can.
+  quitProblem: function (state) {
+    var job = state.player.job;
+    if (job.status === 'none') return 'You don\'t have a day job.';
+    if (job.pending && job.pending.status === 'none') return 'You already quit: your last week ends ' + Game.rules.day.dateLabel(job.pending.day - 1) + '.';
+    return null;
+  },
+
+  // Quits the day job: it ends next Monday (this week's shifts still count). Replaces a pending part-time change.
+  // Returns { state, log }.
+  quit: function (state) {
+    var problem = Game.rules.job.quitProblem(state);
+    if (problem) return { state: state, log: [problem] };
+    return Game.rules.job.setPending(state, 'none',
+      'You quit! Your day job ends ' + Game.rules.day.dateLabel(Game.rules.job.nextMonday(state)) + '.');
+  },
+
+  // Saves a job change for next Monday. Plans on the new schedule's free days stay; plans on days you'll
+  // still work are untouched. Returns { state, log }.
+  setPending: function (state, status, line) {
+    var s = Game.util.clone(state);
+    s.player.job.pending = { status: status, day: Game.rules.job.nextMonday(s) };
+    s = Game.rules.job.dropDaysOffNotNeeded(s).state;
+    return { state: s, log: [line] };
+  },
+
+  // Why a part-time or quit change can't be cancelled, or null if it can. It can't if something is now
+  // booked in the job blocks of a day you'd be working again (a show, studio time, or session work).
+  cancelPendingProblem: function (state) {
+    if (!state.player.job.pending) return 'There\'s no change to cancel.';
+    var s = Game.util.clone(state);
+    s.player.job.pending = null;
+    var clash = Object.keys(s.schedule).map(Number).filter(function (day) {
+      return day >= s.day && Game.rules.job.worksOn(s, day) && Game.rules.job.dayOffNeeded(s, day);
+    })[0];
+    if (clash !== undefined) return 'You booked something during work hours on ' + Game.rules.day.dateLabel(clash) + '. Cancel it first.';
+    return null;
+  },
+
+  // "Never mind": cancels a part-time or quit change before it starts. Returns { state, log }.
+  cancelPending: function (state) {
+    var problem = Game.rules.job.cancelPendingProblem(state);
+    if (problem) return { state: state, log: [problem] };
+    var s = Game.util.clone(state);
+    s.player.job.pending = null;
+    var log = ['Never mind: your job stays as it is.'];
+    // Tasks planned in job blocks on days you'll now be working again are removed.
+    Object.keys(s.schedule).map(Number).forEach(function (day) {
+      if (day >= s.day && Game.rules.job.worksOn(s, day)) {
+        var dropped = Game.rules.job.dropPlansInJobBlocks(s, day);
+        s = dropped.state;
+        log = log.concat(dropped.log);
+      }
+    });
+    return { state: s, log: log };
+  },
+
+  // Removes planned days off on days you won't be scheduled to work anymore (a vacation day is given back).
+  // Returns { state, log }.
+  dropDaysOffNotNeeded: function (state) {
+    var s = Game.util.clone(state);
+    var job = s.player.job;
+    Object.keys(job.daysOff).map(Number).forEach(function (day) {
+      if (Game.rules.job.scheduledOn(s, day)) return;
+      if (job.daysOff[day] === 'vacation') job.vacationDaysLeft += 1;
+      delete job.daysOff[day];
+    });
+    return { state: s, log: [] };
+  },
+
+  // Each morning: a change that starts today takes effect. Quitting is milestone 11 (checked by
+  // Game.rules.progress.checkUnlocks). Returns { state, log, changed }.
+  applyPending: function (state) {
+    var pending = state.player.job.pending;
+    if (!pending || state.day < pending.day) return { state: state, log: [], changed: false };
+    var s = Game.util.clone(state);
+    var job = s.player.job;
+    job.status = pending.status;
+    job.pending = null;
+    if (pending.status === 'none') {
+      job.quitDay = s.day;
+      job.daysOff = {};
+      job.extraShifts = {};
+      return { state: s, log: ['You\'re free: no more day job. Every weekday block is yours now.'], changed: true };
+    }
+    return { state: s, log: ['Part-time starts today: you work ' + Game.rules.job.workdayNames('part') + '.'], changed: true };
+  },
+
+  // The days a job works, in words, like "Monday, Wednesday, and Friday".
+  workdayNames: function (status) {
+    var b = Game.balance.job;
+    var days = (status === 'part' ? b.partTimeDays : b.fullTimeDays).map(function (d) { return Game.content.calendar.dayNames[d]; });
+    return days.length > 1 ? days.slice(0, -1).join(', ') + ', and ' + days[days.length - 1] : days.join('');
+  },
+
+  // ----- The quit screen -----
+
+  // Music income for one week of the ledger (or this week's running totals): gig pay, tips, merch,
+  // streaming, and session work. Not the day job, overtime, loans, or lucky events.
+  musicIncome: function (week) {
+    return Game.balance.job.musicIncomeCategories.reduce(function (sum, key) { return sum + (week.income[key] || 0); }, 0);
+  },
+
+  // What the quit confirm screen shows: your last (up to) 4 finished weeks of music income next to
+  // that week's bills, the average, your weekly bills now, and the job pay you'd give up.
+  // Returns { weeks: [{ week, music, bills }], averageMusic, weeklyBills, jobPayPerWeek, coversShare }
+  // (coversShare: how much of your weekly bills music covers on average, 0.6 = 60%).
+  quitSummary: function (state) {
+    var b = Game.balance;
+    var weeks = state.ledger.slice(-b.job.quitScreenIncomeWeeks).map(function (w) {
+      return { week: w.week, music: Game.rules.job.musicIncome(w), bills: w.costs.bills || 0 };
+    });
+    var total = weeks.reduce(function (sum, w) { return sum + w.music; }, 0);
+    var averageMusic = weeks.length ? Math.round(total / weeks.length) : 0;
+    var weeklyBills = b.housing[state.player.housing].weeklyCost;
+    var status = state.player.job.status;
+    var shifts = status === 'none' ? 0 : (status === 'part' ? b.job.partTimeDays.length : b.job.fullTimeDays.length);
+    return {
+      weeks: weeks,
+      averageMusic: averageMusic,
+      weeklyBills: weeklyBills,
+      jobPayPerWeek: shifts * b.job.payPerShift,
+      coversShare: weeklyBills > 0 ? averageMusic / weeklyBills : 0
+    };
   },
 
   // True if you'll actually be at work that day (scheduled, and not taking it off).
@@ -76,7 +243,7 @@ Game.rules.job = {
     var plan = state.schedule[day] || {};
     return Game.balance.job.jobBlocks.some(function (block) {
       var e = plan[block] && state.entries[plan[block]];
-      return !!e && (e.type === 'gig' || e.type === 'studio');
+      return !!e && (e.type === 'gig' || e.type === 'studio' || e.type === 'sessionWork');
     });
   },
 
@@ -122,6 +289,7 @@ Game.rules.job = {
     var log = [];
     if (job.standing <= b.firedStanding && job.status !== 'none') {
       job.status = 'none';
+      job.pending = null;
       job.daysOff = {};
       log.push('You\'re fired. Your boss had enough. (Use Look for work to find a new job.)');
     } else if (job.standing < b.warningStanding && before >= b.warningStanding) {
@@ -158,7 +326,7 @@ Game.rules.job = {
     var found = rng.chance(b.job.lookForWorkChance);
     s.rngState = rng.getState();
     if (!found) return { state: s, log: ['No luck finding work today.'], found: false };
-    var nextMonday = s.day + (b.time.daysPerWeek - Game.rules.day.dayOfWeek(s.day));
+    var nextMonday = Game.rules.job.nextMonday(s);
     s.player.job.status = 'part';
     s.player.job.startsDay = nextMonday;
     s.player.job.standing = b.job.startStanding;

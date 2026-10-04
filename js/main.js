@@ -31,6 +31,9 @@ Game.app = {
   releaseDraft: { type: 'single', songIds: [] }, // a release being put together on the Songs screen
   contractId: null,     // the residency offer being reviewed
   contractTerms: null,  // the terms you're editing on the contract screen: { weekday, rate, weeks }
+  planWeekStart: null,  // the Monday of the week shown on the Plan week screen
+  planWeekPicks: {},    // Plan week choices not applied yet: { dayOfWeek: actionId | 'clear' }
+  templateNameDraft: '', // the name typed for a new week template
   bandNameDraft: '',       // the band name shown in the name box on the Name your band screen
   pendingWeekSummary: false, // true when the weekly summary should follow the Day results screen
   draftCareer: null,    // a career being set up: { name, instrument, allocation } (not saved until Start)
@@ -486,6 +489,110 @@ Game.app = {
     var result = Game.rules.recording.cancelSession(app.state, entryId);
     app.notice = { kind: 'info', text: result.log.join(' ') };
     app.applyRule(result);
+  },
+
+  cancelSessionWork: function (workId) {
+    var app = Game.app;
+    var work = app.state.sessionWork[workId];
+    if (!window.confirm('Cancel the rest of your sessions with ' + work.bandName + '? You lose the pay for them and the streaming share.')) return;
+    var result = Game.rules.sessionWork.cancel(app.state, workId);
+    app.notice = { kind: 'info', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  acceptSessionWork: function (messageId) {
+    var app = Game.app;
+    var result = Game.rules.sessionWork.accept(app.state, messageId);
+    app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  // ----- The day job (Phase 10) -----
+
+  // Opens the Job screen (from the Stats panel or the Calendar).
+  openJob: function () {
+    Game.app.navigate('job');
+  },
+
+  goPartTime: function () {
+    var app = Game.app;
+    var result = Game.rules.job.goPartTime(app.state);
+    app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  // From the quit confirm screen: quits (the job ends next Monday), then back to the Job screen.
+  quitJob: function () {
+    var app = Game.app;
+    var result = Game.rules.job.quit(app.state);
+    app.show('job');
+    app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  cancelJobChange: function () {
+    var app = Game.app;
+    var result = Game.rules.job.cancelPending(app.state);
+    app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  // ----- Plan week -----
+
+  openPlanWeek: function () {
+    var app = Game.app;
+    app.planWeekStart = Game.rules.planWeek.weekStart(app.state.day);
+    app.planWeekPicks = {};
+    app.show('planWeek');
+  },
+
+  planWeekSelect: function (weekStart) {
+    Game.app.planWeekStart = weekStart;
+    Game.app.planWeekPicks = {};
+    Game.app.notice = null;
+    Game.app.render();
+  },
+
+  // A task picked for one evening in the Plan week list (not applied until "Apply to all 7 evenings").
+  planWeekPick: function (dayOfWeek, value) {
+    var picks = Game.app.planWeekPicks;
+    if (value) picks[dayOfWeek] = value;
+    else delete picks[dayOfWeek];
+    Game.app.render();
+  },
+
+  // Shows what a Plan week rule did: the evenings it couldn't set, or a short "done".
+  planWeekResult: function (result, doneText) {
+    var app = Game.app;
+    app.notice = result.log.length
+      ? { kind: 'error', text: 'Some evenings weren\'t set. ' + result.log.join(' ') }
+      : { kind: 'info', text: doneText };
+    app.applyRule(result);
+  },
+
+  applyPlanWeek: function (weekStart) {
+    var app = Game.app;
+    var result = Game.rules.planWeek.applyWeek(app.state, weekStart, app.planWeekPicks);
+    app.planWeekPicks = {};
+    app.planWeekResult(result, 'Evenings planned.');
+  },
+
+  saveWeekTemplate: function (weekStart) {
+    var app = Game.app;
+    var result = Game.rules.planWeek.saveTemplate(app.state, app.templateNameDraft, weekStart);
+    var failed = result.state === app.state;
+    if (!failed) app.templateNameDraft = '';
+    app.notice = { kind: failed ? 'error' : 'info', text: result.log.join(' ') };
+    app.applyRule(result);
+  },
+
+  applyWeekTemplate: function (templateId, weekStart) {
+    Game.app.planWeekResult(Game.rules.planWeek.applyTemplate(Game.app.state, templateId, weekStart), 'Template applied.');
+  },
+
+  deleteWeekTemplate: function (templateId) {
+    Game.app.notice = null;
+    Game.app.applyRule(Game.rules.planWeek.deleteTemplate(Game.app.state, templateId));
   },
 
   dismissToast: function (toastId) {

@@ -48,7 +48,9 @@ Game.state = {
           unpaidShifts: 0,               // Shifts worked since the last payday
           daysOff: {},                   // day number: 'vacation' | 'sick' | 'skip' (days you won't work)
           extraShifts: {},               // day number: true for an overtime shift (a Saturday you agreed to work)
-          startsDay: null                // a new job starts on this day (after Look for work)
+          startsDay: null,               // a new job starts on this day (after Look for work)
+          pending: null,                 // a change you asked for, starting next Monday: { status: 'part' | 'none', day }
+          quitDay: null                  // the day you quit the day job (milestone 11), or null
         },
         loanOwed: 0,                     // Total debt owed to Mom and Dad
         debtWeeksOverLimit: 0,           // Sundays in a row with debt above the game-over line
@@ -89,6 +91,11 @@ Game.state = {
       eventHistory: {},   // eventId: the last day it happened (for cooldowns)
       effects: [],        // temporary effects: { id, kind: 'gigScore' | 'dailyEnergy', amount, untilDay, label }
       lastEvening: null,  // yesterday's evening task, for "Repeat yesterday's evening"
+      sessionWork: {},    // id: { id, bandName, songTitle, fee, quality, bandFans, sessions, played, missed,
+                          //       status: 'booked' | 'done' | 'cancelled', releaseDay, announced }
+      nextSessionWorkId: 1,
+      weekTemplates: [],  // saved Plan Week templates: { id, name, evenings: { dayOfWeek: { actionId, choice } } }
+      nextTemplateId: 1,
       settings: { tutorial: true },
       tutorialSeen: {},   // tip card id: true once dismissed
     };

@@ -27,13 +27,20 @@ Game.ui.calendar = {
       ? 'No day job. (Plan "Look for work" from a free block.)'
       : (job.status === 'full' ? 'Full-time' : 'Part-time') + ' day job · standing <strong>' + Math.round(job.standing) + '</strong> · ' +
         job.vacationDaysLeft + ' vacation day' + (job.vacationDaysLeft === 1 ? '' : 's') + ' left this year';
+    if (job.pending) {
+      jobLine += ' · ' + (job.pending.status === 'none' ? 'quitting' : 'part-time') + ' from ' + h.dateLabel(job.pending.day);
+    }
 
     root.innerHTML =
       Game.ui.topbar.html(state, app.screen) +
       '<section class="screen">' +
         '<div class="screen__head">' +
           '<h1 class="screen__title">Calendar</h1>' +
-          '<button class="btn" data-action="back">← Back</button>' +
+          '<div class="actions actions--left">' +
+            '<button class="btn" data-action="planWeek">🗓️ Plan week</button>' +
+            '<button class="btn" data-action="openJob">💼 Day job</button>' +
+            '<button class="btn" data-action="back">← Back</button>' +
+          '</div>' +
         '</div>' +
         h.notice(app.notice) +
         '<p class="hint">' + jobLine + '</p>' +
@@ -57,6 +64,9 @@ Game.ui.calendar = {
       session: function (e, el) { app.changeSessionPlayers(el.getAttribute('data-entry'), Number(el.getAttribute('data-change'))); },
       cancelShow: function (e, el) { app.cancelShow(el.getAttribute('data-entry')); },
       cancelStudio: function (e, el) { app.cancelStudio(el.getAttribute('data-entry')); },
+      cancelSessionWork: function (e, el) { app.cancelSessionWork(el.getAttribute('data-work')); },
+      planWeek: function () { app.openPlanWeek(); },
+      openJob: function () { app.openJob(); },
       planBlock: function (e, el) { app.openPicker(el.getAttribute('data-block'), Number(el.getAttribute('data-day'))); },
       clearBlock: function (e, el) { app.calendarClear(Number(el.getAttribute('data-day')), el.getAttribute('data-block')); }
     });
@@ -69,6 +79,7 @@ Game.ui.calendar = {
     var text = {
       show: function () { return '🎤 ' + Game.content.venues[c.entry.venueId].name; },
       studio: function () { return '🎙️ ' + Game.content.studios[c.entry.studio].name; },
+      sessionWork: function () { return '🎧 ' + state.sessionWork[c.entry.workId].bandName; },
       plan: function () { return Game.content.actions[c.entry.actionId].name; },
       pending: function () { return '? ' + c.reason.replace('Waiting to hear from ', ''); },
       off: function () { return 'Off (' + c.offKind + ')'; },
@@ -140,6 +151,11 @@ Game.ui.calendar = {
       var right;
       if (info.kind === 'job') right = '<span class="muted">Day job</span>';
       else if (info.kind === 'show') right = '<span class="muted">Show (see below)</span>';
+      else if (info.kind === 'sessionWork') {
+        var work = state.sessionWork[entry.workId];
+        right = '<span class="plan__task">🎧 Session work: ' + h.escape(work.bandName) + ', "' + h.escape(work.songTitle) + '" (+' + h.money(work.fee) + ')</span>' +
+          '<button class="btn btn--small btn--ghost" data-action="cancelSessionWork" data-work="' + work.id + '">Cancel</button>';
+      }
       else if (info.kind === 'studio') {
         right = '<span class="plan__task">🎙️ ' + h.escape(Game.content.studios[entry.studio].name) + ': "' + h.escape(state.songs[entry.songId].title) + '"</span>' +
           '<button class="btn btn--small btn--ghost" data-action="cancelStudio" data-entry="' + entry.id + '">Cancel</button>';

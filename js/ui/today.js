@@ -44,6 +44,7 @@ Game.ui.today = {
       endDay: function () { app.endDay(); },
       openPicker: function (event, el) { app.openPicker(el.getAttribute('data-block')); },
       openCalendar: function () { app.navigate('calendar'); },
+      openJob: function () { app.openJob(); },
       dismissToast: function (event, el) { app.dismissToast(el.getAttribute('data-toast')); },
       openInbox: function () { app.navigate('inbox'); },
       skipAhead: function () { app.skipAhead(); },
@@ -139,6 +140,16 @@ Game.ui.today = {
           '<span class="block__title">🎙️ ' + h.escape(Game.content.studios[se.studio].name) + '</span>' +
           '<span class="block__detail">Recording "' + h.escape(state.songs[se.songId].title) + '" · ' +
             h.money(b.recording.studios[se.studio].cost) + ' · -' + b.energy.cost.studio + ' energy</span>' +
+          energyLine +
+          '</button>';
+      }
+      if (row.kind === 'sessionWork') {
+        var work = state.sessionWork[state.entries[row.entryId].workId];
+        return '<button class="block block--show" data-action="openCalendar">' +
+          '<span class="block__time">' + name + '</span>' +
+          '<span class="block__title">🎧 Session work: ' + h.escape(work.bandName) + '</span>' +
+          '<span class="block__detail">' + (row.problem ? '<span class="block__problem">' + h.escape(row.problem) + '</span>' :
+            'Playing on "' + h.escape(work.songTitle) + '" · +' + h.money(work.fee) + ' · -' + b.energy.cost.sessionWork + ' energy') + '</span>' +
           energyLine +
           '</button>';
       }

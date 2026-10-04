@@ -681,3 +681,23 @@ button.block:hover { border-color: var(--accent); }
 .contract__terms { font-size: 18px; }
 .contract-edit { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); }
 .contract-edit .field { margin-bottom: var(--space-1); }
+
+/* ---------- Phase 10: day job, session work, Plan week ---------- */
+
+/* A button that looks like a link (the Job row in the Stats panel). */
+.link-btn { font: inherit; color: var(--teal); background: none; border: none; padding: 0; cursor: pointer; text-align: right; }
+.link-btn:hover { text-decoration: underline; }
+
+/* Session work on the Calendar grid. */
+.cal__block--sessionWork { background: rgba(79, 209, 197, 0.18); color: var(--teal); font-weight: bold; }
+
+/* The quit confirm table: week, music income, bills, left over. */
+.quit-table { width: 100%; border-collapse: collapse; margin-bottom: var(--space-2); font-variant-numeric: tabular-nums; }
+.quit-table th, .quit-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+.quit-table th:first-child, .quit-table td:first-child { text-align: left; }
+.quit-table th { color: var(--text-muted); font-weight: normal; }
+
+/* Plan week rows: the day, what's planned, the task list, and "Change picks". */
+.plan__row + .plan__row { margin-top: 6px; }
+.plan__row--past { opacity: 0.5; }
+.plan-week__select { max-width: 220px; }

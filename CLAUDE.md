@@ -76,7 +76,7 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, offers, actions, career, day, debug
+5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, offers, sessionWork, actions, planWeek, career, day, debug
    (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
 6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
@@ -214,6 +214,16 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
 - **Shared screen logic lives in rules**: e.g. `money.maxPayBack` / `sundaysUntilGameOver` / `weekTotals`,
   `recording.streamingEstimate`, `offers.rateOptions`, `job.undoDayOffProblem`, `booking.blockContents`,
   `actions.pickedSongsProblem`, `career.canAdjust`. If a screen needs to work something out, add a rule.
+- **Day job (Phase 10)**: going part-time and quitting wait in `player.job.pending` ({ status, day }) until next
+  Monday; `Game.rules.job.statusOn(state, day)` gives the job on any day (use it, not `job.status`, for future days).
+  `applyPending` runs each morning in End Day. The quit screen reads `job.quitSummary` (music income categories are
+  in `balance.job.musicIncomeCategories`). Milestones 8 and 11 are live; `progress.milestoneMorale` gives quitting +15.
+- **Session work (Phase 10)**: `Game.rules.sessionWork` (offers in the Inbox, kind `sessionWork`; jobs in
+  `state.sessionWork`; calendar entries `type: 'sessionWork'`, commitments like studio time; Sunday "Session credits").
+  Entry types are now `'action' | 'gig' | 'studio' | 'sessionWork'`: anything that treats a booked block as taken
+  must handle all three booked kinds.
+- **Plan week (Phase 10)**: `Game.rules.planWeek` (applyWeek, templates in `state.weekTemplates`). It plans through
+  `actions.plan`, so every normal check applies.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

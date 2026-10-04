@@ -53,8 +53,8 @@ Each day has three blocks, the week runs Monday to Sunday, and you can see and b
 - One workday (two blocks) is a shift. It pays $110, paid Friday night, so $550 a week.
 - **Job standing** (0 to 100, starts at 60) is how your boss sees you. Work a shift: +1. Call in sick: -15. Skip without calling: -25. Below 25 you get a warning. At 0 you're fired.
 - **Vacation:** 10 days a year, paid. Request at least 14 days ahead and there's no standing penalty. This is the main tool for a first out-of-town show. Calling in sick is only possible for today or tomorrow (or for a booked show, decided when you accept it).
-- **Going part-time:** unlocks at reputation 20 and standing 50+. Shifts become Monday, Wednesday, Friday ($330 a week), starting next Monday.
-- **Quitting:** allowed any time. A confirm screen shows your last 4 weeks of music income next to your weekly bills. Takes effect next Monday and frees every job block.
+- **Going part-time:** unlocks at reputation 20 and standing 50+. Shifts become Monday, Wednesday, Friday ($330 a week), starting next Monday. Until Monday, a "Never mind" button cancels the change (unless you've booked something during work hours since).
+- **Quitting:** allowed any time. A confirm screen shows your last 4 weeks of music income next to your weekly bills. Takes effect next Monday and frees every job block. Music income means gig pay, tips, merch, streaming, and session work (not the day job, overtime, loans, or event money). Quitting is milestone 11 (+15 morale).
 - **Getting a job back:** a "Look for work" action. Each try has a 50% chance to land a part-time job starting the next week.
 
 ### How far ahead you can book
@@ -418,7 +418,7 @@ Hollow Records is the odd one out: it pays nothing, but merch sells at double th
 - **Fill-in:** "A band dropped out. Can you play tomorrow?" Short notice, no booking odds, a quick reputation boost.
 - **Opening slot:** play a club to a touring band's crowd (60-90% of the room). A $50 to $150 flat fee and a 6-song set, with no 3-on-stage rule. New fans come from their crowd at half the normal rate. From reputation 10, the chance of an offer each morning is 1% + reputation / 20 % + Networking / 40 % (about 2.5% a day at reputation 20 and Networking 20).&#32;
 - **Residency**: a contract for a weekly night at one venue (4 weeks at the venue's guarantee), offered on Mondays by a venue that likes you (relationship 15+) once you're at reputation 20+. Regulars come back: the crowd never drops below half the room. Before signing you can make one counter-offer: a different night, up to 25% more or less money, or 3 to 6 weeks. Each change lowers the chance they agree (a different night -10%, each 1% more money -2%, each week of difference -5%; plus venue relationship / 2 %). The answer comes the next morning; if it's no, the original terms can still be signed.
-- **Session work: **If your musicianship and reputation is high enough, you can get an offer to sit in on a recording session for another band. Takes a few slots of time to commit to since you'll need to be in the studio a few times. Pay is between a $100 and $200 flat fee per session. In addition, you get partial credit for the songwriting, so you get a small percentage of the streaming money from the song once its released.&#32;
+- **Session work:** once your Musicianship is 40+ and reputation 20+, a band may ask you to sit in on their recording (4% chance each morning, one offer at a time, answer within 2 days). It's 3 studio sessions of one block each, spread over 2 to 4 days in the next 3 to 10 days, never during work hours. Each session pays a flat $100 to $200 (a round $10, set by the offer), costs 20 energy, and gives +1.5 Musicianship. At 0 energy you miss a session (no pay). The band releases the song 2 to 6 weeks after your last session; if you played every session, you get 10% of its streaming money every Sunday (their fans (1,000 to 5,000) x $0.02 x song quality (50 to 80) / 100 x freshness, about $3 to $4 a week per song). You can cancel the remaining sessions from the Calendar (you lose the pay and the share, nothing else).
 
 ### Geography
 
@@ -679,7 +679,7 @@ Four risks could make the game stop being fun. Each has fixes already built into
 - The job and booked commitments fill themselves in.
 - Empty blocks are allowed, so End Day never needs a full calendar.
 - "Repeat yesterday's evening" and saved week templates.
-- A Plan Week view that sets all 7 evenings at once.
+- A Plan Week view that sets all 7 evenings at once (tasks that need a pick get a sensible default), plus up to 5 saved week templates.
 - The manager auto-books shows later in the game.
 - Goal: 1 to 3 real decisions per day.
 

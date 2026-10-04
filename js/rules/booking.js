@@ -93,6 +93,7 @@ Game.rules.booking = {
     var entry = plan && plan[block] && state.entries[plan[block]];
     if (entry && entry.type === 'gig') return 'Show booked at ' + Game.content.venues[entry.venueId].name;
     if (entry && entry.type === 'studio') return 'Studio time booked';
+    if (entry && entry.type === 'sessionWork') return 'Session work booked';
     var pending = Object.keys(state.requests).map(function (id) { return state.requests[id]; }).filter(function (r) {
       return r.status === 'pending' && r.gigDay === day && Game.content.venues[r.venueId].showBlock === block;
     })[0];
@@ -105,14 +106,14 @@ Game.rules.booking = {
   },
 
   // What's in one block of a day (for the Calendar grid). Returns one of:
-  //   { kind: 'show' | 'studio' | 'plan', entry }   something booked or planned there
+  //   { kind: 'show' | 'studio' | 'sessionWork' | 'plan', entry }   something booked or planned there
   //   { kind: 'pending', reason }                   held for a booking reply or an offer (reason from blockTaken)
   //   { kind: 'job' } or { kind: 'off', offKind }   a day-job block (or a day off: 'vacation', 'sick', 'skip')
   //   { kind: 'free' }
   blockContents: function (state, day, block) {
     var plan = state.schedule[day];
     var entry = plan && plan[block] && state.entries[plan[block]];
-    if (entry) return { kind: { gig: 'show', studio: 'studio', action: 'plan' }[entry.type], entry: entry };
+    if (entry) return { kind: { gig: 'show', studio: 'studio', sessionWork: 'sessionWork', action: 'plan' }[entry.type], entry: entry };
     var waiting = Game.rules.booking.blockTaken(state, day, block);
     if (waiting) return { kind: 'pending', reason: waiting };
     if (Game.rules.job.scheduledOn(state, day) && Game.balance.job.jobBlocks.indexOf(block) !== -1) {
@@ -267,7 +268,7 @@ Game.rules.booking = {
     s.inbox.forEach(function (m) {
       if (!m.resolved && m.expiresDay !== null && m.expiresDay < s.day) {
         m.resolved = 'expired';
-        log.push('The offer from ' + Game.content.venues[m.data.venueId].name + ' expired.');
+        log.push('The offer from ' + (m.data.venueId ? Game.content.venues[m.data.venueId].name : m.data.bandName) + ' expired.');
       }
     });
     return { state: s, log: log };

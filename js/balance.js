@@ -49,7 +49,9 @@ Game.balance = {
     partTimeMinStanding: 50,         // Job standing needed to go part-time
     quitMoraleBonus: 15,             // Morale gained when you quit the day job (milestone)
     lookForWorkChance: 0.5,          // Chance each "Look for work" try lands a part-time job
-    quitScreenIncomeWeeks: 4         // The quit screen shows this many weeks of music income
+    quitScreenIncomeWeeks: 4,        // The quit screen shows this many weeks of music income
+    // Money that counts as "music income" on the quit screen (gig pay, tips, merch, streaming, session work)
+    musicIncomeCategories: ['tips', 'gigPay', 'merch', 'streaming', 'sessionWork', 'sessionCredits']
   },
 
   // ---------------------------------------------------------------
@@ -164,7 +166,8 @@ Game.balance = {
       playLive: { performance: 3, musicianship: 1, networking: 1 },
       write:    { songwriting: 2 },
       network:  { networking: 2 },
-      promote:  { promotion: 2 }
+      promote:  { promotion: 2 },
+      sessionWork: { musicianship: 1.5 } // Each session on another band's recording
     },
     moraleLowThreshold: 30,          // Morale below this slows skill gains
     moraleHighThreshold: 70,         // Morale above this speeds them up
@@ -192,6 +195,7 @@ Game.balance = {
       dayJob: 20,
       gig: 25,
       studio: 20,
+      sessionWork: 20,               // A session on another band's recording
       practice: 15,
       rehearse: 15,
       openMic: 15,
@@ -441,11 +445,7 @@ Game.balance = {
   offers: {
     openingSlotFee: { min: 50, max: 150 },   // Flat fee for an opening slot
     openingSlotFanRate: 0.5,                 // New fans from their crowd come at half the normal rate
-    sessionWorkFee: { min: 100, max: 200 },  // Pay per session for sitting in on another band's recording
-    sessionWorkMinMusicianship: null,        // NOT DECIDED in Design.md
-    sessionWorkMinReputation: null,          // NOT DECIDED in Design.md
-    sessionWorkBlocks: null,                 // NOT DECIDED in Design.md ("a few slots")
-    sessionWorkStreamingShare: null,         // NOT DECIDED in Design.md ("a small percentage")
+    // (Session work, sitting in on another band's recording, has its own section: balance.sessionWork)
     residencyWeeks: 4,                       // A residency is a weekly night for a month
 
     // Opening slots: play before a touring band at a club. Chance each morning (from reputation 10):
@@ -489,6 +489,34 @@ Game.balance = {
       minChance: 0.05,
       maxChance: 0.95
     }
+  },
+
+  // ---------------------------------------------------------------
+  // Session work: sitting in on another band's recording (offers arrive in the Inbox)
+  // Your streaming share each Sunday = their fans x streaming.payPerFan x (song quality / 100) x freshness x share
+  // ---------------------------------------------------------------
+  sessionWork: {
+    minMusicianship: 40,             // Offers only come once your Musicianship is this high...
+    minReputation: 20,               // ...and your reputation is this high
+    dailyChance: 0.04,               // Chance each morning of an offer (one open offer at a time)
+    sessions: 3,                     // Each job is this many studio sessions, one block each...
+    days: { min: 2, max: 4 },        // ...spread over this many different days...
+    daysAhead: { min: 3, max: 10 },  // ...somewhere in this many days from now (never on job blocks or booked blocks)
+    fee: { min: 100, max: 200 },     // Pay per session, decided when the offer arrives...
+    feeRoundTo: 10,                  // ...as a round number (a multiple of $10)
+    expiryDays: 2,                   // Answer the offer within this many days
+    releaseAfterWeeks: { min: 2, max: 6 }, // The band releases the song this long after your last session
+    bandFans: { min: 1000, max: 5000 },    // How many fans the other band has (for your streaming share)
+    songQuality: { min: 50, max: 80 },     // How good their song is
+    streamingShare: 0.10             // You get 10% of the song's streaming money (only if you played every session)
+  },
+
+  // ---------------------------------------------------------------
+  // Plan Week: set all 7 evenings at once, and saved week templates
+  // ---------------------------------------------------------------
+  planWeek: {
+    maxTemplates: 5,                 // How many week templates you can keep
+    templateNameMaxLength: 30        // Longest template name you can type
   },
 
   // ---------------------------------------------------------------
@@ -651,7 +679,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 9,                      // Save format version, bumped when the state shape changes
+    version: 10,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

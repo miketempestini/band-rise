@@ -1,5 +1,6 @@
 // inbox.js
-// The Inbox screen: replies from venues, opening slot offers, residency contracts, and event records.
+// The Inbox screen: replies from venues, opening slot offers, residency contracts, session work offers
+// (and news when a song you played on comes out), and event records.
 // Open offers have Accept (or Review contract) and Decline, and an answer-by date.
 // If a show lands on your day job, Accept asks how you'll take the day off.
 
@@ -13,7 +14,7 @@ Game.ui.inbox = {
     var state = app.state;
     var self = Game.ui.inbox;
     var messages = state.inbox.slice().reverse(); // newest first
-    var isOpen = function (m) { return !m.resolved && (m.data.yes || m.kind === 'opening' || m.kind === 'residency'); };
+    var isOpen = function (m) { return !m.resolved && (m.data.yes || m.kind === 'opening' || m.kind === 'residency' || m.kind === 'sessionWork'); };
     var open = messages.filter(isOpen);
     var rest = messages.filter(function (m) { return !isOpen(m); });
 
@@ -37,7 +38,8 @@ Game.ui.inbox = {
       accept: function (e, el) { app.acceptOffer(el.getAttribute('data-id'), el.getAttribute('data-job') || null); },
       decline: function (e, el) { app.declineOffer(el.getAttribute('data-id')); },
       acceptOpening: function (e, el) { app.acceptOpening(el.getAttribute('data-id')); },
-      reviewContract: function (e, el) { app.openContract(el.getAttribute('data-id')); }
+      reviewContract: function (e, el) { app.openContract(el.getAttribute('data-id')); },
+      acceptSessionWork: function (e, el) { app.acceptSessionWork(el.getAttribute('data-id')); }
     });
   },
 
@@ -78,10 +80,46 @@ Game.ui.inbox = {
       '<div class="message__foot">' + buttons + ' ' + status + '</div></div>';
   },
 
+  // A session work offer: the band, the song, every session's time, the pay, and the streaming share.
+  sessionWorkHtml: function (state, m) {
+    var h = Game.ui.helpers;
+    var w = Game.balance.sessionWork;
+    var d = m.data;
+    var times = d.sessions.map(function (slot) {
+      return h.dateLabel(slot.day) + ' ' + Game.content.calendar.blockNames[slot.block].toLowerCase();
+    }).join('; ');
+    var buttons = '';
+    if (!m.resolved) {
+      var problem = Game.rules.sessionWork.acceptProblem(state, m.id);
+      buttons = '<button class="btn btn--small btn--primary" data-action="acceptSessionWork" data-id="' + m.id + '"' + (problem ? ' disabled' : '') + '>Accept</button> ' +
+        '<button class="btn btn--small" data-action="decline" data-id="' + m.id + '">Decline</button>' +
+        (problem ? ' <span class="pick__reason">' + h.escape(problem) + '</span>' : '');
+    }
+    var status = m.resolved
+      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired' }[m.resolved] || m.resolved) + '</span>'
+      : '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>';
+    return '<div class="message' + (m.read ? '' : ' message--new') + '">' +
+      '<div class="message__head"><strong class="pos">🎧 ' + h.escape(d.bandName) + ' want you on their recording</strong>' +
+        (m.read ? '' : ' <span class="badge badge--warn">New</span>') + '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' +
+      '<p>' + d.sessions.length + ' studio sessions for their song "' + h.escape(d.songTitle) + '": ' + h.escape(times) + '. ' +
+        h.money(d.fee) + ' a session, -' + Game.balance.energy.cost.sessionWork + ' energy each. Play every session and you get ' +
+        Math.round(w.streamingShare * 100) + '% of the song\'s streaming money once it\'s out.</p>' +
+      '<div class="message__foot">' + buttons + ' ' + status + '</div></div>';
+  },
+
   messageHtml: function (state, m) {
     var h = Game.ui.helpers;
     var d = m.data;
     if (m.kind === 'opening' || m.kind === 'residency') return Game.ui.inbox.offerHtml(state, m);
+    if (m.kind === 'sessionWork') return Game.ui.inbox.sessionWorkHtml(state, m);
+    if (m.kind === 'sessionRelease') {
+      var work = state.sessionWork[d.workId];
+      return '<div class="message' + (m.read ? '' : ' message--new') + '">' +
+        '<div class="message__head"><strong class="pos">🎶 ' + h.escape(work.bandName) + ' released "' + h.escape(work.songTitle) + '"</strong>' +
+          (m.read ? '' : ' <span class="badge badge--warn">New</span>') + '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' +
+        '<p>You played on it, so ' + Math.round(Game.balance.sessionWork.streamingShare * 100) +
+          '% of its streaming money is yours, paid every Sunday as "Session credits".</p></div>';
+    }
     if (m.kind === 'event') {
       // A record of a morning event and how you answered it.
       return '<div class="message">' +

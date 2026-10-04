@@ -9,7 +9,7 @@ Game.rules.progress = {
 
   // ----- Milestones and unlocks -----
 
-  // The checks for the milestones that are live so far (1 to 5).
+  // The checks for the milestones that are live so far (1 to 9 and 11).
   milestoneChecks: {
     firstOpenMic: function (s) { return s.stats.openMicsPlayed >= 1; },
     firstOriginal: function (s) {
@@ -24,6 +24,11 @@ Game.rules.progress = {
       return Object.keys(s.songs).some(function (id) { return !!s.songs[id].recording; });
     },
     firstRelease: function (s) { return s.releases.length >= 1; },
+    partTime: function (s) {
+      var j = Game.balance.job;
+      return s.player.job.status === 'full' && s.player.reputation >= j.partTimeMinReputation && s.player.job.standing >= j.partTimeMinStanding;
+    },
+    quitJob: function (s) { return s.player.job.quitDay !== null; },
     fullBand: function (s) { return 1 + s.band.memberIds.length >= Game.balance.milestones.fullBandOnStage; }
   },
 
@@ -50,6 +55,8 @@ Game.rules.progress = {
     firstPaidGig: ' You got paid to play. T-shirts are now in the Shop.',
     firstRecording: ' The home recording setup is now in the Shop, and you can release music from the Songs screen.',
     firstRelease: ' Streaming money starts next Sunday, and Social ads are unlocked.',
+    partTime: ' You can go part-time (' + Game.rules.job.workdayNames('part') + '): click Job in the Stats panel, or Day job on the Calendar.',
+    quitJob: ' Every weekday block is yours now.',
     fullBand: ' Clubs open up once your reputation reaches ' + Game.balance.venues.tiers[2].minReputation + '.'
   },
 
@@ -71,7 +78,7 @@ Game.rules.progress = {
       var check = progress.milestoneChecks[m.id];
       if (!check || s.milestones[m.id] !== undefined || !check(s)) return;
       s.milestones[m.id] = s.day;
-      var bonus = Game.balance.morale.change.milestone;
+      var bonus = progress.milestoneMorale(m.id);
       var morale = Game.rules.morale.change(s, bonus);
       s = morale.state;
       var text = 'Milestone ' + m.number + ': ' + m.name + '! +' + bonus + ' morale.' + (progress.milestoneExtra[m.id] || '');
@@ -80,6 +87,11 @@ Game.rules.progress = {
       milestoneLog.push('🏆 Milestone: ' + m.name + '! +' + bonus + ' morale.');
     });
     return { state: s, log: log, milestoneLog: milestoneLog };
+  },
+
+  // The morale a milestone gives: +10, except quitting the day job (+15).
+  milestoneMorale: function (milestoneId) {
+    return milestoneId === 'quitJob' ? Game.balance.job.quitMoraleBonus : Game.balance.morale.change.milestone;
   },
 
   // Removes a banner once the player has seen it. Returns { state, log }.

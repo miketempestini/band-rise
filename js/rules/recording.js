@@ -56,6 +56,7 @@ Game.rules.recording = {
     var entry = plan && plan[block] && state.entries[plan[block]];
     if (entry && entry.type === 'gig') return 'A show is booked then.';
     if (entry && entry.type === 'studio') return 'Studio time is already booked then.';
+    if (entry && entry.type === 'sessionWork') return 'Session work is booked then.';
     var taken = Game.rules.booking.blockTaken(state, day, block);
     return taken ? taken + '.' : null;
   },

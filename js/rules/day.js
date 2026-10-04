@@ -22,10 +22,12 @@ Game.rules.day = {
   },
 
   // True if the day job needs the player on this day of the week.
-  isWorkday: function (state, dayOfWeek) {
+  // status: optional ('full' | 'part' | 'none'); leave it out to use the job you have now.
+  isWorkday: function (state, dayOfWeek, status) {
     var job = Game.balance.job;
-    if (state.player.job.status === 'full') return job.fullTimeDays.indexOf(dayOfWeek) !== -1;
-    if (state.player.job.status === 'part') return job.partTimeDays.indexOf(dayOfWeek) !== -1;
+    if (status === undefined) status = state.player.job.status;
+    if (status === 'full') return job.fullTimeDays.indexOf(dayOfWeek) !== -1;
+    if (status === 'part') return job.partTimeDays.indexOf(dayOfWeek) !== -1;
     return false;
   },
 
@@ -150,6 +152,22 @@ Game.rules.day = {
           exhausted = true;
           lines.push('The session drained you to 0 energy. You\'re Exhausted.');
         }
+      } else if (entry && entry.type === 'sessionWork') {
+        // Session work on another band's recording: a commitment. At 0 energy you miss it.
+        title = 'Session work: ' + s.sessionWork[entry.workId].bandName;
+        var energyAtSession = s.player.energy;
+        var session = Game.rules.sessionWork.playSession(s, entry, energyAtSession);
+        s = session.state;
+        if (!session.missed) {
+          didWork = true;
+          s.player.energy = Game.rules.energy.clamp(s.player.energy - b.energy.cost.sessionWork);
+          session.log[0] = session.log[0].replace(/\.$/, '') + ', -' + b.energy.cost.sessionWork + ' energy.';
+          if (s.player.energy === 0 && !exhausted) {
+            exhausted = true;
+            session.log.push('The session drained you to 0 energy. You\'re Exhausted.');
+          }
+        }
+        lines = lines.concat(session.log);
       } else if (day.isJobBlock(s, block)) {
         title = 'Day job';
         jobBlocks += 1;
@@ -227,10 +245,13 @@ Game.rules.day = {
 
     // Sunday night: bills, morale drift, the debt check, and closing out the week.
     if (dow === b.time.billsDayOfWeek) {
-      // Streaming money comes in first, so it can help cover the bills.
+      // Streaming money (and session credits) comes in first, so it can help cover the bills.
       var streaming = Game.rules.recording.payStreaming(s);
       s = streaming.state;
       streaming.log.forEach(function (line) { endLines.push(line); });
+      var credits = Game.rules.sessionWork.payCredits(s);
+      s = credits.state;
+      credits.log.forEach(function (line) { endLines.push(line); });
       var bills = b.housing[s.player.housing].weeklyCost;
       var paid = Game.rules.money.spend(s, bills, 'bills');
       s = paid.state;
@@ -274,8 +295,19 @@ Game.rules.day = {
     s = unlocked.state;
     unlocked.milestoneLog.forEach(function (line) { endLines.push(line); });
 
-    // On to tomorrow, then check for rusty skills.
+    // On to tomorrow. A job change you asked for (part-time or quitting) starts on its Monday;
+    // quitting is a milestone, so it's checked again right away.
     s.day += 1;
+    var jobChange = Game.rules.job.applyPending(s);
+    s = jobChange.state;
+    jobChange.log.forEach(function (line) { endLines.push(line); });
+    if (jobChange.changed) {
+      var quitMilestone = Game.rules.progress.checkUnlocks(s);
+      s = quitMilestone.state;
+      quitMilestone.milestoneLog.forEach(function (line) { endLines.push(line); });
+    }
+
+    // Check for rusty skills.
     var rust = Game.rules.skills.applyRust(s);
     s = rust.state;
     rust.log.forEach(function (line) { endLines.push(line); });
@@ -296,6 +328,13 @@ Game.rules.day = {
     var offers = Game.rules.offers.roll(s);
     s = offers.state;
     offers.log.forEach(function (line) { endLines.push(line); });
+    // Session work: songs you played on may come out, and a new offer may arrive.
+    var released = Game.rules.sessionWork.processReleases(s);
+    s = released.state;
+    released.log.forEach(function (line) { endLines.push(line); });
+    var sessionOffer = Game.rules.sessionWork.roll(s);
+    s = sessionOffer.state;
+    sessionOffer.log.forEach(function (line) { endLines.push(line); });
     var expired = Game.rules.booking.expireOffers(s);
     s = expired.state;
     expired.log.forEach(function (line) { endLines.push(line); });

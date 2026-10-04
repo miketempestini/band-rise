@@ -129,6 +129,22 @@ Game.rules.debug = {
     return r;
   },
 
+  // A session work offer arrives right now (skipping the requirements and the odds).
+  sessionWorkOffer: function (state) {
+    var r = Game.rules.sessionWork.roll(state, true);
+    return { state: r.state, log: r.log.length ? r.log : ['No offer: one is already open, or your calendar is too full.'] };
+  },
+
+  // Songs you finished session work on come out today (so their streaming share starts this Sunday).
+  releaseSessionSongs: function (state) {
+    var s = Game.util.clone(state);
+    Object.keys(s.sessionWork).forEach(function (id) {
+      var work = s.sessionWork[id];
+      if (work.releaseDay !== null && !work.announced) work.releaseDay = s.day;
+    });
+    return Game.rules.sessionWork.processReleases(s);
+  },
+
   // Forces the next gig's result ('rough' or 'legendary'), or clears it with null.
   forceNextGig: function (state, result) {
     var s = Game.util.clone(state);

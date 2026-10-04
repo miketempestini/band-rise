@@ -68,6 +68,8 @@ Game.ui.debugPanel = {
           '<button class="btn btn--small" data-action="finishSong">Finish song now</button>' +
           '<button class="btn btn--small" data-action="recordNow">Record next session</button>' +
           '<button class="btn btn--small" data-action="streamNow">+1 week streaming</button>' +
+          '<button class="btn btn--small" data-action="sessionOffer">Session work offer</button>' +
+          '<button class="btn btn--small" data-action="sessionRelease">Release session songs</button>' +
         '</div>' +
         '<div class="debug__row">' +
           '<span>Next gig:</span>' +
@@ -114,6 +116,8 @@ Game.ui.debugPanel = {
       finishSong: function () { app.debugFinishSong(); },
       recordNow: function () { app.applyRule(rules.recordNextSession(app.state)); },
       streamNow: function () { app.applyRule(rules.streamingNow(app.state)); },
+      sessionOffer: function () { app.applyRule(rules.sessionWorkOffer(app.state)); },
+      sessionRelease: function () { app.applyRule(rules.releaseSessionSongs(app.state)); },
       addContact: function () { app.applyRule(rules.addContact(app.state)); },
       setReputation: function () { app.applyRule(rules.setReputation(app.state, root.querySelector('#debug-rep').value)); },
       acceptNext: function () { app.applyRule(rules.acceptNextBooking(app.state, !app.state.debug.acceptNextBooking)); },
