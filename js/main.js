@@ -346,7 +346,8 @@ Game.app = {
     }
     app.bookingDraft = null;
     app.notice = { kind: 'info', text: 'Email to ' + Game.content.venues[d.venueId].name + ' planned for this ' +
-      Game.content.calendar.blockNames[block].toLowerCase() + '. It goes out when you end the day; the reply comes 1 to 3 days later.' };
+      Game.content.calendar.blockNames[block].toLowerCase() + '. It goes out when you end the day; the reply comes ' +
+      Game.balance.venues.replyDays.min + ' to ' + Game.balance.venues.replyDays.max + ' days later.' };
     app.applyRule(result);
   },
 
@@ -427,7 +428,9 @@ Game.app = {
   },
 
   calendarUndoDayOff: function (day) {
-    Game.app.applyRule(Game.rules.job.cancelDayOff(Game.app.state, day));
+    var result = Game.rules.job.undoDayOff(Game.app.state, day);
+    Game.app.notice = result.log.length ? { kind: result.state === Game.app.state ? 'error' : 'info', text: result.log.join(' ') } : null;
+    Game.app.applyRule(result);
   },
 
   editSetlist: function (entryId) {

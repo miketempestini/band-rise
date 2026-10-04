@@ -48,8 +48,7 @@ Game.rules.money = {
   // If the amount isn't allowed, the state comes back unchanged with a log line explaining why.
   // Returns { state, log }.
   payBack: function (state, amount) {
-    var p = state.player;
-    var most = Math.min(p.cash, p.loanOwed);
+    var most = Game.rules.money.maxPayBack(state);
 
     if (!Number.isInteger(amount) || amount <= 0) {
       return { state: state, log: ['Enter a whole dollar amount to pay back.'] };
@@ -63,6 +62,30 @@ Game.rules.money = {
     s.player.loanOwed -= amount;
     s.thisWeek.paidBack += amount;
     return { state: s, log: ['You paid Mom and Dad back $' + amount.toLocaleString() + '.'] };
+  },
+
+  // The most you can pay back right now: your cash or your debt, whichever is smaller.
+  maxPayBack: function (state) {
+    return Math.max(0, Math.min(state.player.cash, state.player.loanOwed));
+  },
+
+  // How many more Sundays over the debt line until the game ends (counting the one that ends it).
+  // Example: game over after more than 5 Sundays; 2 so far, so 4 more ends it.
+  sundaysUntilGameOver: function (state) {
+    return Game.balance.debt.gameOverWeeks + 1 - state.player.debtWeeksOverLimit;
+  },
+
+  // Adds up one week from the ledger for the weekly summary.
+  // Money in = every income category, plus Mom and Dad's loans; money out = every cost, plus what you paid back.
+  // Returns { income: [{ key, amount }], costs: [{ key, amount }], totalIn, totalOut }
+  // (the keys 'loans' and 'paidBack' stand for the loan lines).
+  weekTotals: function (week) {
+    var income = Object.keys(week.income).map(function (key) { return { key: key, amount: week.income[key] }; });
+    if (week.loans > 0) income.push({ key: 'loans', amount: week.loans });
+    var costs = Object.keys(week.costs).map(function (key) { return { key: key, amount: week.costs[key] }; });
+    if (week.paidBack > 0) costs.push({ key: 'paidBack', amount: week.paidBack });
+    var sum = function (rows) { return rows.reduce(function (total, r) { return total + r.amount; }, 0); };
+    return { income: income, costs: costs, totalIn: sum(income), totalOut: sum(costs) };
   },
 
   // True if the player owes any money.

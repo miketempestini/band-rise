@@ -208,6 +208,12 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
 - **Co-writing**: Write has `optionalCoWriter`; the picker's person step adds "Write alone". `songs.write(state,
   songwriting, coWriterId)` and `finishSong` handle the bonuses.
 - **Balance check**: tests.html now also runs a 90-day check (`renderLong`, 50 runs) with `planLongDay`.
+- **Numbers in content and text (after the rules review)**: content files read their numbers from balance.js
+  (events: `balance.events.<eventId>`; venue fees: `balance.venues.guarantees`). Any number shown in on-screen
+  text (descriptions, hints, tips) is built from balance.js too, never typed into the sentence.
+- **Shared screen logic lives in rules**: e.g. `money.maxPayBack` / `sundaysUntilGameOver` / `weekTotals`,
+  `recording.streamingEstimate`, `offers.rateOptions`, `job.undoDayOffProblem`, `booking.blockContents`,
+  `actions.pickedSongsProblem`, `career.canAdjust`. If a screen needs to work something out, add a rule.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

@@ -153,7 +153,7 @@ Game.ui.actionPicker = {
     var suggested = exact ? Game.rules.gigs.suggestSet(state, size) : Game.rules.actions.loosestSongs(state, size);
     var venue = exact ? Game.rules.gigs.openMicTonight(state) : null;
     var crowd = venue ? Game.rules.gigs.crowdRange(state, venue) : null;
-    var ready = exact ? picked.length === size : picked.length >= 1 && picked.length <= size;
+    var ready = !Game.rules.actions.pickedSongsProblem(state, action.id, picked);
 
     var rows = Game.rules.songs.playable(state).map(function (song) {
       var on = picked.indexOf(song.id) !== -1;
@@ -176,7 +176,8 @@ Game.ui.actionPicker = {
       ? (venue ? venue.name + ' tonight' : '') + (crowd ? ' · expected crowd ' + crowd.low + ' to ' + crowd.high : '') +
         ' · Tighter, better songs score higher. Originals win more fans.'
       : 'Room costs ' + h.money(action.moneyCost) + '. Each song gets +' + gain + ' tightness if a bandmate shows up ' +
-        '(half if nobody does; x1.5 with a Workhorse). The loosest songs are suggested.';
+        '(x' + Game.balance.songs.tightness.rehearseNoShowMultiplier + ' if nobody does; x' + (1 + Game.balance.traits.workhorse.rehearsalTightnessBonus) +
+        ' with a Workhorse). The loosest songs are suggested.';
     return '<p class="hint picker-note">' + note + '</p>' +
       '<div class="picks">' + rows + '</div>' +
       '<div class="actions actions--split">' +
@@ -219,7 +220,8 @@ Game.ui.actionPicker = {
       ? '<button class="pick pick--all' + (entry && entry.actionId === actionId && !current ? ' pick--current' : '') + '" data-action="pickPerson" data-person="">' +
           '<span class="pick__head"><span class="pick__name">Write alone</span></span>' +
           '<span class="pick__desc">Bandmates with relationship ' + Game.balance.people.coWriteMinRelationship +
-            '+ can co-write: they add their skill / 10 to progress and to the song\'s quality.</span></button>'
+            '+ can co-write: they add their skill / ' + Game.balance.songs.coWriterProgressDivisor + ' to progress and their skill / ' +
+            Game.balance.songs.coWriterQualityDivisor + ' to the song\'s quality.</span></button>'
       : '';
     return '<div class="picks">' + alone + rows + '</div>' +
       '<div class="actions">' +

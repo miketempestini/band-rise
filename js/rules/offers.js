@@ -23,9 +23,9 @@ Game.rules.offers = {
       state.player.skills.networking / o.networkingDivisor / 100);
   },
 
-  // Clubs: where opening slots happen.
+  // Clubs: where opening slots happen (the tier is in balance.offers.openingSlot.venueTier).
   clubs: function () {
-    return Game.rules.booking.venues().filter(function (v) { return v.tier === 2; });
+    return Game.rules.booking.venues().filter(function (v) { return v.tier === Game.balance.offers.openingSlot.venueTier; });
   },
 
   // ----- Residencies -----
@@ -77,12 +77,29 @@ Game.rules.offers = {
     return Game.util.clamp(chance, r.minChance, r.maxChance);
   },
 
+  // The nightly rates you can ask for: the offered rate, then steps up and down (5% each, up to 25%),
+  // each rounded to a whole $5. Returns [{ rate, percent }] from lowest to highest, where percent is the
+  // step's change (like -10 or +5; 0 is the offered rate).
+  rateOptions: function (offer) {
+    var r = Game.balance.offers.residency;
+    var steps = Math.round(r.maxRateChange / r.rateStep);
+    var options = [];
+    for (var k = -steps; k <= steps; k++) {
+      var rate = k === 0 ? offer.rate : Math.round(offer.rate * (1 + k * r.rateStep) / r.rateRoundTo) * r.rateRoundTo;
+      // Small rates can round to the same dollar amount twice; keep just one of each.
+      var last = options[options.length - 1];
+      if (last && last.rate === rate) { if (k === 0) last.percent = 0; continue; }
+      options.push({ rate: rate, percent: Math.round(k * r.rateStep * 100) });
+    }
+    return options;
+  },
+
   // Why counter-offer terms aren't allowed, or null.
   termsProblem: function (state, offer, terms) {
     var r = Game.balance.offers.residency;
     if (terms.weeks < r.minWeeks || terms.weeks > r.maxWeeks) return 'Length must be ' + r.minWeeks + ' to ' + r.maxWeeks + ' weeks.';
-    var change = Math.abs(terms.rate - offer.rate) / offer.rate;
-    if (change > r.maxRateChange + 0.0001) return 'The rate can change by up to ' + Math.round(r.maxRateChange * 100) + '%.';
+    var allowed = Game.rules.offers.rateOptions(offer).some(function (o) { return o.rate === terms.rate; });
+    if (!allowed) return 'Pick one of the rates on the list (up to ' + Math.round(r.maxRateChange * 100) + '% more or less).';
     return Game.rules.offers.residencyProblem(state, offer.venueId, terms.weekday, terms.weeks);
   },
 
@@ -100,7 +117,8 @@ Game.rules.offers = {
     if (!openNow && rng.chance(Game.rules.offers.openingChance(s))) {
       var club = rng.pick(Game.rules.offers.clubs());
       var day = s.day + rng.int(o.openingSlot.daysAhead.min, o.openingSlot.daysAhead.max);
-      var fee = rng.int(o.openingSlotFee.min / 5, o.openingSlotFee.max / 5) * 5; // a round number
+      var round = o.openingSlot.feeRoundTo;
+      var fee = rng.int(o.openingSlotFee.min / round, o.openingSlotFee.max / round) * round; // a round number
       if (club && !Game.rules.booking.blockTaken(s, day, club.showBlock) && !Game.rules.recording.blockProblem(s, day, club.showBlock)) {
         s = Game.rules.booking.addInbox(s, 'opening', { venueId: club.id, day: day, fee: fee },
           Math.min(s.day + o.openingSlot.expiryDays, day - 1));
@@ -108,15 +126,14 @@ Game.rules.offers = {
       }
     }
 
-    // Residency (Mondays only).
+    // Residency (only on the offer day: Mondays).
     var residencyNow = s.inbox.some(function (m) { return m.kind === 'residency' && !m.resolved; });
-    if (!residencyNow && Game.rules.day.dayOfWeek(s.day) === 0) {
+    if (!residencyNow && Game.rules.day.dayOfWeek(s.day) === o.residency.offerDayOfWeek) {
       var venues = Game.rules.offers.residencyVenues(s);
       if (venues.length && rng.chance(o.residency.weeklyChance)) {
         var venue = rng.pick(venues);
         // Offer the first weekday (Thursday, then Friday, ...) whose dates are all free.
-        var nights = [3, 4, 2, 5, 1, 6, 0];
-        var weekday = nights.filter(function (d) { return !Game.rules.offers.residencyProblem(s, venue.id, d, o.residencyWeeks); })[0];
+        var weekday = o.residency.preferredNights.filter(function (d) { return !Game.rules.offers.residencyProblem(s, venue.id, d, o.residencyWeeks); })[0];
         if (weekday !== undefined) {
           s = Game.rules.booking.addInbox(s, 'residency',
             { venueId: venue.id, weekday: weekday, rate: venue.deals.guarantee, weeks: o.residencyWeeks, counter: null },
@@ -213,12 +230,13 @@ Game.rules.offers = {
     if (m.data.counter) return { state: state, log: ['You already made a counter-offer on this contract.'] };
     var problem = Game.rules.offers.termsProblem(state, m.data, terms);
     if (problem) return { state: state, log: [problem] };
+    var r = Game.balance.offers.residency;
     var s = Game.util.clone(state);
     var chance = Game.rules.offers.counterChance(s, m.data, terms);
     s.inbox.forEach(function (x) {
       if (x.id === messageId) {
-        x.data.counter = { weekday: terms.weekday, rate: terms.rate, weeks: terms.weeks, chance: chance, status: 'pending', replyDay: s.day + 1 };
-        x.expiresDay = Math.max(x.expiresDay, s.day + 2); // keep the offer open for the reply
+        x.data.counter = { weekday: terms.weekday, rate: terms.rate, weeks: terms.weeks, chance: chance, status: 'pending', replyDay: s.day + r.counterReplyDays };
+        x.expiresDay = Math.max(x.expiresDay, s.day + r.counterKeepOpenDays); // keep the offer open for the reply
       }
     });
     return { state: s, log: ['Counter-offer sent to ' + Game.content.venues[m.data.venueId].name + ' (' + Math.round(chance * 100) + '% chance). They\'ll answer tomorrow.'] };

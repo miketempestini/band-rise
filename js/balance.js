@@ -404,12 +404,20 @@ Game.balance = {
   // Venues and booking
   // ---------------------------------------------------------------
   venues: {
-    tiers: {                         // Rules for each venue tier (0 = open mic ... 4 = arena)
-      0: { name: 'Open mic',   minReputation: 0,  minOnStage: 1, bookAhead: { min: 0, max: 0 },   ticket: 0,  doorShare: 0,    footTraffic: 30,  gigScorePenalty: 0 },
-      1: { name: 'Small room', minReputation: 10, minOnStage: 1, bookAhead: { min: 7, max: 14 },  ticket: 8,  doorShare: 0.70, footTraffic: 30,  gigScorePenalty: -3, guarantee: { min: 50,  max: 100 } },
-      2: { name: 'Club',       minReputation: 30, minOnStage: 3, bookAhead: { min: 14, max: 28 }, ticket: 12, doorShare: 0.75, footTraffic: 40,  gigScorePenalty: -6, guarantee: { min: 200, max: 500 } },
-      3: { name: 'Theater',    minReputation: 60, minOnStage: 3, bookAhead: { min: 28, max: 56 }, ticket: 25, doorShare: 0.80, footTraffic: 60,  gigScorePenalty: -10, guarantee: { min: 2000, max: null } },
-      4: { name: 'Arena',      minReputation: 85, minOnStage: 3, bookAhead: null,                 ticket: 45, doorShare: null, footTraffic: 200, gigScorePenalty: -15, guarantee: { min: 20000, max: null } }
+    tiers: {                         // Rules for each venue tier (0 = open mic ... 4 = arena); setlist = which songs.setlist entry it uses
+      0: { name: 'Open mic',   setlist: 'openMic',   minReputation: 0,  minOnStage: 1, bookAhead: { min: 0, max: 0 },   ticket: 0,  doorShare: 0,    footTraffic: 30,  gigScorePenalty: 0 },
+      1: { name: 'Small room', setlist: 'smallRoom', minReputation: 10, minOnStage: 1, bookAhead: { min: 7, max: 14 },  ticket: 8,  doorShare: 0.70, footTraffic: 30,  gigScorePenalty: -3, guarantee: { min: 50,  max: 100 } },
+      2: { name: 'Club',       setlist: 'club',      minReputation: 30, minOnStage: 3, bookAhead: { min: 14, max: 28 }, ticket: 12, doorShare: 0.75, footTraffic: 40,  gigScorePenalty: -6, guarantee: { min: 200, max: 500 } },
+      3: { name: 'Theater',    setlist: 'theater',   minReputation: 60, minOnStage: 3, bookAhead: { min: 28, max: 56 }, ticket: 25, doorShare: 0.80, footTraffic: 60,  gigScorePenalty: -10, guarantee: { min: 2000, max: null } },
+      4: { name: 'Arena',      setlist: 'arena',     minReputation: 85, minOnStage: 3, bookAhead: null,                 ticket: 45, doorShare: null, footTraffic: 200, gigScorePenalty: -15, guarantee: { min: 20000, max: null } }
+    },
+    // Each venue's flat fee (its "guarantee"), in dollars. Venue names and sizes are in js/content/venues.js.
+    guarantees: {
+      cornerTap: 60,
+      backRoom: 100,
+      basement: 250,
+      velvetLounge: 400,
+      orpheum: 2000
     },
     // Booking chance = 50% + 3% x (reputation - required) + Networking / 4 % + venue relationship / 5 %
     bookingBaseChance: 0.50,
@@ -450,21 +458,30 @@ Game.balance = {
       daysAhead: { min: 3, max: 10 },      // the show is this many days away
       crowdShare: { min: 0.6, max: 0.9 },  // the headliner's crowd fills this much of the room
       setSize: 6,                          // an opening set is 6 songs (no 3-on-stage rule)
-      expiryDays: 2                        // answer within this many days
+      expiryDays: 2,                       // answer within this many days
+      venueTier: 2,                        // opening slots happen at clubs (tier 2)
+      feeRoundTo: 5                        // the fee is a round number: a multiple of $5
     },
 
     // Residencies: a contract for a weekly night at one venue, offered (on Mondays) by a venue that likes you.
     residency: {
       minReputation: 20,
       minRelationship: 15,                 // the venue's relationship with you
+      offerDayOfWeek: 0,                   // offers only arrive on this day (0 = Monday)
       weeklyChance: 0.25,                  // chance each Monday that an eligible venue offers one
       startDaysAhead: 7,                   // the first night is at least this many days away
+      // The venue offers the first of these nights (0 = Monday) whose dates are all free: Thursday, Friday, Wednesday...
+      preferredNights: [3, 4, 2, 5, 1, 6, 0],
       crowdFloor: 0.5,                     // regulars come back: the crowd never drops below half the room
       expiryDays: 3,                       // answer within this many days
       // Negotiating (one counter-offer per contract; the answer comes the next morning):
+      counterReplyDays: 1,                 // the venue answers a counter-offer this many days later
+      counterKeepOpenDays: 2,              // a counter-offer keeps the contract open at least this many more days
       minWeeks: 3,
       maxWeeks: 6,
       maxRateChange: 0.25,                 // ask for up to 25% more (or less) per night
+      rateStep: 0.05,                      // the rates you can ask for go up and down in 5% steps...
+      rateRoundTo: 5,                      // ...rounded to the nearest $5
       dayChangePenalty: 0.10,              // a different night: -10% chance
       ratePenaltyPerPercent: 0.02,         // each 1% more money: -2% chance
       lengthPenaltyPerWeek: 0.05,          // each week longer or shorter: -5% chance
@@ -644,7 +661,30 @@ Game.balance = {
   events: {
     dailyChance: 0.28,               // Chance each morning that something happens (about one every 3.5 days)
     defaultCooldownDays: 10,         // The same event won't happen again for at least this many days
-    firstOvertimeWeek: 1             // The overtime offer is guaranteed on this week's Friday
+    firstOvertimeWeek: 1,            // The overtime offer is guaranteed on this week's Friday
+
+    // Each event's own numbers. "weight" is how likely it is compared to the other events that can
+    // happen that day (6 is twice as likely as 3). Cash amounts are dollars; gigScore/dailyEnergy
+    // effects last "days" days. Satisfaction and relationship amounts are for bandmates.
+    overtime:      { weight: 6, dayOfWeek: 4 },          // asked on Fridays (0 = Monday), for the next day
+    crackingAmp:   { weight: 3, minGigsPlayed: 1, fixCost: 60, playOnGigScore: -3, playOnDays: 7 },
+    brokenString:  { weight: 4, fixCost: 15, makeDoGigScore: -2, makeDoDays: 4 },
+    blogMention:   { weight: 3, shareBuzz: 8, shareEnergy: -5, enjoyBuzz: 3, enjoyMorale: 3 },
+    carTrouble:    { weight: 2, fixCost: 150, busEnergyPerNight: -5, busDays: 7 },
+    fillIn:        { weight: 3, venues: ['cornerTap', 'backRoom'], reputation: 1 },
+    lessons:       { weight: 3, minMusicianship: 25, pay: 40, energy: -10 },
+    party:         { weight: 3, joinMorale: 8, joinEnergy: -15, stayInMorale: -3 },
+    sunnySaturday: { weight: 4, dayOfWeek: 5, buskCash: { min: 15, max: 35 }, buskBuzz: 2, buskEnergy: -15 },
+    moreRehearsal: { weight: 3, promiseSatisfaction: 5, refuseSatisfaction: -3 },
+    // Band life (Phase 9)
+    argument:      { weight: 3, minMembers: 2, sideWith: 6, sideAgainst: -6, stayOut: -2 },
+    sideProject:   { weight: 2, minAmbition: 50, encourageSatisfaction: 6, encourageReliability: -10, commitSatisfaction: -4 },
+    biggerShare:   { weight: 2, cooldownDays: 30, minAmbition: 60, giveSatisfaction: 5, refuseSatisfaction: -8 },
+    gearStolen:    { weight: 2, replaceCost: 120, borrowGigScore: -3, borrowDays: 7 },
+    sickBeforeShow:{ weight: 4, shortGigScore: -5, shortDays: 2 },
+    noiseComplaint:{ weight: 2, fine: 40, quietSatisfaction: -3 },
+    songIdea:      { weight: 3, progress: 15, energy: -10, satisfaction: 3 },
+    lateNight:     { weight: 3, minMembers: 2, morale: 8, relationship: 4, energy: -15 }
   },
 
   // ---------------------------------------------------------------
@@ -670,6 +710,16 @@ Game.balance = {
   // ---------------------------------------------------------------
   timeSavers: {
     maxSkipDays: 14                  // "Skip to next commitment" never skips more than this many days at once
+  },
+
+  // ---------------------------------------------------------------
+  // Screens: how much to show at once
+  // ---------------------------------------------------------------
+  ui: {
+    playerNameMaxLength: 24,         // Longest player name you can type at New career
+    skillBigStep: 5,                 // The skills page has -5/-1/+1/+5 buttons: this is the big step
+    upcomingMilestones: 4,           // The Career screen lists this many milestones under "Coming up"
+    upcomingShows: 3                 // Today's "Coming up" panel lists this many booked shows
   },
 
   // ---------------------------------------------------------------

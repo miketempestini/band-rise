@@ -50,7 +50,7 @@ Game.rules.progress = {
     firstPaidGig: ' You got paid to play. T-shirts are now in the Shop.',
     firstRecording: ' The home recording setup is now in the Shop, and you can release music from the Songs screen.',
     firstRelease: ' Streaming money starts next Sunday, and Social ads are unlocked.',
-    fullBand: ' Clubs open up once your reputation reaches 30.'
+    fullBand: ' Clubs open up once your reputation reaches ' + Game.balance.venues.tiers[2].minReputation + '.'
   },
 
   // Records anything newly reached (in state.milestones) and queues its banner.

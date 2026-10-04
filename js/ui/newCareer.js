@@ -33,7 +33,7 @@ Game.ui.newCareer = {
         '<div class="panel">' +
           '<label class="field">' +
             '<span class="field__label">Your name</span>' +
-            '<input type="text" id="career-name" class="input" maxlength="24" placeholder="Type a name" autocomplete="off" value="' + h.escape(draft.name || '') + '">' +
+            '<input type="text" id="career-name" class="input" maxlength="' + Game.balance.ui.playerNameMaxLength + '" placeholder="Type a name" autocomplete="off" value="' + h.escape(draft.name || '') + '">' +
           '</label>' +
           '<div class="field">' +
             '<span class="field__label">Starting instrument</span>' +

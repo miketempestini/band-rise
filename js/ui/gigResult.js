@@ -97,7 +97,7 @@ Game.ui.gigResult = {
     });
 
     var notes = [];
-    if (gig.luckProtected) notes.push('Bad-luck protection: after two Rough nights, luck couldn\'t go below 0 tonight.');
+    if (gig.luckProtected) notes.push('Bad-luck protection: after ' + Game.balance.gigs.badLuckStreak + ' Rough nights, luck couldn\'t go below 0 tonight.');
     if (gig.forced) notes.push('Debug: this result was forced from the debug panel.');
     gig.notes.forEach(function (line) { notes.push(line); });
 

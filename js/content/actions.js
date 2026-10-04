@@ -77,7 +77,7 @@ Game.content = Game.content || {};
     openMic: {
       id: 'openMic',
       name: 'Play the open mic',
-      description: 'Sign up, wait your turn, play two songs for whoever shows up.',
+      description: 'Sign up, wait your turn, play ' + b.songs.setlist.openMic.songs + ' songs for whoever shows up.',
       blocks: 1,
       energyCost: b.energy.cost.openMic,
       moneyCost: 0,
@@ -154,7 +154,7 @@ Game.content = Game.content || {};
     emailVenue: {
       id: 'emailVenue',
       name: 'Email a venue',
-      description: 'Pitch a venue for a date. The reply comes in 1 to 3 days.',
+      description: 'Pitch a venue for a date. The reply comes in ' + b.venues.replyDays.min + ' to ' + b.venues.replyDays.max + ' days.',
       blocks: 1,
       energyCost: b.energy.cost.admin,
       moneyCost: 0,
@@ -169,7 +169,7 @@ Game.content = Game.content || {};
     bookStudio: {
       id: 'bookStudio',
       name: 'Book studio time',
-      description: 'Book a studio 10+ days ahead to record your originals.',
+      description: 'Book a studio ' + b.recording.bookAheadDays + '+ days ahead to record your originals.',
       blocks: 1,
       energyCost: b.energy.cost.admin,
       moneyCost: 0,
@@ -216,7 +216,8 @@ Game.content = Game.content || {};
     lookForWork: {
       id: 'lookForWork',
       name: 'Look for work',
-      description: 'Hand out résumés. A 50% chance to land a part-time job (Mon/Wed/Fri).',
+      description: 'Hand out résumés. A ' + Math.round(b.job.lookForWorkChance * 100) + '% chance to land a part-time job (' +
+        b.job.partTimeDays.map(function (d) { return Game.content.calendar.dayNames[d].slice(0, 3); }).join('/') + ').',
       blocks: 1,
       energyCost: b.energy.cost.admin,
       moneyCost: 0,

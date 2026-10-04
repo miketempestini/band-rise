@@ -132,7 +132,7 @@ Game.ui.songs = {
       var p = Game.rules.recording.releasePreview(state, draft.type, draft.songIds);
       var fans = Object.keys(p.fansPerCity).reduce(function (sum, id) { return sum + p.fansPerCity[id]; }, 0);
       preview = '<p class="hint">Average recording quality ' + Math.round(p.avgQuality) + ' · about ' +
-        (fans ? Game.util.signed(p.buzz) + ' buzz' + (p.halved ? ' (halved: your last release was under 4 weeks ago)' : '') + ', +' + Math.round(fans) + ' fans' : 'no buzz or fans yet (you need fans first)') +
+        (fans ? Game.util.signed(p.buzz) + ' buzz' + (p.halved ? ' (halved: your last release was under ' + Game.balance.releases.spamWindowWeeks + ' weeks ago)' : '') + ', +' + Math.round(fans) + ' fans' : 'no buzz or fans yet (you need fans first)') +
         ', ' + Game.util.signed(p.reputation) + ' reputation. Streaming pays from next Sunday.</p>';
     }
     return '<div class="panel"><h3 class="panel__title">💿 Release music</h3>' +
@@ -149,14 +149,15 @@ Game.ui.songs = {
   releasesHtml: function (state) {
     var h = Game.ui.helpers;
     if (!state.releases.length) return '';
+    var b = Game.balance.streaming;
+    var estimate = Game.rules.recording.streamingEstimate(state);
     var rows = state.releases.slice().reverse().map(function (r) {
       return '<li><strong>' + Game.content.releaseTypes[r.type].name + '</strong> · ' + h.dateLabel(r.day) + ' · ' +
         r.songIds.map(function (id) { return h.escape(state.songs[id].title); }).join(', ') +
-        ' <span class="muted">(freshness ' + Math.round(Game.rules.recording.freshness(r, state.day + 7) * 100) + '%)</span></li>';
+        ' <span class="muted">(freshness ' + Math.round(Game.rules.recording.freshness(r, estimate.day) * 100) + '%)</span></li>';
     }).join('');
-    var sunday = Game.util.clone(state);
-    sunday.day += Game.rules.day.daysUntilBills(state) || Game.balance.time.daysPerWeek;
     return '<div class="panel"><h3 class="panel__title">Your releases</h3><ul class="log">' + rows + '</ul>' +
-      '<p class="hint">Streaming next Sunday: about ' + h.money(Game.rules.recording.streamingPay(sunday)) + ' (total fans × $0.02 × recording quality, fading 3% a week).</p></div>';
+      '<p class="hint">Streaming next Sunday: about ' + h.money(estimate.pay) + ' (total fans × $' + b.payPerFan + ' × recording quality, fading ' +
+        Math.round(b.freshnessDropPerWeek * 100) + '% a week).</p></div>';
   }
 };

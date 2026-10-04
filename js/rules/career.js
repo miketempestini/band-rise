@@ -49,6 +49,16 @@ Game.rules.career = {
     return a;
   },
 
+  // Whether a skill's + buttons (more points) or - buttons (fewer points) can do anything right now.
+  // Returns { add, remove }: add needs points left and room under the cap; remove needs points above the minimum.
+  canAdjust: function (allocation, skill) {
+    var b = Game.balance.skills;
+    return {
+      add: Game.rules.career.pointsLeft(allocation) > 0 && allocation[skill] < b.startingMaxPerSkill,
+      remove: allocation[skill] > b.startingMinPerSkill
+    };
+  },
+
   // Spreads all the starting points randomly, one at a time, never past the cap.
   // seed: a whole number (the same seed always gives the same spread).
   randomAllocation: function (seed) {

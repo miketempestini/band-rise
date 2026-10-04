@@ -25,7 +25,8 @@ Game.ui.inbox = {
           '<button class="btn" data-action="back">← Back</button>' +
         '</div>' +
         h.notice(app.notice) +
-        (messages.length ? '' : '<p class="hint">No messages yet. Email a venue from Book; their reply lands here in 1 to 3 days.</p>') +
+        (messages.length ? '' : '<p class="hint">No messages yet. Email a venue from Book; their reply lands here in ' +
+          Game.balance.venues.replyDays.min + ' to ' + Game.balance.venues.replyDays.max + ' days.</p>') +
         (open.length ? '<div class="panel"><h3 class="panel__title">Offers waiting for you</h3>' + open.map(function (m) { return self.messageHtml(state, m); }).join('') + '</div>' : '') +
         (rest.length ? '<div class="panel"><h3 class="panel__title">Earlier</h3>' + rest.map(function (m) { return self.messageHtml(state, m); }).join('') + '</div>' : '') +
       '</section>';

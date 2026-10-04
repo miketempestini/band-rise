@@ -38,8 +38,14 @@ Game.rules.job = {
       if (ahead < b.vacationNoticeDays) return 'Vacation needs ' + b.vacationNoticeDays + ' days\' notice (that\'s ' + ahead + ' days away).';
       if (state.player.job.vacationDaysLeft <= 0) return 'No vacation days left this year.';
     }
-    if (kind === 'sick' && !forShow && ahead > b.sickNoticeDays) return 'You can only call in sick for today or tomorrow.';
+    if (kind === 'sick' && !forShow && ahead > b.sickNoticeDays) return 'You can only call in sick for ' + Game.rules.job.sickWindowText() + '.';
     return null;
+  },
+
+  // When you're allowed to call in sick, in words: "today or tomorrow" (or "today or up to N days ahead").
+  sickWindowText: function () {
+    var days = Game.balance.job.sickNoticeDays;
+    return days === 1 ? 'today or tomorrow' : 'today or up to ' + days + ' days ahead';
   },
 
   // Takes a day off. Vacation uses one of your vacation days now (and is paid);
@@ -63,6 +69,30 @@ Game.rules.job = {
     delete s.player.job.daysOff[day];
     // Tasks you planned in the job blocks that day can't happen now that you're working.
     return Game.rules.job.dropPlansInJobBlocks(s, day);
+  },
+
+  // True if a booked show or studio session sits in that day's job blocks (so the day off is needed).
+  dayOffNeeded: function (state, day) {
+    var plan = state.schedule[day] || {};
+    return Game.balance.job.jobBlocks.some(function (block) {
+      var e = plan[block] && state.entries[plan[block]];
+      return !!e && (e.type === 'gig' || e.type === 'studio');
+    });
+  },
+
+  // Why a planned day off can't be undone, or null if it can.
+  undoDayOffProblem: function (state, day) {
+    if (!state.player.job.daysOff[day]) return 'That isn\'t a day off.';
+    if (day < state.day) return 'That day is already over.';
+    if (Game.rules.job.dayOffNeeded(state, day)) return 'A booked show or studio session needs that day off.';
+    return null;
+  },
+
+  // The player undoes a day off from the Calendar (only if nothing booked needs it). Returns { state, log }.
+  undoDayOff: function (state, day) {
+    var problem = Game.rules.job.undoDayOffProblem(state, day);
+    if (problem) return { state: state, log: [problem] };
+    return Game.rules.job.cancelDayOff(state, day);
   },
 
   // Removes tasks planned in the job blocks on a day you'll now be working. Returns { state, log }.

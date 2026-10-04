@@ -56,7 +56,7 @@ Game.ui.today = {
         if (input) { input.focus(); input.select(); }
       },
       payBackMax: function () {
-        root.querySelector('#payback-amount').value = Math.min(state.player.cash, state.player.loanOwed);
+        root.querySelector('#payback-amount').value = Game.rules.money.maxPayBack(state);
       },
       payBack: function () {
         app.payBack(Number(root.querySelector('#payback-amount').value));
@@ -218,14 +218,14 @@ Game.ui.today = {
     var job = state.player.job;
     if (job.status === 'none' || job.standing >= Game.balance.job.warningStanding) return '';
     return '<div class="panel panel--debt"><h3 class="panel__title">Job trouble</h3>' +
-      '<p class="panel__warn">Your boss warned you. Job standing ' + Math.round(job.standing) + ': at 0 you\'re fired. ' +
+      '<p class="panel__warn">Your boss warned you. Job standing ' + Math.round(job.standing) + ': at ' + Game.balance.job.firedStanding + ' you\'re fired. ' +
       'Each shift you work adds +' + Game.balance.job.standingPerShift + '.</p></div>';
   },
 
   // The next few booked shows.
   upcomingHtml: function (state) {
     var h = Game.ui.helpers;
-    var shows = Game.rules.booking.upcomingShows(state).filter(function (e) { return e.day > state.day; }).slice(0, 3);
+    var shows = Game.rules.booking.upcomingShows(state).filter(function (e) { return e.day > state.day; }).slice(0, Game.balance.ui.upcomingShows);
     if (!shows.length) return '';
     return '<div class="panel"><h3 class="panel__title">Coming up</h3><ul class="log">' + shows.map(function (e) {
       var days = e.day - state.day;
@@ -294,10 +294,10 @@ Game.ui.today = {
     var p = state.player;
     if (p.loanOwed <= 0) return '';
 
-    var most = Math.min(p.cash, p.loanOwed);
+    var most = Game.rules.money.maxPayBack(state);
     var status;
     if (p.loanOwed > d.gameOverDebt) {
-      var sundaysLeft = d.gameOverWeeks + 1 - p.debtWeeksOverLimit;
+      var sundaysLeft = Game.rules.money.sundaysUntilGameOver(state);
       status = '<p class="panel__warn">Your debt is over ' + h.money(d.gameOverDebt) + '. ' +
         'If it\'s still over on ' + sundaysLeft + ' more Sunday' + (sundaysLeft === 1 ? '' : 's') +
         ', it\'s game over.</p>';

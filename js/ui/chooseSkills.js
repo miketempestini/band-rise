@@ -21,8 +21,8 @@ Game.ui.chooseSkills = {
     var rows = Object.keys(Game.content.skills).map(function (skill) {
       var value = allocation[skill];
       var extra = bonus.skill === skill ? bonus.amount : 0;
-      var canAdd = left > 0 && value < b.startingMaxPerSkill;
-      var canRemove = value > b.startingMinPerSkill;
+      var can = career.canAdjust(allocation, skill);
+      var big = Game.balance.ui.skillBigStep;
       function stepButton(delta, enabled) {
         return '<button class="btn btn--small step" data-action="step" data-skill="' + skill + '" data-delta="' + delta + '"' +
           (enabled ? '' : ' disabled') + '>' + (delta > 0 ? '+' : '') + delta + '</button>';
@@ -33,9 +33,9 @@ Game.ui.chooseSkills = {
           '<span class="alloc__desc">' + Game.content.skillDescriptions[skill] + '</span>' +
         '</div>' +
         '<div class="alloc__controls">' +
-          stepButton(-5, canRemove) + stepButton(-1, canRemove) +
+          stepButton(-big, can.remove) + stepButton(-1, can.remove) +
           '<span class="alloc__value">' + value + '</span>' +
-          stepButton(1, canAdd) + stepButton(5, canAdd) +
+          stepButton(1, can.add) + stepButton(big, can.add) +
         '</div>' +
         '<div class="alloc__total">' +
           (extra ? '<span class="alloc__bonus">+' + extra + ' from ' + instrumentName + '</span>' : '') +

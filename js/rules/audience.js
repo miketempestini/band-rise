@@ -36,7 +36,7 @@ Game.rules.audience = {
       var before = s.cities[id].buzz;
       if (before <= b.min) return;
       s.cities[id].buzz = Math.max(b.min, before + b.fadePerDay);
-      var lost = Math.round((before - s.cities[id].buzz) * 10) / 10;
+      var lost = Game.util.round1(before - s.cities[id].buzz);
       log.push(Game.content.cities[id].name + ' buzz faded: -' + lost + '.');
     });
     return { state: s, log: log };

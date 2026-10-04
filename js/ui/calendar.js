@@ -65,19 +65,17 @@ Game.ui.calendar = {
 
   // What's in one block of a day, for the grid: { text, kind }.
   blockInfo: function (state, day, block) {
-    var plan = state.schedule[day];
-    var entry = plan && plan[block] && state.entries[plan[block]];
-    if (entry && entry.type === 'gig') return { text: '🎤 ' + Game.content.venues[entry.venueId].name, kind: 'show' };
-    if (entry && entry.type === 'studio') return { text: '🎙️ ' + Game.content.studios[entry.studio].name, kind: 'studio' };
-    if (entry && entry.type === 'action') return { text: Game.content.actions[entry.actionId].name, kind: 'plan' };
-    var waiting = Game.rules.booking.blockTaken(state, day, block);
-    if (waiting) return { text: '? ' + waiting.replace('Waiting to hear from ', ''), kind: 'pending' };
-    var jobDay = Game.rules.job.scheduledOn(state, day);
-    if (jobDay && Game.balance.job.jobBlocks.indexOf(block) !== -1) {
-      var off = state.player.job.daysOff[day];
-      return off ? { text: 'Off (' + off + ')', kind: 'off' } : { text: 'Job', kind: 'job' };
-    }
-    return { text: '', kind: 'free' };
+    var c = Game.rules.booking.blockContents(state, day, block);
+    var text = {
+      show: function () { return '🎤 ' + Game.content.venues[c.entry.venueId].name; },
+      studio: function () { return '🎙️ ' + Game.content.studios[c.entry.studio].name; },
+      plan: function () { return Game.content.actions[c.entry.actionId].name; },
+      pending: function () { return '? ' + c.reason.replace('Waiting to hear from ', ''); },
+      off: function () { return 'Off (' + c.offKind + ')'; },
+      job: function () { return 'Job'; },
+      free: function () { return ''; }
+    }[c.kind]();
+    return { text: text, kind: c.kind };
   },
 
   cellHtml: function (state, day, isSelected) {
@@ -106,18 +104,15 @@ Game.ui.calendar = {
     if (Game.rules.job.scheduledOn(state, day)) {
       var off = state.player.job.daysOff[day];
       if (off) {
-        var lockedByShow = Game.rules.booking.upcomingShows(state).some(function (e) {
-          return e.day === day && b.job.jobBlocks.indexOf(e.block) !== -1;
-        });
         parts.push('<p>Day off: <strong>' + { vacation: 'vacation day (paid)', sick: 'calling in sick (' + b.job.sickDayPenalty + ' standing)', skip: 'skipping work (' + b.job.skipPenalty + ' standing)' }[off] + '</strong></p>' +
-          (lockedByShow || day < state.day ? '' : '<button class="btn btn--small" data-action="undoDayOff" data-day="' + day + '">Undo day off</button>'));
+          (Game.rules.job.undoDayOffProblem(state, day) ? '' : '<button class="btn btn--small" data-action="undoDayOff" data-day="' + day + '">Undo day off</button>'));
       } else if (day >= state.day) {
         var kinds = [['vacation', 'Vacation day (paid)'], ['sick', 'Call in sick (' + b.job.sickDayPenalty + ')'], ['skip', 'Skip work (' + b.job.skipPenalty + ')']];
         parts.push('<p>Day job: Morning and Afternoon.</p><div class="dayoff">' + kinds.map(function (k) {
           var problem = Game.rules.job.dayOffProblem(state, day, k[0]);
           return '<button class="btn btn--small" data-action="dayOff" data-day="' + day + '" data-kind="' + k[0] + '"' +
             (problem ? ' disabled title="' + h.escape(problem) + '"' : '') + '>' + k[1] + '</button>';
-        }).join('') + '</div><p class="hint">Vacation needs ' + b.job.vacationNoticeDays + ' days\' notice. Calling in sick is only for today or tomorrow.</p>');
+        }).join('') + '</div><p class="hint">Vacation needs ' + b.job.vacationNoticeDays + ' days\' notice. Calling in sick is only for ' + Game.rules.job.sickWindowText() + '.</p>');
       }
     } else {
       parts.push('<p class="muted">No day job this day.</p>');

@@ -128,11 +128,7 @@ Game.rules.recording = {
     var s = Game.util.clone(state);
     delete s.entries[entryId];
     delete s.schedule[e.day][e.block];
-    var stillNeeded = Game.balance.job.jobBlocks.some(function (block) {
-      var other = s.schedule[e.day] && s.schedule[e.day][block] && s.entries[s.schedule[e.day][block]];
-      return other && (other.type === 'studio' || other.type === 'gig');
-    });
-    if (!stillNeeded && s.player.job.daysOff[e.day]) s = Game.rules.job.cancelDayOff(s, e.day).state;
+    if (!Game.rules.job.dayOffNeeded(s, e.day) && s.player.job.daysOff[e.day]) s = Game.rules.job.cancelDayOff(s, e.day).state;
     return { state: s, log: ['Cancelled studio time on ' + Game.rules.day.dateLabel(e.day) + '.'] };
   },
 
@@ -230,7 +226,7 @@ Game.rules.recording = {
     return {
       state: s,
       log: ['Released your ' + name + '! ' +
-        (cities ? u.signed(preview.buzz) + ' buzz' + (preview.halved ? ' (halved: your last release was under 4 weeks ago)' : '') +
+        (cities ? u.signed(preview.buzz) + ' buzz' + (preview.halved ? ' (halved: your last release was under ' + Game.balance.releases.spamWindowWeeks + ' weeks ago)' : '') +
           ', +' + gained + ' fan' + (gained === 1 ? '' : 's') + ', ' : 'No fans yet to hear it, so no buzz or new fans. ') +
         u.signed(preview.reputation) + ' reputation. Streaming money starts next Sunday.']
     };
@@ -247,20 +243,29 @@ Game.rules.recording = {
 
   // This Sunday's streaming money: for each released song,
   //   total fans x 0.02 x (recording quality / 100) x freshness.
-  // Only releases from before today count (a release on Sunday starts paying next Sunday).
-  streamingPay: function (state) {
+  // Only releases from before that day count (a release on Sunday starts paying next Sunday).
+  // day: optional, the Sunday to work it out for (leave out for today).
+  streamingPay: function (state, day) {
     var b = Game.balance.streaming;
+    if (day === undefined) day = state.day;
     var fans = Game.rules.progress.totalFans(state);
     var total = 0;
     state.releases.forEach(function (rel) {
-      if (rel.day >= state.day) return;
-      var fresh = Game.rules.recording.freshness(rel, state.day);
+      if (rel.day >= day) return;
+      var fresh = Game.rules.recording.freshness(rel, day);
       rel.songIds.forEach(function (id) {
         var song = state.songs[id];
         if (song && song.recording) total += fans * b.payPerFan * (song.recording.quality / 100) * fresh;
       });
     });
     return Math.round(total);
+  },
+
+  // The next Sunday's streaming (on a Sunday, the one a week later) and about how much it will pay,
+  // with today's fans. Returns { day, pay }.
+  streamingEstimate: function (state) {
+    var day = state.day + (Game.rules.day.daysUntilBills(state) || Game.balance.time.daysPerWeek);
+    return { day: day, pay: Game.rules.recording.streamingPay(state, day) };
   },
 
   // Sunday night: pays streaming money. Returns { state, log }.

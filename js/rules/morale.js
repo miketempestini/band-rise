@@ -44,7 +44,7 @@ Game.rules.morale = {
     var step = Math.max(-b.weeklyDrift, Math.min(b.weeklyDrift, gap));
     if (step === 0) return { state: state, log: [] };
     var result = Game.rules.morale.change(state, step);
-    var line = 'Weekly morale drift toward ' + target + ': ' + (step > 0 ? '+' : '') + Math.round(step * 10) / 10 + ' morale.';
+    var line = 'Weekly morale drift toward ' + target + ': ' + (step > 0 ? '+' : '') + Game.util.round1(step) + ' morale.';
     return { state: result.state, log: [line].concat(result.log) };
   }
 };

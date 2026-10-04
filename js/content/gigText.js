@@ -34,7 +34,7 @@ Game.content.gigText = {
   tips: {
     tired: 'You were tired. Rest the day before a show.',
     lowMorale: 'Your morale was low. A day off or some rest before a show helps.',
-    badLuck: 'Bad luck tonight. It happens. After two Rough nights in a row, luck can\'t go against you.',
+    badLuck: 'Bad luck tonight. It happens. After ' + Game.balance.gigs.badLuckStreak + ' Rough nights in a row, luck can\'t go against you.',
     looseSongs: 'Your songs were loose. Practice them before the next show.'
   }
 };

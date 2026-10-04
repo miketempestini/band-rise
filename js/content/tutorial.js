@@ -9,7 +9,7 @@ Game.content = Game.content || {};
 Game.content.tutorial = [
   {
     id: 'topbar', day: 0, target: 'topbar', title: 'Your life at a glance',
-    text: 'The bar at the top shows your cash, energy, morale, reputation, the date, and when rent is due. Rent is $400 every Sunday night.'
+    text: 'The bar at the top shows your cash, energy, morale, reputation, the date, and when rent is due. Rent is $' + Game.balance.housing.starter.weeklyCost + ' every Sunday night.'
   },
   {
     id: 'blocks', day: 0, target: 'blocks', title: 'Three blocks a day',

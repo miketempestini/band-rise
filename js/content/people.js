@@ -1,6 +1,6 @@
 // people.js
 // Fixed words for people: band roles and the six personality traits.
-// The numbers for each trait live in balance.js (balance.traits).
+// The numbers for each trait live in balance.js (balance.traits); the text below is built from them.
 
 window.Game = window.Game || {};
 Game.content = Game.content || {};
@@ -13,41 +13,46 @@ Game.content.roles = {
   vocals: { name: 'Vocals', person: 'singer' }
 };
 
+(function () {
+var t = Game.balance.traits;
+var pct = function (x) { return Math.round(x * 100) + '%'; };
+
 Game.content.traits = {
   workhorse: {
     name: 'Workhorse',
-    upside: '+50% tightness from rehearsals',
-    downside: 'Unhappy with fewer than 2 rehearsals a week',
+    upside: '+' + pct(t.workhorse.rehearsalTightnessBonus) + ' tightness from rehearsals',
+    downside: 'Unhappy with fewer than ' + t.workhorse.minRehearsalsPerWeek + ' rehearsals a week',
     clashesWith: 'Flaky'
   },
   easygoing: {
     name: 'Easygoing',
-    upside: 'Satisfaction drifts up 2 a week',
+    upside: 'Satisfaction drifts up ' + t.easygoing.weeklySatisfaction + ' a week',
     downside: 'None',
     clashesWith: 'No one'
   },
   perfectionist: {
     name: 'Perfectionist',
-    upside: '+5 to band musicianship',
-    downside: '-10 satisfaction after a Rough gig',
+    upside: '+' + t.perfectionist.bandMusicianshipBonus + ' to band musicianship',
+    downside: t.perfectionist.roughGigSatisfaction + ' satisfaction after a Rough gig',
     clashesWith: 'Party Animal'
   },
   partyAnimal: {
     name: 'Party Animal',
-    upside: '+5 gig score (crowd energy)',
-    downside: 'Reliability -20',
+    upside: '+' + t.partyAnimal.gigScoreBonus + ' gig score (crowd energy)',
+    downside: 'Reliability ' + t.partyAnimal.reliabilityPenalty,
     clashesWith: 'Perfectionist'
   },
   diva: {
     name: 'Diva',
-    upside: '+5 gig score',
-    downside: 'Wants 1.5 shares of gig pay',
+    upside: '+' + t.diva.gigScoreBonus + ' gig score',
+    downside: 'Wants ' + Game.balance.bandPay.divaShares + ' shares of gig pay',
     clashesWith: 'Another Diva'
   },
   flaky: {
     name: 'Flaky',
-    upside: 'Usually skilled (+15 when met)',
-    downside: 'Misses 25% of rehearsals',
+    upside: 'Usually skilled (+' + t.flaky.skillBonusWhenCreated + ' when met)',
+    downside: 'Misses ' + pct(t.flaky.missRehearsalChance) + ' of rehearsals',
     clashesWith: 'Workhorse'
   }
 };
+})();

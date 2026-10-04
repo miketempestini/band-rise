@@ -4,6 +4,41 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 10c: Rules review clean-up (2026-10-04)
+A check of the whole project against CLAUDE.md, then fixes for everything found (owner's OK; "built ahead" items left as they are).
+No gameplay numbers changed: the balance checks give the same results as before.
+- **Numbers moved into balance.js:**
+  - Every event's numbers (`balance.events.<eventId>`: weights, costs, amounts, how long effects last, which weekday).
+  - Each venue's flat fee (`balance.venues.guarantees`), and which setlist size each venue tier uses (`setlist` on each tier).
+  - Opening slot details: club tier, fee rounded to $5. Residency details: Monday offers, preferred nights
+    (Thursday first), rate steps (5%, rounded to $5), counter-offer reply and keep-open days.
+  - Screen limits (`balance.ui`): player name length, the ±5 skill buttons, how many milestones and upcoming shows to list.
+- **On-screen text built from balance.js**, so it can't go out of date. This covers:
+  - trait descriptions, studio blurbs, milestone triggers, and the tutorial's rent
+  - "reply in 1 to 3 days", "Clubs open at reputation 30", "under 4 weeks", Workhorse x1.5, co-writer skill / 10
+  - streaming $0.02 and 3%, "two Rough nights", "at 0 you're fired", "today or tomorrow"
+  - action descriptions (open mic songs, studio notice, look-for-work odds)
+- **Rules moved out of screens:**
+  - `money.maxPayBack`, `money.sundaysUntilGameOver` (Today and the weekly summary shared this), `money.weekTotals`
+  - `recording.streamingEstimate` (the Songs screen no longer builds a pretend Sunday)
+  - `offers.rateOptions` (the contract's rate list; `termsProblem` now only accepts a rate from that list)
+  - `job.undoDayOffProblem` / `job.undoDayOff` / `job.dayOffNeeded`, and `booking.blockContents` (what's in a calendar block)
+  - `actions.pickedSongsProblem` (the picker's confirm button), `career.canAdjust` (the skill page's +/- buttons)
+- **Small fixes along the way:**
+  - Cancelling a show no longer gives back a day off that a studio session that same day still needs.
+  - Undo day off now also stays locked when a studio session is booked on that day's job blocks.
+- **Tests:** 223 passing (review.test.js new, 22 tests). These cover:
+  - cancelling studio time and shows
+  - residency and opening-slot offers arriving, offer expiry, and declining
+  - 5 band-life events and the cover nights banner
+  - the debug shortcuts, song-name uniqueness, and the browser save check
+  - every rule moved out of the screens
+- **Left as is (owner's call):** small extras that weren't asked for:
+  - the Career screen's later milestones and lifetime stats
+  - Today's "Coming up" panel and the Job and Vacation rows on the Stats panel
+  - "Band this week" on the weekly summary, and the cover nights banner
+  - club and theater fees set early
+
 ### Session 10b: Reputation made harder to gain (2026-10-04)
 - All three suggestions applied (owner's call): gains shrink faster (x (1 - reputation / 110), was 150); open mics give
   half once small rooms unlock; gigs more than one tier below your highest unlocked tier give no reputation (clubs
@@ -302,7 +337,7 @@ A running log of what's built, what's next, and known issues. Update at the end 
   1 fan and +2 reputation a night. Two open mics a week reach reputation 10 in roughly 2.5 weeks, matching
   Design.md's first-three-weeks target.
 - **Placeholders to tune:** cover night unlock (reputation 5, Musicianship 25), session player skill 40,
-  club/theater guarantees ($250/$400/$2,000, inside Design.md's ranges).
+  club/theater guarantees ($250/$400/$2,000, inside Design.md's ranges; now in balance.venues.guarantees).
 - **Balance to watch:** small-room crowds are only about 15 at the start (0 fans), so rooms run under 25% full
   (-5) until you build fans. The door deal pays about $73-95 at Corner Tap vs. a $60 guarantee.
 - **Balance to watch:** a new bandmate makes every song lose 20 tightness, and with only open mics there's no

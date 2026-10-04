@@ -245,6 +245,15 @@ Game.rules.actions = {
     return null;
   },
 
+  // Why the songs picked for an action's set don't work yet, or null when they're ready to confirm.
+  // Open mic: exactly its set size. Rehearse: 1 to its max. (Used by the picker's confirm button.)
+  pickedSongsProblem: function (state, actionId, songIds) {
+    var action = Game.content.actions[actionId];
+    if (action.setSize) return Game.rules.gigs.setProblem(state, songIds, action.setSize);
+    if (action.songsMax) return Game.rules.actions.songListProblem(state, songIds, action.songsMax);
+    return null;
+  },
+
   // The loosest songs, up to max (the suggested list for Rehearse).
   loosestSongs: function (state, max) {
     return Game.rules.songs.sortSongs(state, Game.rules.songs.playable(state), 'tightLow')

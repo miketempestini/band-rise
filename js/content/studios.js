@@ -5,12 +5,17 @@
 window.Game = window.Game || {};
 Game.content = Game.content || {};
 
+(function () {
+var st = Game.balance.recording.studios;
+
 Game.content.studios = {
-  home: { id: 'home', name: 'Home setup', blurb: 'Your own gear in the spare room. Free once you own it, but recordings top out at quality 40.' },
+  home: { id: 'home', name: 'Home setup', blurb: 'Your own gear in the spare room. Free once you own it, but recordings top out at quality ' + st.home.qualityCap + '.' },
   demo: { id: 'demo', name: 'Demo studio', blurb: 'A cheap room with an engineer who\'s seen it all.' },
-  pro:  { id: 'pro',  name: 'Pro studio',  blurb: 'Real gear, a real producer. Recordings come out +10 better.' },
-  top:  { id: 'top',  name: 'Top studio',  blurb: 'Where the records you love were made. +20, and only for signed acts.' }
+  pro:  { id: 'pro',  name: 'Pro studio',  blurb: 'Real gear, a real producer. Recordings come out +' + st.pro.bonus + ' better.' },
+  top:  { id: 'top',  name: 'Top studio',  blurb: 'Where the records you love were made. +' + st.top.bonus + ', and only for signed acts.' }
 };
+
+})();
 
 Game.content.merch = {
   shirts: { id: 'shirts', name: 'T-shirts', unit: 'shirt' },

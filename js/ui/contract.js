@@ -30,12 +30,10 @@ Game.ui.contract = {
       var problem = offers.residencyProblem(state, offer.venueId, i, terms.weeks);
       return '<option value="' + i + '"' + (terms.weekday === i ? ' selected' : '') + (problem ? ' disabled' : '') + '>' + name + (problem ? ' (taken)' : '') + '</option>';
     }).join('');
-    var rateOptions = '';
-    var steps = Math.round(r.maxRateChange * 100 / 5);
-    for (var k = -steps; k <= steps; k++) {
-      var rate = Math.round(offer.rate * (1 + k * 0.05) / 5) * 5;
-      rateOptions += '<option value="' + rate + '"' + (terms.rate === rate ? ' selected' : '') + '>$' + rate + (k === 0 ? ' (offered)' : (k > 0 ? ' (+' + k * 5 + '%)' : ' (' + k * 5 + '%)')) + '</option>';
-    }
+    var rateOptions = offers.rateOptions(offer).map(function (o) {
+      return '<option value="' + o.rate + '"' + (terms.rate === o.rate ? ' selected' : '') + '>$' + o.rate +
+        (o.percent === 0 ? ' (offered)' : ' (' + Game.util.signed(o.percent) + '%)') + '</option>';
+    }).join('');
     var weekOptions = '';
     for (var w = r.minWeeks; w <= r.maxWeeks; w++) {
       weekOptions += '<option value="' + w + '"' + (terms.weeks === w ? ' selected' : '') + '>' + w + ' weeks' + (w === offer.weeks ? ' (offered)' : '') + '</option>';

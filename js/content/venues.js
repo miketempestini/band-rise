@@ -1,7 +1,7 @@
 // venues.js
 // Every venue in the game. Fixed data, never saved. Names are made up.
 // The rules for each tier (who can book it, how far ahead, ticket price, foot traffic, score penalty)
-// are in balance.js (balance.venues.tiers).
+// are in balance.js (balance.venues.tiers), and so is each venue's flat fee (balance.venues.guarantees).
 //
 //   cityId       which city it's in (see cities.js)
 //   tier         0 open mic, 1 small room, 2 club, 3 theater, 4 arena
@@ -16,6 +16,9 @@
 
 window.Game = window.Game || {};
 Game.content = Game.content || {};
+
+(function () {
+var pay = Game.balance.venues.guarantees;
 
 Game.content.venues = {
   // ----- Tier 0: open mics -----
@@ -34,12 +37,12 @@ Game.content.venues = {
   cornerTap: {
     id: 'cornerTap', name: 'Corner Tap', cityId: 'hometown', tier: 1,
     capacity: 45, showBlock: 'evening',
-    deals: { guarantee: 60, door: true, coverNight: true }
+    deals: { guarantee: pay.cornerTap, door: true, coverNight: true }
   },
   backRoom: {
     id: 'backRoom', name: 'The Back Room', cityId: 'hometown', tier: 1,
     capacity: 60, showBlock: 'evening',
-    deals: { guarantee: 100, door: true, coverNight: true }
+    deals: { guarantee: pay.backRoom, door: true, coverNight: true }
   },
   hollowRecords: {
     id: 'hollowRecords', name: 'Hollow Records in-store', cityId: 'hometown', tier: 1,
@@ -51,18 +54,19 @@ Game.content.venues = {
   basement: {
     id: 'basement', name: 'The Basement', cityId: 'hometown', tier: 2,
     capacity: 200, showBlock: 'evening',
-    deals: { guarantee: 250, door: true }
+    deals: { guarantee: pay.basement, door: true }
   },
   velvetLounge: {
     id: 'velvetLounge', name: 'Velvet Lounge', cityId: 'hometown', tier: 2,
     capacity: 300, showBlock: 'evening',
-    deals: { guarantee: 400, door: true }
+    deals: { guarantee: pay.velvetLounge, door: true }
   },
 
   // ----- Tier 3: theater (locked until reputation 60 and a release) -----
   orpheum: {
     id: 'orpheum', name: 'The Orpheum', cityId: 'hometown', tier: 3,
     capacity: 1200, showBlock: 'evening', requiresRelease: true,
-    deals: { guarantee: 2000, door: true }
+    deals: { guarantee: pay.orpheum, door: true }
   }
 };
+})();

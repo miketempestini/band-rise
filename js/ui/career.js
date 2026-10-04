@@ -13,7 +13,7 @@ Game.ui.career = {
     var st = state.stats;
 
     var reached = Game.content.milestones.filter(function (m) { return state.milestones[m.id] !== undefined; });
-    var ahead = Game.content.milestones.filter(function (m) { return state.milestones[m.id] === undefined; }).slice(0, 4);
+    var ahead = Game.content.milestones.filter(function (m) { return state.milestones[m.id] === undefined; }).slice(0, Game.balance.ui.upcomingMilestones);
 
     var milestoneRow = function (m, done) {
       return '<div class="milestone' + (done ? ' milestone--done' : '') + '">' +

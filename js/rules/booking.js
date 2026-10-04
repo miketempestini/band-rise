@@ -31,8 +31,8 @@ Game.rules.booking = {
     var lists = Game.balance.songs.setlist;
     if (deal === 'coverNight') return { size: lists.coverNight.songs, coversOnly: true };
     if (deal === 'opening') return { size: Game.balance.offers.openingSlot.setSize, coversOnly: false, coverLimit: null };
-    var byTier = { 1: lists.smallRoom, 2: lists.club, 3: lists.theater, 4: lists.arena };
-    return { size: byTier[venue.tier].songs, coversOnly: false, coverLimit: byTier[venue.tier].coverLimit };
+    var list = lists[Game.balance.venues.tiers[venue.tier].setlist]; // each tier says which setlist size it uses
+    return { size: list.songs, coversOnly: false, coverLimit: list.coverLimit };
   },
 
   // The reputation a booking needs (cover nights have their own, lower bar).
@@ -102,6 +102,24 @@ Game.rules.booking = {
     })[0];
     if (offer) return 'Offer waiting in your inbox';
     return null;
+  },
+
+  // What's in one block of a day (for the Calendar grid). Returns one of:
+  //   { kind: 'show' | 'studio' | 'plan', entry }   something booked or planned there
+  //   { kind: 'pending', reason }                   held for a booking reply or an offer (reason from blockTaken)
+  //   { kind: 'job' } or { kind: 'off', offKind }   a day-job block (or a day off: 'vacation', 'sick', 'skip')
+  //   { kind: 'free' }
+  blockContents: function (state, day, block) {
+    var plan = state.schedule[day];
+    var entry = plan && plan[block] && state.entries[plan[block]];
+    if (entry) return { kind: { gig: 'show', studio: 'studio', action: 'plan' }[entry.type], entry: entry };
+    var waiting = Game.rules.booking.blockTaken(state, day, block);
+    if (waiting) return { kind: 'pending', reason: waiting };
+    if (Game.rules.job.scheduledOn(state, day) && Game.balance.job.jobBlocks.indexOf(block) !== -1) {
+      var off = state.player.job.daysOff[day];
+      return off ? { kind: 'off', offKind: off } : { kind: 'job' };
+    }
+    return { kind: 'free' };
   },
 
   // Why you can't send a booking request, or null if you can.
@@ -426,9 +444,10 @@ Game.rules.booking = {
     var which = ahead >= Game.balance.cancellations.earlyNoticeDays ? 'early' : 'late';
     var s = Game.util.clone(state);
     if (e.sessionPlayers) s = Game.rules.money.earn(s, e.sessionPlayers * Game.balance.economy.sessionPlayerFee, 'sessionRefund').state;
-    if (s.player.job.daysOff[e.day]) s = Game.rules.job.cancelDayOff(s, e.day).state;
     delete s.entries[entryId];
     delete s.schedule[e.day][e.block];
+    // Give back a day off taken for the show (unless a studio session that day still needs it).
+    if (s.player.job.daysOff[e.day] && !Game.rules.job.dayOffNeeded(s, e.day)) s = Game.rules.job.cancelDayOff(s, e.day).state;
     var penalty = Game.rules.booking.applyPenalty(s, e.venueId, which);
     return { state: penalty.state, log: ['Cancelled the show at ' + Game.content.venues[e.venueId].name + '. '].concat(penalty.log) };
   },
