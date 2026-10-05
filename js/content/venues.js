@@ -150,4 +150,15 @@ var room = function (id, name, cityId, tier, capacity) {
   room('valmoraOpera', 'Valmora Opera House', 'valmora', 3, 1400),
   room('valmoraFestival', 'Valmora Festival Grounds', 'valmora', 4, 25000)
 ].forEach(function (v) { Game.content.venues[v.id] = v; });
+
+// ----- Festivals (Phase 12): one in each National city. Offers only, afternoon slots. -----
+// The fee and the crowd come with each offer (balance.bigOffers).
+var festival = function (id, name, cityId, capacity) {
+  return { id: id, name: name, cityId: cityId, tier: 4, festival: true, capacity: capacity, showBlock: 'afternoon', deals: {} };
+};
+[
+  festival('halstonFest', 'New Halston Music Fest', 'newHalston', 40000),
+  festival('crescentFest', 'Crescent Riverfront Festival', 'crescentCity', 30000),
+  festival('harborlineFest', 'Harborline Summer Fest', 'kingsport', 35000)
+].forEach(function (v) { Game.content.venues[v.id] = v; });
 })();

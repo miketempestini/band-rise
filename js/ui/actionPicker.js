@@ -16,7 +16,10 @@ Game.ui.actionPicker = {
     var blockName = (state.planningAhead ? Game.rules.day.dateLabel(state.day) + ' · ' : '') + Game.content.calendar.blockNames[block];
     var stepAction = songStepFor && Game.content.actions[songStepFor];
     var body, title;
-    if (stepAction && stepAction.setSize) {
+    if (stepAction && stepAction.needsCities) {
+      body = Game.ui.actionPicker.citiesStepHtml(state, stepAction, pickedSet || []);
+      title = blockName + ': pick up to ' + stepAction.needsCities + ' cities for the campaign';
+    } else if (stepAction && stepAction.setSize) {
       body = Game.ui.actionPicker.setStepHtml(state, stepAction, pickedSet || []);
       title = blockName + ': pick ' + stepAction.setSize + ' songs for the open mic';
     } else if (stepAction && stepAction.songsMax) {
@@ -186,6 +189,29 @@ Game.ui.actionPicker = {
           (picked.length === size ? ' · click another song to swap' : '') + '</span>' +
         '<button class="btn btn--primary" data-action="confirmSet"' + (ready ? '' : ' disabled') + '>' +
           (exact ? 'Play these ' + size + ' songs' : 'Rehearse ' + picked.length + ' song' + (picked.length === 1 ? '' : 's')) + '</button>' +
+      '</div>';
+  },
+
+  // City step (Big campaign): tick up to 3 cities you've unlocked; each shows its fans and buzz.
+  citiesStepHtml: function (state, action, picked) {
+    var h = Game.ui.helpers;
+    var p = Game.balance.promotion.bigCampaign;
+    var rows = Game.rules.actions.campaignCities(state).map(function (id) {
+      var on = picked.indexOf(id) !== -1;
+      var c = state.cities[id];
+      return '<button class="pick pick--song pick--check' + (on ? ' pick--current' : '') + '" data-action="toggleSetSong" data-song="' + id + '">' +
+        '<span class="pick__head"><span class="pick__name"><span class="check">' + (on ? '✓' : '') + '</span>' + h.escape(Game.content.cities[id].name) + '</span>' +
+        '<span class="pick__costs">' + c.fans.toLocaleString() + ' fans · buzz ' + Math.round(c.buzz) + '</span></span>' +
+        '<span class="pick__desc">+' + Math.round(c.fans * p.fanRate) + ' fans</span></button>';
+    }).join('');
+    var problem = Game.rules.actions.campaignProblem(state, picked);
+    return '<p class="hint picker-note">Each city gets +' + Game.util.round1(Game.rules.audience.promoBuzz(state, 'bigCampaign')) + ' buzz and new fans equal to ' +
+        Math.round(p.fanRate * 100) + '% of its fans. Costs ' + h.money(action.moneyCost) + '.</p>' +
+      '<div class="picks">' + rows + '</div>' +
+      '<div class="actions actions--split">' +
+        '<button class="btn btn--ghost" data-action="pickerBack">← Back to actions</button>' +
+        '<span class="hint">' + picked.length + ' of up to ' + action.needsCities + ' picked</span>' +
+        '<button class="btn btn--primary" data-action="confirmSet"' + (problem ? ' disabled' : '') + '>Run the campaign</button>' +
       '</div>';
   },
 

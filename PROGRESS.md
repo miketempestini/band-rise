@@ -4,6 +4,42 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 13: Phase 12, the big time (2026-10-04)
+- **Manager** (milestone 14: reputation 50 and 2,000 fans): Rita Vance offers by Inbox (again 8 weeks after a no).
+  - Takes 15% of gig pay before the band split.
+  - New **Manager screen** (from Book) with "Let them go".
+  - **12-week calendar**: shown 4 weeks at a time; every booking follows the 4-week (or 12-week) horizon.
+  - **Auto-booking** by your rules (cities, venue sizes, nights, shows a week). Monday emails; "yes" replies are booked for
+    you when they need no time off.
+  - **Tours on request**: pick cities and a venue size; a proposal arrives 5 days later. It has one show per city, nearest
+    first, 5+ weeks out, with crowd and pay estimates, travel, hotels, production, and net. Accept books everything
+    with chained travel; decline scraps it. Needs a van.
+- **Big campaign** (reputation 40, $150): pick up to 3 cities in the picker; +15 buzz (boosted by Promotion) and +1% fans.
+- **Press and radio push** ($500, manager): +10 buzz everywhere you have fans, +2 reputation, once every 2 weeks.
+- **Theaters** (milestone 15) and **production**: $1,000 a theater show, $5,000 an arena show, festivals none.
+- **Label** (milestone 16: reputation 65 and 10,000 fans): Northbound Records.
+  - Advance: $10,000 + $2 a fan, up to $50,000. Signing also opens the Top studio and, with a manager, National cities.
+  - Keeps 80% of streaming until the advance is paid back.
+- **Flights** to National cities: 2 blocks each way, $300 a person each way.
+- **Arenas and festivals** (milestone 18: reputation 85 and 100,000 fans, plus a label): Monday offers only.
+  - Arena: its flat fee, 18 songs, $5,000 production.
+  - Festival: $5,000 to $15,000, 8-song afternoon slot, its own crowd.
+  - Three new festivals, one in each National city.
+- **Awards season** (milestone 17 with the first nomination): nominations the Monday of week 48, ceremony the Saturday
+  of week 52. Song of the Year, Record of the Year, Breakout Act; win odds shown; +5 reputation a win.
+- **Debug**: + fans, manager/label/arena/festival offers, award nominations, awards night.
+- Fixed during testing: auto-booking first only looked 14+ days out, which missed small rooms (they book 7 to 14 days
+  out); it now follows each venue's window.
+- **Saves:** version 12. **Tests:** 282 passing (bigtime.test.js new). Short balance checks unchanged.
+- **Two-year balance check** (new, on request; 10 runs, 728 days). Results:
+  - Cash: $2,600 at day 90, $4,500 at day 180, **$71,000 at day 365, $152,000 at day 545, $242,000 at day 728**.
+  - Manager around day 163; quit the day job ~195; first theater ~200; first tour ~243; label ~244.
+  - Arenas and festivals: never (fans plateau around 50,000, half the 100,000 needed).
+  - Reputation hits 100 in every run.
+  - Last 8 weeks: $6,400 a week in (gig pay $4,000, streaming $2,200) against $2,800 out (production $1,900,
+    rent $400). Every run has 85 weeks of costs saved.
+  - **Verdict: money stops mattering once theaters arrive (around day 200)**: from then on cash only goes up.
+
 ### Session 12b: Door deals only (2026-10-04)
 - Owner's change: venues can't be booked for a flat fee anymore. Emailing a venue offers a share of the door, plus cover
   nights (Corner Tap, The Back Room) and in-stores (Hollow Records) where a venue has them. A venue's flat fee is still
@@ -378,13 +414,25 @@ No gameplay numbers changed: the balance checks give the same results as before.
   with a no-library test runner, git repo (pushed to github.com/miketempestini/band-rise, private).
 
 ## What's next
-- Phase 12 candidates from Design.md: Shop gear (instrument upgrades, housing), the manager (milestone 14: auto-booking,
-  12-week calendar, press push), theaters (milestone 15), the label (milestone 16, National cities, flights).
-- Milestone 13's reward, "bigger opening slots", isn't built (opening slots are hometown-only for now; owner's pick).
-- Promotion (flyers, social ads) still only reaches the hometown; out-of-town buzz comes from gigs and releases.
-- The balance checks could add a simulated player who plays Near cities, to see how fast fans grow out of town.
+- **Suggested fixes from the two-year check (not applied, owner to decide):**
+  1. Build the housing ladder from Design.md (nicer apartment $700/week up to a $5,000/week mansion and a vacation home):
+     the main thing to spend money on, and it raises weekly costs as you grow.
+  2. Make theaters pay less or cost more: production by size (for example $3,000 at a 1,200-seat theater), or a 70% door
+     share instead of 80%. A full Orpheum pays about $24,000 a night today.
+  3. Slow reputation at the top: the press push gives +52 reputation a year. Try +1, a 4-week wait, or the same
+     "smaller gains near the top" rule gigs use. Every run maxes out at 100.
+  4. Make 100,000 fans reachable: fans plateau near 50,000 because the hometown fills up (50,000 ceiling) and
+     out-of-town fans grow slowly. Options: bigger fan gains on tours and from releases out of town, or a lower bar
+     for the Arena milestone (for example 60,000).
+  5. Bandmates could cost a weekly retainer once you're big (or ask for bigger shares), so a larger band costs more.
+- Phase 13 candidates from Design.md: Shop gear (instrument upgrades, housing), International cities (after a "major
+  nationwide tour"), milestone 13's reward (bigger opening slots).
+- Promotion (flyers, social ads) still only reaches the hometown; the Big campaign and press push reach other cities.
 
 ## Known issues / open decisions
+- **Money stops mattering by mid-year 1** (see the two-year check above and the suggested fixes in What's next).
+- **The two-year balance check is slow** (about 5 minutes headless, longer in a browser tab), so it only runs on request.
+- **Auto-booking only books "yes" replies that need no time off work.** Other replies wait in the Inbox for you.
 - **Trips that have started are fixed**: cancelling a show mid-trip keeps the travel as planned (you still drive the route).
 - **Chaining is simple**: a city-to-city leg uses the longer of the two cities' distances (there's no real map distance).
 - **Out-of-town reputation follows the usual "outgrown" rule**: at reputation 30+ an out-of-town open mic gives no

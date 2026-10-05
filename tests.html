@@ -47,6 +47,7 @@
   <script src="js/content/milestones.js"></script>
   <script src="js/content/tutorial.js"></script>
   <script src="js/content/studios.js"></script>
+  <script src="js/content/business.js"></script>
   <script src="js/state.js"></script>
   <script src="js/save.js"></script>
   <script src="js/rules/money.js"></script>
@@ -66,6 +67,10 @@
   <script src="js/rules/offers.js"></script>
   <script src="js/rules/sessionWork.js"></script>
   <script src="js/rules/travel.js"></script>
+  <script src="js/rules/manager.js"></script>
+  <script src="js/rules/label.js"></script>
+  <script src="js/rules/bigShows.js"></script>
+  <script src="js/rules/awards.js"></script>
   <script src="js/rules/actions.js"></script>
   <script src="js/rules/planWeek.js"></script>
   <script src="js/rules/career.js"></script>
@@ -97,6 +102,7 @@
   <script src="js/tests/review.test.js"></script>
   <script src="js/tests/dayjob.test.js"></script>
   <script src="js/tests/road.test.js"></script>
+  <script src="js/tests/bigtime.test.js"></script>
 
   <script src="js/tests/balance.sim.js"></script>
 
@@ -106,6 +112,13 @@
     setTimeout(function () {
       Game.balanceSim.render(document.getElementById('balance'), 100, Game.balance.slice.endDay);
       Game.balanceSim.renderLong(document.getElementById('balance'), 50, 90);
+      // The two-year check is slow, so it only runs on request: the button, or tests.html?years in the address.
+      var years = function () { Game.balanceSim.renderYears(document.getElementById('balance'), 10, 2 * Game.balance.time.daysPerYear); };
+      var btn = document.createElement('button');
+      btn.textContent = 'Run the two-year balance check (slow)';
+      btn.onclick = function () { btn.disabled = true; setTimeout(years, 20); };
+      document.getElementById('balance').appendChild(btn);
+      if (/[?&]years\b/.test(window.location.search)) years();
     }, 50);
   </script>
 </body>

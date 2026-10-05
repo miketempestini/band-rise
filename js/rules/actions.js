@@ -99,7 +99,7 @@ Game.rules.actions = {
         row.kind = 'travel';
         row.entryId = booked.id;
         energy = clampEnergy(energy - b.travel.energyPerBlock);
-        if (booked.legStart) cash -= Game.rules.travel.legGas(booked.from, booked.to);
+        if (booked.legStart) cash -= Game.rules.travel.legGas(booked.from, booked.to, state);
       } else if (Game.rules.day.isJobBlock(state, block)) {
         row.kind = 'job';
         energy = clampEnergy(energy - b.energy.cost.dayJob);
@@ -136,6 +136,31 @@ Game.rules.actions = {
   awayProblem: function (state, block, actionId) {
     if (!Game.rules.travel.tripAt(state, state.day, block) || Game.content.actions[actionId].onTheRoad) return null;
     return 'You\'re on the road then: only ' + Game.rules.actions.roadActionsText() + '.';
+  },
+
+  // Days until the press and radio push can be used again (0 = now).
+  pressPushWait: function (state) {
+    var last = state.manager.lastPushDay;
+    if (last === null || last === undefined) return 0;
+    return Math.max(0, last + Game.balance.promotion.pressPush.cooldownDays - state.day);
+  },
+
+  // Cities a Big campaign can reach (any city you've unlocked), biggest fan base first.
+  campaignCities: function (state) {
+    return Object.keys(state.cities).filter(function (id) { return state.cities[id].unlocked; })
+      .sort(function (a, b) { return state.cities[b].fans - state.cities[a].fans; });
+  },
+
+  // Why a list of cities won't work for a Big campaign, or null.
+  campaignProblem: function (state, cityIds) {
+    var max = Game.balance.promotion.bigCampaign.maxCities;
+    if (!Array.isArray(cityIds) || cityIds.length < 1 || cityIds.length > max) return 'Pick 1 to ' + max + ' cities.';
+    var ok = Game.rules.actions.campaignCities(state);
+    for (var i = 0; i < cityIds.length; i++) {
+      if (ok.indexOf(cityIds[i]) === -1) return 'Pick cities you\'ve unlocked.';
+      if (cityIds.indexOf(cityIds[i]) !== i) return 'Each city only once.';
+    }
+    return null;
   },
 
   // The actions you can do on the road, in words, like "Practice, Write, Rest, Post online, or Talk".
@@ -239,6 +264,21 @@ Game.rules.actions = {
       result.ok = false;
       result.reason = 'You already have a job.';
     }
+    if (action.minReputation && state.player.reputation < action.minReputation) {
+      result.ok = false;
+      result.reason = 'Unlocks at reputation ' + action.minReputation + '.';
+    }
+    if (action.needsManager && !Game.rules.manager.hired(state)) {
+      result.ok = false;
+      result.reason = 'Needs a manager.';
+    }
+    var pushWait = action.effects.pressPush ? Game.rules.actions.pressPushWait(state) : 0;
+    if (pushWait > 0) {
+      result.ok = false;
+      result.reason = 'Your manager can call in favors again in ' + pushWait + ' day' + (pushWait === 1 ? '' : 's') + '.';
+    }
+    if (action.effects.campaign) result.gains.buzz = Game.rules.audience.promoBuzz(state, 'bigCampaign');
+    if (action.effects.pressPush) result.gains.buzz = Game.rules.audience.promoBuzz(state, 'pressPush');
     if (action.songsMax && !Game.rules.songs.playable(state).length) {
       result.ok = false;
       result.reason = 'You don\'t have any finished songs yet.';
@@ -379,6 +419,12 @@ Game.rules.actions = {
       var listProblem = Game.rules.actions.songListProblem(state, songIds, action.songsMax);
       if (listProblem) return { state: state, log: [listProblem] };
     }
+    var cityIds = null;
+    if (action.needsCities) {
+      cityIds = Array.isArray(songChoice) ? songChoice.slice() : Game.rules.actions.campaignCities(state).slice(0, action.needsCities);
+      var cityProblem = Game.rules.actions.campaignProblem(state, cityIds);
+      if (cityProblem) return { state: state, log: [cityProblem] };
+    }
     if (action.optionalCoWriter && songChoice) {
       personId = songChoice;
       var coProblem = Game.rules.actions.personProblem(state, actionId, personId);
@@ -407,7 +453,7 @@ Game.rules.actions = {
     var s = Game.rules.actions.clear(state, block).state;
     var id = 'e' + s.nextEntryId;
     s.nextEntryId += 1;
-    s.entries[id] = { id: id, day: s.day, block: block, type: 'action', actionId: actionId, songId: songId, songIds: songIds, personId: personId, request: request, status: 'planned',
+    s.entries[id] = { id: id, day: s.day, block: block, type: 'action', actionId: actionId, songId: songId, songIds: songIds, personId: personId, request: request, cityIds: cityIds, status: 'planned',
       plannedAhead: !!state.planningAhead };
     s.schedule[s.day] = s.schedule[s.day] || {};
     s.schedule[s.day][block] = id;
@@ -486,8 +532,10 @@ Game.rules.actions = {
   // songId: the song for actions that need one (Practice). songIds: the set for a gig, or Rehearse's songs.
   // personId: who it's with (Jam, Hang out, Talk).
   // Returns { state, line, notes, skipped, finishedSongId, gig }: line is the one-line result for Day results.
-  perform: function (state, actionId, songId, songIds, personId, request) {
+  // cityIds: the cities picked for a Big campaign.
+  perform: function (state, actionId, songId, songIds, personId, request, cityIds) {
     var util = Game.util;
+    var b = Game.balance;
     var action = Game.content.actions[actionId];
     var s = state;
     var parts = [];
@@ -525,6 +573,33 @@ Game.rules.actions = {
       var buzz = Game.rules.audience.promoBuzz(s, action.effects.buzz);
       s = Game.rules.audience.addBuzz(s, 'hometown', buzz).state;
       parts.push(util.signed(buzz) + ' ' + Game.content.cities.hometown.name + ' buzz');
+    }
+
+    // Big campaign: buzz in each picked city, plus new fans (1% of that city's fans).
+    if (action.effects.campaign) {
+      var campaignBuzz = Game.rules.audience.promoBuzz(s, 'bigCampaign');
+      var cities = cityIds && cityIds.length ? cityIds : Game.rules.actions.campaignCities(s).slice(0, action.needsCities);
+      cities.forEach(function (id) {
+        s = Game.rules.audience.addBuzz(s, id, campaignBuzz).state;
+        var added = Game.rules.audience.addFans(s, id, Math.round(s.cities[id].fans * b.promotion.bigCampaign.fanRate));
+        s = added.state;
+        s.cities[id].lastActivityDay = s.day;
+        parts.push(Game.content.cities[id].name + ' ' + util.signed(campaignBuzz) + ' buzz, +' + added.added + ' fans');
+      });
+    }
+
+    // Press and radio push: buzz in every city with fans, and reputation.
+    if (action.effects.pressPush) {
+      var pushBuzz = Game.rules.audience.promoBuzz(s, 'pressPush');
+      var reached = 0;
+      Object.keys(s.cities).forEach(function (id) {
+        if (s.cities[id].fans <= 0) return;
+        s = Game.rules.audience.addBuzz(s, id, pushBuzz).state;
+        reached += 1;
+      });
+      s.player.reputation = util.clamp(s.player.reputation + b.promotion.pressPush.reputation, 0, b.reputation.max);
+      s.manager.lastPushDay = s.day;
+      parts.push(util.signed(pushBuzz) + ' buzz in ' + reached + ' cit' + (reached === 1 ? 'y' : 'ies') + ', +' + b.promotion.pressPush.reputation + ' reputation');
     }
 
     // Song tightness (Practice). If the song is gone, the loosest song is used instead.

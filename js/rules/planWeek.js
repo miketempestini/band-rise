@@ -26,7 +26,7 @@ Game.rules.planWeek = {
     var t = Game.balance.time;
     var first = Game.rules.planWeek.weekStart(state.day);
     var list = [];
-    for (var i = 0; i < t.calendarWeeks; i++) list.push(first + i * t.daysPerWeek);
+    for (var i = 0; i < Game.rules.manager.calendarWeeks(state); i++) list.push(first + i * t.daysPerWeek);
     return list;
   },
 

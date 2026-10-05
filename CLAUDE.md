@@ -76,7 +76,7 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, offers, sessionWork, travel, actions, planWeek, career, day, debug
+5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, offers, sessionWork, travel, manager, label, bigShows, awards, actions, planWeek, career, day, debug
    (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
 6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
@@ -231,6 +231,13 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   you're away. Actions you can do away are marked `onTheRoad` in actions.js. Cities and their venues are content;
   their fan ceilings and venue fees are in balance.js. Fan gains go through the ceiling (`audience.addFans`).
 - **Emailing a venue** is `booking.emailVenue` (instant, 5 energy, no block). There's no "Email a venue" action now.
+- **The big time (Phase 12)**: `Game.rules.manager` (hiring, `cutOf`, `calendarWeeks`/`horizonDay`, auto-booking,
+  tour requests and proposals), `Game.rules.label` (offer, advance, `splitStreaming`), `Game.rules.bigShows` (arena and
+  festival offers, deals 'arena' | 'festival' with a fee), `Game.rules.awards` (nominations and the ceremony). They run each
+  morning from End Day. `booking.dateProblem` is the one check for "can a show be on this date" (window, horizon, block,
+  travel). Production costs: `booking.productionCost`. Flights: `travel.isFlight` / `legGas(from, to, state)`.
+- **Two-year balance check**: `Game.balanceSim.renderYears` runs only on request (the button on tests.html, or
+  `tests.html?years`); it takes about 5 minutes headless.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

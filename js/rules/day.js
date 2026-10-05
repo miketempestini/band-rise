@@ -197,7 +197,7 @@ Game.rules.day = {
           lines.push('The job drained you to 0 energy. You\'re Exhausted.');
         }
       } else if (actionId) {
-        var done = Game.rules.actions.perform(s, actionId, entry.songId, entry.songIds, entry.personId, entry.request);
+        var done = Game.rules.actions.perform(s, actionId, entry.songId, entry.songIds, entry.personId, entry.request, entry.cityIds);
         s = done.state;
         if (done.finishedSongId) report.finishedSongs.push(done.finishedSongId);
         if (done.gig) report.gig = true;
@@ -363,6 +363,14 @@ Game.rules.day = {
     var sessionOffer = Game.rules.sessionWork.roll(s);
     s = sessionOffer.state;
     sessionOffer.log.forEach(function (line) { endLines.push(line); });
+    // The big time: your manager books "yes" replies, plans tours, and emails venues on Mondays; manager,
+    // label, arena, and festival offers may arrive; and in December, awards season.
+    [Game.rules.manager.autoAccept, Game.rules.manager.offerCheck, Game.rules.label.offerCheck,
+      Game.rules.manager.processTourRequests, Game.rules.bigShows.roll, Game.rules.manager.autoBook, Game.rules.awards.check].forEach(function (rule) {
+      var r = rule(s);
+      s = r.state;
+      r.log.forEach(function (line) { endLines.push(line); });
+    });
     var expired = Game.rules.booking.expireOffers(s);
     s = expired.state;
     expired.log.forEach(function (line) { endLines.push(line); });

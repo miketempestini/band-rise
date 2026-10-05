@@ -19,7 +19,8 @@ Game.balance = {
     daysPerYear: 364,              // 52 weeks: vacation days reset after this many days
     calendarWeeks: 4,              // How many weeks the Calendar screen shows
     startBookingWeeks: 4,          // How far ahead you can book at the start
-    managerBookingWeeks: 12,       // How far ahead you can book after getting a Manager
+    managerBookingWeeks: 12,       // How far ahead you can book after getting a Manager (and the Calendar shows)
+    calendarPageWeeks: 4,          // The Calendar shows this many weeks at a time
     emptyBlockEnergy: 5,           // Energy gained for each block left empty at End Day
     paydayDayOfWeek: 4,            // Friday (0 = Monday): day-job pay arrives that night
     billsDayOfWeek: 6              // Sunday (0 = Monday): rent and living costs are due that night
@@ -75,7 +76,83 @@ Game.balance = {
     // Back-to-back shows: if your next out-of-town show is within this many days (or going home in between
     // doesn't fit), you drive straight on to the next city instead of going home.
     chainWithinDays: 2,
-    openMicSignupDays: { min: 1, max: 14 }      // Out-of-town open mics: sign up for a night this many days ahead
+    openMicSignupDays: { min: 1, max: 14 },     // Out-of-town open mics: sign up for a night this many days ahead
+    // National cities are reached by plane: each way takes this many blocks (airport time included) and costs
+    // this much per person on stage (you plus your bandmates). No van needed for the flight itself.
+    flight: { blocks: 2, perPersonOneWay: 300 }
+  },
+
+  // ---------------------------------------------------------------
+  // Big shows: production costs (sound and lights) paid on the night, by venue tier
+  // ---------------------------------------------------------------
+  production: {
+    theater: 1000,                   // Tier 3
+    arena: 5000,                     // Tier 4 arena shows
+    festival: 0                      // Festivals provide their own production
+  },
+
+  // ---------------------------------------------------------------
+  // The manager (milestone 14: reputation 50 and 2,000 fans)
+  // ---------------------------------------------------------------
+  manager: {
+    gigPayCut: 0.15,                 // Takes 15% of all gig pay (before the band's split)
+    offerExpiryDays: 7,              // Answer the manager's offer within this many days
+    reofferWeeks: 8,                 // Turn the manager down and they ask again this many weeks later
+    autoBook: {
+      defaultMaxPerWeek: 2,          // Starting rule: at most this many shows a week
+      maxPerWeekLimit: 5             // The most shows a week you can set (dates follow each venue's booking window)
+    },
+    tour: {
+      planDays: 5,                   // The manager takes this many days to plan a tour
+      leadDays: 35,                  // The first show is at least 5 weeks after the proposal arrives
+      proposalExpiryDays: 3,         // Answer a tour proposal within this many days
+      minCities: 2,
+      maxCities: 8,
+      showDayOfWeekPreferred: [3, 4, 5, 6, 2, 1, 0] // Nights the manager tries first (Thursday first), as with residencies
+    }
+  },
+
+  // ---------------------------------------------------------------
+  // The label (milestone 16: reputation 65 and 10,000 fans)
+  // ---------------------------------------------------------------
+  label: {
+    advanceBase: 10000,              // Advance = $10,000 + $2 per fan, up to $50,000
+    advancePerFan: 2,
+    advanceMax: 50000,
+    streamingCut: 0.80,              // The label keeps 80% of streaming until the advance is paid back
+    offerExpiryDays: 7,
+    reofferWeeks: 8                  // Turn the label down and they ask again this many weeks later
+  },
+
+  // ---------------------------------------------------------------
+  // Arenas and festivals (milestone 18: reputation 85 and 100,000 fans): offers only
+  // ---------------------------------------------------------------
+  bigOffers: {
+    offerDayOfWeek: 0,               // Offers arrive on Mondays...
+    arenaWeeklyChance: 0.10,         // ...an arena offer 10% of the time
+    festivalWeeklyChance: 0.10,      // ...a festival offer 10% of the time (one of each open at a time)
+    daysAhead: { min: 42, max: 70 }, // The show is 6 to 10 weeks out
+    expiryDays: 5,
+    festivalFee: { min: 5000, max: 15000 }, festivalFeeRoundTo: 500,
+    festivalCrowdShare: { min: 0.3, max: 0.6 }, // A festival crowd fills this much of the grounds
+    festivalSetSize: 8                // A festival slot is an 8-song set (an arena is a full 18)
+  },
+
+  // ---------------------------------------------------------------
+  // Awards season: every December (weeks 48 to 52 of each 52-week year)
+  // ---------------------------------------------------------------
+  awards: {
+    nominationsWeek: 48,             // Nominations arrive on the Monday of week 48
+    ceremonyWeek: 52,                // The ceremony is on the Saturday of week 52
+    ceremonyDayOfWeek: 5,
+    songMinQuality: 60,              // Song of the Year: a release this year with recording quality 60+
+    recordMinQuality: 55,            // Record of the Year: an EP or album this year, average quality 55+
+    breakoutMinFans: 2000,           // Breakout Act: 2,000+ new fans this year
+    breakoutFansForMax: 20000,       // ...the win chance tops out at this many new fans
+    qualityFloor: 50,                // Song/record win chance = (quality - 50) / 50
+    minChance: 0.10,
+    maxChance: 0.80,
+    winReputation: 5                 // Each win: +5 reputation
   },
 
   // ---------------------------------------------------------------
@@ -619,8 +696,8 @@ Game.balance = {
     postOnline:  { cost: 0,   buzzBase: 1, buzzSkillDivisor: 20 },   // +1 + Promotion / 20 hometown buzz
     flyers:      { cost: 20,  buzz: 3 },                             // One city
     socialAds:   { cost: 50,  buzz: 8 },                             // One city, needs first release
-    bigCampaign: { cost: 150, buzz: 15, maxCities: 3, fanRate: 0.01, minReputation: 40 },
-    pressPush:   { cost: 500, buzz: 10, reputation: 2 },             // Every city with fans, needs Manager
+    bigCampaign: { cost: 150, buzz: 15, maxCities: 3, fanRate: 0.01, minReputation: 40 }, // Up to 3 cities you pick
+    pressPush:   { cost: 500, buzz: 10, reputation: 2, cooldownDays: 14 }, // Every city with fans, needs Manager; once every 2 weeks
     paidSkillDivisor: 100            // Paid promo effects x (1 + Promotion / 100)
   },
 
@@ -671,14 +748,10 @@ Game.balance = {
     fullBandOnStage: 3,
     onTheRoadReputation: 25,
     managerReputation: 50,
-    managerFans: 2000,
-    managerCut: 0.15,                // Manager takes 15% of gig pay
+    managerFans: 2000,               // (the manager's cut is in balance.manager)
     theaterReputation: 60,
     labelReputation: 65,
-    labelFans: 10000,
-    labelAdvance: { min: 10000, max: 50000 },
-    labelStreamingCut: 0.80,         // Label keeps 80% of streaming until the advance is paid back
-    awardsMonth: 12,                 // Awards season is every December
+    labelFans: 10000,                // (the advance and streaming cut are in balance.label)
     arenaReputation: 85,
     arenaFans: 100000
   },
@@ -715,7 +788,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 11,                     // Save format version, bumped when the state shape changes
+    version: 12,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 
@@ -791,6 +864,7 @@ Game.balance = {
   // ---------------------------------------------------------------
   debug: {
     cashStep: 500,                   // The +$ and -$ buttons add or remove this much
+    fansStep: 5000,                  // The "+ fans" button adds this many hometown fans
     skipDays: 7                      // The skip button jumps this many days
   }
 };

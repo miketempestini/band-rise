@@ -39,6 +39,7 @@ Game.rules.booking = {
     var lists = Game.balance.songs.setlist;
     if (deal === 'coverNight') return { size: lists.coverNight.songs, coversOnly: true };
     if (deal === 'opening') return { size: Game.balance.offers.openingSlot.setSize, coversOnly: false, coverLimit: null };
+    if (deal === 'festival') return { size: Game.balance.bigOffers.festivalSetSize, coversOnly: false, coverLimit: lists.arena.coverLimit };
     var list = lists[Game.balance.venues.tiers[venue.tier].setlist]; // each tier says which setlist size it uses
     return { size: list.songs, coversOnly: false, coverLimit: list.coverLimit };
   },
@@ -89,18 +90,32 @@ Game.rules.booking = {
     return Game.util.clamp(chance, v.bookingMinChance, v.bookingMaxChance);
   },
 
-  // The days you can ask for: inside the venue's booking window. Each is { day, free, why }.
-  // Out of town, a date also has to fit the travel (see Game.rules.travel.check).
+  // The days you can ask for: inside the venue's booking window and your booking horizon (4 weeks, or 12
+  // with a manager). Each is { day, free, why }.
   bookingDates: function (state, venue) {
     var w = Game.balance.venues.tiers[venue.tier].bookAhead;
-    var away = venue.cityId !== 'hometown';
+    var last = Math.min(state.day + w.max, Game.rules.manager.horizonDay(state));
     var dates = [];
-    for (var d = state.day + w.min; d <= state.day + w.max; d++) {
-      var taken = Game.rules.booking.blockTaken(state, d, venue.showBlock, away);
-      if (!taken && away) taken = Game.rules.travel.check(state, venue.id, d).problem;
+    for (var d = state.day + w.min; d <= last; d++) {
+      var taken = Game.rules.booking.dateProblem(state, venue, d);
       dates.push({ day: d, free: !taken, why: taken });
     }
     return dates;
+  },
+
+  // Why a show at this venue can't be on this date, or null: outside its window or your horizon, the block
+  // is taken, or (out of town) the travel doesn't fit (see Game.rules.travel.check).
+  dateProblem: function (state, venue, day) {
+    var w = Game.balance.venues.tiers[venue.tier].bookAhead;
+    if (!w || day < state.day + w.min || day > state.day + w.max) return 'Outside ' + venue.name + '\'s booking window.';
+    if (day > Game.rules.manager.horizonDay(state)) {
+      return 'You can only book ' + Game.rules.manager.calendarWeeks(state) + ' weeks ahead' +
+        (Game.rules.manager.hired(state) ? '' : ' (' + Game.balance.time.managerBookingWeeks + ' with a manager)') + '.';
+    }
+    var away = venue.cityId !== 'hometown';
+    var taken = Game.rules.booking.blockTaken(state, day, venue.showBlock, away);
+    if (!taken && away) taken = Game.rules.travel.check(state, venue.id, day).problem;
+    return taken || null;
   },
 
   // Why a block is already taken (a show, studio time, session work, travel, being away on a trip, or a
@@ -158,9 +173,8 @@ Game.rules.booking = {
     if (vs.pendingRequestId) return 'You already have a request out to ' + venue.name + '.';
     var unmet = Game.rules.booking.requirements(state, venue, deal).filter(function (r) { return !r.met; })[0];
     if (unmet) return 'Needs ' + unmet.text + '.';
-    var ok = Game.rules.booking.bookingDates(state, venue).filter(function (d) { return d.day === gigDay; })[0];
-    if (!ok) return 'Pick a date inside the booking window.';
-    if (!ok.free) return ok.why + ' that day.';
+    var problem = Game.rules.booking.dateProblem(state, venue, gigDay);
+    if (problem) return /window|weeks ahead/.test(problem) ? problem : problem.replace(/\.$/, '') + ' that day.';
     return null;
   },
 
@@ -189,7 +203,7 @@ Game.rules.booking = {
   //   opening, residency: the agreed fee (passed in)
   payFor: function (venue, deal, crowd, fee) {
     var tier = Game.balance.venues.tiers[venue.tier];
-    if (deal === 'opening' || deal === 'residency') return fee || 0;
+    if (deal === 'opening' || deal === 'residency' || deal === 'arena' || deal === 'festival') return fee || 0;
     if (deal === 'guarantee') return venue.deals.guarantee;
     if (deal === 'door') return Math.round(crowd * tier.ticket * tier.doorShare);
     if (deal === 'coverNight') return Game.balance.economy.coverGigFee;
@@ -201,11 +215,22 @@ Game.rules.booking = {
     var tier = Game.balance.venues.tiers[venue.tier];
     if (deal === 'opening') return 'Opening slot: $' + fee + ' flat, their crowd';
     if (deal === 'residency') return 'Residency: $' + fee + ' a night';
+    if (deal === 'arena') return 'Arena headliner: $' + Number(fee).toLocaleString() + ' flat';
+    if (deal === 'festival') return 'Festival slot: $' + Number(fee).toLocaleString() + ' flat';
     if (deal === 'guarantee') return '$' + venue.deals.guarantee + ' guarantee';
     if (deal === 'door') return Math.round(tier.doorShare * 100) + '% of the door ($' + tier.ticket + ' tickets)';
     if (deal === 'coverNight') return 'Cover night: $' + Game.balance.economy.coverGigFee + ' flat, covers only';
     if (deal === 'openMic') return 'Open mic: tip jar, new fans';
     return 'In-store: no pay, good for fans';
+  },
+
+  // Production (sound and lights) for a show: theaters and arenas pay it on the night; festivals provide it.
+  productionCost: function (venue, deal) {
+    var p = Game.balance.production;
+    if (deal === 'festival' || venue.festival) return p.festival;
+    if (venue.tier === 3) return p.theater;
+    if (venue.tier === 4) return p.arena;
+    return 0;
   },
 
   // The penalties for cancelling a show this many days ahead (or a no-show).
@@ -292,7 +317,7 @@ Game.rules.booking = {
       s.venues[r.venueId].pendingRequestId = null;
       var expires = Math.min(s.day + b.offerExpiryDays, r.gigDay - 1);
       s = Game.rules.booking.addInbox(s, 'reply',
-        { venueId: r.venueId, gigDay: r.gigDay, deal: r.deal, yes: yes, chance: r.chance },
+        { venueId: r.venueId, gigDay: r.gigDay, deal: r.deal, yes: yes, chance: r.chance, byManager: !!r.byManager },
         yes ? expires : null);
       log.push(venue.name + (yes ? ' said yes! Accept the show in your Inbox.' : ' said no this time.'));
     });
@@ -547,11 +572,22 @@ Game.rules.booking = {
     var o = Game.balance.offers;
     var played = Game.rules.gigs.playGig(state, entry.venueId, songIds, energy, {
       deal: entry.deal, sessionPlayers: entry.sessionPlayers, fee: entry.fee,
-      crowdShare: entry.deal === 'opening' ? o.openingSlot.crowdShare : null,     // the headliner's crowd
+      crowdShare: entry.deal === 'opening' ? o.openingSlot.crowdShare                // the headliner's crowd
+        : (entry.deal === 'festival' ? Game.balance.bigOffers.festivalCrowdShare : null), // a festival crowd
       fanRate: entry.deal === 'opening' ? o.openingSlotFanRate : 1,               // their fans, at half the rate
       crowdFloor: entry.deal === 'residency' ? o.residency.crowdFloor : null      // regulars come back
     });
     var after = Game.rules.travel.afterShow(played.state, entry); // out of town: tours, unlocks, your van
-    return { state: after.state, gig: played.gig, log: played.log.concat(after.log), noShow: false };
+    var s = after.state;
+    var log = played.log.concat(after.log);
+    // Theaters and arenas: production (sound and lights), paid on the night.
+    var production = Game.rules.booking.productionCost(venue, entry.deal);
+    if (production > 0) {
+      var paid = Game.rules.money.spend(s, production, 'production');
+      s = paid.state;
+      log.push('Production (sound and lights): -$' + production.toLocaleString() + '.');
+      log = log.concat(paid.log);
+    }
+    return { state: s, gig: played.gig, log: log, noShow: false };
   }
 };

@@ -38,7 +38,7 @@ Game.rules.recording = {
     if (studio.minReputation && state.player.reputation < studio.minReputation) {
       return 'Needs reputation ' + studio.minReputation + ' (you have ' + Math.floor(state.player.reputation) + ').';
     }
-    if (studio.needsLabel) return 'Needs a label deal.';
+    if (studio.needsLabel && !Game.rules.label.signed(state)) return 'Needs a label deal.';
     return null;
   },
 
@@ -271,10 +271,16 @@ Game.rules.recording = {
   },
 
   // Sunday night: pays streaming money. Returns { state, log }.
+  // With a label deal, the label keeps 80% until the advance is paid back.
   payStreaming: function (state) {
     var pay = Game.rules.recording.streamingPay(state);
     if (!state.releases.length) return { state: state, log: [] };
-    var s = pay > 0 ? Game.rules.money.earn(state, pay, 'streaming').state : state;
-    return { state: s, log: ['Streaming: +$' + pay + ' this week.'] };
+    var split = Game.rules.label.splitStreaming(state, pay);
+    var s = split.yours > 0 ? Game.rules.money.earn(state, split.yours, 'streaming').state : Game.util.clone(state);
+    if (!split.label) return { state: s, log: ['Streaming: +$' + pay + ' this week.'] };
+    s.label.owed -= split.label;
+    return { state: s, log: ['Streaming: $' + pay + ' this week. ' + Game.content.business.label.name + ' kept $' + split.label +
+      (s.label.owed > 0 ? ' ($' + s.label.owed.toLocaleString() + ' of the advance still to pay back), you got $' + split.yours + '.'
+        : '. The advance is paid back: from now on streaming is all yours (you got $' + split.yours + ').')] };
   }
 };

@@ -9,7 +9,7 @@ Game.rules.progress = {
 
   // ----- Milestones and unlocks -----
 
-  // The checks for the milestones that are live so far (1 to 13).
+  // The checks for every milestone (1 to 18).
   milestoneChecks: {
     firstOpenMic: function (s) { return s.stats.openMicsPlayed >= 1; },
     firstOriginal: function (s) {
@@ -32,6 +32,14 @@ Game.rules.progress = {
     onTheRoad: function (s) { return s.player.reputation >= Game.balance.milestones.onTheRoadReputation; },
     wheels: function (s) { return s.stats.vansBought > 0; },
     firstTour: function (s) { return Game.rules.travel.playedTour(s); },
+    manager: function (s) { return Game.rules.manager.qualifies(s); },
+    theater: function (s) { return s.player.reputation >= Game.balance.milestones.theaterReputation && s.releases.length > 0; },
+    labelOffer: function (s) { return Game.rules.label.qualifies(s); },
+    awards: function (s) { return s.awards.length > 0; },
+    arena: function (s) {
+      var m = Game.balance.milestones;
+      return s.player.reputation >= m.arenaReputation && Game.rules.progress.totalFans(s) >= m.arenaFans;
+    },
     fullBand: function (s) { return 1 + s.band.memberIds.length >= Game.balance.milestones.fullBandOnStage; }
   },
 
@@ -64,6 +72,12 @@ Game.rules.progress = {
       .map(function (id) { return Game.content.cities[id].name; }).join(' and ') + '), and vans are in the Shop. See the Map.',
     wheels: ' You can tour now (3+ out-of-town shows in ' + Game.balance.tours.withinDays + ' days), and Far cities can take the band.',
     firstTour: ' Real road warriors.',
+    manager: ' A manager wants to work with you: check your Inbox. With one you get a ' + Game.balance.time.managerBookingWeeks +
+      '-week calendar, auto-booking, tours on request, and the press and radio push.',
+    theater: ' Theaters are open (they cost $' + Game.balance.production.theater.toLocaleString() + ' in production a night).',
+    labelOffer: ' A label wants to sign you: check your Inbox.',
+    awards: ' Your first award nomination. See your Inbox.',
+    arena: ' Arena and festival offers can come now (with a label deal).',
     fullBand: ' Clubs open up once your reputation reaches ' + Game.balance.venues.tiers[2].minReputation + '.'
   },
 

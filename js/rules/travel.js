@@ -47,15 +47,26 @@ Game.rules.travel = {
     return order[Math.max(a, b)];
   },
 
-  // Blocks of driving for one leg (0 if it's the same city).
+  // True if a leg is a flight (to or from a National or International city).
+  isFlight: function (fromCityId, toCityId) {
+    var flying = ['national', 'international'];
+    return flying.indexOf(Game.content.cities[fromCityId].region) !== -1 || flying.indexOf(Game.content.cities[toCityId].region) !== -1;
+  },
+
+  // Blocks of travel for one leg (0 if it's the same city): driving by distance, or a flight.
   legBlocks: function (fromCityId, toCityId) {
     if (fromCityId === toCityId) return 0;
+    if (Game.rules.travel.isFlight(fromCityId, toCityId)) return Game.balance.travel.flight.blocks;
     return Game.balance.travel.blocksEachWay[Game.rules.travel.legRegion(fromCityId, toCityId)];
   },
 
-  // Gas for one leg: half the round trip of the farther city.
-  legGas: function (fromCityId, toCityId) {
+  // What one leg costs: gas (half the round trip of the farther city), or plane tickets for everyone on
+  // stage (you plus your bandmates). state: needed for flights (to count the band); left out, it's just you.
+  legGas: function (fromCityId, toCityId, state) {
     if (fromCityId === toCityId) return 0;
+    if (Game.rules.travel.isFlight(fromCityId, toCityId)) {
+      return Game.balance.travel.flight.perPersonOneWay * (1 + (state ? state.band.memberIds.length : 0));
+    }
     return Game.balance.travel.gasRoundTrip[Game.rules.travel.legRegion(fromCityId, toCityId)] / 2;
   },
 
@@ -77,7 +88,10 @@ Game.rules.travel = {
       if (rep < g.farMinReputation) need.push('reputation ' + g.farMinReputation + ' (you have ' + Math.floor(rep) + ')');
       if (!state.player.gear.van) need.push('a van (in the Shop)');
     }
-    if (region === 'national') return 'Needs a manager and a label (coming in a later phase).';
+    if (region === 'national') {
+      if (!state.manager.hired) need.push('a manager');
+      if (!state.label.signed) need.push('a label deal');
+    }
     if (region === 'international') return 'Needs a major nationwide tour first (coming in a later phase).';
     return need.length ? 'Needs ' + need.join(' and ') + '.' : null;
   },
@@ -396,7 +410,7 @@ Game.rules.travel = {
     var trip = Object.keys(s.state.trips).map(function (id) { return s.state.trips[id]; })
       .filter(function (x) { return x.showIds.indexOf(s.entryId) !== -1; })[0];
     var legs = tr.tripLegs(s.state, trip);
-    var gas = legs.reduce(function (sum, leg) { return sum + tr.legGas(leg.from, leg.to); }, 0);
+    var gas = legs.reduce(function (sum, leg) { return sum + tr.legGas(leg.from, leg.to, state); }, 0);
     var blocks = legs.reduce(function (sum, leg) { return sum + leg.slots.length; }, 0);
     var nights = tr.tripNights(trip);
     return { problem: null, legs: legs, gas: gas, hotelNights: nights, hotelCost: nights * b.hotelPerNight,
@@ -439,12 +453,13 @@ Game.rules.travel = {
       if (why) return tr.strand(s, trip.id, why);
     }
     if (entry.legStart) {
-      var gas = tr.legGas(entry.from, entry.to);
+      var gas = tr.legGas(entry.from, entry.to, s);
+      var flight = tr.isFlight(entry.from, entry.to);
       var spent = Game.rules.money.spend(s, gas, 'travel');
       s = spent.state;
       log = log.concat(spent.log);
-      log.push((entry.to === 'hometown' ? 'Driving home from ' + Game.content.cities[entry.from].name : 'On the road to ' + Game.content.cities[entry.to].name) +
-        ': $' + gas + ' gas.');
+      log.push((entry.to === 'hometown' ? (flight ? 'Flying' : 'Driving') + ' home from ' + Game.content.cities[entry.from].name
+        : (flight ? 'Flying to ' : 'On the road to ') + Game.content.cities[entry.to].name) + ': $' + gas.toLocaleString() + (flight ? ' in plane tickets.' : ' gas.'));
     } else {
       log.push(entry.to === 'hometown' ? 'Still driving home.' : 'Still on the road to ' + Game.content.cities[entry.to].name + '.');
     }

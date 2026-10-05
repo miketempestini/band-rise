@@ -72,6 +72,16 @@ Game.ui.debugPanel = {
           '<button class="btn btn--small" data-action="sessionRelease">Release session songs</button>' +
         '</div>' +
         '<div class="debug__row">' +
+          '<span>Big time:</span>' +
+          '<button class="btn btn--small" data-action="addFans">+' + Game.balance.debug.fansStep.toLocaleString() + ' fans</button>' +
+          '<button class="btn btn--small" data-action="managerOffer">Manager offer</button>' +
+          '<button class="btn btn--small" data-action="labelOffer">Label offer</button>' +
+          '<button class="btn btn--small" data-action="arenaOffer">Arena offer</button>' +
+          '<button class="btn btn--small" data-action="festivalOffer">Festival offer</button>' +
+          '<button class="btn btn--small" data-action="awardsNominate">Award nominations</button>' +
+          '<button class="btn btn--small" data-action="awardsCeremony">Awards night</button>' +
+        '</div>' +
+        '<div class="debug__row">' +
           '<span>Next gig:</span>' +
           '<button class="btn btn--small' + (forced === 'rough' ? ' btn--primary' : '') + '" data-action="forceRough">Rough</button>' +
           '<button class="btn btn--small' + (forced === 'legendary' ? ' btn--primary' : '') + '" data-action="forceLegendary">Legendary</button>' +
@@ -118,6 +128,13 @@ Game.ui.debugPanel = {
       streamNow: function () { app.applyRule(rules.streamingNow(app.state)); },
       sessionOffer: function () { app.applyRule(rules.sessionWorkOffer(app.state)); },
       sessionRelease: function () { app.applyRule(rules.releaseSessionSongs(app.state)); },
+      addFans: function () { app.applyRule(rules.addFans(app.state, Game.balance.debug.fansStep)); },
+      managerOffer: function () { app.applyRule(rules.managerOffer(app.state)); },
+      labelOffer: function () { app.applyRule(rules.labelOffer(app.state)); },
+      arenaOffer: function () { app.applyWithNotice(rules.bigOffer(app.state, 'arena')); },
+      festivalOffer: function () { app.applyWithNotice(rules.bigOffer(app.state, 'festival')); },
+      awardsNominate: function () { app.applyWithNotice(rules.awardsNominate(app.state)); },
+      awardsCeremony: function () { app.applyWithNotice(rules.awardsCeremony(app.state)); },
       addContact: function () { app.applyRule(rules.addContact(app.state)); },
       setReputation: function () { app.applyRule(rules.setReputation(app.state, root.querySelector('#debug-rep').value)); },
       acceptNext: function () { app.applyRule(rules.acceptNextBooking(app.state, !app.state.debug.acceptNextBooking)); },

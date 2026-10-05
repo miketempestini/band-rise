@@ -145,6 +145,30 @@ Game.rules.debug = {
     return Game.rules.sessionWork.processReleases(s);
   },
 
+  // The big time (Phase 12): offers arrive right now, skipping their requirements.
+  managerOffer: function (state) {
+    return { state: Game.rules.booking.addInbox(state, 'managerOffer', {}, state.day + Game.balance.manager.offerExpiryDays), log: [] };
+  },
+  labelOffer: function (state) {
+    return { state: Game.rules.booking.addInbox(state, 'labelOffer', { advance: Game.rules.label.advanceFor(state) }, state.day + Game.balance.label.offerExpiryDays), log: [] };
+  },
+  bigOffer: function (state, kind) {
+    var r = Game.rules.bigShows.roll(state, kind);
+    return { state: r.state, log: r.log.length ? r.log : ['No ' + kind + ' offer: one is open already, or no National city is unlocked (needs a manager and a label).'] };
+  },
+  // Awards: nominations now, or the ceremony now (for this year's nominations).
+  awardsNominate: function (state) {
+    var r = Game.rules.awards.nominate(state);
+    return { state: r.state, log: r.log.length ? r.log : ['No nominations: nothing released this year qualifies, and not enough new fans.'] };
+  },
+  awardsCeremony: function (state) { return Game.rules.awards.ceremony(state); },
+
+  // Adds fans to the hometown (never past its fan ceiling).
+  addFans: function (state, amount) {
+    var r = Game.rules.audience.addFans(state, 'hometown', amount);
+    return Game.rules.progress.checkUnlocks(r.state);
+  },
+
   // Forces the next gig's result ('rough' or 'legendary'), or clears it with null.
   forceNextGig: function (state, result) {
     var s = Game.util.clone(state);

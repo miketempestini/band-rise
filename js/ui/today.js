@@ -159,7 +159,7 @@ Game.ui.today = {
           '<span class="block__time">' + name + '</span>' +
           '<span class="block__title">🚐 ' + (te.to === 'hometown' ? 'Driving home from ' + h.escape(Game.content.cities[te.from].name)
             : 'Travel to ' + h.escape(Game.content.cities[te.to].name)) + '</span>' +
-          '<span class="block__detail">' + (te.legStart ? 'Gas ' + h.money(Game.rules.travel.legGas(te.from, te.to)) + ' · ' : '') +
+          '<span class="block__detail">' + (te.legStart ? (Game.rules.travel.isFlight(te.from, te.to) ? 'Flights ' : 'Gas ') + h.money(Game.rules.travel.legGas(te.from, te.to, state)) + ' · ' : '') +
             '-' + b.travel.energyPerBlock + ' energy</span>' +
           energyLine +
           '</button>';

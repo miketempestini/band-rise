@@ -60,7 +60,7 @@ Each day has three blocks, the week runs Monday to Sunday, and you can see and b
 ### How far ahead you can book
 
 - Start: 4 weeks.
-- After the Manager milestone: 12 weeks, which is what tours need.
+- After the Manager milestone: 12 weeks, which is what tours need. Every booking (and the Calendar) follows this horizon, so without a manager a theater (28 to 56 days out) can only be booked exactly 4 weeks ahead.
 - Each venue tier also has its own booking window (see Venues).
 
 ### Planning ahead
@@ -140,7 +140,7 @@ You start with $500 and save about $150 a week if you spend nothing on music, so
 | Hotel | $80 a night | Out-of-town stays |
 | Van | Beater $1,500 (lasts 10 out-of-town shows), Used $3,000 (30 shows), New $12,000 (never breaks down) | Needed for Far cities with a band, and for tours. A worn-out van gets you home, then it's gone |
 | Merch stock | $200 for 25 shirts, $150 for 50 CDs | Paid up front |
-| Production | $500 to $5,000 a show | Sound and lights at theaters and bigger |
+| Production | $1,000 a theater show, $5,000 an arena show (festivals provide their own) | Sound and lights, paid on the night |
 | Surprise bills | $40 to $300 | Random events like a broken string or car trouble |
 
 ### Splitting money with the band
@@ -463,6 +463,16 @@ Out of town, small rooms, clubs, and theaters book for a share of the door (cove
 - Back-to-back cities chain travel and show in one day where the distance allows: if your next out-of-town show is within 2 days (or there's no time to go home in between), you drive straight on from city to city. A city-to-city leg uses the longer of the two cities' distances.
 - Road fatigue: from day 5 on the road, morale drops 3 a day. Bandmates gain 2 satisfaction per tour show.
 
+### The big time (Phase 12)
+
+- **Manager** (reputation 50 and 2,000 fans): offers to manage you by Inbox (again 8 weeks after you turn them down). Takes 15% of all gig pay before the band's split. You can let them go from the Manager screen.
+  - **Auto-booking**: you set the cities, venue sizes, nights, and shows a week (up to 5). Every Monday the manager emails matching venues for dates inside each venue's booking window (normal odds, no energy). A "yes" is booked for you if it needs no time off work and the travel fits.
+  - **Tours on request**: pick 2 to 8 unlocked cities and a venue size. The manager plans for 5 days, then sends a proposal: one show per city, nearest cities first, starting at least 5 weeks out (inside the 12-week calendar), with each show's expected crowd and your pay (after the manager and the band), plus travel, hotels, and production. Accepting books every show and all the travel (city to city where it makes sense); declining scraps the plan. A tour needs a van.
+- **Flights**: National cities (open with a manager and a label) are 2 blocks each way by plane, $300 a person each way (you plus your bandmates).
+- **Label** (reputation 65 and 10,000 fans): an advance of $10,000 + $2 per fan (up to $50,000), the Top studio, and National cities (with a manager). The label keeps 80% of streaming until the advance is paid back.
+- **Arenas and festivals** (reputation 85, 100,000 fans, and a label): offers only. Each Monday a 10% chance of each (one open at a time), 6 to 10 weeks out, answer within 5 days. An arena pays its flat fee ($20,000 to $30,000), an 18-song set, $5,000 production. A festival pays $5,000 to $15,000 for an 8-song afternoon slot to 30% to 60% of the grounds, production provided. Festivals: New Halston Music Fest, Crescent Riverfront Festival, Harborline Summer Fest.
+- **Awards season**: a game year is 52 weeks; December is weeks 48 to 52. Nominations arrive on the Monday of week 48; the ceremony is the Saturday of week 52. Song of the Year (a release this year with recording quality 60+), Record of the Year (an EP or album this year averaging 55+), Breakout Act (2,000+ new fans this year). Win chance: (quality - 50) / 50, or new fans / 20,000, kept between 10% and 80%. Each win: +5 reputation.
+
 ## Audience, buzz and reputation
 
 Each city tracks fans (people who stick around) and buzz (how hot you are right now). Fans grow slowly and stay; buzz spikes and fades. Reputation is one industry-wide number that unlocks things.
@@ -511,8 +521,8 @@ Each city tracks fans (people who stick around) and buzz (how hot you are right 
 | Post online | Free, 1 block | +1 to +5 hometown buzz (1 + Promotion / 20) | Start |
 | Hang flyers | $20, 1 block | +3 buzz in one city | Start |
 | Social ads | $50 | +8 buzz in one city | First release |
-| Big campaign | $150 | +15 buzz in up to 3 cities, plus fans equal to 1% of each | Reputation 40 |
-| Press and radio push | $500 | +10 buzz in every city with fans, +2 reputation | Manager |
+| Big campaign | $150 | +15 buzz in up to 3 cities you pick, plus fans equal to 1% of each | Reputation 40 |
+| Press and radio push | $500 | +10 buzz in every city with fans, +2 reputation. Once every 2 weeks | Manager |
 
 Paid promotion effects are multiplied by (1 + Promotion / 100), so the skill matters more as budgets grow.
 
@@ -585,8 +595,8 @@ Milestones unlock new actions and screens, so the game keeps handing the player 
 | 13 | First tour | 3+ out-of-town shows in 10 days | Bigger opening slots |
 | 14 | Manager | Reputation 50 and 2,000 fans | Auto-booking, 12-week calendar, press push. Manager takes 15% of gig pay |
 | 15 | Theater | Reputation 60 and a release | Tier 3 venues |
-| 16 | Label offer | Reputation 65 and 10,000 fans | A cash advance ($10,000 to $50,000), Top studio, national cities. The label keeps 80% of streaming until the advance is paid back |
-| 17 | Awards season | Every December | Nominations from your releases and fans. A win adds reputation |
+| 16 | Label offer | Reputation 65 and 10,000 fans | A cash advance ($10,000 + $2 per fan, up to $50,000; turned down, it's offered again 8 weeks later), Top studio, national cities. The label keeps 80% of streaming until the advance is paid back |
+| 17 | Awards season | Every December (first nomination) | Nominations from your releases and fans. A win adds reputation |
 | 18 | Arena | Reputation 85 and 100,000 fans | Arena and festival offers |
 
 ### Housing (the lifestyle ladder)

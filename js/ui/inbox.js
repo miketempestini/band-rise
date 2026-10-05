@@ -14,7 +14,8 @@ Game.ui.inbox = {
     var state = app.state;
     var self = Game.ui.inbox;
     var messages = state.inbox.slice().reverse(); // newest first
-    var isOpen = function (m) { return !m.resolved && (m.data.yes || m.kind === 'opening' || m.kind === 'residency' || m.kind === 'sessionWork'); };
+    var offerKinds = ['opening', 'residency', 'sessionWork', 'managerOffer', 'labelOffer', 'tourProposal', 'arenaOffer', 'festivalOffer'];
+    var isOpen = function (m) { return !m.resolved && (m.data.yes || offerKinds.indexOf(m.kind) !== -1); };
     var open = messages.filter(isOpen);
     var rest = messages.filter(function (m) { return !isOpen(m); });
 
@@ -39,7 +40,11 @@ Game.ui.inbox = {
       decline: function (e, el) { app.declineOffer(el.getAttribute('data-id')); },
       acceptOpening: function (e, el) { app.acceptOpening(el.getAttribute('data-id')); },
       reviewContract: function (e, el) { app.openContract(el.getAttribute('data-id')); },
-      acceptSessionWork: function (e, el) { app.acceptSessionWork(el.getAttribute('data-id')); }
+      acceptSessionWork: function (e, el) { app.acceptSessionWork(el.getAttribute('data-id')); },
+      hireManager: function (e, el) { app.hireManager(el.getAttribute('data-id')); },
+      signLabel: function (e, el) { app.signLabel(el.getAttribute('data-id')); },
+      acceptTour: function (e, el) { app.acceptTour(el.getAttribute('data-id'), el.getAttribute('data-job') || null); },
+      acceptBigShow: function (e, el) { app.acceptBigShow(el.getAttribute('data-id'), el.getAttribute('data-job') || null); }
     });
   },
 
@@ -107,9 +112,93 @@ Game.ui.inbox = {
       '<div class="message__foot">' + buttons + ' ' + status + '</div></div>';
   },
 
+  // A message card: a heading, a body (HTML), buttons, and the answer-by date or the outcome.
+  cardHtml: function (m, head, body, buttons) {
+    var h = Game.ui.helpers;
+    var status = m.resolved
+      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired' }[m.resolved] || m.resolved) + '</span>'
+      : (m.expiresDay !== null ? '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>' : '');
+    return '<div class="message' + (m.read ? '' : ' message--new') + '">' +
+      '<div class="message__head"><strong class="pos">' + h.escape(head) + '</strong>' + (m.read ? '' : ' <span class="badge badge--warn">New</span>') +
+        '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' + body +
+      (buttons || status ? '<div class="message__foot">' + (m.resolved ? '' : buttons || '') + ' ' + status + '</div>' : '') + '</div>';
+  },
+
+  // Accept buttons that ask how to take workdays off when an offer needs them (one button per way).
+  jobButtonsHtml: function (state, m, action, jobDays, problemFor, label) {
+    var h = Game.ui.helpers;
+    if (!jobDays.length) {
+      var p = problemFor(null);
+      return '<button class="btn btn--small btn--primary" data-action="' + action + '" data-id="' + m.id + '"' + (p ? ' disabled' : '') + '>' + label + '</button>' +
+        (p ? ' <span class="pick__reason">' + h.escape(p) + '</span>' : '');
+    }
+    return '<p class="hint">This keeps you away from your day job on ' + jobDays.map(function (x) { return h.dateLabel(x); }).join(', ') + '. How will you take ' +
+      (jobDays.length > 1 ? 'those days' : 'the day') + ' off?</p>' +
+      [['vacation', 'vacation'], ['sick', 'call in sick'], ['skip', 'skip work']].map(function (k) {
+        var p = problemFor(k[0]);
+        return '<button class="btn btn--small' + (p ? '' : ' btn--primary') + '" data-action="' + action + '" data-id="' + m.id + '" data-job="' + k[0] + '"' +
+          (p ? ' disabled title="' + h.escape(p) + '"' : '') + '>' + label + ', ' + k[1] + '</button>';
+      }).join(' ');
+  },
+
+  // Phase 12 messages: the manager's and label's offers, tour proposals, arena and festival offers, and notes.
+  bigTimeHtml: function (state, m) {
+    var h = Game.ui.helpers;
+    var self = Game.ui.inbox;
+    var b = Game.balance;
+    var d = m.data;
+    var decline = '<button class="btn btn--small" data-action="decline" data-id="' + m.id + '">Decline</button>';
+    if (m.kind === 'note') return self.cardHtml(m, d.title, '<p>' + h.escape(d.text) + '</p>', '');
+    if (m.kind === 'managerOffer') {
+      var who = Game.content.business.manager;
+      return self.cardHtml(m, '💼 ' + who.name + ' wants to manage you',
+        '<p>' + h.escape(who.company) + ' takes ' + Math.round(b.manager.gigPayCut * 100) + '% of your gig pay. In return: a ' + b.time.managerBookingWeeks +
+        '-week calendar, auto-booking by your rules, tours planned on request, and the press and radio push.</p>',
+        '<button class="btn btn--small btn--primary" data-action="hireManager" data-id="' + m.id + '">Hire them</button> ' + decline);
+    }
+    if (m.kind === 'labelOffer') {
+      return self.cardHtml(m, '📀 ' + Game.content.business.label.name + ' wants to sign you',
+        '<p>A <strong>' + h.money(d.advance) + '</strong> advance, paid now. You get the Top studio' + (Game.rules.manager.hired(state) ? ' and the National cities' : ' (and National cities once you have a manager)') +
+        '. The label keeps ' + Math.round(b.label.streamingCut * 100) + '% of your streaming money until the advance is paid back. Turn it down and they\'ll ask again in ' +
+        b.label.reofferWeeks + ' weeks.</p>',
+        '<button class="btn btn--small btn--primary" data-action="signLabel" data-id="' + m.id + '">Sign</button> ' + decline);
+    }
+    if (m.kind === 'tourProposal') {
+      var e = d.estimate;
+      var rows = e.rows.map(function (r) {
+        var v = Game.content.venues[r.venueId];
+        return '<tr><td>' + h.dateLabel(r.day) + '</td><td>' + h.escape(v.name) + ', ' + h.escape(Game.content.cities[v.cityId].name) + '</td><td>' + r.crowd +
+          '</td><td>' + h.money(r.yourPay) + '</td></tr>';
+      }).join('');
+      var skipped = d.skipped.length ? '<p class="hint">Skipped: ' + d.skipped.map(function (x) {
+        return h.escape(Game.content.cities[x.cityId].name) + ' (' + h.escape(x.why) + ')';
+      }).join('; ') + '</p>' : '';
+      var body = (d.shows.length
+        ? '<table class="quit-table"><thead><tr><th>Date</th><th>Venue</th><th>Crowd (about)</th><th>Your pay</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+          '<p class="hint">Your pay is after the manager\'s cut and the band\'s shares, at today\'s fans and buzz. Costs: travel ' + h.money(e.travel) + ', hotels ' +
+          h.money(e.hotels) + (e.production ? ', production ' + h.money(e.production) : '') + '. About <strong>' + h.money(e.net) + '</strong> left over.</p>'
+        : '<p>Your manager couldn\'t fit any shows.</p>') + skipped;
+      var buttons = d.shows.length ? self.jobButtonsHtml(state, m, 'acceptTour', e.jobDays.filter(function (x) { return Game.rules.job.worksOn(state, x); }),
+        function (choice) { return Game.rules.manager.tourAcceptProblem(state, m.id, choice); }, 'Book the tour') + ' ' + decline : decline;
+      return self.cardHtml(m, '🚐 Tour proposal: ' + d.shows.length + ' show' + (d.shows.length === 1 ? '' : 's'), body, buttons);
+    }
+    // Arena or festival offer.
+    var venue = Game.content.venues[d.venueId];
+    var arena = m.kind === 'arenaOffer';
+    var preview = Game.rules.travel.preview(Game.rules.booking.withoutMessage(state, m.id), d.venueId, d.day, arena ? 'arena' : 'festival');
+    var bodyBig = '<p>' + (arena ? 'Headline ' : 'Play a slot at ') + h.escape(venue.name) + ' in ' + h.escape(Game.content.cities[venue.cityId].name) + ', ' +
+      h.dateLabel(d.day) + ' (' + Game.content.calendar.blockNames[venue.showBlock].toLowerCase() + '): <strong>' + h.money(d.fee) + '</strong> flat, ' +
+      Game.rules.booking.setFor(venue, arena ? 'arena' : 'festival').size + '-song set. ' +
+      (arena ? 'Production costs ' + h.money(b.production.arena) + ' on the night.' : 'The festival provides production.') + '</p>' + Game.ui.booking.tripHtml(preview);
+    return self.cardHtml(m, (arena ? '🏟️ Arena offer: ' : '🎪 Festival offer: ') + venue.name, bodyBig,
+      self.jobButtonsHtml(state, m, 'acceptBigShow', Game.rules.bigShows.jobDays(state, m.id),
+        function (choice) { return Game.rules.bigShows.acceptProblem(state, m.id, choice); }, 'Accept') + ' ' + decline);
+  },
+
   messageHtml: function (state, m) {
     var h = Game.ui.helpers;
     var d = m.data;
+    if (['note', 'managerOffer', 'labelOffer', 'tourProposal', 'arenaOffer', 'festivalOffer'].indexOf(m.kind) !== -1) return Game.ui.inbox.bigTimeHtml(state, m);
     if (m.kind === 'opening' || m.kind === 'residency') return Game.ui.inbox.offerHtml(state, m);
     if (m.kind === 'sessionWork') return Game.ui.inbox.sessionWorkHtml(state, m);
     if (m.kind === 'sessionRelease') {

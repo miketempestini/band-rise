@@ -20,7 +20,7 @@ Game.ui.booking = {
 
     // City tabs: every city you can drive to (locked ones say why on the Map).
     var cityTabs = Object.keys(Game.content.cities).filter(function (id) {
-      return Game.rules.travel.regionOrder.indexOf(Game.content.cities[id].region) !== -1;
+      return Game.content.cities[id].region !== 'international';
     }).map(function (id) {
       var open = state.cities[id].unlocked;
       return '<button class="btn btn--small' + (id === cityId ? ' btn--primary' : '') + '" data-action="city" data-city="' + id + '"' +
@@ -48,15 +48,17 @@ Game.ui.booking = {
       '<section class="screen">' +
         '<div class="screen__head">' +
           '<h1 class="screen__title">Book a show</h1>' +
-          '<button class="btn" data-action="back">← Back</button>' +
+          '<div class="actions actions--left"><button class="btn" data-action="openManager">💼 Manager</button>' +
+          '<button class="btn" data-action="back">← Back</button></div>' +
         '</div>' +
         h.notice(app.notice) +
         '<div class="sort-bar">' + cityTabs + '</div>' +
         self.waitingHtml(state) +
         (home ? self.studioHtml(state, app)
           : '<p class="hint">' + h.escape(city.name) + ' · ' + Game.rules.travel.legBlocks('hometown', cityId) + ' travel block' +
-              (Game.rules.travel.legBlocks('hometown', cityId) === 1 ? '' : 's') + ' each way · $' + Game.balance.travel.gasRoundTrip[city.region] +
-              ' gas round trip · fans ' + state.cities[cityId].fans.toLocaleString() + ' · buzz ' + Math.round(state.cities[cityId].buzz) +
+              (Game.rules.travel.legBlocks('hometown', cityId) === 1 ? '' : 's') + ' each way · ' +
+              (Game.rules.travel.isFlight('hometown', cityId) ? '$' + Game.rules.travel.legGas('hometown', cityId, state) * 2 + ' in flights round trip'
+                : '$' + Game.balance.travel.gasRoundTrip[city.region] + ' gas round trip') + ' · fans ' + state.cities[cityId].fans.toLocaleString() + ' · buzz ' + Math.round(state.cities[cityId].buzz) +
               '. Travel is booked for you when you accept a show.</p>' + self.openMicHtml(state, app, cityId)) +
         sections +
       '</section>';
@@ -68,6 +70,7 @@ Game.ui.booking = {
       pickDate: function (e, el) { app.bookingDate(Number(el.getAttribute('data-day'))); },
       sendEmail: function () { app.sendBookingEmail(); },
       city: function (e, el) { app.bookingCitySelect(el.getAttribute('data-city')); },
+      openManager: function () { app.openManager(); },
       openMicPick: function (e, el) { app.openMicPick(el.getAttribute('data-venue'), Number(el.getAttribute('data-day'))); },
       openMicCancel: function () { app.openMicPick(null); },
       openMicSignUp: function () { app.signUpOpenMic(); },
@@ -130,13 +133,14 @@ Game.ui.booking = {
         ' ' + Game.content.calendar.blockNames[tr.slotBlock(t)].toLowerCase();
     };
     var legs = preview.legs.map(function (leg) {
-      return '<li>🚐 ' + h.escape(Game.content.cities[leg.from].name) + ' → ' + h.escape(Game.content.cities[leg.to].name) + ': ' +
+      return '<li>' + (tr.isFlight(leg.from, leg.to) ? '✈️ ' : '🚐 ') + h.escape(Game.content.cities[leg.from].name) + ' → ' + h.escape(Game.content.cities[leg.to].name) + ': ' +
         leg.slots.map(when).join(', ') + '</li>';
     }).join('');
     return '<div class="trip"><strong>The trip' + (preview.showCount > 1 ? ' (with your other show' + (preview.showCount > 2 ? 's' : '') + ' nearby)' : '') + '</strong>' +
       '<ul class="log">' + legs + '</ul>' +
-      '<p class="hint">Gas ' + h.money(preview.gas) + ' · ' + preview.hotelNights + ' hotel night' + (preview.hotelNights === 1 ? '' : 's') +
-        ' (' + h.money(preview.hotelCost) + ') · ' + preview.energy + ' energy of driving' +
+      '<p class="hint">' + (preview.legs.some(function (leg) { return tr.isFlight(leg.from, leg.to); }) ? 'Flights ' : 'Gas ') + h.money(preview.gas) + ' · ' +
+        preview.hotelNights + ' hotel night' + (preview.hotelNights === 1 ? '' : 's') +
+        ' (' + h.money(preview.hotelCost) + ') · ' + preview.energy + ' energy of travel' +
         (preview.jobDays.length ? ' · needs ' + preview.jobDays.map(function (d) { return h.dateLabel(d); }).join(', ') + ' off work' : '') + '</p></div>';
   },
 

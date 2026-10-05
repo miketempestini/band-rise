@@ -90,7 +90,8 @@ Game.state = {
       stats: { gigsPlayed: 0, bestResult: null, biggestCrowd: 0, totalEarned: 0, openMicsPlayed: 0, paidShows: 0,
                outOfTownShowDays: [], // the day of every out-of-town show you've played (for tours)
                citiesPlayed: {},      // cityId: shows played there
-               vansBought: 0 },
+               vansBought: 0,
+               yearStartFans: 0 },   // total fans when this game year began (for the Breakout Act award)
       pendingEvent: null, // today's event waiting for an answer: { eventId, day, data }
       eventHistory: {},   // eventId: the last day it happened (for cooldowns)
       effects: [],        // temporary effects: { id, kind: 'gigScore' | 'dailyEnergy', amount, untilDay, label }
@@ -98,6 +99,16 @@ Game.state = {
       sessionWork: {},    // id: { id, bandName, songTitle, fee, quality, bandFans, sessions, played, missed,
                           //       status: 'booked' | 'done' | 'cancelled', releaseDay, announced }
       nextSessionWorkId: 1,
+      // The manager (Phase 12). rules: the auto-booking rules you set on the Manager screen.
+      manager: {
+        hired: false, hiredDay: null, nextOfferDay: 0, lastPushDay: null,
+        rules: { on: false, cities: ['hometown'], tiers: [1, 2], nights: [4, 5], maxPerWeek: b.manager.autoBook.defaultMaxPerWeek }
+      },
+      tourRequests: [],   // tours you asked the manager to plan: { id, cities, tier, earliestDay, readyDay }
+      nextTourRequestId: 1,
+      // The label (Phase 12): owed is the part of the advance not yet paid back from streaming.
+      label: { signed: false, signedDay: null, advance: 0, owed: 0, nextOfferDay: 0 },
+      awards: [],         // every nomination: { year, category, title, chance, won (null until the ceremony) }
       trips: {},          // trips out of town: id: { id, showIds, cities, startT, endT, needsVan } (see Game.rules.travel)
       nextTripId: 1,
       weekTemplates: [],  // saved Plan Week templates: { id, name, evenings: { dayOfWeek: { actionId, choice } } }

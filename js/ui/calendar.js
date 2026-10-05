@@ -13,13 +13,17 @@ Game.ui.calendar = {
     var state = app.state;
     var self = Game.ui.calendar;
     var b = Game.balance;
-    var start = state.day - Game.rules.day.dayOfWeek(state.day); // this week's Monday
+    // The Calendar shows 4 weeks at a time: 4 weeks in all, or 12 (three pages) with a manager.
+    var pageWeeks = b.time.calendarPageWeeks;
+    var pages = Math.ceil(Game.rules.manager.calendarWeeks(state) / pageWeeks);
+    var page = Math.min(app.calendarPage || 0, pages - 1);
+    var start = state.day - Game.rules.day.dayOfWeek(state.day) + page * pageWeeks * b.time.daysPerWeek; // this page's first Monday
     var selected = app.calendarDay === null || app.calendarDay === undefined ? state.day : app.calendarDay;
     var job = state.player.job;
 
     var head = Game.content.calendar.dayNames.map(function (n) { return '<div class="cal__dow">' + n.slice(0, 3) + '</div>'; }).join('');
     var cells = '';
-    for (var d = start; d < start + b.time.calendarWeeks * b.time.daysPerWeek; d++) {
+    for (var d = start; d < start + pageWeeks * b.time.daysPerWeek; d++) {
       cells += self.cellHtml(state, d, d === selected);
     }
 
@@ -44,6 +48,10 @@ Game.ui.calendar = {
         '</div>' +
         h.notice(app.notice) +
         '<p class="hint">' + jobLine + '</p>' +
+        (pages > 1 ? '<div class="sort-bar"><button class="btn btn--small" data-action="calPage" data-page="' + (page - 1) + '"' + (page === 0 ? ' disabled' : '') + '>◀ Earlier</button>' +
+          '<span class="muted">Weeks ' + Game.rules.day.weekNumber(start) + ' to ' + Game.rules.day.weekNumber(start + (pageWeeks - 1) * b.time.daysPerWeek) +
+          ' (page ' + (page + 1) + ' of ' + pages + ')</span>' +
+          '<button class="btn btn--small" data-action="calPage" data-page="' + (page + 1) + '"' + (page >= pages - 1 ? ' disabled' : '') + '>Later ▶</button></div>' : '') +
         '<div class="cal-layout">' +
           '<div class="cal">' + head + cells + '</div>' +
           '<div class="cal-detail">' + self.detailHtml(state, app, selected) + '</div>' +
@@ -66,6 +74,7 @@ Game.ui.calendar = {
       cancelStudio: function (e, el) { app.cancelStudio(el.getAttribute('data-entry')); },
       cancelSessionWork: function (e, el) { app.cancelSessionWork(el.getAttribute('data-work')); },
       planWeek: function () { app.openPlanWeek(); },
+      calPage: function (e, el) { app.calendarPage = Number(el.getAttribute('data-page')); app.render(); },
       openJob: function () { app.openJob(); },
       planBlock: function (e, el) { app.openPicker(el.getAttribute('data-block'), Number(el.getAttribute('data-day'))); },
       clearBlock: function (e, el) { app.calendarClear(Number(el.getAttribute('data-day')), el.getAttribute('data-block')); }
@@ -242,7 +251,7 @@ Game.ui.calendar = {
       tripText = '<p class="hint">🚐 Trip: ' + legs.map(function (leg) {
         return Game.content.cities[leg.from].name + ' → ' + Game.content.cities[leg.to].name + ' (' + h.dateLabel(tr.slotDay(leg.slots[0])) + ' ' +
           Game.content.calendar.blockNames[tr.slotBlock(leg.slots[0])].toLowerCase() + ')';
-      }).join(', ') + ' · gas ' + h.money(legs.reduce(function (sum, leg) { return sum + tr.legGas(leg.from, leg.to); }, 0)) +
+      }).join(', ') + ' · gas ' + h.money(legs.reduce(function (sum, leg) { return sum + tr.legGas(leg.from, leg.to, state); }, 0)) +
         ' · ' + tr.tripNights(trip) + ' hotel night' + (tr.tripNights(trip) === 1 ? '' : 's') + (trip.needsVan ? ' · needs a van' : '') + '</p>';
     }
 

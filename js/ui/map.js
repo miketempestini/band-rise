@@ -75,7 +75,7 @@ Game.ui.map = {
       }).join('');
     }).join('');
     return '<svg class="map" viewBox="0 0 ' + size + ' ' + size + '" role="img" aria-label="Map of cities around Millbrook">' + rings + dots + '</svg>' +
-      '<p class="hint">Rings: Near (1 travel block each way), Mid (2), Far (a full day). National and International cities need flights (later phases).</p>';
+      '<p class="hint">Rings: Near (1 travel block each way), Mid (2), Far (a full day). National cities are a flight away (with a manager and a label); International cities come later.</p>';
   },
 
   // Your van, if you have one.
@@ -99,7 +99,8 @@ Game.ui.map = {
     var tr = Game.rules.travel;
     var city = Game.content.cities[cityId];
     var cs = state.cities[cityId];
-    var drive = tr.regionOrder.indexOf(city.region) > 0;
+    var drive = cityId !== 'hometown' && city.region !== 'international'; // places you can travel to now (driving, or flights)
+    var fly = drive && tr.isFlight('hometown', cityId);
     var problem = cs.unlocked ? null : tr.cityUnlockProblem(state, cityId);
     var venues = Object.keys(Game.content.venues).map(function (id) { return Game.content.venues[id]; })
       .filter(function (v) { return v.cityId === cityId; });
@@ -114,7 +115,8 @@ Game.ui.map = {
       '<p class="hint">' + h.escape(city.blurb) + '</p>' +
       '<dl class="rows">' +
         (drive ? '<dt>Travel</dt><dd>' + tr.legBlocks('hometown', cityId) + ' block' + (tr.legBlocks('hometown', cityId) === 1 ? '' : 's') + ' each way · ' +
-          h.money(Game.balance.travel.gasRoundTrip[city.region]) + ' gas round trip</dd>' : (cityId === 'hometown' ? '' : '<dt>Travel</dt><dd>Flights (later)</dd>')) +
+          (fly ? h.money(tr.legGas('hometown', cityId, state) * 2) + ' in flights round trip (' + h.money(Game.balance.travel.flight.perPersonOneWay) + ' a person each way)'
+            : h.money(Game.balance.travel.gasRoundTrip[city.region]) + ' gas round trip') + '</dd>' : (cityId === 'hometown' ? '' : '<dt>Travel</dt><dd>Flights (later)</dd>')) +
         '<dt>Fans</dt><dd>' + cs.fans.toLocaleString() + ' / ' + city.fanCeiling.toLocaleString() + '</dd>' +
         '<dt>Buzz</dt><dd>' + Math.round(cs.buzz) + '</dd>' +
         (cityId === 'hometown' ? '' : '<dt>Shows played</dt><dd>' + played + '</dd>') +

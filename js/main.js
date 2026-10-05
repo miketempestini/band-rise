@@ -34,6 +34,8 @@ Game.app = {
   contractId: null,     // the residency offer being reviewed
   contractTerms: null,  // the terms you're editing on the contract screen: { weekday, rate, weeks }
   planWeekStart: null,  // the Monday of the week shown on the Plan week screen
+  calendarPage: 0,      // which 4 weeks the Calendar shows (0 = from this week; up to 2 with a manager)
+  tourDraft: null,      // a tour request being set up on the Manager screen: { cities, tier, earliestDay }
   planWeekPicks: {},    // Plan week choices not applied yet: { dayOfWeek: actionId | 'clear' }
   templateNameDraft: '', // the name typed for a new week template
   bandNameDraft: '',       // the band name shown in the name box on the Name your band screen
@@ -164,6 +166,13 @@ Game.app = {
       app.navigate('booking');
       return;
     }
+    if (action.needsCities) {
+      // Big campaign: pick up to 3 cities (your biggest ones are ticked to start).
+      app.pickerSet = Game.rules.actions.campaignCities(app.pickerView()).slice(0, action.needsCities);
+      app.pickerSongStep = actionId;
+      app.render();
+      return;
+    }
     if (action.setSize || action.songsMax) {
       // Start from the songs already planned in this block, or the suggested ones.
       var entry = Game.rules.actions.plannedEntry(app.pickerView(), app.pickerBlock);
@@ -198,7 +207,7 @@ Game.app = {
   toggleSetSong: function (songId) {
     var app = Game.app;
     var stepAction = Game.content.actions[app.pickerSongStep];
-    var size = stepAction.setSize || stepAction.songsMax;
+    var size = stepAction.setSize || stepAction.songsMax || stepAction.needsCities;
     var i = app.pickerSet.indexOf(songId);
     if (i !== -1) {
       app.pickerSet.splice(i, 1);
@@ -239,7 +248,7 @@ Game.app = {
     if (screen === app.screen) return;
     var resting = ['songReveal', 'nameBand', 'settings', screen];
     if (resting.indexOf(app.screen) === -1) app.returnTo[screen] = app.screen;
-    if (screen === 'calendar') app.calendarDay = app.state.day;
+    if (screen === 'calendar') { app.calendarDay = app.state.day; app.calendarPage = 0; }
     if (screen === 'booking') { app.bookingDraft = null; app.studioDraft = null; app.openMicDraft = null; }
     app.show(screen);
     if (screen === 'inbox' && Game.rules.booking.unreadCount(app.state)) {
@@ -565,6 +574,45 @@ Game.app = {
     app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
     app.applyRule(result);
   },
+
+  // ----- The big time (Phase 12): manager, tours, label, arenas and festivals -----
+
+  // Uses a rule's result and shows its message (as an error if nothing changed).
+  applyWithNotice: function (result) {
+    var app = Game.app;
+    app.notice = result.log.length ? { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') } : null;
+    app.applyRule(result);
+  },
+
+  openManager: function () { Game.app.navigate('manager'); },
+  hireManager: function (messageId) { Game.app.applyWithNotice(Game.rules.manager.hire(Game.app.state, messageId)); },
+  letGoManager: function () {
+    if (!window.confirm('Let your manager go? You lose auto-booking, tours, the press push, and the 12-week calendar (shows already booked stay).')) return;
+    Game.app.applyWithNotice(Game.rules.manager.letGo(Game.app.state));
+  },
+  saveManagerRules: function (rules) { Game.app.applyWithNotice(Game.rules.manager.setRules(Game.app.state, rules)); },
+
+  // The tour request form on the Manager screen.
+  tourDraftSet: function (field, value) {
+    var app = Game.app;
+    app.tourDraft = app.tourDraft || { cities: [], tier: 2, earliestDay: null };
+    if (field === 'city') {
+      var i = app.tourDraft.cities.indexOf(value);
+      if (i === -1) app.tourDraft.cities.push(value); else app.tourDraft.cities.splice(i, 1);
+    } else {
+      app.tourDraft[field] = value;
+    }
+    app.render();
+  },
+  requestTour: function () {
+    var app = Game.app;
+    var result = Game.rules.manager.requestTour(app.state, app.tourDraft || { cities: [] });
+    if (result.state !== app.state) app.tourDraft = null;
+    app.applyWithNotice(result);
+  },
+  acceptTour: function (messageId, jobChoice) { Game.app.applyWithNotice(Game.rules.manager.acceptTour(Game.app.state, messageId, jobChoice)); },
+  signLabel: function (messageId) { Game.app.applyWithNotice(Game.rules.label.sign(Game.app.state, messageId)); },
+  acceptBigShow: function (messageId, jobChoice) { Game.app.applyWithNotice(Game.rules.bigShows.accept(Game.app.state, messageId, jobChoice)); },
 
   // ----- Plan week -----
 

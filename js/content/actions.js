@@ -29,6 +29,8 @@
 //   needsBooking: 'studio'  planned from the Book screen's Studio section (Book studio time)
 //   needsHomeStudio     true if you need the home recording setup (Record at home)
 //   songFilter          'originals' to only offer original songs in the song step
+//   needsCities         pick up to this many cities (Big campaign); minReputation: reputation needed
+//   needsManager        true if you need a manager (Press and radio push)
 //   needsRelease        true if it unlocks with your first release (Social ads)
 //   optionalCoWriter    true if a bandmate (relationship 40+) can write with you (Write)
 //   songsMax            pick 1 to this many songs (Rehearse)
@@ -198,6 +200,40 @@ Game.content = Game.content || {};
       requirements: {},
       effects: { skills: b.skills.baseGain.promote, buzz: 'socialAds' },
       needsRelease: true,
+      countsAsWork: true,
+      noSkillWhenBurnedOut: false
+    },
+
+    bigCampaign: {
+      id: 'bigCampaign',
+      name: 'Big campaign',
+      description: 'Posters, playlists, and paid ads in up to ' + b.promotion.bigCampaign.maxCities + ' cities: +' + b.promotion.bigCampaign.buzz +
+        ' buzz each, plus new fans (' + Math.round(b.promotion.bigCampaign.fanRate * 100) + '% of each city\'s fans).',
+      blocks: 1,
+      energyCost: b.energy.cost.promote,
+      moneyCost: b.promotion.bigCampaign.cost,
+      moneyCategory: 'promotion',
+      requirements: {},
+      effects: { skills: b.skills.baseGain.promote, campaign: true },
+      needsCities: b.promotion.bigCampaign.maxCities,
+      minReputation: b.promotion.bigCampaign.minReputation,
+      countsAsWork: true,
+      noSkillWhenBurnedOut: false
+    },
+
+    pressPush: {
+      id: 'pressPush',
+      name: 'Press and radio push',
+      description: 'Your manager calls in favors: +' + b.promotion.pressPush.buzz + ' buzz in every city with fans and +' +
+        b.promotion.pressPush.reputation + ' reputation. Once every ' + b.promotion.pressPush.cooldownDays / b.time.daysPerWeek + ' weeks.',
+      blocks: 1,
+      energyCost: b.energy.cost.promote,
+      moneyCost: b.promotion.pressPush.cost,
+      moneyCategory: 'promotion',
+      requirements: {},
+      effects: { skills: b.skills.baseGain.promote, pressPush: true },
+      needsManager: true,
+      onTheRoad: true,
       countsAsWork: true,
       noSkillWhenBurnedOut: false
     },

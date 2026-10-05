@@ -288,10 +288,13 @@ Game.rules.gigs = {
     }
 
     // Tips and show pay: split into equal shares with the band (a Diva takes 1.5). You keep your share.
+    // A manager takes their cut of the show pay first (not tips).
     var share = Game.rules.people.payShares(s).yourShare;
     var yourTips = Math.round(tips * share);
     if (yourTips > 0) s = Game.rules.money.earn(s, yourTips, 'tips').state;
-    var pay = opts.deal ? Game.rules.booking.payFor(venue, opts.deal, crowd, opts.fee) : 0;
+    var grossPay = opts.deal ? Game.rules.booking.payFor(venue, opts.deal, crowd, opts.fee) : 0;
+    var managerCut = Game.rules.manager.cutOf(s, grossPay);
+    var pay = grossPay - managerCut;
     var yourPay = Math.round(pay * share);
     if (yourPay > 0) s = Game.rules.money.earn(s, yourPay, 'gigPay').state;
     s.stats.totalEarned += yourTips + yourPay;
@@ -368,6 +371,7 @@ Game.rules.gigs = {
         tips: tips,
         yourTips: yourTips,
         pay: pay,
+        managerCut: managerCut,
         yourPay: yourPay,
         venueRelationship: venueChange,
         merch: { sold: merch.sold, revenue: merch.revenue, soldOut: merch.soldOut },
@@ -383,7 +387,7 @@ Game.rules.gigs = {
     var resultName = result.charAt(0).toUpperCase() + result.slice(1);
     var money = '';
     if (yourTips) money += ', $' + yourTips + ' in tips' + (bandNames.length ? ' (your share)' : '');
-    if (pay) money += ', $' + pay + ' pay' + (bandNames.length ? ' (your share $' + yourPay + ')' : '');
+    if (pay) money += ', $' + pay + ' pay' + (managerCut ? ' after your manager\'s $' + managerCut : '') + (bandNames.length ? ' (your share $' + yourPay + ')' : '');
     if (merch.revenue) money += ', $' + merch.revenue + ' in merch';
     return {
       state: s,
