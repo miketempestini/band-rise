@@ -7,10 +7,6 @@ Game.ui = Game.ui || {};
 
 Game.ui.weeklySummary = {
 
-  // Plain names for each money category.
-  incomeLabels: { loans: 'Loans from Mom and Dad', dayJob: 'Day job', tips: 'Open mic tips', gigPay: 'Gig pay (your share)', streaming: 'Streaming', label: 'Label advance', merch: 'Merch sales', sessionWork: 'Session work', sessionCredits: 'Session credits', overtime: 'Overtime', events: 'Odd jobs and luck', sessionRefund: 'Session players refunded', debug: 'Debug cash' },
-  costLabels: { housing: 'Moving and homes', paidBack: 'Paid back to Mom and Dad', bills: 'Rent and living costs', networking: 'Going out to network', promotion: 'Promotion', rehearsal: 'Rehearsal room', hangOut: 'Hanging out', sessionPlayers: 'Session players', travel: 'Travel and hotels', production: 'Production', studio: 'Studio time', merchStock: 'Merch stock', gear: 'Gear', events: 'Surprise costs', debug: 'Debug' },
-
   render: function (root, app) {
     var h = Game.ui.helpers;
     var d = Game.balance.debt;
@@ -20,8 +16,8 @@ Game.ui.weeklySummary = {
 
     // The "Money in" and "Money out" lists (the rules add them up).
     var totals = Game.rules.money.weekTotals(week);
-    var inRows = totals.income.map(function (r) { return [self.incomeLabels[r.key] || r.key, h.money(r.amount)]; });
-    var outRows = totals.costs.map(function (r) { return [self.costLabels[r.key] || r.key, h.money(r.amount)]; });
+    var inRows = totals.income.map(function (r) { return [Game.content.finance.income[r.key] || r.key, h.money(r.amount)]; });
+    var outRows = totals.costs.map(function (r) { return [Game.content.finance.costs[r.key] || r.key, h.money(r.amount)]; });
 
     var debtWarning = '';
     if (week.endDebt > d.gameOverDebt) {

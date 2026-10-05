@@ -55,6 +55,7 @@ Game.ui.topbar = {
       ['songs', '🎵 Songs'],
       ['people', '👥 People' + (Game.rules.people.needTalk(state).length ? ' <span class="badge badge--bad">!</span>' : '')],
       ['shop', '🛒 Shop'],
+      ['finances', '💰 Finances'],
       ['career', '🏆 Career'],
       ['settings', '⚙️ Settings']
     ];

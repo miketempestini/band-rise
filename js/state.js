@@ -107,6 +107,10 @@ Game.state = {
         hired: false, hiredDay: null, nextOfferDay: 0, lastPushDay: null,
         rules: { on: false, cities: ['hometown'], tiers: [1, 2], nights: [4, 5], maxPerWeek: b.manager.autoBook.defaultMaxPerWeek }
       },
+      // Money records for the Finances screen (the last 92 days): entries are every dollar in or out of your cash
+      // ({ day, flow: 'in' | 'out', cat, amount, tripId }) plus band money that isn't yours ({ flow: 'band', cat,
+      // amount, personId }); shows are one record per gig played (see Game.rules.finances).
+      finances: { entries: [], shows: [] },
       adCampaigns: [],    // tour ad campaigns: { cityId, packageId, landDay, showDay, landed }
       tourRequests: [],   // tours you asked the manager to plan: { id, cities, tier, earliestDay, readyDay }
       nextTourRequestId: 1,

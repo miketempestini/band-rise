@@ -308,6 +308,20 @@ Game.rules.gigs = {
     s = merch.state;
     s.stats.totalEarned += merch.revenue;
 
+    // The Finances screen: the show's money for the whole band (ticket sales or the fee, the manager's cut, each
+    // bandmate's pay, the band's tips) and a record of the show.
+    var memberShares = Game.rules.people.payShares(s).memberShares;
+    var memberPay = {};
+    Object.keys(memberShares).forEach(function (id) {
+      memberPay[id] = Math.round(pay * memberShares[id]);
+      Game.rules.finances.add(s, { flow: 'band', cat: 'memberPay', personId: id, amount: memberPay[id] });
+    });
+    Game.rules.finances.add(s, { flow: 'band', cat: opts.deal === 'door' ? 'ticketSales' : 'showFees', amount: grossPay });
+    Game.rules.finances.add(s, { flow: 'band', cat: 'managerPay', amount: managerCut });
+    Game.rules.finances.add(s, { flow: 'band', cat: 'bandTips', amount: tips - yourTips });
+    Game.rules.finances.addShow(s, { venueId: venueId, deal: opts.deal || 'openMic', gross: grossPay, managerCut: managerCut, memberPay: memberPay,
+      yourPay: yourPay, tips: tips, yourTips: yourTips, merch: merch.revenue, production: 0, tripId: null, tour: false });
+
     // Venue relationship (booked rooms): +5 after a Solid or better show, -10 after a Rough one.
     var venueChange = 0;
     if (venue.tier > 0) {

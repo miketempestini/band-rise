@@ -279,6 +279,7 @@ Game.rules.recording = {
     var s = split.yours > 0 ? Game.rules.money.earn(state, split.yours, 'streaming').state : Game.util.clone(state);
     if (!split.label) return { state: s, log: ['Streaming: +$' + pay + ' this week.'] };
     s.label.owed -= split.label;
+    Game.rules.finances.add(s, { flow: 'band', cat: 'labelKept', amount: split.label });
     return { state: s, log: ['Streaming: $' + pay + ' this week. ' + Game.content.business.label.name + ' kept $' + split.label +
       (s.label.owed > 0 ? ' ($' + s.label.owed.toLocaleString() + ' of the advance still to pay back), you got $' + split.yours + '.'
         : '. The advance is paid back: from now on streaming is all yours (you got $' + split.yours + ').')] };

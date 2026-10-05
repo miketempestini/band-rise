@@ -759,3 +759,27 @@ button.recap:hover { border-color: var(--accent); }
 .recap__more { color: var(--teal); font-size: 14px; font-weight: bold; }
 .recap__strip { color: var(--text-muted); margin-top: 0; font-variant-numeric: tabular-nums; }
 .modal--wide { width: 760px; max-width: calc(100vw - 32px); }
+
+/* ---------- Finances screen ---------- */
+
+.finance-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-2); margin-bottom: var(--space-3); }
+.finance-card { background: var(--panel); border: 2px solid var(--line); border-radius: var(--radius); padding: var(--space-2) var(--space-3); box-shadow: var(--shadow); }
+.finance-card__label { display: block; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+.finance-card__value { display: block; font-size: 26px; font-weight: bold; font-variant-numeric: tabular-nums; }
+.finance-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-3); }
+@media (max-width: 900px) { .finance-grid { grid-template-columns: minmax(0, 1fr); } }
+.finance-bar { display: grid; grid-template-columns: 1fr 120px 44px; align-items: center; gap: 8px; margin: 4px 0; font-size: 14px; }
+.finance-bar__track { height: 10px; background: var(--panel-2); border-radius: 5px; overflow: hidden; }
+.finance-bar__fill { display: block; height: 100%; }
+.finance-bar__fill--in { background: var(--good); }
+.finance-bar__fill--out { background: var(--bad); }
+.finance-bar__pct { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-muted); }
+.chart { width: 100%; height: auto; display: block; }
+.chart__in { fill: var(--good); }
+.chart__out { fill: var(--bad); }
+.chart__axis { stroke: var(--line); stroke-width: 1; }
+.chart__label { fill: var(--text-muted); font-size: 12px; font-family: inherit; }
+.finance-trip td { background: var(--panel-2); }
+.finance-trip__show td:first-child { padding-left: 24px; }
+.finance-shows td, .finance-shows th { font-size: 14px; }
+.finance-shows td:nth-child(2), .finance-shows th:nth-child(2), .finance-trip td:first-child { text-align: left; }

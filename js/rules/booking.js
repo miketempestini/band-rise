@@ -585,6 +585,14 @@ Game.rules.booking = {
     var log = played.log.concat(after.log);
     // Theaters and arenas: production (sound and lights), paid on the night.
     var production = Game.rules.booking.productionCost(venue, entry.deal, played.gig.rewards.pay + played.gig.rewards.managerCut);
+    // The Finances screen's show record: its trip (if out of town), tour, and production.
+    var trip = Object.keys(state.trips).filter(function (id) { return state.trips[id].showIds.indexOf(entry.id) !== -1; })[0] || null;
+    var record = s.finances && s.finances.shows[s.finances.shows.length - 1];
+    if (record && record.day === s.day && record.venueId === entry.venueId) {
+      record.tripId = trip;
+      record.tour = Game.rules.travel.isTourShow(state, entry);
+      record.production = production;
+    }
     if (production > 0) {
       var paid = Game.rules.money.spend(s, production, 'production');
       s = paid.state;

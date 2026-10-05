@@ -4,6 +4,23 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14d: Finances tab (2026-10-04)
+- **New 💰 Finances tab**, with filters for last week, last month, and last 3 months. It shows:
+  - **Summary cards:** money in, money out, net, cash now, and any debt or label advance still owed.
+  - **Show money (the whole band):** ticket sales and show fees, then who got them: the manager, each bandmate by
+    name, and you, plus tips (yours and the band's).
+  - **Your money in and out** by category: day job, gig pay, tips, merch sales, streaming, session work, loans;
+    rent, merch cost, studio, promotion and ads, travel and hotels (your part), production, gear and vans,
+    moving, and surprise costs.
+  - **Covered by others:** each bandmate's part of gas and hotels, and what the label kept from streaming.
+  - **Top earners and costs:** bars with percentages.
+  - **Week by week:** a bar chart of the last 13 weeks, money in vs. out.
+  - **Show by show:** each gig's ticket sales, manager, band, you, merch, production, and net. Out-of-town trips and
+    tours are grouped, with their travel and a trip net.
+- **Under the hood:** money is tracked from now on (`state.finances`, kept for 92 days). Category names moved to
+  `js/content/finance.js`, shared with the weekly wrap-up.
+- **Saves:** version 15. **Tests:** 307 passing (finances.test.js new).
+
 ### Session 14c: End Day stays on Today (2026-10-04)
 - Owner's change: ending a day no longer switches to the Day results screen. You stay on Today.
 - **Previous day box:** the empty space on the left of the dashboard now holds this box:

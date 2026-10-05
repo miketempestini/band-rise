@@ -310,6 +310,8 @@ Game.rules.day = {
       endLines.push('Exhausted: ' + b.morale.change.exhausted + ' morale, and you\'ll only recover ' + b.energy.exhaustedOvernight + ' energy tonight.');
       changeMorale(b.morale.change.exhausted, endLines);
     }
+    // Old money records drop off (the Finances screen keeps the last few months).
+    s = Game.rules.finances.prune(s).state;
     // On the road: a hotel if you're away tonight, and road fatigue from day 5.
     var road = Game.rules.travel.nightly(s);
     s = road.state;

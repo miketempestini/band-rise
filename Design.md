@@ -825,6 +825,7 @@ Sixteen screens, most of them panels around one main Today view. The vertical sl
 | 13 | Shop | Gear, merch stock, van, housing | Buy | No |
 | 14 | Map | Cities, fans and buzz in each | Plan travel | No |
 | 15 | Career | Milestones, fame level, lifetime stats, career card | Share | No |
+| 15b | Finances | Every dollar in and out for the last week, month, or 3 months: the band's show money (ticket sales, manager, each bandmate, you), your money in and out by category, what others covered, top earners and costs, a 13-week chart, and show-by-show profit with trips and tours grouped | Filter | No |
 | 16 | Settings and saves | Export, import, reset | Manage saves | Partly (export and import) |
 
 Visual style: simple and cartoonish, with details to come. Until then, plain colored panels and placeholder icons are fine.

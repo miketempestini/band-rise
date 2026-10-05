@@ -17,6 +17,7 @@ Game.rules.money = {
     var s = Game.util.clone(state);
     s.player.cash += amount;
     s.thisWeek.income[category] = (s.thisWeek.income[category] || 0) + amount;
+    Game.rules.finances.add(s, { flow: 'in', cat: category, amount: amount });
     return { state: s, log: [] };
   },
 
@@ -24,19 +25,22 @@ Game.rules.money = {
   // If that would leave cash below $0, Mom and Dad lend money, $1,000 at a time,
   // until cash is back to $0 or more. There's no limit on how much they'll lend.
   // Returns { state, log }.
-  spend: function (state, amount, category) {
+  // extra: optional details for the Finances screen's record, like { tripId } for travel costs.
+  spend: function (state, amount, category, extra) {
     var b = Game.balance.debt;
     var s = Game.util.clone(state);
     var log = [];
 
     s.player.cash -= amount;
     s.thisWeek.costs[category] = (s.thisWeek.costs[category] || 0) + amount;
+    Game.rules.finances.add(s, Object.assign({ flow: 'out', cat: category, amount: amount }, extra || {}));
 
     // Keep borrowing until cash isn't negative anymore.
     while (s.player.cash < 0) {
       s.player.cash += b.familyLoanAmount;
       s.player.loanOwed += b.familyLoanAmount;
       s.thisWeek.loans += b.familyLoanAmount;
+      Game.rules.finances.add(s, { flow: 'in', cat: 'loans', amount: b.familyLoanAmount });
       log.push('You were short on cash. Mom and Dad lent you $' + b.familyLoanAmount.toLocaleString() + '.');
     }
 
@@ -61,6 +65,7 @@ Game.rules.money = {
     s.player.cash -= amount;
     s.player.loanOwed -= amount;
     s.thisWeek.paidBack += amount;
+    Game.rules.finances.add(s, { flow: 'out', cat: 'paidBack', amount: amount });
     return { state: s, log: ['You paid Mom and Dad back $' + amount.toLocaleString() + '.'] };
   },
 

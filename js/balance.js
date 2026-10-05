@@ -810,7 +810,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 14,                     // Save format version, bumped when the state shape changes
+    version: 15,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 
@@ -862,6 +862,16 @@ Game.balance = {
       bandSize:   { min: 1,   max: 1 },  // bandmates besides you
       reputation: { min: 10,  max: 13 }
     }
+  },
+
+  // ---------------------------------------------------------------
+  // Finances screen
+  // ---------------------------------------------------------------
+  finances: {
+    keepDays: 92,                    // Money records older than this are dropped each night (the screen shows up to 90 days)
+    periods: [7, 30, 90],            // The filters: last week, last month, last 3 months (in days)
+    chartWeeks: 13,                  // The weekly chart shows this many weeks
+    topCount: 5                      // "Top earners and costs" lists this many of each
   },
 
   // ---------------------------------------------------------------

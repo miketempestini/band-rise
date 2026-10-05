@@ -75,6 +75,14 @@ Game.rules.travel = {
     return Math.round(amount * Game.rules.people.payShares(state).yourShare);
   },
 
+  // Notes what each bandmate chipped in for a road cost, for the Finances screen (s: a state that's already a copy).
+  logBandShare: function (s, amount) {
+    var shares = Game.rules.people.payShares(s).memberShares;
+    Object.keys(shares).forEach(function (id) {
+      Game.rules.finances.add(s, { flow: 'band', cat: 'travelCovered', personId: id, amount: Math.round(amount * shares[id]) });
+    });
+  },
+
   // ----- Cities unlocking -----
 
   // Why a city isn't open to you yet, or null if it is (or would be now).
@@ -462,9 +470,10 @@ Game.rules.travel = {
       var gas = tr.legGas(entry.from, entry.to, s);
       var mine = tr.yourShareOf(s, gas); // the band chips in for their shares
       var flight = tr.isFlight(entry.from, entry.to);
-      var spent = Game.rules.money.spend(s, mine, 'travel');
+      var spent = Game.rules.money.spend(s, mine, 'travel', { tripId: entry.tripId });
       s = spent.state;
       log = log.concat(spent.log);
+      tr.logBandShare(s, gas);
       log.push((entry.to === 'hometown' ? (flight ? 'Flying' : 'Driving') + ' home from ' + Game.content.cities[entry.from].name
         : (flight ? 'Flying to ' : 'On the road to ') + Game.content.cities[entry.to].name) + ': $' + gas.toLocaleString() + (flight ? ' in plane tickets' : ' gas') +
         (mine < gas ? ' (your part $' + mine.toLocaleString() + ', the band covers the rest).' : '.'));
@@ -576,8 +585,10 @@ Game.rules.travel = {
     else s.player.roadDays = 0;
     if (awayTonight) {
       var hotel = tr.yourShareOf(s, b.travel.hotelPerNight); // the band chips in for their shares
-      var spent = Game.rules.money.spend(s, hotel, 'travel');
+      var tonight = Object.keys(s.trips).filter(function (id) { return s.trips[id].startT <= lastToday && s.trips[id].endT > lastToday; })[0];
+      var spent = Game.rules.money.spend(s, hotel, 'travel', { tripId: tonight });
       s = spent.state;
+      tr.logBandShare(s, b.travel.hotelPerNight);
       log.push('Hotel: -$' + hotel + (hotel < b.travel.hotelPerNight ? ' (your part of $' + b.travel.hotelPerNight + ')' : '') + '.');
       log = log.concat(spent.log);
     }

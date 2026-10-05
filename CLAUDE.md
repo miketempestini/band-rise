@@ -76,7 +76,7 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, housing, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, offers, sessionWork, travel, manager, label, bigShows, awards, actions, planWeek, career, day, debug
+5. `js/rules/*.js`: money, finances, housing, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, offers, sessionWork, travel, manager, label, bigShows, awards, actions, planWeek, career, day, debug
    (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
 6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
@@ -247,6 +247,11 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   `adsRunning` stops buzz fading), `manager.proposalEstimate(state, messageId, ads)`, word of mouth in `travel.afterShow` and
   `travel.isTourShow` (fanRate bonus in `booking.playShow`), road costs split with `travel.yourShareOf`, and production via
   `booking.productionCost(venue, deal, pay)`.
+- **Finances (money records)**: every dollar of your cash goes through `money.earn` / `money.spend` (pass
+  `{ tripId }` as spend's 4th argument for trip costs), which also log it for the Finances tab. Money that isn't
+  yours (a show's gross, the manager's cut, bandmates' pay and travel shares, the label's cut) is logged with
+  `Game.rules.finances.add(s, { flow: 'band', ... })`. Records are kept for 92 days. New money flows must do one or
+  the other. Category names live in `js/content/finance.js`.
 - **Dates**: day numbers are real dates (day 0 = Monday, January 5, 2026, in `balance.time.startDate`). Show dates with
   `Game.rules.day.dateLabel` ("Saturday, March 14"), `shortDate` ("Sat, Mar 14"), `longDate` (with the year),
   `weekLabel` ("Mar 9 – 15"), or `spanLabel`. Never show week numbers as dates; `weekNumber` is only for counting.
