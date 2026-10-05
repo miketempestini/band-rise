@@ -16,7 +16,8 @@ Game.balance = {
   time: {
     blocks: ['morning', 'afternoon', 'evening'], // The three parts of each day, in order
     daysPerWeek: 7,                // Weeks run Monday to Sunday
-    daysPerYear: 364,              // 52 weeks: vacation days reset after this many days
+    startDate: { year: 2026, month: 1, day: 5 }, // Every career starts on Monday, January 5, 2026 (day 0)
+    daysPerYear: 365,              // About a year (only used to size the two-year balance check)
     calendarWeeks: 4,              // How many weeks the Calendar screen shows
     startBookingWeeks: 4,          // How far ahead you can book at the start
     managerBookingWeeks: 12,       // How far ahead you can book after getting a Manager (and the Calendar shows)
@@ -142,9 +143,9 @@ Game.balance = {
   // Awards season: every December (weeks 48 to 52 of each 52-week year)
   // ---------------------------------------------------------------
   awards: {
-    nominationsWeek: 48,             // Nominations arrive on the Monday of week 48
-    ceremonyWeek: 52,                // The ceremony is on the Saturday of week 52
-    ceremonyDayOfWeek: 5,
+    month: 12,                       // Awards season is December (vacation days and "this year" follow real years too)
+    nominationsDayOfWeek: 0,         // Nominations arrive on the first Monday of December (0 = Monday)
+    ceremonyDayOfWeek: 5,            // The ceremony is on the last Saturday of December
     songMinQuality: 60,              // Song of the Year: a release this year with recording quality 60+
     recordMinQuality: 55,            // Record of the Year: an EP or album this year, average quality 55+
     breakoutMinFans: 2000,           // Breakout Act: 2,000+ new fans this year

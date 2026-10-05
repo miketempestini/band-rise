@@ -288,8 +288,8 @@
   Game.test('Awards: nominations from this year\'s releases and new fans, with odds; a win adds reputation', function (t) {
     var a = Game.balance.awards;
     var s = bigState();
-    s.day = (a.nominationsWeek - 1) * 7; // the Monday of week 48
-    t.equal(Game.rules.awards.weekOfYear(s.day), a.nominationsWeek, 'week 48');
+    while (!Game.rules.awards.isNominationsDay(s.day)) s.day += 1;
+    t.equal(Game.rules.day.dateLabel(s.day), 'Monday, December 7', 'the first Monday of December 2026');
     var ids = Object.keys(s.songs).filter(function (id) { return !s.songs[id].isCover; });
     s.songs[ids[0]].recording = { quality: 75, day: 10, studio: 'pro' };
     s.songs[ids[1]].recording = { quality: 58, day: 10, studio: 'demo' };
@@ -303,10 +303,11 @@
     t.near(noms[1].chance, 0.16, 'record: (58 - 50) / 50 = 16%');
     t.near(noms[2].chance, 0.25, 'breakout: 5,000 / 20,000 = 25%');
     s = Game.rules.awards.check(s).state;
-    t.equal(s.awards.length, 3, 'nominated on the Monday of week 48');
+    t.equal(s.awards.length, 3, 'nominated on the first Monday of December');
     t.ok(s.milestones.awards === undefined && Game.rules.progress.checkUnlocks(s).state.milestones.awards !== undefined, 'milestone 17 with the first nomination');
     s.awards.forEach(function (n) { n.chance = 1; });
-    s.day = (a.ceremonyWeek - 1) * 7 + a.ceremonyDayOfWeek;
+    s.day = Game.rules.awards.ceremonyDayAfter(s.day);
+    t.equal(Game.rules.day.dateLabel(s.day), 'Saturday, December 26', 'the last Saturday of December');
     var rep = s.player.reputation;
     var r = Game.rules.awards.check(s);
     t.ok(r.state.awards.every(function (n) { return n.won === true; }), 'all won (chance forced to 100%)');
@@ -319,10 +320,12 @@
     var ids = Object.keys(s.songs).filter(function (id) { return !s.songs[id].isCover; });
     s.songs[ids[0]].recording = { quality: 90, day: 10, studio: 'pro' };
     s.releases.push({ id: 'r1', type: 'single', songIds: [ids[0]], day: 100, avgQuality: 90 });
-    s.day = Game.balance.time.daysPerYear + 10;
+    var newYear = 0;
+    while (!Game.rules.day.isNewYear(newYear)) newYear += 1;
+    s.day = newYear + 10;
     t.equal(Game.rules.awards.nominationsFor(s).length, 0, 'a release last year: no nomination');
     s.cities.hometown.fans = 4000;
-    s.day = Game.balance.time.daysPerYear * 2;
+    s.day = newYear;
     t.equal(Game.rules.awards.check(s).state.stats.yearStartFans, 4000, 'a new year remembers today\'s fans');
   });
 

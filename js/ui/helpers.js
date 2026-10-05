@@ -12,7 +12,7 @@ Game.ui.helpers = {
     return sign + '$' + Math.abs(Math.round(amount)).toLocaleString();
   },
 
-  // Shows a day like "Week 1, Monday".
+  // Shows a day like "Saturday, March 14".
   dateLabel: function (day) {
     return Game.rules.day.dateLabel(day);
   },

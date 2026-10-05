@@ -148,7 +148,9 @@ Game.save = {
 
   // A file name like "band-rise-week3.json".
   exportFileName: function (state) {
-    return 'band-rise-week' + Game.rules.day.weekNumber(state.day) + '.json';
+    var d = Game.rules.day.date(state.day);
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    return 'band-rise-' + d.year + '-' + pad(d.month + 1) + '-' + pad(d.date) + '.json';
   },
 
   // Downloads the state as a .json file.

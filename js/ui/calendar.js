@@ -24,7 +24,7 @@ Game.ui.calendar = {
     var head = Game.content.calendar.dayNames.map(function (n) { return '<div class="cal__dow">' + n.slice(0, 3) + '</div>'; }).join('');
     var cells = '';
     for (var d = start; d < start + pageWeeks * b.time.daysPerWeek; d++) {
-      cells += self.cellHtml(state, d, d === selected);
+      cells += self.cellHtml(state, d, d === selected, d === start);
     }
 
     var jobLine = job.status === 'none'
@@ -49,7 +49,7 @@ Game.ui.calendar = {
         h.notice(app.notice) +
         '<p class="hint">' + jobLine + '</p>' +
         (pages > 1 ? '<div class="sort-bar"><button class="btn btn--small" data-action="calPage" data-page="' + (page - 1) + '"' + (page === 0 ? ' disabled' : '') + '>◀ Earlier</button>' +
-          '<span class="muted">Weeks ' + Game.rules.day.weekNumber(start) + ' to ' + Game.rules.day.weekNumber(start + (pageWeeks - 1) * b.time.daysPerWeek) +
+          '<span class="muted">' + Game.rules.day.spanLabel(start, start + pageWeeks * b.time.daysPerWeek - 1) +
           ' (page ' + (page + 1) + ' of ' + pages + ')</span>' +
           '<button class="btn btn--small" data-action="calPage" data-page="' + (page + 1) + '"' + (page >= pages - 1 ? ' disabled' : '') + '>Later ▶</button></div>' : '') +
         '<div class="cal-layout">' +
@@ -100,7 +100,8 @@ Game.ui.calendar = {
     return { text: text, kind: c.kind };
   },
 
-  cellHtml: function (state, day, isSelected) {
+  // first: true for the first cell on the page (it always shows its month).
+  cellHtml: function (state, day, isSelected, first) {
     var self = Game.ui.calendar;
     var past = day < state.day;
     var rows = Game.balance.time.blocks.map(function (block) {
@@ -109,7 +110,13 @@ Game.ui.calendar = {
     }).join('');
     return '<button class="cal__day' + (day === state.day ? ' cal__day--today' : '') + (past ? ' cal__day--past' : '') +
       (isSelected ? ' cal__day--selected' : '') + '" data-action="selectDay" data-day="' + day + '">' +
-      '<span class="cal__date">W' + Game.rules.day.weekNumber(day) + (day === state.day ? ' · Today' : '') + '</span>' + rows + '</button>';
+      '<span class="cal__date">' + Game.ui.calendar.cellDate(day, first) + (day === state.day ? ' · Today' : '') + '</span>' + rows + '</button>';
+  },
+
+  // A calendar cell's date: just the day of the month, with the month's short name on the 1st (and on the page's first cell).
+  cellDate: function (day, first) {
+    var d = Game.rules.day.date(day);
+    return d.date === 1 || first ? Game.rules.day.shortName(Game.content.calendar.monthNames[d.month]) + ' ' + d.date : String(d.date);
   },
 
   // The selected day: its job situation and any booked shows.

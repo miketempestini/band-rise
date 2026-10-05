@@ -34,7 +34,7 @@ Game.ui.weeklySummary = {
     root.innerHTML =
       Game.ui.topbar.html(state, app.screen) +
       '<section class="screen screen--narrow">' +
-        '<h1 class="screen__title">Week ' + week.week + ' wrap-up</h1>' +
+        '<h1 class="screen__title">Week of ' + Game.rules.day.weekLabel(Game.rules.day.firstDayOfWeek(week.week)) + ': wrap-up</h1>' +
         '<div class="summary-grid">' +
           self.listPanel('Money in', inRows, h.money(totals.totalIn), 'Nothing came in this week.') +
           self.listPanel('Money out', outRows, h.money(totals.totalOut), 'Nothing went out this week.') +
@@ -56,7 +56,7 @@ Game.ui.weeklySummary = {
           debtWarning +
         '</div>' +
         '<div class="actions">' +
-          '<button class="btn btn--primary btn--big" data-action="continue">Start week ' + (week.week + 1) + '</button>' +
+          '<button class="btn btn--primary btn--big" data-action="continue">Start the week of ' + Game.rules.day.weekLabel(Game.rules.day.firstDayOfWeek(week.week + 1)) + '</button>' +
         '</div>' +
       '</section>';
 

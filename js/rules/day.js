@@ -11,12 +11,71 @@ Game.rules.day = {
     return day % Game.balance.time.daysPerWeek;
   },
 
-  // A day as words, like "Week 2, Saturday" (used in messages and on screens).
-  dateLabel: function (day) {
-    return 'Week ' + Game.rules.day.weekNumber(day) + ', ' + Game.content.calendar.dayNames[Game.rules.day.dayOfWeek(day)];
+  // ----- Real dates -----
+  // The game counts days from 0. Day 0 is the start date in balance.time.startDate (Monday, January 5, 2026),
+  // and each day after is the next calendar day. Dates are worked out in UTC so they never shift with time zones.
+
+  // A day as a real date: { year, month (0 = January), date (1 to 31), dayOfWeek (0 = Monday) }.
+  date: function (day) {
+    var start = Game.balance.time.startDate;
+    var msPerDay = 24 * 60 * 60 * 1000;
+    var d = new Date(Date.UTC(start.year, start.month - 1, start.day) + day * msPerDay);
+    return { year: d.getUTCFullYear(), month: d.getUTCMonth(), date: d.getUTCDate(), dayOfWeek: Game.rules.day.dayOfWeek(day) };
   },
 
-  // Which week it is, starting at 1.
+  // The short name of a month or weekday, like "Mar" or "Sat".
+  shortName: function (name) { return name.slice(0, 3); },
+
+  // A day as words, like "Saturday, March 14" (used in messages and on screens).
+  dateLabel: function (day) {
+    var d = Game.rules.day.date(day);
+    var c = Game.content.calendar;
+    return c.dayNames[d.dayOfWeek] + ', ' + c.monthNames[d.month] + ' ' + d.date;
+  },
+
+  // The full date with the year, like "Monday, January 5, 2026" (the top bar and the Career screen).
+  longDate: function (day) {
+    return Game.rules.day.dateLabel(day) + ', ' + Game.rules.day.date(day).year;
+  },
+
+  // A short date, like "Sat, Mar 14" (date buttons and the calendar).
+  shortDate: function (day) {
+    var d = Game.rules.day.date(day);
+    var c = Game.content.calendar;
+    var sn = Game.rules.day.shortName;
+    return sn(c.dayNames[d.dayOfWeek]) + ', ' + sn(c.monthNames[d.month]) + ' ' + d.date;
+  },
+
+  // The Monday-to-Sunday week a day is in, like "Mar 9 – 15" or "Mar 30 – Apr 5".
+  weekLabel: function (day) {
+    var monday = day - Game.rules.day.dayOfWeek(day);
+    var a = Game.rules.day.date(monday);
+    var b = Game.rules.day.date(monday + Game.balance.time.daysPerWeek - 1);
+    var sn = Game.rules.day.shortName;
+    var months = Game.content.calendar.monthNames;
+    return sn(months[a.month]) + ' ' + a.date + ' – ' + (b.month === a.month ? '' : sn(months[b.month]) + ' ') + b.date;
+  },
+
+  // A span of days, like "January 5 – February 1".
+  spanLabel: function (fromDay, toDay) {
+    var months = Game.content.calendar.monthNames;
+    var a = Game.rules.day.date(fromDay);
+    var b = Game.rules.day.date(toDay);
+    return months[a.month] + ' ' + a.date + ' – ' + months[b.month] + ' ' + b.date + (b.year !== a.year ? ', ' + b.year : '');
+  },
+
+  // True on New Year's Day (January 1).
+  isNewYear: function (day) {
+    var d = Game.rules.day.date(day);
+    return d.month === 0 && d.date === 1;
+  },
+
+  // The Monday that starts week number N of the career.
+  firstDayOfWeek: function (week) {
+    return (week - 1) * Game.balance.time.daysPerWeek;
+  },
+
+  // Which week of the career it is, starting at 1 (for counting weeks, not for showing dates).
   weekNumber: function (day) {
     return Math.floor(day / Game.balance.time.daysPerWeek) + 1;
   },
@@ -376,7 +435,7 @@ Game.rules.day = {
     expired.log.forEach(function (line) { endLines.push(line); });
 
     // A new year of vacation days.
-    if (s.day % b.time.daysPerYear === 0) {
+    if (day.isNewYear(s.day)) {
       s.player.job.vacationDaysLeft = b.job.vacationDaysPerYear;
       endLines.push('A new year: ' + b.job.vacationDaysPerYear + ' vacation days.');
     }

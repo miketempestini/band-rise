@@ -49,7 +49,9 @@ Game.ui.career = {
         '<div class="panel">' +
           '<h3 class="panel__title">Lifetime</h3>' +
           '<dl class="rows">' +
+            '<dt>Started</dt><dd>' + Game.rules.day.longDate(0) + '</dd>' +
             '<dt>Days played</dt><dd>' + state.day + '</dd>' +
+            '<dt>Weeks played</dt><dd>' + Math.floor(state.day / Game.balance.time.daysPerWeek) + '</dd>' +
             '<dt>Gigs played</dt><dd>' + st.gigsPlayed + ' (' + st.openMicsPlayed + ' open mics, ' + st.paidShows + ' paid shows)</dd>' +
             '<dt>Best result</dt><dd>' + (st.bestResult ? st.bestResult.charAt(0).toUpperCase() + st.bestResult.slice(1) : '-') + '</dd>' +
             '<dt>Biggest crowd</dt><dd>' + st.biggestCrowd + '</dd>' +

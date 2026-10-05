@@ -4,6 +4,26 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 13b: Real calendar dates (2026-10-04)
+- Owner's change: every date is a real date with a month name, not a week number. A career starts Monday, January 5,
+  2026; real years and leap years follow.
+- **Where dates show now:**
+  - top bar: "Sun, Jan 25, 2026"
+  - Calendar: cells show the day of the month, with the month on the 1st; the pager reads "January 5 – February 1"
+  - every message and Inbox card: "Saturday, March 14"
+  - Book screen date buttons and trips: "Sat, Mar 14"
+  - Plan week buttons: "Feb 2 – 8"
+  - weekly wrap-up: "Week of Jan 12 – 18"
+  - quit screen rows, contract dates, and the tour start list
+  - export file names: band-rise-2026-03-14.json
+- **Career screen:** shows the start date, days played, and **weeks played**.
+- **Yearly things follow real years:**
+  - vacation days reset on January 1
+  - the "new fans this year" count starts January 1
+  - awards: nominations on the first Monday of December, the ceremony on the last Saturday of December
+- Saved games didn't change: dates come from the day number.
+- **Tests:** 286 passing (calendar.test.js new; the awards and vacation tests now use real dates).
+
 ### Session 13: Phase 12, the big time (2026-10-04)
 - **Manager** (milestone 14: reputation 50 and 2,000 fans): Rita Vance offers by Inbox (again 8 weeks after a no).
   - Takes 15% of gig pay before the band split.

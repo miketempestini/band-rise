@@ -41,6 +41,8 @@ Each day turns this wheel a little: actions grow your act, shows turn that into 
 
 Each day has three blocks, the week runs Monday to Sunday, and you can see and book 4 weeks ahead at the start.
 
+The game uses real calendar dates: every career starts on Monday, January 5, 2026, and dates show with month names ("Saturday, March 14"). Years are real years (2027 comes after 2026, with leap years). The Career screen also counts days and weeks played.
+
 ### Blocks
 
 - Three blocks a day: Morning, Afternoon, Evening.
@@ -52,7 +54,7 @@ Each day has three blocks, the week runs Monday to Sunday, and you can see and b
 - Starts full-time: Monday to Friday, Morning and Afternoon. These blocks are pre-filled and locked.
 - One workday (two blocks) is a shift. It pays $110, paid Friday night, so $550 a week.
 - **Job standing** (0 to 100, starts at 60) is how your boss sees you. Work a shift: +1. Call in sick: -15. Skip without calling: -25. Below 25 you get a warning. At 0 you're fired.
-- **Vacation:** 10 days a year, paid. Request at least 14 days ahead and there's no standing penalty. This is the main tool for a first out-of-town show. Calling in sick is only possible for today or tomorrow (or for a booked show, decided when you accept it).
+- **Vacation:** 10 days a year (reset every January 1), paid. Request at least 14 days ahead and there's no standing penalty. This is the main tool for a first out-of-town show. Calling in sick is only possible for today or tomorrow (or for a booked show, decided when you accept it).
 - **Going part-time:** unlocks at reputation 20 and standing 50+. Shifts become Monday, Wednesday, Friday ($330 a week), starting next Monday. Until Monday, a "Never mind" button cancels the change (unless you've booked something during work hours since).
 - **Quitting:** allowed any time. A confirm screen shows your last 4 weeks of music income next to your weekly bills. Takes effect next Monday and frees every job block. Music income means gig pay, tips, merch, streaming, and session work (not the day job, overtime, loans, or event money). Quitting is milestone 11 (+15 morale).
 - **Getting a job back:** a "Look for work" action. Each try has a 50% chance to land a part-time job starting the next week.
@@ -471,7 +473,7 @@ Out of town, small rooms, clubs, and theaters book for a share of the door (cove
 - **Flights**: National cities (open with a manager and a label) are 2 blocks each way by plane, $300 a person each way (you plus your bandmates).
 - **Label** (reputation 65 and 10,000 fans): an advance of $10,000 + $2 per fan (up to $50,000), the Top studio, and National cities (with a manager). The label keeps 80% of streaming until the advance is paid back.
 - **Arenas and festivals** (reputation 85, 100,000 fans, and a label): offers only. Each Monday a 10% chance of each (one open at a time), 6 to 10 weeks out, answer within 5 days. An arena pays its flat fee ($20,000 to $30,000), an 18-song set, $5,000 production. A festival pays $5,000 to $15,000 for an 8-song afternoon slot to 30% to 60% of the grounds, production provided. Festivals: New Halston Music Fest, Crescent Riverfront Festival, Harborline Summer Fest.
-- **Awards season**: a game year is 52 weeks; December is weeks 48 to 52. Nominations arrive on the Monday of week 48; the ceremony is the Saturday of week 52. Song of the Year (a release this year with recording quality 60+), Record of the Year (an EP or album this year averaging 55+), Breakout Act (2,000+ new fans this year). Win chance: (quality - 50) / 50, or new fans / 20,000, kept between 10% and 80%. Each win: +5 reputation.
+- **Awards season**: every December, in real calendar years. Nominations arrive on the first Monday of December; the ceremony is the last Saturday of December. "This year" and "new fans this year" start on January 1. Song of the Year (a release this year with recording quality 60+), Record of the Year (an EP or album this year averaging 55+), Breakout Act (2,000+ new fans this year). Win chance: (quality - 50) / 50, or new fans / 20,000, kept between 10% and 80%. Each win: +5 reputation.
 
 ## Audience, buzz and reputation
 

@@ -236,6 +236,10 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   festival offers, deals 'arena' | 'festival' with a fee), `Game.rules.awards` (nominations and the ceremony). They run each
   morning from End Day. `booking.dateProblem` is the one check for "can a show be on this date" (window, horizon, block,
   travel). Production costs: `booking.productionCost`. Flights: `travel.isFlight` / `legGas(from, to, state)`.
+- **Dates**: day numbers are real dates (day 0 = Monday, January 5, 2026, in `balance.time.startDate`). Show dates with
+  `Game.rules.day.dateLabel` ("Saturday, March 14"), `shortDate` ("Sat, Mar 14"), `longDate` (with the year),
+  `weekLabel` ("Mar 9 – 15"), or `spanLabel`. Never show week numbers as dates; `weekNumber` is only for counting.
+  Yearly things use `isNewYear` and real months (awards: `awards.isNominationsDay` / `isCeremonyDay`).
 - **Two-year balance check**: `Game.balanceSim.renderYears` runs only on request (the button on tests.html, or
   `tests.html?years`); it takes about 5 minutes headless.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at

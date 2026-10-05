@@ -16,7 +16,7 @@ Game.ui.quitJob = {
 
     var rows = sum.weeks.length
       ? sum.weeks.map(function (w) {
-          return '<tr><td>Week ' + w.week + '</td><td>' + h.money(w.music) + '</td><td>' + h.money(w.bills) + '</td>' +
+          return '<tr><td>Week of ' + Game.rules.day.weekLabel(Game.rules.day.firstDayOfWeek(w.week)) + '</td><td>' + h.money(w.music) + '</td><td>' + h.money(w.bills) + '</td>' +
             '<td class="' + (w.music >= w.bills ? 'pos' : 'neg') + '">' + h.money(w.music - w.bills) + '</td></tr>';
         }).join('')
       : '<tr><td colspan="4" class="muted">No finished weeks yet.</td></tr>';

@@ -20,7 +20,7 @@ Game.ui.planWeek = {
 
     var weekButtons = weeks.map(function (start) {
       return '<button class="btn btn--small' + (start === weekStart ? ' btn--primary' : '') + '" data-action="week" data-start="' + start + '">' +
-        'Week ' + Game.rules.day.weekNumber(start) + (start === weeks[0] ? ' (this week)' : '') + '</button>';
+        Game.rules.day.weekLabel(start) + (start === weeks[0] ? ' (this week)' : '') + '</button>';
     }).join('');
 
     var rows = pw.evenings(state, weekStart).map(function (e) {
@@ -69,7 +69,7 @@ Game.ui.planWeek = {
         h.notice(app.notice) +
         '<div class="sort-bar">' + weekButtons + '</div>' +
         '<div class="panel">' +
-          '<h3 class="panel__title">Evenings, week ' + Game.rules.day.weekNumber(weekStart) + '</h3>' +
+          '<h3 class="panel__title">Evenings, ' + Game.rules.day.weekLabel(weekStart) + '</h3>' +
           rows +
           '<p class="hint">Tasks that need a pick get a sensible one: the loosest song for Practice, the suggested set for an open mic, ' +
             'the loosest songs for Rehearse, your closest contact for Jam or Hang out, and writing alone. ' +

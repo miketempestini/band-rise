@@ -8,6 +8,9 @@ Game.content.calendar = {
   // Day 0 of every week is Monday.
   dayNames: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
 
+  // Month names, January first.
+  monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+
   // Display names for the three blocks of the day.
   blockNames: { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening' }
 };

@@ -35,7 +35,7 @@ Game.ui.topbar = {
       h.meter('Energy', p.energy, b.energy.max) +
       h.meter('Morale', p.morale, b.morale.max) +
       '<div class="stat"><span class="stat__label">Reputation</span><span class="stat__value">' + Math.round(p.reputation) + '</span></div>' +
-      '<div class="stat"><span class="stat__label">Date</span><span class="stat__value">' + h.dateLabel(state.day) + '</span></div>' +
+      '<div class="stat"><span class="stat__label">Date</span><span class="stat__value">' + Game.rules.day.shortDate(state.day) + ', ' + Game.rules.day.date(state.day).year + '</span></div>' +
       '<div class="stat' + (daysToRent === 0 ? ' stat--warn' : '') + '"><span class="stat__label">Rent</span><span class="stat__value">' + rentText + '</span></div>' +
       '</header>' +
       Game.ui.topbar.navHtml(state, screen);

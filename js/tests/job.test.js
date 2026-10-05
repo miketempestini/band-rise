@@ -99,12 +99,19 @@
     t.equal(r.state.player.job.daysOff[gigDay], 'sick');
   });
 
-  Game.test('Vacation days reset every 52 weeks', function (t) {
+  Game.test('Vacation days reset on January 1', function (t) {
     var s = freshState();
     s.player.job.vacationDaysLeft = 3;
-    s.day = Game.balance.time.daysPerYear - 1;
+    var newYear = 0;
+    while (!Game.rules.day.isNewYear(newYear)) newYear += 1;
+    s.day = newYear - 2;
+    s.pendingEvent = null;
     s = Game.rules.day.endDay(s).state;
-    t.equal(s.player.job.vacationDaysLeft, 10);
+    t.equal(s.player.job.vacationDaysLeft, 3, 'December 30: not yet');
+    s.pendingEvent = null;
+    s = Game.rules.day.endDay(s).state;
+    t.equal(Game.rules.day.dateLabel(s.day), 'Friday, January 1', 'January 1, 2027');
+    t.equal(s.player.job.vacationDaysLeft, Game.balance.job.vacationDaysPerYear, 'reset');
   });
 
 })();

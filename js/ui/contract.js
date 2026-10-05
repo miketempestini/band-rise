@@ -23,7 +23,7 @@ Game.ui.contract = {
     var describe = function (t) {
       var dates = offers.residencyDates(state, t.weekday, t.weeks);
       return t.weeks + ' ' + days[t.weekday] + 's at <strong>$' + t.rate + '</strong> a night = <strong>' + h.money(t.rate * t.weeks) + '</strong> ' +
-        '<span class="muted">(' + dates.map(function (d) { return 'W' + Game.rules.day.weekNumber(d); }).join(', ') + ')</span>';
+        '<span class="muted">(' + dates.map(function (d) { return Game.rules.day.shortDate(d).replace(/^\w+, /, ''); }).join(', ') + ')</span>';
     };
 
     var dayOptions = days.map(function (name, i) {

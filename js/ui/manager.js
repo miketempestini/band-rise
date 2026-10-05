@@ -124,7 +124,7 @@ Game.ui.manager = {
     var first = state.day + t.leadDays;
     var weeks = '';
     for (var day = first - Game.rules.day.dayOfWeek(first); day <= Game.rules.manager.horizonDay(state) - Game.balance.time.daysPerWeek; day += Game.balance.time.daysPerWeek) {
-      weeks += '<option value="' + day + '"' + (d.earliestDay === day ? ' selected' : '') + '>Week ' + Game.rules.day.weekNumber(day) + '</option>';
+      weeks += '<option value="' + day + '"' + (d.earliestDay === day ? ' selected' : '') + '>The week of ' + Game.rules.day.weekLabel(day) + '</option>';
     }
     var problem = Game.rules.manager.tourRequestProblem(state, d);
     return '<div class="panel"><h3 class="panel__title">🚐 Ask for a tour</h3>' +

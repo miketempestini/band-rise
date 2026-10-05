@@ -1,7 +1,7 @@
 // awards.js
-// Awards season (Phase 12, milestone 17): every December. A game year is 52 weeks; December is weeks 48 to 52.
-// Nominations arrive on the Monday of week 48, from your releases and fans this year; the ceremony is the
-// Saturday of week 52, and each win adds reputation. Numbers are in balance.awards; names in content/business.js.
+// Awards season (Phase 12, milestone 17): every December (real calendar years). Nominations arrive on the first
+// Monday of December, from your releases and fans this year; the ceremony is the last Saturday of December,
+// and each win adds reputation. Numbers are in balance.awards; names in content/business.js.
 //
 // Categories:
 //   song      Song of the Year: your best recording released this year (quality 60+)
@@ -14,10 +14,27 @@ Game.rules = Game.rules || {};
 
 Game.rules.awards = {
 
-  // Which game year a day is in (starting at 1), and which week of that year (1 to 52).
-  year: function (day) { return Math.floor(day / Game.balance.time.daysPerYear) + 1; },
-  weekOfYear: function (day) {
-    return Math.floor((day % Game.balance.time.daysPerYear) / Game.balance.time.daysPerWeek) + 1;
+  // Which calendar year a day is in (like 2026).
+  year: function (day) { return Game.rules.day.date(day).year; },
+
+  // True on the first Monday of December (nominations) / the last Saturday of December (the ceremony).
+  isNominationsDay: function (day) {
+    var a = Game.balance.awards;
+    var d = Game.rules.day.date(day);
+    return d.month === a.month - 1 && d.dayOfWeek === a.nominationsDayOfWeek && d.date <= Game.balance.time.daysPerWeek;
+  },
+  isCeremonyDay: function (day) {
+    var a = Game.balance.awards;
+    var d = Game.rules.day.date(day);
+    var next = Game.rules.day.date(day + Game.balance.time.daysPerWeek);
+    return d.month === a.month - 1 && d.dayOfWeek === a.ceremonyDayOfWeek && next.month !== d.month;
+  },
+
+  // The ceremony day in the same December as a day (the last Saturday of the month).
+  ceremonyDayAfter: function (day) {
+    var d = day;
+    while (!Game.rules.awards.isCeremonyDay(d)) d += 1;
+    return d;
   },
 
   // A win chance from a quality: (quality - 50) / 50, kept between 10% and 80%.
@@ -64,27 +81,25 @@ Game.rules.awards = {
     return list;
   },
 
-  // Each morning: on the Monday of week 48, nominations arrive; on the Saturday of week 52, the winners are
-  // announced (each win adds reputation). A new year resets the "new fans this year" count. Returns { state, log }.
+  // Each morning: on the first Monday of December, nominations arrive; on the last Saturday of December, the
+  // winners are announced (each win adds reputation). January 1 resets the "new fans this year" count.
+  // Returns { state, log }.
   check: function (state) {
-    var a = Game.balance.awards;
     var aw = Game.rules.awards;
-    var dow = Game.rules.day.dayOfWeek(state.day);
-    var week = aw.weekOfYear(state.day);
     var s = state;
     var log = [];
 
-    if (state.day % Game.balance.time.daysPerYear === 0) {
+    if (Game.rules.day.isNewYear(state.day)) {
       s = Game.util.clone(s);
       s.stats.yearStartFans = Game.rules.progress.totalFans(s);
     }
 
-    if (week === a.nominationsWeek && dow === 0) {
+    if (aw.isNominationsDay(s.day)) {
       var nominated = aw.nominate(s);
       s = nominated.state;
       log = log.concat(nominated.log);
     }
-    if (week === a.ceremonyWeek && dow === a.ceremonyDayOfWeek) {
+    if (aw.isCeremonyDay(s.day)) {
       var held = aw.ceremony(s);
       s = held.state;
       log = log.concat(held.log);
@@ -106,7 +121,7 @@ Game.rules.awards = {
       });
       var text = 'You\'re nominated: ' + noms.map(function (n) {
         return Game.content.business.awards[n.category].name + ' for ' + n.title + ' (' + Math.round(n.chance * 100) + '% chance)';
-      }).join('; ') + '. The ceremony is ' + Game.rules.day.dateLabel(s.day + (a.ceremonyWeek - a.nominationsWeek) * Game.balance.time.daysPerWeek + a.ceremonyDayOfWeek) + '.';
+      }).join('; ') + '. The ceremony is ' + Game.rules.day.dateLabel(aw.ceremonyDayAfter(s.day)) + '.';
       s = Game.rules.booking.addInbox(s, 'note', { title: '🏅 Awards season: nominations', text: text }, null);
       log.push(text);
     }

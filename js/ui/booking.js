@@ -100,7 +100,7 @@ Game.ui.booking = {
     if (!venue) return '';
     var draft = app.openMicDraft && app.openMicDraft.venueId === venue.id ? app.openMicDraft : null;
     var dates = tr.openMicDates(state, venue.id).map(function (d) {
-      var label = Game.content.calendar.dayNames[Game.rules.day.dayOfWeek(d)].slice(0, 3) + ' W' + Game.rules.day.weekNumber(d);
+      var label = Game.rules.day.shortDate(d);
       var taken = Game.rules.booking.blockTaken(state, d, venue.showBlock, true) || tr.check(state, venue.id, d, 'openMic').problem;
       return '<button class="date-btn' + (draft && draft.day === d ? ' date-btn--on' : '') + '" data-action="openMicPick" data-venue="' + venue.id +
         '" data-day="' + d + '"' + (taken ? ' disabled title="' + h.escape(taken) + '"' : '') + '>' + label + '</button>';
@@ -129,7 +129,7 @@ Game.ui.booking = {
     var tr = Game.rules.travel;
     if (preview.problem) return '<p class="pick__reason">' + h.escape(preview.problem) + '</p>';
     var when = function (t) {
-      return Game.content.calendar.dayNames[Game.rules.day.dayOfWeek(tr.slotDay(t))].slice(0, 3) + ' W' + Game.rules.day.weekNumber(tr.slotDay(t)) +
+      return Game.rules.day.shortDate(tr.slotDay(t)) +
         ' ' + Game.content.calendar.blockNames[tr.slotBlock(t)].toLowerCase();
     };
     var legs = preview.legs.map(function (leg) {
@@ -196,7 +196,7 @@ Game.ui.booking = {
     var r = Game.balance.recording;
     var studio = r.studios[draft.studio];
     var dates = Game.rules.recording.bookingDays(state).map(function (d) {
-      var label = Game.content.calendar.dayNames[Game.rules.day.dayOfWeek(d)].slice(0, 3) + ' W' + Game.rules.day.weekNumber(d);
+      var label = Game.rules.day.shortDate(d);
       return '<button class="date-btn' + (draft.day === d ? ' date-btn--on' : '') + '" data-action="studioDate" data-day="' + d + '">' + label + '</button>';
     }).join('');
 
@@ -321,7 +321,7 @@ Game.ui.booking = {
     var h = Game.ui.helpers;
     var away = venue.cityId !== 'hometown';
     var dates = Game.rules.booking.bookingDates(state, venue).map(function (d) {
-      var label = Game.content.calendar.dayNames[Game.rules.day.dayOfWeek(d.day)].slice(0, 3) + ' W' + Game.rules.day.weekNumber(d.day);
+      var label = Game.rules.day.shortDate(d.day);
       var clash = d.free && (away ? Game.rules.travel.check(state, venue.id, d.day, draft.deal).jobDays.length > 0
         : Game.rules.booking.clashesWithJob(state, d.day, venue.showBlock));
       return '<button class="date-btn' + (draft.gigDay === d.day ? ' date-btn--on' : '') + (clash ? ' date-btn--job' : '') + '"' +
