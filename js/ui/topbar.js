@@ -29,6 +29,7 @@ Game.ui.topbar = {
       '<div class="topbar__who">' +
         '<span class="topbar__brand">Band Rise</span>' +
         '<span class="topbar__name">' + h.escape(p.name) + ' · ' + Game.content.instruments[p.instrument].name + '</span>' +
+        '<span class="topbar__fame" title="Fame level (by total fans)">⭐ ' + Game.rules.progress.fame(state).name + '</span>' +
       '</div>' +
       '<div class="stat"><span class="stat__label">Cash</span><span class="stat__value stat__value--cash">' + h.money(p.cash) + '</span></div>' +
       debt +

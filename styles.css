@@ -724,3 +724,16 @@ button.block:hover { border-color: var(--accent); }
 .cal__block--travel { background: rgba(255, 181, 71, 0.18); color: var(--accent); font-weight: bold; }
 .cal__block--away { background: rgba(255, 181, 71, 0.08); color: var(--text-muted); font-style: italic; }
 .block--travel { border-style: solid; border-color: var(--accent); background: rgba(255, 181, 71, 0.06); }
+
+/* ---------- Phase 13: fame ladder, career card, top bar fame ---------- */
+
+.topbar__fame { color: var(--accent); font-size: 13px; font-weight: bold; }
+
+.fame-ladder { display: flex; flex-direction: column; gap: 4px; margin-top: var(--space-2); }
+.fame-step { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; padding: 6px 10px; border-radius: 8px;
+  background: var(--panel-2); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.fame-step--reached { color: var(--text); }
+.fame-step--current { background: var(--accent); color: var(--accent-text); font-weight: bold; }
+.fame-step__mark { text-align: center; }
+
+.career-card { width: 100%; height: auto; display: block; border-radius: var(--radius); margin: var(--space-2) 0; box-shadow: var(--shadow); }

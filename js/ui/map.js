@@ -32,7 +32,7 @@ Game.ui.map = {
       Game.ui.topbar.html(state, app.screen) +
       '<section class="screen">' +
         '<div class="screen__head">' +
-          '<h1 class="screen__title">🗺️ Map</h1>' +
+          '<h1 class="screen__title">Map</h1>' +
           '<button class="btn" data-action="back">← Back</button>' +
         '</div>' +
         h.notice(app.notice) +

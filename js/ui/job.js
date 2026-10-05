@@ -72,11 +72,11 @@ Game.ui.job = {
       Game.ui.topbar.html(state, app.screen) +
       '<section class="screen screen--narrow">' +
         '<div class="screen__head">' +
-          '<h1 class="screen__title">💼 Day job</h1>' +
+          '<h1 class="screen__title">Day job</h1>' +
           '<button class="btn" data-action="back">← Back</button>' +
         '</div>' +
         h.notice(app.notice) +
-        '<div class="panel">' + summary + pending + '</div>' +
+        '<div class="panel"><h3 class="panel__title">' + (job.status === 'none' ? 'No day job' : 'Your job') + '</h3>' + summary + pending + '</div>' +
         choices +
       '</section>';
 

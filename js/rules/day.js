@@ -126,7 +126,7 @@ Game.rules.day = {
     var plan = Game.rules.actions.dayPlan(state);
     var plannedSpending = state.player.cash - plan[plan.length - 1].cashAfter;
 
-    var bills = b.housing[state.player.housing].weeklyCost;
+    var bills = Game.rules.housing.weeklyBills(state);
     return {
       earnedSoFar: earnedSoFar,
       upcomingPay: upcomingPay,
@@ -334,7 +334,7 @@ Game.rules.day = {
       var credits = Game.rules.sessionWork.payCredits(s);
       s = credits.state;
       credits.log.forEach(function (line) { endLines.push(line); });
-      var bills = b.housing[s.player.housing].weeklyCost;
+      var bills = Game.rules.housing.weeklyBills(s); // your home, plus the vacation home if you own one
       var paid = Game.rules.money.spend(s, bills, 'bills');
       s = paid.state;
       endLines.push('Paid $' + bills.toLocaleString() + ' for rent and living costs.');

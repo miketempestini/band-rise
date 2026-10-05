@@ -170,7 +170,7 @@ Game.rules.job = {
     });
     var total = weeks.reduce(function (sum, w) { return sum + w.music; }, 0);
     var averageMusic = weeks.length ? Math.round(total / weeks.length) : 0;
-    var weeklyBills = b.housing[state.player.housing].weeklyCost;
+    var weeklyBills = Game.rules.housing.weeklyBills(state);
     var status = state.player.job.status;
     var shifts = status === 'none' ? 0 : (status === 'part' ? b.job.partTimeDays.length : b.job.fullTimeDays.length);
     return {

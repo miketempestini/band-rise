@@ -4,6 +4,35 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14: Phase 13, lifestyle and legacy (2026-10-04)
+- **Housing ladder** (Shop → Housing): Starter $400 / Nicer $700 / House $1,500 / Mansion $5,000 a week, with morale
+  resting at 50 / 55 / 60 / 65.
+  - Moving (up or down) costs 4 weeks of the new home up front.
+  - The House gives a free home studio.
+  - Sunday bills, the quit screen, and Today all use the real weekly bills.
+- **Vacation Home**: a second home. It unlocks after you've lived in the House, costs $16,000 up front plus $4,000 a
+  week on top, and raises the morale resting level to 75. It can be sold (no refund).
+- **Debt block**: while you owe Mom and Dad, you can't move up or buy the vacation home (`debt.blockedActions`); moving
+  down and selling still work.
+- **Fame**: your level is in the top bar (⭐ under your name). The Career screen has the full 10-level ladder
+  (reached ✓, current highlighted, fans needed for the next).
+- **Career card** (Career screen): a 1200×630 image drawn on a canvas, saved as band-rise-card-YYYY-MM-DD.png with
+  "Save as image". It shows:
+  - name, band, instrument, and home
+  - fame level, fans, days and weeks played
+  - original songs and releases
+  - biggest show (venue, city, crowd, date)
+  - milestones, reputation, and the start and current dates
+
+  Gigs now remember your biggest show.
+- **Visual pass**:
+  - Every screen now has the same header (title left, "← Back" right).
+  - Settings got the top bar and tabs (it had none) and the standard header.
+  - Emoji were removed from screen titles (Map, Manager, Day job, Residency contract, Skipped days).
+  - Untitled panels got titles (Day job, Manager).
+  - The Stats panel shows your home.
+- **Saves:** version 13. **Tests:** 293 passing (housing.test.js new).
+
 ### Session 13b: Real calendar dates (2026-10-04)
 - Owner's change: every date is a real date with a month name, not a week number. A career starts Monday, January 5,
   2026; real years and leap years follow.
@@ -435,8 +464,8 @@ No gameplay numbers changed: the balance checks give the same results as before.
 
 ## What's next
 - **Suggested fixes from the two-year check (not applied, owner to decide):**
-  1. Build the housing ladder from Design.md (nicer apartment $700/week up to a $5,000/week mansion and a vacation home):
-     the main thing to spend money on, and it raises weekly costs as you grow.
+  1. ~~Build the housing ladder~~ (done in Phase 13). Re-run the two-year check to see how much it soaks up (the simulated
+     player doesn't move house yet: teach it to, then compare).
   2. Make theaters pay less or cost more: production by size (for example $3,000 at a 1,200-seat theater), or a 70% door
      share instead of 80%. A full Orpheum pays about $24,000 a night today.
   3. Slow reputation at the top: the press push gives +52 reputation a year. Try +1, a 4-week wait, or the same

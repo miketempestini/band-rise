@@ -11,8 +11,12 @@ Game.ui.settings = {
     var hasGame = !!app.state && !app.state.gameOver;
 
     root.innerHTML =
+      (hasGame ? Game.ui.topbar.html(app.state, app.screen) : '') +
       '<section class="screen screen--narrow">' +
-        '<h1 class="screen__title">Settings</h1>' +
+        '<div class="screen__head">' +
+          '<h1 class="screen__title">Settings</h1>' +
+          '<button class="btn" data-action="back">← Back</button>' +
+        '</div>' +
         h.notice(app.notice) +
         (hasGame ? '<div class="panel">' +
           '<h3 class="panel__title">Tutorial</h3>' +
@@ -30,8 +34,7 @@ Game.ui.settings = {
           '</div>' +
           '<p class="hint">Importing replaces the game you have now.</p>' +
         '</div>' +
-        '<div class="actions">' +
-          '<button class="btn btn--ghost" data-action="back">Back</button>' +
+        '<div class="actions actions--left">' +
           '<button class="btn btn--ghost" data-action="title">Title screen</button>' +
         '</div>' +
       '</section>';
@@ -46,6 +49,7 @@ Game.ui.settings = {
       export: function () { app.exportSave(); },
       import: function () { fileInput.click(); },
       back: function () { if (hasGame) app.goBack('settings'); else app.show('title'); },
+      focusPayBack: function () { app.goBack('settings'); },
       title: function () { app.show('title'); }
     });
   }

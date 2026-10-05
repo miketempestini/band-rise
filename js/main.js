@@ -614,6 +614,21 @@ Game.app = {
   signLabel: function (messageId) { Game.app.applyWithNotice(Game.rules.label.sign(Game.app.state, messageId)); },
   acceptBigShow: function (messageId, jobChoice) { Game.app.applyWithNotice(Game.rules.bigShows.accept(Game.app.state, messageId, jobChoice)); },
 
+  // ----- Housing (Phase 13) -----
+
+  moveHome: function (homeId) {
+    var app = Game.app;
+    var cost = Game.rules.housing.moveCost(homeId);
+    if (!window.confirm('Move into the ' + Game.balance.housing[homeId].name.toLowerCase() + '? Moving costs ' + Game.ui.helpers.money(cost) +
+      ' now, and your weekly bills become ' + Game.ui.helpers.money(Game.balance.housing[homeId].weeklyCost + (app.state.player.vacationHome ? Game.balance.housing.vacation.weeklyCost : 0)) + '.')) return;
+    app.applyWithNotice(Game.rules.housing.move(app.state, homeId));
+  },
+  buyVacationHome: function () { Game.app.applyWithNotice(Game.rules.housing.buyVacationHome(Game.app.state)); },
+  sellVacationHome: function () {
+    if (!window.confirm('Sell the vacation home? Its weekly cost stops, and you get nothing back.')) return;
+    Game.app.applyWithNotice(Game.rules.housing.sellVacationHome(Game.app.state));
+  },
+
   // ----- Plan week -----
 
   openPlanWeek: function () {

@@ -55,7 +55,9 @@ Game.state = {
         loanOwed: 0,                     // Total debt owed to Mom and Dad
         debtWeeksOverLimit: 0,           // Sundays in a row with debt above the game-over line
         burnedOut: false,                // true while Burned out (morale fell below 15, until back above 25)
-        housing: 'starter',
+        housing: 'starter',              // your main home (a key of balance.housing.ladder)
+        vacationHome: false,             // true if you own the vacation home (a second home)
+        livedInHouse: false,             // true once you've lived in the House (it unlocks the vacation home)
         gear: { instrumentTier: 0, homeStudio: false, van: null }, // van: null, or { kind, shows, worn } (see Game.rules.travel)
         roadDays: 0,                     // Days in a row you've spent away from home (road fatigue from day 5)
         merchStock: { shirts: 0, cds: 0 },
@@ -91,7 +93,8 @@ Game.state = {
                outOfTownShowDays: [], // the day of every out-of-town show you've played (for tours)
                citiesPlayed: {},      // cityId: shows played there
                vansBought: 0,
-               yearStartFans: 0 },   // total fans when this game year began (for the Breakout Act award)
+               yearStartFans: 0,
+               biggestShow: null },  // your biggest crowd's show: { venueId, crowd, day }   // total fans when this game year began (for the Breakout Act award)
       pendingEvent: null, // today's event waiting for an answer: { eventId, day, data }
       eventHistory: {},   // eventId: the last day it happened (for cooldowns)
       effects: [],        // temporary effects: { id, kind: 'gigScore' | 'dailyEnergy', amount, untilDay, label }

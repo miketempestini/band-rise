@@ -73,7 +73,7 @@ Game.ui.contract = {
       Game.ui.topbar.html(state, app.screen) +
       '<section class="screen screen--narrow">' +
         '<div class="screen__head">' +
-          '<h1 class="screen__title">📜 Residency contract</h1>' +
+          '<h1 class="screen__title">Residency contract</h1>' +
           '<button class="btn" data-action="back">← Inbox</button>' +
         '</div>' +
         h.notice(app.notice) +

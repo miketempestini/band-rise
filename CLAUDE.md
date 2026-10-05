@@ -76,7 +76,7 @@ Files must load in this order, because later files use things earlier files defi
 2. `js/rng.js`, `js/util.js`
 3. `js/content/*.js`
 4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, offers, sessionWork, travel, manager, label, bigShows, awards, actions, planWeek, career, day, debug
+5. `js/rules/*.js`: money, housing, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, offers, sessionWork, travel, manager, label, bigShows, awards, actions, planWeek, career, day, debug
    (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
 6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
 7. `js/main.js` (game page only, always last: it starts the game)
@@ -236,6 +236,11 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   festival offers, deals 'arena' | 'festival' with a fee), `Game.rules.awards` (nominations and the ceremony). They run each
   morning from End Day. `booking.dateProblem` is the one check for "can a show be on this date" (window, horizon, block,
   travel). Production costs: `booking.productionCost`. Flights: `travel.isFlight` / `legGas(from, to, state)`.
+- **Housing (Phase 13)**: `Game.rules.housing` (`weeklyBills`, `restingLevel`, `move`, the vacation home). Always use
+  `housing.weeklyBills(state)` for rent, never `balance.housing[...]` directly. Fame: `progress.fame` / `fameLadder`;
+  the career card's numbers: `progress.careerCard` (drawn by `Game.ui.careerCard` on a canvas).
+- **Screens**: every screen uses the same header (`.screen__head`: title on the left, "← Back" on the right), panels with a
+  `.panel__title`, and no emoji in screen titles (tabs have the icons).
 - **Dates**: day numbers are real dates (day 0 = Monday, January 5, 2026, in `balance.time.startDate`). Show dates with
   `Game.rules.day.dateLabel` ("Saturday, March 14"), `shortDate` ("Sat, Mar 14"), `longDate` (with the year),
   `weekLabel` ("Mar 9 – 15"), or `spanLabel`. Never show week numbers as dates; `weekNumber` is only for counting.

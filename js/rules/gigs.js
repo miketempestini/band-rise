@@ -340,6 +340,7 @@ Game.rules.gigs = {
     if (!s.stats.bestResult || g.resultOrder.indexOf(result) > g.resultOrder.indexOf(s.stats.bestResult)) {
       s.stats.bestResult = result;
     }
+    if (crowd > 0 && crowd >= s.stats.biggestCrowd) s.stats.biggestShow = { venueId: venueId, crowd: crowd, day: s.day }; // for the career card
     s.stats.biggestCrowd = Math.max(s.stats.biggestCrowd, crowd);
 
     var gig = {

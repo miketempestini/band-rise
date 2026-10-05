@@ -21,7 +21,7 @@ Game.ui.skipSummary = {
     root.innerHTML =
       Game.ui.topbar.html(app.state, app.screen) +
       '<section class="screen screen--narrow">' +
-        '<h1 class="screen__title">⏩ Skipped ' + r.days.length + ' day' + (r.days.length === 1 ? '' : 's') + '</h1>' +
+        '<h1 class="screen__title">Skipped ' + r.days.length + ' day' + (r.days.length === 1 ? '' : 's') + '</h1>' +
         '<p class="notice notice--info">' + h.escape(r.stopReason) + '</p>' +
         '<div class="panel skip-days">' + days + '</div>' +
         '<div class="actions"><button class="btn btn--primary btn--big" data-action="continue">Continue</button></div>' +

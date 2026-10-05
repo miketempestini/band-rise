@@ -21,7 +21,7 @@ Game.ui.manager = {
     var body;
     if (!hired) {
       var m = b.milestones;
-      body = '<div class="panel"><p>No manager yet. Once you reach reputation ' + m.managerReputation + ' and ' + m.managerFans.toLocaleString() +
+      body = '<div class="panel"><h3 class="panel__title">No manager yet</h3><p>Once you reach reputation ' + m.managerReputation + ' and ' + m.managerFans.toLocaleString() +
         ' fans, ' + h.escape(who.name) + ' of ' + h.escape(who.company) + ' will offer to manage you (Inbox).</p>' +
         '<p class="hint">You have reputation ' + Math.floor(state.player.reputation) + ' and ' + Game.rules.progress.totalFans(state).toLocaleString() + ' fans. ' +
         'A manager takes ' + Math.round(b.manager.gigPayCut * 100) + '% of gig pay, and gives you a ' + b.time.managerBookingWeeks +
@@ -39,7 +39,7 @@ Game.ui.manager = {
       Game.ui.topbar.html(state, app.screen) +
       '<section class="screen screen--narrow">' +
         '<div class="screen__head">' +
-          '<h1 class="screen__title">💼 Manager</h1>' +
+          '<h1 class="screen__title">Manager</h1>' +
           '<button class="btn" data-action="back">← Back</button>' +
         '</div>' +
         h.notice(app.notice) +

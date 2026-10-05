@@ -231,7 +231,7 @@ Game.balance = {
     gameOverWeeks: 5,                // ...for more than this many weeks in a row
     gameOverMessage: "You went broke, had to sell your guitar, and move back into your parent's house. Maybe this music thing is more of a hobby for you.",
     // Actions you can't do while you owe money. Later phases add ids here (for example 'upgradeHousing').
-    blockedActions: []
+    blockedActions: ['upgradeHousing', 'buyVacationHome'] // While you owe money: no moving up, no vacation home
   },
 
   // ---------------------------------------------------------------
@@ -766,7 +766,8 @@ Game.balance = {
     house:    { name: 'House',                weeklyCost: 1500, moraleRest: 60, freeHomeStudio: true },
     mansion:  { name: 'Mansion in the hills', weeklyCost: 5000, moraleRest: 65 },
     vacation: { name: 'Vacation home',        weeklyCost: 4000, moraleRest: 75, canBePrimary: false, needs: 'house' },
-    moveCostWeeks: 4                 // Moving costs 4 weeks of the new rent up front
+    ladder: ['starter', 'nicer', 'house', 'mansion'], // Homes you can live in, cheapest first (the vacation home is a second home)
+    moveCostWeeks: 4                 // Moving (or buying the vacation home) costs 4 weeks of the new home's weekly cost up front
   },
 
   // ---------------------------------------------------------------
@@ -789,7 +790,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 12,                     // Save format version, bumped when the state shape changes
+    version: 13,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

@@ -39,6 +39,18 @@ Game.ui.career = {
               '<p class="hint">' + (fame.next.minFans - fame.fans).toLocaleString() + ' more to <strong>' + fame.next.name + '</strong> (' +
               fame.next.minFans.toLocaleString() + ' fans)</p>'
             : '<p class="hint">The top. Legend.</p>') +
+          '<div class="fame-ladder">' + Game.rules.progress.fameLadder(state).map(function (l) {
+            return '<div class="fame-step' + (l.reached ? ' fame-step--reached' : '') + (l.current ? ' fame-step--current' : '') + '">' +
+              '<span class="fame-step__mark">' + (l.current ? '⭐' : (l.reached ? '✓' : '')) + '</span>' +
+              '<span class="fame-step__name">' + l.name + '</span>' +
+              '<span class="fame-step__fans">' + l.minFans.toLocaleString() + ' fans</span></div>';
+          }).reverse().join('') + '</div>' +
+        '</div>' +
+        '<div class="panel">' +
+          '<h3 class="panel__title">🎴 Career card</h3>' +
+          '<p class="hint">A snapshot of your career to share with other players. Save it as an image.</p>' +
+          '<canvas id="career-card" class="career-card" width="' + Game.ui.careerCard.width + '" height="' + Game.ui.careerCard.height + '"></canvas>' +
+          '<div class="actions actions--left"><button class="btn btn--primary" data-action="saveCard">Save as image</button></div>' +
         '</div>' +
         '<div class="panel">' +
           '<h3 class="panel__title">Milestones · ' + reached.length + ' reached</h3>' +
@@ -54,7 +66,7 @@ Game.ui.career = {
             '<dt>Weeks played</dt><dd>' + Math.floor(state.day / Game.balance.time.daysPerWeek) + '</dd>' +
             '<dt>Gigs played</dt><dd>' + st.gigsPlayed + ' (' + st.openMicsPlayed + ' open mics, ' + st.paidShows + ' paid shows)</dd>' +
             '<dt>Best result</dt><dd>' + (st.bestResult ? st.bestResult.charAt(0).toUpperCase() + st.bestResult.slice(1) : '-') + '</dd>' +
-            '<dt>Biggest crowd</dt><dd>' + st.biggestCrowd + '</dd>' +
+            '<dt>Biggest crowd</dt><dd>' + st.biggestCrowd + (st.biggestShow ? ' (' + h.escape(Game.content.venues[st.biggestShow.venueId].name) + ', ' + h.dateLabel(st.biggestShow.day) + ')' : '') + '</dd>' +
             '<dt>Earned from music</dt><dd>' + h.money(st.totalEarned) + '</dd>' +
             '<dt>Original songs</dt><dd>' + Game.rules.songs.playable(state).filter(function (x) { return !x.isCover; }).length + '</dd>' +
             '<dt>Reputation</dt><dd>' + Game.util.round1(state.player.reputation) + '</dd>' +
@@ -64,7 +76,9 @@ Game.ui.career = {
 
     h.bind(root, {
       back: function () { app.goBack('career'); },
-      focusPayBack: function () { app.goBack('career'); }
+      focusPayBack: function () { app.goBack('career'); },
+      saveCard: function () { Game.ui.careerCard.save(root.querySelector('#career-card'), state); }
     });
+    Game.ui.careerCard.draw(root.querySelector('#career-card'), Game.rules.progress.careerCard(state));
   }
 };

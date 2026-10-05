@@ -32,7 +32,7 @@ Game.rules.morale = {
 
   // The morale level things drift back toward each Sunday. Better housing raises it.
   restingLevel: function (state) {
-    return Game.balance.housing[state.player.housing].moraleRest;
+    return Game.rules.housing.restingLevel(state); // the vacation home counts too
   },
 
   // Every Sunday, morale moves up to 3 points toward its resting level.

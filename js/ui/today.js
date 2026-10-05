@@ -277,7 +277,7 @@ Game.ui.today = {
     var b = Game.balance;
     var dow = Game.rules.day.dayOfWeek(state.day);
     if (dow === b.time.billsDayOfWeek) {
-      return 'Tonight: rent and living costs of ' + Game.ui.helpers.money(b.housing[state.player.housing].weeklyCost) + ' are due, then your weekly summary.';
+      return 'Tonight: rent and living costs of ' + Game.ui.helpers.money(Game.rules.housing.weeklyBills(state)) + ' are due, then your weekly summary.';
     }
     var openMic = Game.rules.gigs.openMicTonight(state);
     var mic = openMic ? 'Open mic tonight at ' + openMic.name + ' (plan it in the Evening). ' : '';

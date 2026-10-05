@@ -144,6 +144,44 @@ Game.rules.progress = {
     return { name: levels[i].name, next: next, fans: fans, toNext: toNext };
   },
 
+  // The fame ladder: every level with its fan bar, whether you've reached it, and which one you're at.
+  // Returns [{ name, minFans, reached, current }].
+  fameLadder: function (state) {
+    var fans = Game.rules.progress.totalFans(state);
+    var current = Game.rules.progress.fame(state).name;
+    return Game.balance.fameLevels.map(function (l) {
+      return { name: l.name, minFans: l.minFans, reached: fans >= l.minFans, current: l.name === current };
+    });
+  },
+
+  // Everything the career card shows (Phase 13), in one plain object.
+  careerCard: function (state) {
+    var p = state.player;
+    var st = state.stats;
+    var big = st.biggestShow;
+    var venue = big && Game.content.venues[big.venueId];
+    var originals = Object.keys(state.songs).filter(function (id) { return !state.songs[id].isCover && state.songs[id].quality !== null; }).length;
+    return {
+      name: p.name,
+      band: state.band.name || null,
+      instrument: Game.content.instruments[p.instrument].name,
+      fame: Game.rules.progress.fame(state).name,
+      fans: Game.rules.progress.totalFans(state),
+      days: state.day,
+      weeks: Math.floor(state.day / Game.balance.time.daysPerWeek),
+      started: Game.rules.day.longDate(0),
+      today: Game.rules.day.longDate(state.day),
+      originals: originals,
+      releases: state.releases.length,
+      biggestShow: venue ? { venueName: venue.name, cityName: Game.content.cities[venue.cityId].name, crowd: big.crowd, date: Game.rules.day.longDate(big.day) }
+        : (st.biggestCrowd ? { venueName: null, cityName: null, crowd: st.biggestCrowd, date: null } : null),
+      milestones: Game.content.milestones.filter(function (m) { return state.milestones[m.id] !== undefined; }).length,
+      milestonesTotal: Game.content.milestones.length,
+      reputation: Math.round(p.reputation),
+      home: Game.balance.housing[p.housing].name + (p.vacationHome ? ' (+ vacation home)' : '')
+    };
+  },
+
   // ----- The end of the first three weeks -----
 
   // True once it's time for the "Three weeks in" card (and it hasn't been shown yet).

@@ -1,11 +1,37 @@
 // shop.js
-// The Shop screen: merch stock (T-shirts, CDs) and the home recording setup.
+// The Shop screen: merch stock (T-shirts, CDs), the home recording setup, vans, and housing (where you live).
 // Locked items say what unlocks them.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
 
 Game.ui.shop = {
+
+  // Housing: every home with its weekly cost, morale resting level, and what moving costs.
+  housingHtml: function (state) {
+    var h = Game.ui.helpers;
+    var cards = Game.rules.housing.options(state).map(function (o) {
+      var icon = { starter: '🏢', nicer: '🏬', house: '🏡', mansion: '🏰', vacation: '🏖️' }[o.id];
+      var button;
+      if (o.current) button = '<span class="badge badge--warn">You live here</span>';
+      else if (o.second && o.owned) button = '<span class="badge badge--warn">Yours</span> <button class="btn btn--small btn--ghost" data-action="sellVacation">Sell (no refund)</button>';
+      else if (o.problem) button = '<span class="pick__reason">🔒 ' + h.escape(o.problem) + '</span>';
+      else if (o.second) button = '<button class="btn btn--primary" data-action="buyVacation">Buy for ' + h.money(o.moveCost) + '</button>';
+      else button = '<button class="btn btn--primary" data-action="moveHome" data-home="' + o.id + '">Move for ' + h.money(o.moveCost) + '</button>';
+      return '<div class="shop-item' + (o.problem && !o.current && !o.owned ? ' shop-item--locked' : '') + '">' +
+        '<div class="shop-item__icon">' + icon + '</div>' +
+        '<div class="shop-item__name">' + h.escape(o.name) + '</div>' +
+        '<p class="hint">' + h.money(o.weeklyCost) + ' a week' + (o.second ? ' on top of your home' : '') + ' · morale rests at ' + o.moraleRest +
+          (o.studio ? ' · comes with a home studio' : '') + (o.second ? ' · a second home, unlocks after the House' : '') + '</p>' +
+        '<div class="shop-item__buy">' + button + '</div>' +
+        '</div>';
+    }).join('');
+    return '<div class="panel"><h3 class="panel__title">🏠 Housing</h3>' +
+      '<p class="hint">Weekly bills now: <strong>' + h.money(Game.rules.housing.weeklyBills(state)) + '</strong>. Morale drifts toward <strong>' +
+        Game.rules.housing.restingLevel(state) + '</strong> each Sunday. Moving costs ' + Game.balance.housing.moveCostWeeks +
+        ' weeks of the new home\'s cost up front. While you owe Mom and Dad, you can only move down.</p>' +
+      '<div class="shop-grid">' + cards + '</div></div>';
+  },
 
   render: function (root, app) {
     var h = Game.ui.helpers;
@@ -48,12 +74,16 @@ Game.ui.shop = {
             '(double at Hollow Records). Merch money is all yours.</p>' +
         '</div>' +
         '<div class="shop-grid">' + cards + '</div>' +
+        Game.ui.shop.housingHtml(state) +
       '</section>';
 
     h.bind(root, {
       back: function () { app.goBack('shop'); },
       focusPayBack: function () { app.goBack('shop'); },
-      buy: function (e, el) { app.buyItem(el.getAttribute('data-item')); }
+      buy: function (e, el) { app.buyItem(el.getAttribute('data-item')); },
+      moveHome: function (e, el) { app.moveHome(el.getAttribute('data-home')); },
+      buyVacation: function () { app.buyVacationHome(); },
+      sellVacation: function () { app.sellVacationHome(); }
     });
   }
 };

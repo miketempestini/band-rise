@@ -613,6 +613,10 @@ Milestones unlock new actions and screens, so the game keeps handing the player 
 
 Moving costs 4 weeks of the new rent up front. Higher costs are deliberate: success brings bigger bills.
 
+- Homes are in the Shop. You can move up or down (both cost 4 weeks of the new home). Moving into the House gives you the home studio for free.
+- The Vacation Home is a second home: it unlocks once you've lived in the House, costs 4 weeks up front, then $4,000 a week on top of your main home, and raises the morale resting level to 75 (the higher level counts). You can sell it (its cost stops; no money back).
+- While you owe Mom and Dad money, you can't move up or buy the Vacation Home. Moving down and selling are always allowed.
+
 ### Fame levels (by total fans across all cities)
 
 | Fame level | Total fans |
@@ -628,7 +632,7 @@ Moving costs 4 weeks of the new rent up front. Higher costs are deliberate: succ
 | Arena Act | 2,000,000 |
 | Legend | 10,000,000 |
 
-A later feature: a shareable career card (fame level, days played, fans, songs, biggest show) made for sharing with other players.
+The Career screen shows all ten fame levels (your level is also in the top bar) and a career card: an image with your fame level, days and weeks played, fans, original songs and releases, biggest show (venue, city, crowd, date), milestones, and reputation. "Save as image" downloads it as a PNG to share with other players.
 
 ## Vertical slice: the first three weeks
 
