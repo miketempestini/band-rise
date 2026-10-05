@@ -120,8 +120,8 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
 - **Planned actions** live in `state.schedule[day][block]` → `state.entries[id]`, and are removed at End Day.
 - `Game.rules.actions.dayPlan(state)` walks today's blocks in order and gives energy/cash before and after each.
   Use it for any "can I afford this at that point in the day?" check.
-- **End Day** builds `state.lastDayReport` (`{ day, blocks: [{ block, title, lines }], overnight: [...] }`),
-  which the Day results screen draws. New nightly effects should add their lines to `report.overnight`.
+- **End Day** builds `state.lastDayReport` (`{ day, blocks: [{ block, title, lines }], overnight: [...], summary }`),
+  which Today's Previous day box and its pop-up draw. New nightly effects should add their lines to `report.overnight`.
 - **Morale** changes should go through `Game.rules.morale.change` so Burned out stays up to date.
 - **Skills** grow through `Game.rules.skills.train` (it also resets the rust clock).
 - **Buzz**: `Game.rules.audience.addBuzz` / `fadeBuzz`. Cities are content in `js/content/cities.js`.
@@ -147,8 +147,10 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   breakdown in `state.lastGig`. Score parts are a list of `{ id, value }`; labels and tips are in
   `js/content/gigText.js`. To add a modifier later, add a part in `scoreParts` and a label in gigText.
 - **Actions with a set** use `setSize`; the picker's set step stores `songIds` on the entry.
-- **After End Day** the order is: gig result (crowd meter, then result) → song reveals → Day results →
-  weekly summary. See `Game.app.afterDayChange` / `afterGigResult`.
+- **After End Day** the order is: gig result (crowd meter, then result) → song reveals → weekly summary (Sunday) →
+  back to Today. There's no Day results screen anymore: Today's "Previous day" box shows `lastDayReport.summary`
+  (built by `Game.rules.day.summary` in End Day), and clicking it opens the full readout as a pop-up
+  (`Game.ui.dayResults`). See `Game.app.afterDayChange` / `afterGigResult`.
 - **Debug forcing** lives in `state.debug.forceNextGig`; the result screen shows an honest "Debug" score part.
 
 ## How the pieces fit (added in Phase 5)

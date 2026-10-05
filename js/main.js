@@ -40,7 +40,8 @@ Game.app = {
   planWeekPicks: {},    // Plan week choices not applied yet: { dayOfWeek: actionId | 'clear' }
   templateNameDraft: '', // the name typed for a new week template
   bandNameDraft: '',       // the band name shown in the name box on the Name your band screen
-  pendingWeekSummary: false, // true when the weekly summary should follow the Day results screen
+  pendingWeekSummary: false, // true when the weekly summary should follow End Day (after any gig result and song reveals)
+  dayReportOpen: false, // true while the full "previous day" readout is open over Today
   draftCareer: null,    // a career being set up: { name, instrument, allocation } (not saved until Start)
   debug: /[?&]debug\b/.test(window.location.search), // true when the address ends in ?debug
 
@@ -59,6 +60,7 @@ Game.app = {
       app.pickerDay = null;
       app.pickerSongStep = null;
       app.revealError = null;
+      app.dayReportOpen = false;
     }
     app.screen = screen;
     app.render();
@@ -843,7 +845,7 @@ Game.app = {
       app.pendingWeekSummary = result.weekEnded;
       if (app.state.lastDayReport.gig) {
         app.gigPhase = 'meter';
-        app.show('gigResult'); // the gig comes first, then any song reveal, then Day results
+        app.show('gigResult'); // the gig comes first, then any song reveal, then back to Today (or the week's wrap-up)
       } else {
         app.afterGigResult();
       }
@@ -867,20 +869,27 @@ Game.app = {
     Game.app.afterGigResult();
   },
 
-  // After the gig (or right after End Day if there was none): song reveals, then Day results.
+  // After the gig (or right after End Day if there was none): song reveals, then the weekly summary on Sunday
+  // night, otherwise straight back to Today (the day's summary is in the "Previous day" box there).
   afterGigResult: function () {
-    var app = Game.app;
-    var finished = app.state.lastDayReport.finishedSongs || [];
-    if (finished.length) app.startReveals(finished, 'dayResults');
-    else app.show('dayResults');
-  },
-
-  // Leaves the Day results screen: on to the weekly summary on Sunday night, otherwise back to Today.
-  leaveDayResults: function () {
     var app = Game.app;
     var next = app.pendingWeekSummary ? 'weeklySummary' : 'today';
     app.pendingWeekSummary = false;
-    app.show(next);
+    app.dayReportOpen = false;
+    var finished = app.state.lastDayReport.finishedSongs || [];
+    if (finished.length) app.startReveals(finished, next);
+    else app.show(next);
+  },
+
+  // The full readout of the previous day, as a pop-up over Today.
+  openDayReport: function () {
+    Game.app.dayReportOpen = true;
+    Game.app.render();
+  },
+  closeDayReport: function () {
+    Game.app.dayReportOpen = false;
+    document.onkeydown = null;
+    Game.app.render();
   },
 
   // Leaving the weekly summary: after week 3, the one-time "Three weeks in" card; otherwise Today.

@@ -4,6 +4,19 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14c: End Day stays on Today (2026-10-04)
+- Owner's change: ending a day no longer switches to the Day results screen. You stay on Today.
+- **Previous day box:** the empty space on the left of the dashboard now holds this box:
+  - cash change (and cash now), energy and morale before → after
+  - up to 5 big moments: a gig (result, crowd, fans) or a no-show, milestones, songs finished, new Inbox messages,
+    people met, bandmates joining or leaving, and loans
+  - clicking it opens the full readout (every block and everything overnight) as a pop-up; Escape or Close returns
+- **Still shown:** the gig result (on gig days), song reveals, and the weekly wrap-up (Sunday).
+- **Layout:** three columns on wide windows. On narrower windows (under 1200px), the box sits above the day's plan.
+- **Under the hood:** the summary is saved with the day (`lastDayReport.summary`, built by `Game.rules.day.summary`).
+  Old saves show the overnight lines instead.
+- **Tests:** 300 passing (day summary tests in day.test.js).
+
 ### Session 14b: Manager and touring upgrades (2026-10-04)
 - **Why:** a two-year touring simulation (one-off, not in the repo; 10 runs with and 10 without a manager) found:
   - No tour made the player money: about -$2,260 per tour, -$1,070 per single out-of-town show.

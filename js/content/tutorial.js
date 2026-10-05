@@ -21,7 +21,7 @@ Game.content.tutorial = [
   },
   {
     id: 'endDay', day: 2, target: 'endDay', title: 'End the day',
-    text: 'When your plan looks good, click End Day. You\'ll see what happened, and the next day begins.'
+    text: 'When your plan looks good, click End Day. The next day begins right here, and the Previous day box on the left sums up what happened (click it for the full day).'
   },
   {
     id: 'calendar', day: 2, target: 'calendar', title: 'Plan ahead',

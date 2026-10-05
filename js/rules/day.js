@@ -156,6 +156,7 @@ Game.rules.day = {
     var s = util.clone(state);
     var dow = day.dayOfWeek(s.day);
     var report = { day: s.day, blocks: [], overnight: [], finishedSongs: [], gig: false };
+    var before = Game.rules.day.snapshot(s); // for the "Previous day" summary on Today
     var weekEnded = false;
 
     // Today's event, if you didn't answer it: the safe choice happens.
@@ -458,6 +459,7 @@ Game.rules.day = {
       s = day.closeWeek(s, day.weekNumber(report.day));
     }
 
+    report.summary = Game.rules.day.summary(before, s, report);
     s.lastDayReport = report;
 
     // A flat list of everything that happened, for tests and simple displays.
@@ -468,6 +470,100 @@ Game.rules.day = {
     log = log.concat(report.overnight);
 
     return { state: s, log: log, weekEnded: weekEnded };
+  },
+
+  // ----- The "Previous day" summary (shown on Today after End Day) -----
+
+  // What the summary compares against: noted at the start of End Day.
+  snapshot: function (state) {
+    return {
+      cash: state.player.cash, debt: state.player.loanOwed, energy: state.player.energy, morale: state.player.morale,
+      inboxIds: state.inbox.map(function (m) { return m.id; }),
+      peopleIds: Object.keys(state.people),
+      memberIds: state.band.memberIds.slice(),
+      milestoneIds: Object.keys(state.milestones)
+    };
+  },
+
+  // The day's summary: cash, energy, and morale before and after, and the big moments.
+  // Returns { cash: { before, after }, energy: { before, after }, morale: { before, after }, highlights: [{ icon, text }] }.
+  summary: function (before, state, report) {
+    return {
+      cash: { before: before.cash, after: state.player.cash },
+      energy: { before: before.energy, after: state.player.energy },
+      morale: { before: before.morale, after: state.player.morale },
+      highlights: Game.rules.day.summaryHighlights(before, state, report)
+    };
+  },
+
+  // The big moments of a day, in order: a gig (or a no-show), milestones, songs finished, new messages,
+  // people met, bandmates joining or leaving, and loans from Mom and Dad. Returns [{ icon, text }].
+  summaryHighlights: function (before, state, report) {
+    var list = [];
+    var add = function (icon, text) { list.push({ icon: icon, text: text }); };
+    var venues = Game.content.venues;
+
+    // The gig.
+    var g = state.lastGig;
+    if (report.gig && g && g.day === report.day) {
+      var fans = g.rewards ? g.rewards.fans : 0;
+      add('🎤', g.result.charAt(0).toUpperCase() + g.result.slice(1) + (g.kind === 'openMic' ? ' set at ' : ' show at ') + g.venueName + ': ' +
+        g.crowd + ' people, +' + fans + ' fan' + (fans === 1 ? '' : 's') + '.');
+    }
+    (report.blocks || []).forEach(function (row) { if (row.title === 'No-show') add('🚫', row.lines[0] || 'No-show.'); });
+
+    // Milestones reached.
+    Game.content.milestones.forEach(function (m) {
+      if (state.milestones[m.id] !== undefined && before.milestoneIds.indexOf(m.id) === -1) add('🏆', 'Milestone ' + m.number + ': ' + m.name + '!');
+    });
+
+    // Songs finished.
+    (report.finishedSongs || []).forEach(function (id) {
+      if (state.songs[id]) add('🎵', 'You finished a song: "' + state.songs[id].title + '".');
+    });
+
+    // New messages.
+    state.inbox.forEach(function (m) {
+      if (before.inboxIds.indexOf(m.id) !== -1) return;
+      var label = Game.rules.day.messageLabel(state, m);
+      if (label) add(m.kind === 'event' ? '⚡' : '📬', label);
+    });
+
+    // People.
+    Object.keys(state.people).forEach(function (id) {
+      if (before.peopleIds.indexOf(id) === -1) add('👋', 'You met ' + state.people[id].name + ' (' + Game.content.roles[state.people[id].role].person + ').');
+    });
+    state.band.memberIds.forEach(function (id) {
+      if (before.memberIds.indexOf(id) === -1) add('🎸', state.people[id].name + ' joined the band.');
+    });
+    before.memberIds.forEach(function (id) {
+      if (state.band.memberIds.indexOf(id) === -1 && state.people[id]) add('💔', state.people[id].name + ' left the band.');
+    });
+
+    // Loans.
+    if (state.player.loanOwed > before.debt) add('💸', 'Mom and Dad lent you $' + (state.player.loanOwed - before.debt).toLocaleString() + '.');
+    return list;
+  },
+
+  // A short label for a new Inbox message, like "The Basement said yes" or "Tour proposal". Null to skip it.
+  messageLabel: function (state, m) {
+    var d = m.data;
+    var venue = d.venueId && Game.content.venues[d.venueId];
+    switch (m.kind) {
+      case 'reply': return venue.name + (d.yes ? ' said yes! Accept it in your Inbox.' : ' said no.');
+      case 'event': return d.title + '.';
+      case 'opening': return 'Opening slot offer: ' + venue.name + '.';
+      case 'residency': return 'Residency offer: ' + venue.name + '.';
+      case 'sessionWork': return 'Session work offer from ' + d.bandName + '.';
+      case 'sessionRelease': return 'A song you played on came out.';
+      case 'managerOffer': return 'A manager wants to work with you.';
+      case 'labelOffer': return 'A label wants to sign you.';
+      case 'tourProposal': return 'Your tour proposal is ready.';
+      case 'arenaOffer': return 'Arena offer: ' + venue.name + '.';
+      case 'festivalOffer': return 'Festival offer: ' + venue.name + '.';
+      case 'note': return d.title.replace(/^\W+/, '') + '.';
+      default: return null;
+    }
   },
 
   // "Skip to next commitment": ends days one after another (with nothing planned) until something needs

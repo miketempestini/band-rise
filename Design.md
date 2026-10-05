@@ -814,7 +814,7 @@ Sixteen screens, most of them panels around one main Today view. The vertical sl
 | 2 | New career | Name and instrument, then a skills page to spend 50 starting points | Confirm | Yes |
 | 3 | Today (main hub) | Top bar (cash, energy, morale, reputation, date, days to rent), three block cards, inbox preview | Fill blocks, End Day | Yes |
 | 4 | Action picker | Available actions with cost, energy, and expected effect. Locked ones are greyed out with the reason | Pick an action | Yes |
-| 5 | Day results | One line per block, plus overnight changes | Continue | Yes |
+| 5 | Day results | A "Previous day" box on Today (cash, energy, morale, big moments); click it for the full readout (one line per block, plus overnight) in a pop-up | Open, close | Yes |
 | 6 | Gig result | Crowd, score breakdown, rewards, one tip | Continue | Yes |
 | 7 | Weekly summary | Money in and out, fans, reputation change, warnings | Continue | Yes |
 | 8 | Inbox | Offers, replies, and events, with choices and expiry dates | Accept or decline | Yes |

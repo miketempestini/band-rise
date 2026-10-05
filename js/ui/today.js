@@ -16,6 +16,7 @@ Game.ui.today = {
     root.innerHTML =
       Game.ui.topbar.html(state, app.screen) +
       '<div class="dashboard">' +
+        '<aside class="dashboard__recap">' + Game.ui.dayResults.boxHtml(state) + '</aside>' +
         '<section class="dashboard__main">' +
           h.notice(app.notice) +
           Game.ui.today.tipHtml(state) +
@@ -38,10 +39,12 @@ Game.ui.today = {
           Game.ui.today.debtPanelHtml(state, app) +
         '</aside>' +
       '</div>' +
-      (app.pickerBlock ? Game.ui.actionPicker.html(state, app.pickerBlock, app.pickerSongStep, app.pickerSet, app.practiceSort, app.practiceFilter) : '');
+      (app.pickerBlock ? Game.ui.actionPicker.html(state, app.pickerBlock, app.pickerSongStep, app.pickerSet, app.practiceSort, app.practiceFilter) : '') +
+      (app.dayReportOpen && state.lastDayReport && !app.pickerBlock ? Game.ui.dayResults.modalHtml(state) : '');
 
     h.bind(root, {
       endDay: function () { app.endDay(); },
+      openDayReport: function () { app.openDayReport(); },
       openPicker: function (event, el) { app.openPicker(el.getAttribute('data-block')); },
       openCalendar: function () { app.navigate('calendar'); },
       openJob: function () { app.openJob(); },
@@ -65,6 +68,7 @@ Game.ui.today = {
     });
 
     if (app.pickerBlock) Game.ui.actionPicker.bind(root, app);
+    if (app.dayReportOpen) Game.ui.dayResults.bindModal(root, app);
 
     // Highlight whatever the current tip card is talking about.
     var tip = Game.rules.progress.tutorialCard(state);

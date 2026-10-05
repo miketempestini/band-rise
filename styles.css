@@ -186,11 +186,20 @@ body {
 
 .dashboard {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: 300px minmax(0, 1fr) 360px; /* the previous day, today's plan, the side panels */
+  grid-template-areas: "recap main side";
   gap: 24px;
   padding: 32px 24px;
-  max-width: 1280px;
+  max-width: 1640px;
   margin: 0 auto;
+  align-items: start;
+}
+.dashboard__recap { grid-area: recap; }
+.dashboard__main { grid-area: main; }
+.dashboard__side { grid-area: side; }
+/* Narrower windows: the previous day sits above today's plan. */
+@media (max-width: 1200px) {
+  .dashboard { grid-template-columns: minmax(0, 1fr) 360px; grid-template-rows: auto 1fr; grid-template-areas: "recap side" "main side"; }
 }
 
 .blocks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -737,3 +746,16 @@ button.block:hover { border-color: var(--accent); }
 .fame-step__mark { text-align: center; }
 
 .career-card { width: 100%; height: auto; display: block; border-radius: var(--radius); margin: var(--space-2) 0; box-shadow: var(--shadow); }
+
+/* ---------- The "Previous day" box on Today, and its full readout ---------- */
+
+.recap { display: block; width: 100%; text-align: left; font: inherit; color: var(--text); cursor: pointer; }
+button.recap:hover { border-color: var(--accent); }
+.recap--empty { cursor: default; }
+.recap__numbers { margin-bottom: var(--space-2); font-variant-numeric: tabular-nums; }
+.recap__list { list-style: none; margin: 0 0 var(--space-2); padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.recap__list li { display: flex; gap: 8px; align-items: baseline; }
+.recap__icon { flex: 0 0 auto; }
+.recap__more { color: var(--teal); font-size: 14px; font-weight: bold; }
+.recap__strip { color: var(--text-muted); margin-top: 0; font-variant-numeric: tabular-nums; }
+.modal--wide { width: 760px; max-width: calc(100vw - 32px); }

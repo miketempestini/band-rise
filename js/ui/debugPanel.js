@@ -14,7 +14,7 @@ Game.ui.debugPanel = {
   render: function (root, app) {
     var h = Game.ui.helpers;
     var d = Game.balance.debug;
-    var showOn = ['today', 'weeklySummary', 'dayResults', 'songs', 'people', 'booking', 'inbox', 'calendar', 'career', 'shop'];
+    var showOn = ['today', 'weeklySummary', 'songs', 'people', 'booking', 'inbox', 'calendar', 'career', 'shop'];
 
     if (!app.debug || !app.state || app.state.gameOver || showOn.indexOf(app.screen) === -1) {
       root.innerHTML = '';

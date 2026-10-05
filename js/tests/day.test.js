@@ -137,4 +137,53 @@
     t.equal(s.thisWeek.startSkills.musicianship, 30);
   });
 
+  // ----- The "Previous day" summary -----
+
+  Game.test('Day summary: cash, energy, and morale before and after (Friday is payday)', function (t) {
+    var s = dayTestState();
+    s.day = 4; // a Friday
+    s.player.job.unpaidShifts = 4;
+    s.pendingEvent = null;
+    var cash = s.player.cash;
+    var energy = s.player.energy;
+    var r = Game.rules.day.endDay(s).state;
+    var sum = r.lastDayReport.summary;
+    t.equal(sum.cash.before, cash, 'cash before');
+    t.equal(sum.cash.after, r.player.cash, 'cash after');
+    t.equal(sum.cash.after - sum.cash.before, 5 * Game.balance.job.payPerShift, 'payday: 5 shifts');
+    t.equal(sum.energy.before, energy, 'energy before');
+    t.equal(sum.energy.after, r.player.energy, 'energy after (after sleeping)');
+    t.equal(sum.morale.after, r.player.morale, 'morale after');
+  });
+
+  Game.test('Day summary: a finished song, a milestone, someone met, a new message, and a loan are big moments', function (t) {
+    var s = dayTestState();
+    var before = Game.rules.day.snapshot(s);
+    var st = Game.rules.songs.startSong(s);
+    s = Game.rules.songs.finishSong(st.state, st.songId).state;
+    s = Game.rules.progress.checkUnlocks(s).state;
+    s = Game.rules.people.meet(s).state;
+    s = Game.rules.booking.addInbox(s, 'reply', { venueId: 'backRoom', gigDay: 12, deal: 'door', yes: true, chance: 0.6 }, 15);
+    s = Game.rules.money.spend(s, s.player.cash + 10, 'debug').state;
+    var list = Game.rules.day.summaryHighlights(before, s, { day: s.day, blocks: [], finishedSongs: [st.songId], gig: false });
+    var text = list.map(function (x) { return x.icon + ' ' + x.text; }).join(' | ');
+    t.ok(text.indexOf('🎵 You finished a song') !== -1, 'the song: ' + text);
+    t.ok(text.indexOf('🏆 Milestone 2: First original') !== -1, 'the milestone');
+    t.ok(text.indexOf('👋 You met') !== -1, 'someone met');
+    t.ok(text.indexOf('📬 The Back Room said yes') !== -1, 'the reply');
+    t.ok(text.indexOf('💸 Mom and Dad lent you $1,000') !== -1, 'the loan');
+  });
+
+  Game.test('Day summary: a gig shows its result, crowd, and new fans', function (t) {
+    var s = dayTestState();
+    s.day = 1; // Tuesday: open mic night
+    s.pendingEvent = null;
+    s = Game.rules.actions.plan(s, 'evening', 'openMic').state;
+    var r = Game.rules.day.endDay(s).state;
+    var gig = r.lastDayReport.summary.highlights[0];
+    t.equal(gig.icon, '🎤', 'the gig comes first');
+    t.ok(gig.text.indexOf(r.lastGig.crowd + ' people') !== -1, 'with the crowd: ' + gig.text);
+    t.ok(gig.text.indexOf('set at The Rusty Nail') !== -1, 'an open mic set');
+  });
+
 })();
