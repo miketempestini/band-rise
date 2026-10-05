@@ -99,7 +99,7 @@ Game.rules.actions = {
         row.kind = 'travel';
         row.entryId = booked.id;
         energy = clampEnergy(energy - b.travel.energyPerBlock);
-        if (booked.legStart) cash -= Game.rules.travel.legGas(booked.from, booked.to, state);
+        if (booked.legStart) cash -= Game.rules.travel.yourShareOf(state, Game.rules.travel.legGas(booked.from, booked.to, state));
       } else if (Game.rules.day.isJobBlock(state, block)) {
         row.kind = 'job';
         energy = clampEnergy(energy - b.energy.cost.dayJob);

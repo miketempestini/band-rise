@@ -312,7 +312,7 @@ Game.balanceSim = {
 
   // The same player as the 90-day check, plus the big-time moves: writes up to a 14-song theater set, hires the manager and turns on auto-booking
   // (clubs and theaters, Friday and Saturday, 2 a week), buys a used van, records and releases an EP every
-  // 12 weeks, asks for a tour every 10 weeks, uses the press push, signs the label, takes arena and festival
+  // 12 weeks, asks for a tour every 10 weeks (with Local ads in each city when cash allows), uses the press push, signs the label, takes arena and festival
   // offers, and quits the day job once music covers its bills 1.5 times over.
   planBigDay: function (s) {
     var sim = Game.balanceSim;
@@ -338,7 +338,11 @@ Game.balanceSim = {
       if (m.kind === 'labelOffer') s = Game.rules.label.sign(s, m.id).state;
       if (m.kind === 'tourProposal') {
         var job = Game.rules.manager.tourAcceptProblem(s, m.id, null) ? 'sick' : null;
-        s = Game.rules.manager.acceptTour(s, m.id, job).state;
+        // Local ads in every tour city, if there's comfortably enough cash.
+        var ads = {};
+        m.data.shows.forEach(function (x) { ads[Game.content.venues[x.venueId].cityId] = 'local'; });
+        if (Game.rules.manager.adsProblem(s, m.id, ads) || s.player.cash < 2 * Object.keys(ads).length * Game.balance.manager.tour.ads.local.cost) ads = {};
+        s = Game.rules.manager.acceptTour(s, m.id, job, ads).state;
       }
       if (m.kind === 'arenaOffer' || m.kind === 'festivalOffer') {
         var ok = !Game.rules.bigShows.acceptProblem(s, m.id, null) ? null : 'sick';
@@ -475,7 +479,7 @@ Game.balanceSim = {
       : 'Money still matters by the end of year 2 in most runs (' + (all.length - stopped) + ' of ' + all.length + ' have less than a year of costs saved).';
     el.innerHTML += '<h2>Balance check: two years, ' + runs + ' runs (does money ever stop mattering?)</h2>' +
       '<p class="muted">The 90-day player, plus: hires the manager and auto-books clubs and theaters, buys a used van, releases an EP every 12 weeks, ' +
-        'asks for a tour every 10 weeks, uses the press push, signs the label, takes arena and festival offers, and quits the day job once music pays ' +
+        'asks for a tour every 10 weeks (with Local ads in each city when cash allows), uses the press push, signs the label, takes arena and festival offers, and quits the day job once music pays ' +
         'the bills 1.5 times over. (' + ((Date.now() - started) / 1000).toFixed(1) + 's)</p>' +
       '<table class="sim"><thead><tr><th>Cash at</th><th>Average</th><th>Range</th></tr></thead><tbody>' + cashRows + '</tbody></table>' +
       '<table class="sim" style="margin-top:16px"><thead><tr><th>When</th><th>Reached</th><th>Average day</th></tr></thead><tbody>' + whenRows + '</tbody></table>' +

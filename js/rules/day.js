@@ -375,6 +375,10 @@ Game.rules.day = {
     var faded = Game.rules.audience.fadeBuzz(s);
     s = faded.state;
     faded.log.forEach(function (line) { endLines.push(line); });
+    // Your manager posts for the band every night (after the fade, so it holds buzz up).
+    var posts = Game.rules.manager.dailyPosts(s);
+    s = posts.state;
+    posts.log.forEach(function (line) { endLines.push(line); });
 
     // Anything newly unlocked or achieved (like small rooms at reputation 10) gets a banner on Today
     // (checked before the day moves forward, so it's dated the day it happened).
@@ -424,7 +428,7 @@ Game.rules.day = {
     sessionOffer.log.forEach(function (line) { endLines.push(line); });
     // The big time: your manager books "yes" replies, plans tours, and emails venues on Mondays; manager,
     // label, arena, and festival offers may arrive; and in December, awards season.
-    [Game.rules.manager.autoAccept, Game.rules.manager.offerCheck, Game.rules.label.offerCheck,
+    [Game.rules.manager.processAds, Game.rules.manager.autoAccept, Game.rules.manager.offerCheck, Game.rules.label.offerCheck,
       Game.rules.manager.processTourRequests, Game.rules.bigShows.roll, Game.rules.manager.autoBook, Game.rules.awards.check].forEach(function (rule) {
       var r = rule(s);
       s = r.state;

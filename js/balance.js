@@ -87,8 +87,9 @@ Game.balance = {
   // Big shows: production costs (sound and lights) paid on the night, by venue tier
   // ---------------------------------------------------------------
   production: {
-    theater: 1000,                   // Tier 3
-    arena: 5000,                     // Tier 4 arena shows
+    share: 0.25,                     // Production costs 25% of the show's pay (before splits)...
+    theater: 1000,                   // ...up to $1,000 at a theater (tier 3)
+    arena: 5000,                     // ...up to $5,000 at an arena (tier 4)
     festival: 0                      // Festivals provide their own production
   },
 
@@ -109,7 +110,22 @@ Game.balance = {
       proposalExpiryDays: 3,         // Answer a tour proposal within this many days
       minCities: 2,
       maxCities: 8,
-      showDayOfWeekPreferred: [3, 4, 5, 6, 2, 1, 0] // Nights the manager tries first (Thursday first), as with residencies
+      showDayOfWeekPreferred: [3, 4, 5, 6, 2, 1, 0], // Nights the manager tries first (Thursday first), as with residencies
+      // Ad campaigns you can add per city to a tour proposal. They land a week before the show (and the city's
+      // buzz doesn't fade while the ads run). fans: new fans in that city right away.
+      adLeadDays: 7,
+      ads: {
+        posters: { cost: 150,  buzz: 20, fans: 0 },
+        local:   { cost: 500,  buzz: 35, fans: 50 },
+        full:    { cost: 1500, buzz: 50, fans: 200 }
+      }
+    },
+    // The manager posts for the band every day (free: part of the cut). Buzz in every city where you have fans,
+    // more in "focus cities": cities with an out-of-town show in the next 2 weeks.
+    social: {
+      dailyBuzz: 1,                  // +1 buzz a day in every city with fans (buzz fades 2 a day)
+      focusBuzz: 3,                  // +3 a day in focus cities
+      focusDays: 14
     }
   },
 
@@ -180,7 +196,6 @@ Game.balance = {
     rehearsalRoomPerBlock: 20,       // Rehearsal room rent per block (needed with a band)
     networkingCost: 15,              // Drinks when you go out to network
     hangOutCost: 15,                 // Cost to hang out with a contact
-    productionCost: { min: 500, max: 5000 }, // Sound and lights per show at theaters and bigger
     surpriseBill: { min: 40, max: 300 },     // Random bills like a broken string or car trouble
     instrumentUpgrades: [            // Instrument tiers you can buy, in order
       { tier: 1, cost: 400,  gigBonus: 5 },
@@ -650,7 +665,12 @@ Game.balance = {
 
   tours: {
     minShows: 3,                     // A tour is 3+ out-of-town shows...
-    withinDays: 10                   // ...within 10 days
+    withinDays: 10,                  // ...within 10 days
+    // Word of mouth on tour: tour shows win 50% more new fans, and give buzz to the next city on the route.
+    fanBonus: 0.5,
+    nextCityBuzz: 10,
+    // Any out-of-town show gives a little buzz to the other cities in the same region (Near, Mid, Far...).
+    regionBuzz: 3
   },
 
   // ---------------------------------------------------------------
@@ -790,7 +810,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 13,                     // Save format version, bumped when the state shape changes
+    version: 14,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

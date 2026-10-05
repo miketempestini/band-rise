@@ -241,6 +241,10 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   the career card's numbers: `progress.careerCard` (drawn by `Game.ui.careerCard` on a canvas).
 - **Screens**: every screen uses the same header (`.screen__head`: title on the left, "← Back" on the right), panels with a
   `.panel__title`, and no emoji in screen titles (tabs have the icons).
+- **Manager and touring upgrades**: `manager.dailyPosts` (nightly), tour ads (`state.adCampaigns`, `manager.processAds`,
+  `adsRunning` stops buzz fading), `manager.proposalEstimate(state, messageId, ads)`, word of mouth in `travel.afterShow` and
+  `travel.isTourShow` (fanRate bonus in `booking.playShow`), road costs split with `travel.yourShareOf`, and production via
+  `booking.productionCost(venue, deal, pay)`.
 - **Dates**: day numbers are real dates (day 0 = Monday, January 5, 2026, in `balance.time.startDate`). Show dates with
   `Game.rules.day.dateLabel` ("Saturday, March 14"), `shortDate` ("Sat, Mar 14"), `longDate` (with the year),
   `weekLabel` ("Mar 9 – 15"), or `spanLabel`. Never show week numbers as dates; `weekNumber` is only for counting.

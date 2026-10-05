@@ -66,6 +66,7 @@ Game.rules.audience = {
     Object.keys(s.cities).forEach(function (id) {
       var before = s.cities[id].buzz;
       if (before <= b.min) return;
+      if (Game.rules.manager.adsRunning(s, id)) return; // tour ads are running there: buzz holds
       s.cities[id].buzz = Math.max(b.min, before + b.fadePerDay);
       var lost = Game.util.round1(before - s.cities[id].buzz);
       log.push(Game.content.cities[id].name + ' buzz faded: -' + lost + '.');

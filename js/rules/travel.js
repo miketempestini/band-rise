@@ -70,6 +70,11 @@ Game.rules.travel = {
     return Game.balance.travel.gasRoundTrip[Game.rules.travel.legRegion(fromCityId, toCityId)] / 2;
   },
 
+  // Your part of a road cost (gas, flights, hotels): bandmates chip in by their pay shares (a Diva's 1.5 too).
+  yourShareOf: function (state, amount) {
+    return Math.round(amount * Game.rules.people.payShares(state).yourShare);
+  },
+
   // ----- Cities unlocking -----
 
   // Why a city isn't open to you yet, or null if it is (or would be now).
@@ -400,12 +405,12 @@ Game.rules.travel = {
   },
 
   // What the trip for a new out-of-town show would look like, for the Book screen and the Inbox:
-  // { legs: [{ from, to, slots }], gas, hotelNights, hotelCost, energy, jobDays, problem }.
+  // { legs: [{ from, to, slots }], gas, hotelNights, hotelCost, yourCost (your part of gas and hotels), energy, jobDays, problem }.
   preview: function (state, venueId, day, deal) {
     var tr = Game.rules.travel;
     var b = Game.balance.travel;
     var c = tr.check(state, venueId, day, deal);
-    if (c.problem) return { problem: c.problem, legs: [], gas: 0, hotelNights: 0, hotelCost: 0, energy: 0, jobDays: [] };
+    if (c.problem) return { problem: c.problem, legs: [], gas: 0, hotelNights: 0, hotelCost: 0, yourCost: 0, energy: 0, jobDays: [] };
     var s = tr.addShow(state, venueId, day, deal || 'door', null);
     var trip = Object.keys(s.state.trips).map(function (id) { return s.state.trips[id]; })
       .filter(function (x) { return x.showIds.indexOf(s.entryId) !== -1; })[0];
@@ -414,6 +419,7 @@ Game.rules.travel = {
     var blocks = legs.reduce(function (sum, leg) { return sum + leg.slots.length; }, 0);
     var nights = tr.tripNights(trip);
     return { problem: null, legs: legs, gas: gas, hotelNights: nights, hotelCost: nights * b.hotelPerNight,
+      yourCost: tr.yourShareOf(state, gas) + nights * tr.yourShareOf(state, b.hotelPerNight),
       energy: blocks * b.energyPerBlock, jobDays: c.jobDays, showCount: trip.showIds.length };
   },
 
@@ -454,12 +460,14 @@ Game.rules.travel = {
     }
     if (entry.legStart) {
       var gas = tr.legGas(entry.from, entry.to, s);
+      var mine = tr.yourShareOf(s, gas); // the band chips in for their shares
       var flight = tr.isFlight(entry.from, entry.to);
-      var spent = Game.rules.money.spend(s, gas, 'travel');
+      var spent = Game.rules.money.spend(s, mine, 'travel');
       s = spent.state;
       log = log.concat(spent.log);
       log.push((entry.to === 'hometown' ? (flight ? 'Flying' : 'Driving') + ' home from ' + Game.content.cities[entry.from].name
-        : (flight ? 'Flying to ' : 'On the road to ') + Game.content.cities[entry.to].name) + ': $' + gas.toLocaleString() + (flight ? ' in plane tickets.' : ' gas.'));
+        : (flight ? 'Flying to ' : 'On the road to ') + Game.content.cities[entry.to].name) + ': $' + gas.toLocaleString() + (flight ? ' in plane tickets' : ' gas') +
+        (mine < gas ? ' (your part $' + mine.toLocaleString() + ', the band covers the rest).' : '.'));
     } else {
       log.push(entry.to === 'hometown' ? 'Still driving home.' : 'Still on the road to ' + Game.content.cities[entry.to].name + '.');
     }
@@ -500,16 +508,39 @@ Game.rules.travel = {
 
   // After an out-of-town show is played: count it (for tours, unlocks, and your van), and on a tour every
   // bandmate gains satisfaction. Returns { state, log }.
+  // True if a show (about to be played, or just played) is part of a tour: counting every out-of-town show
+  // played before it, the ones still booked, and this one.
+  isTourShow: function (state, entry) {
+    var tr = Game.rules.travel;
+    if (!tr.isOutOfTown(entry.venueId)) return false;
+    var days = state.stats.outOfTownShowDays.filter(function (d) { return d !== entry.day; })
+      .concat(tr.outOfTownShows(state).filter(function (e) { return e.id !== entry.id; }).map(function (e) { return e.day; })).concat([entry.day]);
+    return tr.isTour(days, entry.day);
+  },
+
   afterShow: function (state, entry) {
     var tr = Game.rules.travel;
+    var b = Game.balance;
     if (!tr.isOutOfTown(entry.venueId)) return { state: state, log: [] };
     var s = Game.util.clone(state);
     var log = [];
     var cityId = tr.cityOfVenue(entry.venueId);
-    // This show, every out-of-town show played before it, and the ones still booked.
-    var days = s.stats.outOfTownShowDays.concat(tr.outOfTownShows(s).filter(function (e) { return e.id !== entry.id; })
-      .map(function (e) { return e.day; })).concat([entry.day]);
-    var tour = tr.isTour(days, entry.day);
+    var tour = tr.isTourShow(s, entry);
+
+    // Word of mouth: the other cities in this region hear about the show; on a tour, the next city on the route
+    // gets a bigger boost.
+    var region = Game.content.cities[cityId].region;
+    Object.keys(Game.content.cities).forEach(function (id) {
+      if (id !== cityId && Game.content.cities[id].region === region) s = Game.rules.audience.addBuzz(s, id, b.tours.regionBuzz).state;
+    });
+    if (tour) {
+      var next = tr.outOfTownShows(s).filter(function (e) { return e.id !== entry.id && e.day >= entry.day && tr.cityOfVenue(e.venueId) !== cityId; })[0];
+      if (next && next.day - entry.day < b.tours.withinDays) {
+        var nextCity = tr.cityOfVenue(next.venueId);
+        s = Game.rules.audience.addBuzz(s, nextCity, b.tours.nextCityBuzz).state;
+        log.push('Word of mouth: +' + b.tours.nextCityBuzz + ' buzz in ' + Game.content.cities[nextCity].name + ', your next stop.');
+      }
+    }
     s.stats.outOfTownShowDays.push(entry.day);
     s.stats.citiesPlayed[cityId] = (s.stats.citiesPlayed[cityId] || 0) + 1;
     if (tour && s.band.memberIds.length) {
@@ -544,9 +575,10 @@ Game.rules.travel = {
     if (tr.awayOnDay(s, s.day) || awayTonight) s.player.roadDays += 1;
     else s.player.roadDays = 0;
     if (awayTonight) {
-      var spent = Game.rules.money.spend(s, b.travel.hotelPerNight, 'travel');
+      var hotel = tr.yourShareOf(s, b.travel.hotelPerNight); // the band chips in for their shares
+      var spent = Game.rules.money.spend(s, hotel, 'travel');
       s = spent.state;
-      log.push('Hotel: -$' + b.travel.hotelPerNight + '.');
+      log.push('Hotel: -$' + hotel + (hotel < b.travel.hotelPerNight ? ' (your part of $' + b.travel.hotelPerNight + ')' : '') + '.');
       log = log.concat(spent.log);
     }
     if (s.player.roadDays >= b.morale.roadFatigueStartDay) {

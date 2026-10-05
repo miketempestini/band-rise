@@ -36,6 +36,7 @@ Game.app = {
   planWeekStart: null,  // the Monday of the week shown on the Plan week screen
   calendarPage: 0,      // which 4 weeks the Calendar shows (0 = from this week; up to 2 with a manager)
   tourDraft: null,      // a tour request being set up on the Manager screen: { cities, tier, earliestDay }
+  tourAds: {},          // ads picked on a tour proposal in the Inbox: { messageId: { cityId: packageId } }
   planWeekPicks: {},    // Plan week choices not applied yet: { dayOfWeek: actionId | 'clear' }
   templateNameDraft: '', // the name typed for a new week template
   bandNameDraft: '',       // the band name shown in the name box on the Name your band screen
@@ -610,7 +611,15 @@ Game.app = {
     if (result.state !== app.state) app.tourDraft = null;
     app.applyWithNotice(result);
   },
-  acceptTour: function (messageId, jobChoice) { Game.app.applyWithNotice(Game.rules.manager.acceptTour(Game.app.state, messageId, jobChoice)); },
+  acceptTour: function (messageId, jobChoice) {
+    Game.app.applyWithNotice(Game.rules.manager.acceptTour(Game.app.state, messageId, jobChoice, Game.app.tourAds[messageId] || {}));
+  },
+  // An ad package picked (or cleared) for one city on a tour proposal.
+  tourAdPick: function (messageId, cityId, packageId) {
+    var ads = Game.app.tourAds[messageId] = Game.app.tourAds[messageId] || {};
+    if (packageId) ads[cityId] = packageId; else delete ads[cityId];
+    Game.app.render();
+  },
   signLabel: function (messageId) { Game.app.applyWithNotice(Game.rules.label.sign(Game.app.state, messageId)); },
   acceptBigShow: function (messageId, jobChoice) { Game.app.applyWithNotice(Game.rules.bigShows.accept(Game.app.state, messageId, jobChoice)); },
 

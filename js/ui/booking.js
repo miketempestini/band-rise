@@ -140,7 +140,8 @@ Game.ui.booking = {
       '<ul class="log">' + legs + '</ul>' +
       '<p class="hint">' + (preview.legs.some(function (leg) { return tr.isFlight(leg.from, leg.to); }) ? 'Flights ' : 'Gas ') + h.money(preview.gas) + ' · ' +
         preview.hotelNights + ' hotel night' + (preview.hotelNights === 1 ? '' : 's') +
-        ' (' + h.money(preview.hotelCost) + ') · ' + preview.energy + ' energy of travel' +
+        ' (' + h.money(preview.hotelCost) + ')' + (preview.yourCost < preview.gas + preview.hotelCost ? ' · your part ' + h.money(preview.yourCost) + ' (the band chips in)' : '') +
+        ' · ' + preview.energy + ' energy of travel' +
         (preview.jobDays.length ? ' · needs ' + preview.jobDays.map(function (d) { return h.dateLabel(d); }).join(', ') + ' off work' : '') + '</p></div>';
   },
 

@@ -240,33 +240,133 @@ Game.rules.manager = {
     return { shows: shows, skipped: skipped, estimate: Game.rules.manager.tourEstimate(state, hyp, shows) };
   },
 
-  // A tour's money, roughly: each show's expected crowd and your door share (after the manager and the band),
-  // then gas or flights, hotels, and production. hyp: the state with the tour on the calendar.
-  // Returns { rows: [{ venueId, day, crowd, pay, yourPay }], income, travel, hotels, production, net, jobDays }.
-  tourEstimate: function (state, hyp, shows) {
+  // A tour's money, roughly: each show's expected crowd (with any ads you picked) and your door share (after the
+  // manager and the band), then your part of gas or flights and hotels (the band chips in), production, and ads.
+  // hyp: the state with the tour on the calendar. ads: optional { cityId: packageId } (see balance.manager.tour.ads).
+  // Returns { rows: [{ venueId, day, crowdNoAds, crowd, pay, yourPay, production }], income, travel, hotels,
+  // production, adCost, net, jobDays }. (Daily posts and word of mouth aren't counted: a little extra on top.)
+  tourEstimate: function (state, hyp, shows, ads) {
     var tr = Game.rules.travel;
     var b = Game.balance;
+    var packages = b.manager.tour.ads;
     var share = Game.rules.people.payShares(state).yourShare;
+    ads = ads || {};
     var rows = shows.map(function (show) {
       var venue = Game.content.venues[show.venueId];
-      var crowd = Math.min(venue.capacity, Math.round(Game.rules.gigs.expectedCrowd(state, venue)));
+      var crowdNoAds = Math.min(venue.capacity, Math.round(Game.rules.gigs.expectedCrowd(state, venue)));
+      var pkg = packages[ads[venue.cityId]];
+      var crowd = crowdNoAds;
+      if (pkg) {
+        // The same crowd sum, with the ad's fans and buzz in that city.
+        var view = Game.util.clone(state);
+        view.cities[venue.cityId].fans = Math.min(Game.content.cities[venue.cityId].fanCeiling, view.cities[venue.cityId].fans + pkg.fans);
+        view.cities[venue.cityId].buzz = Math.min(b.buzz.max, view.cities[venue.cityId].buzz + pkg.buzz);
+        crowd = Math.min(venue.capacity, Math.round(Game.rules.gigs.expectedCrowd(view, venue)));
+      }
       var pay = Game.rules.booking.payFor(venue, 'door', crowd);
       var afterCut = pay - Math.round(pay * b.manager.gigPayCut);
-      return { venueId: show.venueId, day: show.day, crowd: crowd, pay: pay, yourPay: Math.round(afterCut * share),
-        production: Game.rules.booking.productionCost(venue, 'door') };
+      return { venueId: show.venueId, day: show.day, crowdNoAds: crowdNoAds, crowd: crowd, pay: pay, yourPay: Math.round(afterCut * share),
+        production: Game.rules.booking.productionCost(venue, 'door', pay) };
     });
     var travel = 0;
     var hotels = 0;
     Object.keys(hyp.trips).forEach(function (id) {
       var trip = hyp.trips[id];
       if (state.trips[id] || !trip.showIds.some(function (sid) { return !state.entries[sid]; })) return; // only the new trips
-      tr.tripLegs(hyp, trip).forEach(function (leg) { travel += tr.legGas(leg.from, leg.to, state); });
-      hotels += tr.tripNights(trip) * b.travel.hotelPerNight;
+      tr.tripLegs(hyp, trip).forEach(function (leg) { travel += tr.yourShareOf(state, tr.legGas(leg.from, leg.to, state)); });
+      hotels += tr.tripNights(trip) * tr.yourShareOf(state, b.travel.hotelPerNight);
     });
+    var adCost = Object.keys(ads).reduce(function (sum, cityId) { return sum + (packages[ads[cityId]] ? packages[ads[cityId]].cost : 0); }, 0);
     var income = rows.reduce(function (sum, r) { return sum + r.yourPay; }, 0);
     var production = rows.reduce(function (sum, r) { return sum + r.production; }, 0);
-    return { rows: rows, income: income, travel: travel, hotels: hotels, production: production,
-      net: income - travel - hotels - production, jobDays: tr.jobDaysNeeded(hyp) };
+    return { rows: rows, income: income, travel: travel, hotels: hotels, production: production, adCost: adCost,
+      net: income - travel - hotels - production - adCost, jobDays: tr.jobDaysNeeded(hyp) };
+  },
+
+  // A tour proposal's estimate with a set of ads (for the Inbox, as you pick them). Returns the tourEstimate.
+  proposalEstimate: function (state, messageId, ads) {
+    var m = state.inbox.filter(function (x) { return x.id === messageId; })[0];
+    var hyp = state;
+    m.data.shows.forEach(function (x) {
+      var added = Game.rules.travel.addShow(hyp, x.venueId, x.day, 'door', null);
+      if (!added.problems.length) hyp = added.state;
+    });
+    return Game.rules.manager.tourEstimate(state, hyp, m.data.shows, ads);
+  },
+
+  // ----- Tour ad campaigns -----
+
+  // Why a set of ads can't go with a tour proposal, or null. ads: { cityId: packageId }.
+  adsProblem: function (state, messageId, ads) {
+    var m = state.inbox.filter(function (x) { return x.id === messageId; })[0];
+    var packages = Game.balance.manager.tour.ads;
+    var cities = m.data.shows.map(function (x) { return Game.content.venues[x.venueId].cityId; });
+    var cost = 0;
+    var ids = Object.keys(ads || {});
+    for (var i = 0; i < ids.length; i++) {
+      if (cities.indexOf(ids[i]) === -1) return 'Ads only go in cities on the tour.';
+      if (!packages[ads[ids[i]]]) return 'Pick an ad package.';
+      cost += packages[ads[ids[i]]].cost;
+    }
+    if (cost > state.player.cash) return 'The ads cost $' + cost.toLocaleString() + ' (you have $' + Math.floor(state.player.cash).toLocaleString() + ').';
+    return null;
+  },
+
+  // Each morning: ad campaigns land a week before their show: buzz and new fans in that city. While the ads
+  // run (until the show), that city's buzz doesn't fade. Finished campaigns are cleared. Returns { state, log }.
+  processAds: function (state) {
+    if (!state.adCampaigns.length) return { state: state, log: [] };
+    var s = Game.util.clone(state);
+    var log = [];
+    var packages = Game.balance.manager.tour.ads;
+    s.adCampaigns.forEach(function (c) {
+      if (c.landed || c.landDay > s.day) return;
+      var pkg = packages[c.packageId];
+      c.landed = true;
+      s = Game.rules.audience.addBuzz(s, c.cityId, pkg.buzz).state;
+      var added = Game.rules.audience.addFans(s, c.cityId, pkg.fans);
+      s = added.state;
+      log.push('Your ads are up in ' + Game.content.cities[c.cityId].name + ': +' + pkg.buzz + ' buzz' + (added.added ? ', +' + added.added + ' fans' : '') + '.');
+    });
+    s.adCampaigns = s.adCampaigns.filter(function (c) { return c.showDay >= s.day; });
+    return { state: s, log: log };
+  },
+
+  // True if ads are running in a city today (landed, and the show hasn't happened yet): its buzz holds.
+  adsRunning: function (state, cityId) {
+    return state.adCampaigns.some(function (c) { return c.cityId === cityId && c.landed && c.showDay >= state.day; });
+  },
+
+  // ----- Daily posts -----
+
+  // Cities with an out-of-town show in the next 2 weeks (the manager posts more about those).
+  focusCities: function (state) {
+    var last = state.day + Game.balance.manager.social.focusDays;
+    var list = [];
+    Game.rules.travel.outOfTownShows(state).forEach(function (e) {
+      var city = Game.content.venues[e.venueId].cityId;
+      if (e.day <= last && list.indexOf(city) === -1) list.push(city);
+    });
+    return list;
+  },
+
+  // Each night: the manager posts for the band (free): +1 buzz in every city with fans, +3 more in focus cities.
+  // Returns { state, log }.
+  dailyPosts: function (state) {
+    if (!Game.rules.manager.hired(state)) return { state: state, log: [] };
+    var so = Game.balance.manager.social;
+    var focus = Game.rules.manager.focusCities(state);
+    var s = state;
+    var reached = 0;
+    Object.keys(state.cities).forEach(function (id) {
+      var amount = (state.cities[id].fans > 0 ? so.dailyBuzz : 0) + (focus.indexOf(id) !== -1 ? so.focusBuzz : 0);
+      if (!amount) return;
+      s = Game.rules.audience.addBuzz(s, id, amount).state;
+      reached += 1;
+    });
+    if (!reached) return { state: s, log: [] };
+    return { state: s, log: ['Your manager posted for the band: buzz in ' + reached + ' cit' + (reached === 1 ? 'y' : 'ies') +
+      (focus.length ? ' (extra for ' + focus.map(function (id) { return Game.content.cities[id].name; }).join(', ') + ')' : '') + '.'] };
   },
 
   // Each morning: tour plans that are ready become a proposal in the Inbox. Returns { state, log }.
@@ -310,8 +410,9 @@ Game.rules.manager = {
 
   // Accepts a tour: every show (no odds: the manager already confirmed them) and all the travel go on the
   // calendar. Returns { state, log }.
-  acceptTour: function (state, messageId, jobChoice) {
-    var problem = Game.rules.manager.tourAcceptProblem(state, messageId, jobChoice);
+  // ads: optional { cityId: packageId }: paid now, landing a week before that city's show.
+  acceptTour: function (state, messageId, jobChoice, ads) {
+    var problem = Game.rules.manager.tourAcceptProblem(state, messageId, jobChoice) || Game.rules.manager.adsProblem(state, messageId, ads || {});
     if (problem) return { state: state, log: [problem] };
     var m = state.inbox.filter(function (x) { return x.id === messageId; })[0];
     var s = state;
@@ -320,6 +421,18 @@ Game.rules.manager = {
     jobDays.forEach(function (d) { s = Game.rules.job.takeDayOff(s, d, jobChoice, true).state; });
     s = Game.util.clone(s);
     s.inbox.forEach(function (x) { if (x.id === messageId) { x.resolved = 'accepted'; x.read = true; } });
-    return { state: s, log: ['Tour booked: ' + m.data.shows.length + ' shows and all the travel are on your Calendar.'] };
+    var log = ['Tour booked: ' + m.data.shows.length + ' shows and all the travel are on your Calendar.'];
+    // Ads: pay now; each lands a week before its city's show.
+    var packages = Game.balance.manager.tour.ads;
+    Object.keys(ads || {}).forEach(function (cityId) {
+      var pkg = packages[ads[cityId]];
+      var show = m.data.shows.filter(function (x) { return Game.content.venues[x.venueId].cityId === cityId; })[0];
+      s = Game.rules.money.spend(s, pkg.cost, 'promotion').state;
+      s.adCampaigns.push({ cityId: cityId, packageId: ads[cityId], landDay: Math.max(s.day, show.day - Game.balance.manager.tour.adLeadDays),
+        showDay: show.day, landed: false });
+      log.push('Ads booked in ' + Game.content.cities[cityId].name + ' ($' + pkg.cost.toLocaleString() + ').');
+    });
+    var landed = Game.rules.manager.processAds(s); // ads for a show within a week land right away
+    return { state: landed.state, log: log.concat(landed.log) };
   }
 };

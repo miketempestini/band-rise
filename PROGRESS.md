@@ -4,6 +4,28 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14b: Manager and touring upgrades (2026-10-04)
+- **Why:** a two-year touring simulation (one-off, not in the repo; 10 runs with and 10 without a manager) found:
+  - No tour made the player money: about -$2,260 per tour, -$1,070 per single out-of-town show.
+  - Out-of-town crowds averaged only about 38 people, since nearly all fans are at home.
+  - Flat $1,000 theater production was more than the whole door.
+  - With a 3-piece band you kept about 20% of the door but paid all the travel and production.
+  - The manager was clearly worth the 15%: about $291,000 your share over two years vs $17,500 without, because a
+    manager opens up hometown theaters. That comparison flatters the manager (the no-manager sim never books theaters
+    or travels).
+- **What changed (owner's picks):**
+  - **Daily posts:** with a manager, every night +1 buzz in every city with fans, and +3 more in focus cities (an
+    out-of-town show in the next 2 weeks). Free, part of the cut.
+  - **Tour ads:** tour proposals offer ads per city: Posters $150 (+20 buzz), Local $500 (+35 buzz, +50 fans), Full
+    $1,500 (+50 buzz, +200 fans). Paid on booking, they land a week before the show and hold the city's buzz until
+    then. The proposal shows crowd and pay with and without ads, live, as you pick.
+  - **Word of mouth on tour:** tour shows win 50% more new fans and give +10 buzz to the next city on the route. Any
+    out-of-town show gives +3 buzz to the other cities in its region.
+  - **Production scales with the show:** 25% of the show's pay, up to $1,000 (theater) or $5,000 (arena).
+  - **Bandmates split gas, flights, and hotels** by their pay shares; only your share comes out of your cash.
+- The two-year balance check's simulated player now buys Local ads on its tours when cash allows.
+- **Saves:** version 14. **Tests:** 297 passing.
+
 ### Session 14: Phase 13, lifestyle and legacy (2026-10-04)
 - **Housing ladder** (Shop → Housing): Starter $400 / Nicer $700 / House $1,500 / Mansion $5,000 a week, with morale
   resting at 50 / 55 / 60 / 65.
@@ -479,6 +501,9 @@ No gameplay numbers changed: the balance checks give the same results as before.
 - Promotion (flyers, social ads) still only reaches the hometown; the Big campaign and press push reach other cities.
 
 ## Known issues / open decisions
+- **Touring profit after the manager and touring upgrades hasn't been measured yet.** The re-run of the touring
+  simulation was stopped before it finished (owner's call). Re-run it to check that tours now pay and the manager is
+  still worth 15%.
 - **Money stops mattering by mid-year 1** (see the two-year check above and the suggested fixes in What's next).
 - **The two-year balance check is slow** (about 5 minutes headless, longer in a browser tab), so it only runs on request.
 - **Auto-booking only books "yes" replies that need no time off work.** Other replies wait in the Inbox for you.

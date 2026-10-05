@@ -186,18 +186,20 @@
 
   // ----- Production -----
 
-  Game.test('Production: theaters cost $1,000 on the night, arenas $5,000, festivals nothing', function (t) {
+  Game.test('Production: 25% of the show\'s pay, up to $1,000 at a theater and $5,000 at an arena; festivals nothing', function (t) {
     var p = Game.balance.production;
-    t.equal(Game.rules.booking.productionCost(Game.content.venues.orpheum, 'door'), p.theater, 'theater');
-    t.equal(Game.rules.booking.productionCost(Game.content.venues.halstonArena, 'arena'), p.arena, 'arena');
-    t.equal(Game.rules.booking.productionCost(Game.content.venues.halstonFest, 'festival'), p.festival, 'festival');
-    t.equal(Game.rules.booking.productionCost(Game.content.venues.basement, 'door'), 0, 'clubs: none');
+    t.equal(Game.rules.booking.productionCost(Game.content.venues.orpheum, 'door', 2000), 500, 'a $2,000 theater night: $500');
+    t.equal(Game.rules.booking.productionCost(Game.content.venues.orpheum, 'door', 24000), p.theater, 'a full theater: capped at $1,000');
+    t.equal(Game.rules.booking.productionCost(Game.content.venues.halstonArena, 'arena', 25000), p.arena, 'an arena: up to $5,000');
+    t.equal(Game.rules.booking.productionCost(Game.content.venues.halstonFest, 'festival', 10000), p.festival, 'festival: none');
+    t.equal(Game.rules.booking.productionCost(Game.content.venues.basement, 'door', 3000), 0, 'clubs: none');
     var s = withBand(bigState(), 2);
     s.releases.push({ id: 'r1', type: 'single', songIds: [], day: 0, avgQuality: 50 });
     s = Game.rules.offers.bookShow(s, 'orpheum', s.day, 'door').state;
     var entry = s.entries[s.schedule[s.day].evening];
     var r = Game.rules.booking.playShow(s, entry, 100);
-    t.equal(r.state.thisWeek.costs.production, p.theater, 'paid on the night');
+    var gross = r.gig.rewards.pay + r.gig.rewards.managerCut;
+    t.equal(r.state.thisWeek.costs.production, Math.min(p.theater, Math.round(gross * p.share)), 'paid on the night: 25% of $' + gross);
   });
 
   // ----- The label -----
@@ -327,6 +329,85 @@
     s.cities.hometown.fans = 4000;
     s.day = newYear;
     t.equal(Game.rules.awards.check(s).state.stats.yearStartFans, 4000, 'a new year remembers today\'s fans');
+  });
+
+  // ----- Manager and touring upgrades -----
+
+  Game.test('Daily posts: with a manager, +1 buzz a night where you have fans and +3 more in cities with a show in the next 2 weeks', function (t) {
+    var so = Game.balance.manager.social;
+    var s = bigState();
+    s.cities.hometown.fans = 500;
+    t.equal(Game.rules.manager.dailyPosts(s).state, s, 'no manager: no posts');
+    s = withManager(s);
+    s = Game.rules.travel.addShow(s, 'copperPint', s.day + 10, 'door', null).state;
+    var r = Game.rules.manager.dailyPosts(s).state;
+    t.equal(r.cities.hometown.buzz, s.cities.hometown.buzz + so.dailyBuzz, 'hometown +1');
+    t.equal(r.cities.harlowFalls.buzz, s.cities.harlowFalls.buzz + so.focusBuzz, 'Harlow Falls (show in 10 days, no fans yet) +3');
+    t.equal(r.cities.cedarJunction.buzz, 0, 'nowhere else');
+    t.sameContents(Game.rules.manager.focusCities(s), ['harlowFalls'], 'the focus city');
+  });
+
+  Game.test('Tour ads: paid on accept, land a week before the show (buzz + fans), hold buzz until then, and show in the estimate', function (t) {
+    var ads = Game.balance.manager.tour.ads;
+    var s = withManager(bigState());
+    s.player.gear.van = { kind: 'used', shows: 0, worn: false };
+    s = Game.rules.manager.requestTour(s, { cities: ['harlowFalls', 'cedarJunction'], tier: 1 }).state;
+    s.day += Game.balance.manager.tour.planDays;
+    s = Game.rules.manager.processTourRequests(s).state;
+    var m = lastMessage(s, 'tourProposal');
+    var none = Game.rules.manager.proposalEstimate(s, m.id, {});
+    var withAds = Game.rules.manager.proposalEstimate(s, m.id, { harlowFalls: 'local' });
+    t.ok(withAds.rows[0].crowd > withAds.rows[0].crowdNoAds, 'ads mean a bigger crowd (' + withAds.rows[0].crowdNoAds + ' → ' + withAds.rows[0].crowd + ')');
+    t.equal(withAds.adCost, ads.local.cost, 'the ad cost is counted');
+    t.equal(none.adCost, 0);
+    t.ok(Game.rules.manager.adsProblem(Object.assign(Game.util.clone(s), { player: Object.assign(Game.util.clone(s.player), { cash: 10 }) }), m.id, { harlowFalls: 'full' }),
+      'can\'t afford the ads');
+    var cash = s.player.cash;
+    var r = Game.rules.manager.acceptTour(s, m.id, null, { harlowFalls: 'local' }).state;
+    t.equal(r.player.cash, cash - ads.local.cost, 'paid now');
+    var show = m.data.shows.filter(function (x) { return Game.content.venues[x.venueId].cityId === 'harlowFalls'; })[0];
+    t.equal(r.adCampaigns[0].landDay, show.day - Game.balance.manager.tour.adLeadDays, 'lands a week before the show');
+    r.day = r.adCampaigns[0].landDay;
+    var landed = Game.rules.manager.processAds(r).state;
+    t.equal(landed.cities.harlowFalls.buzz, ads.local.buzz, '+35 buzz');
+    t.equal(landed.cities.harlowFalls.fans, ads.local.fans, '+50 fans');
+    t.equal(Game.rules.audience.fadeBuzz(landed).state.cities.harlowFalls.buzz, ads.local.buzz, 'buzz holds while the ads run');
+  });
+
+  Game.test('Word of mouth: tour shows win 50% more fans and give the next stop +10 buzz; any show gives its region +3', function (t) {
+    var b = Game.balance.tours;
+    var s = bigState();
+    s = Game.rules.travel.addShow(s, 'copperPint', 12, 'door', null).state;
+    s = Game.rules.travel.addShow(s, 'railyardTavern', 13, 'door', null).state;
+    var first = s.entries[s.schedule[12].evening];
+    t.equal(Game.rules.travel.isTourShow(s, first), false, 'two shows: not a tour yet');
+    var after = Game.rules.travel.afterShow(s, first).state;
+    t.equal(after.cities.cedarJunction.buzz, b.regionBuzz, 'the other Near city hears about it: +3');
+    t.equal(after.cities.portEllery.buzz, 0, 'a Mid city doesn\'t');
+    var tour = Game.util.clone(s);
+    tour.stats.outOfTownShowDays = [10];
+    t.ok(Game.rules.travel.isTourShow(tour, first), 'with a show 2 days earlier: a tour');
+    var onTour = Game.rules.travel.afterShow(tour, first).state;
+    t.equal(onTour.cities.cedarJunction.buzz, b.regionBuzz + b.nextCityBuzz, 'the next stop gets +10 more');
+    tour.day = 12;
+    s.day = 12;
+    var a = Game.rules.booking.playShow(tour, first, 100).gig.rewards.rawFans;
+    var plain = Game.rules.booking.playShow(s, first, 100).gig.rewards.rawFans;
+    t.near(a, plain * (1 + b.fanBonus), 'tour show: 1.5x the new fans (' + Game.util.round1(plain) + ' → ' + Game.util.round1(a) + ')');
+  });
+
+  Game.test('Road costs: bandmates chip in for gas and hotels by their shares', function (t) {
+    var s = withBand(bigState(), 3); // 4 people: your share is 1 of 4
+    t.near(Game.rules.people.payShares(s).yourShare, 0.25, 'your share');
+    t.equal(Game.rules.travel.yourShareOf(s, Game.balance.travel.hotelPerNight), 20, 'a $80 hotel: you pay $20');
+    s = Game.rules.travel.addShow(s, 'copperPint', 12, 'door', null).state;
+    s.day = 12;
+    var leg = s.entries[s.schedule[12].afternoon];
+    var cash = s.player.cash;
+    var r = Game.rules.travel.travelBlock(s, leg, 100).state;
+    t.equal(cash - r.player.cash, Game.rules.travel.yourShareOf(s, Game.rules.travel.legGas('hometown', 'harlowFalls', s)), 'gas: your part only');
+    var night = Game.rules.travel.nightly(r).state;
+    t.equal(r.player.cash - night.player.cash, 20, 'hotel: your part only');
   });
 
   // ----- Milestones and saving -----

@@ -224,13 +224,15 @@ Game.rules.booking = {
     return 'In-store: no pay, good for fans';
   },
 
-  // Production (sound and lights) for a show: theaters and arenas pay it on the night; festivals provide it.
-  productionCost: function (venue, deal) {
+  // Production (sound and lights) for a show: theaters and arenas pay 25% of the show's pay (before splits),
+  // up to $1,000 (theater) or $5,000 (arena), on the night. Festivals provide their own. Smaller rooms: none.
+  // pay: the show's pay; left out, it's the most it could cost.
+  productionCost: function (venue, deal, pay) {
     var p = Game.balance.production;
     if (deal === 'festival' || venue.festival) return p.festival;
-    if (venue.tier === 3) return p.theater;
-    if (venue.tier === 4) return p.arena;
-    return 0;
+    var cap = venue.tier === 3 ? p.theater : (venue.tier === 4 ? p.arena : 0);
+    if (pay === undefined) return cap;
+    return Math.min(cap, Math.round(pay * p.share));
   },
 
   // The penalties for cancelling a show this many days ahead (or a no-show).
@@ -574,14 +576,15 @@ Game.rules.booking = {
       deal: entry.deal, sessionPlayers: entry.sessionPlayers, fee: entry.fee,
       crowdShare: entry.deal === 'opening' ? o.openingSlot.crowdShare                // the headliner's crowd
         : (entry.deal === 'festival' ? Game.balance.bigOffers.festivalCrowdShare : null), // a festival crowd
-      fanRate: entry.deal === 'opening' ? o.openingSlotFanRate : 1,               // their fans, at half the rate
+      fanRate: (entry.deal === 'opening' ? o.openingSlotFanRate : 1) *              // their fans, at half the rate
+        (Game.rules.travel.isTourShow(state, entry) ? 1 + Game.balance.tours.fanBonus : 1), // word of mouth on tour: more new fans
       crowdFloor: entry.deal === 'residency' ? o.residency.crowdFloor : null      // regulars come back
     });
     var after = Game.rules.travel.afterShow(played.state, entry); // out of town: tours, unlocks, your van
     var s = after.state;
     var log = played.log.concat(after.log);
     // Theaters and arenas: production (sound and lights), paid on the night.
-    var production = Game.rules.booking.productionCost(venue, entry.deal);
+    var production = Game.rules.booking.productionCost(venue, entry.deal, played.gig.rewards.pay + played.gig.rewards.managerCut);
     if (production > 0) {
       var paid = Game.rules.money.spend(s, production, 'production');
       s = paid.state;

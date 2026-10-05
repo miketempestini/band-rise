@@ -33,6 +33,9 @@ Game.ui.inbox = {
         (rest.length ? '<div class="panel"><h3 class="panel__title">Earlier</h3>' + rest.map(function (m) { return self.messageHtml(state, m); }).join('') + '</div>' : '') +
       '</section>';
 
+    root.querySelectorAll('.tour-ad').forEach(function (sel) {
+      sel.addEventListener('change', function () { app.tourAdPick(sel.getAttribute('data-id'), sel.getAttribute('data-city'), sel.value); });
+    });
     h.bind(root, {
       back: function () { app.goBack('inbox'); },
       focusPayBack: function () { app.goBack('inbox'); },
@@ -164,22 +167,39 @@ Game.ui.inbox = {
         '<button class="btn btn--small btn--primary" data-action="signLabel" data-id="' + m.id + '">Sign</button> ' + decline);
     }
     if (m.kind === 'tourProposal') {
-      var e = d.estimate;
+      var ads = (m.resolved ? null : Game.app.tourAds[m.id]) || {};
+      var e = d.shows.length && !m.resolved ? Game.rules.manager.proposalEstimate(state, m.id, ads) : d.estimate;
+      var packages = b.manager.tour.ads;
+      var adNames = { posters: 'Posters and playlists', local: 'Local ads', full: 'Full campaign' };
+      var seen = {};
       var rows = e.rows.map(function (r) {
         var v = Game.content.venues[r.venueId];
-        return '<tr><td>' + h.dateLabel(r.day) + '</td><td>' + h.escape(v.name) + ', ' + h.escape(Game.content.cities[v.cityId].name) + '</td><td>' + r.crowd +
+        var city = v.cityId;
+        var first = !seen[city];
+        seen[city] = true;
+        var select = m.resolved || !first ? '' : '<select class="input tour-ad" data-id="' + m.id + '" data-city="' + city + '"><option value="">No ads</option>' +
+          Object.keys(packages).map(function (k) {
+            var pk = packages[k];
+            return '<option value="' + k + '"' + (ads[city] === k ? ' selected' : '') + '>' + adNames[k] + ' (' + h.money(pk.cost) + ': +' + pk.buzz + ' buzz' +
+              (pk.fans ? ', +' + pk.fans + ' fans' : '') + ')</option>';
+          }).join('') + '</select>';
+        return '<tr><td>' + h.dateLabel(r.day) + '</td><td>' + h.escape(v.name) + ', ' + h.escape(Game.content.cities[city].name) + '</td><td>' + select + '</td><td>' +
+          (r.crowdNoAds !== undefined && r.crowd !== r.crowdNoAds ? r.crowdNoAds + ' → <strong>' + r.crowd + '</strong>' : r.crowd) +
           '</td><td>' + h.money(r.yourPay) + '</td></tr>';
       }).join('');
       var skipped = d.skipped.length ? '<p class="hint">Skipped: ' + d.skipped.map(function (x) {
         return h.escape(Game.content.cities[x.cityId].name) + ' (' + h.escape(x.why) + ')';
       }).join('; ') + '</p>' : '';
       var body = (d.shows.length
-        ? '<table class="quit-table"><thead><tr><th>Date</th><th>Venue</th><th>Crowd (about)</th><th>Your pay</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-          '<p class="hint">Your pay is after the manager\'s cut and the band\'s shares, at today\'s fans and buzz. Costs: travel ' + h.money(e.travel) + ', hotels ' +
-          h.money(e.hotels) + (e.production ? ', production ' + h.money(e.production) : '') + '. About <strong>' + h.money(e.net) + '</strong> left over.</p>'
+        ? '<table class="quit-table"><thead><tr><th>Date</th><th>Venue</th><th>Ads</th><th>Crowd (about)</th><th>Your pay</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+          '<p class="hint">Your pay is after the manager\'s cut and the band\'s shares, at today\'s fans and buzz. Your costs: travel ' + h.money(e.travel) +
+          ', hotels ' + h.money(e.hotels) + ' (the band chips in for the rest)' + (e.production ? ', production ' + h.money(e.production) : '') +
+          (e.adCost ? ', ads ' + h.money(e.adCost) : '') + '. About <strong>' + h.money(e.net) + '</strong> left over. ' +
+          'Ads land a week before the show and hold that city\'s buzz until then. Your manager\'s daily posts and word of mouth on tour add a little more.</p>'
         : '<p>Your manager couldn\'t fit any shows.</p>') + skipped;
       var buttons = d.shows.length ? self.jobButtonsHtml(state, m, 'acceptTour', e.jobDays.filter(function (x) { return Game.rules.job.worksOn(state, x); }),
-        function (choice) { return Game.rules.manager.tourAcceptProblem(state, m.id, choice); }, 'Book the tour') + ' ' + decline : decline;
+        function (choice) { return Game.rules.manager.tourAcceptProblem(state, m.id, choice) || Game.rules.manager.adsProblem(state, m.id, ads); },
+        'Book the tour' + (e.adCost ? ' + ads' : '')) + ' ' + decline : decline;
       return self.cardHtml(m, '🚐 Tour proposal: ' + d.shows.length + ' show' + (d.shows.length === 1 ? '' : 's'), body, buttons);
     }
     // Arena or festival offer.

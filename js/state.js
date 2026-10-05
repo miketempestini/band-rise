@@ -107,6 +107,7 @@ Game.state = {
         hired: false, hiredDay: null, nextOfferDay: 0, lastPushDay: null,
         rules: { on: false, cities: ['hometown'], tiers: [1, 2], nights: [4, 5], maxPerWeek: b.manager.autoBook.defaultMaxPerWeek }
       },
+      adCampaigns: [],    // tour ad campaigns: { cityId, packageId, landDay, showDay, landed }
       tourRequests: [],   // tours you asked the manager to plan: { id, cities, tier, earliestDay, readyDay }
       nextTourRequestId: 1,
       // The label (Phase 12): owed is the part of the advance not yet paid back from streaming.

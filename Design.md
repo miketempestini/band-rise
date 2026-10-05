@@ -142,7 +142,7 @@ You start with $500 and save about $150 a week if you spend nothing on music, so
 | Hotel | $80 a night | Out-of-town stays |
 | Van | Beater $1,500 (lasts 10 out-of-town shows), Used $3,000 (30 shows), New $12,000 (never breaks down) | Needed for Far cities with a band, and for tours. A worn-out van gets you home, then it's gone |
 | Merch stock | $200 for 25 shirts, $150 for 50 CDs | Paid up front |
-| Production | $1,000 a theater show, $5,000 an arena show (festivals provide their own) | Sound and lights, paid on the night |
+| Production | 25% of the show's pay, up to $1,000 at a theater and $5,000 at an arena (festivals provide their own) | Sound and lights, paid on the night, so a half-empty room doesn't lose money on production alone |
 | Surprise bills | $40 to $300 | Random events like a broken string or car trouble |
 
 ### Splitting money with the band
@@ -462,6 +462,8 @@ Out of town, small rooms, clubs, and theaters book for a share of the door (cove
 ### Tours
 
 - A tour is 3+ out-of-town shows within 10 days. It needs a van, plus vacation days or no day job.
+- Word of mouth: tour shows win 50% more new fans and give +10 buzz to the next city on the route. Any out-of-town show gives +3 buzz to the other cities in the same region.
+- Bandmates chip in for gas, flights, and hotels by their pay shares (a Diva pays 1.5 shares), so only your share comes out of your cash.
 - Back-to-back cities chain travel and show in one day where the distance allows: if your next out-of-town show is within 2 days (or there's no time to go home in between), you drive straight on from city to city. A city-to-city leg uses the longer of the two cities' distances.
 - Road fatigue: from day 5 on the road, morale drops 3 a day. Bandmates gain 2 satisfaction per tour show.
 
@@ -469,6 +471,8 @@ Out of town, small rooms, clubs, and theaters book for a share of the door (cove
 
 - **Manager** (reputation 50 and 2,000 fans): offers to manage you by Inbox (again 8 weeks after you turn them down). Takes 15% of all gig pay before the band's split. You can let them go from the Manager screen.
   - **Auto-booking**: you set the cities, venue sizes, nights, and shows a week (up to 5). Every Monday the manager emails matching venues for dates inside each venue's booking window (normal odds, no energy). A "yes" is booked for you if it needs no time off work and the travel fits.
+  - **Daily posts** (free, part of the cut): every night the manager posts for the band: +1 buzz in every city where you have fans, and +3 more in "focus cities" (cities with an out-of-town show in the next 2 weeks).
+  - **Tour ads**: a tour proposal lets you add an ad package per city: Posters and playlists $150 (+20 buzz), Local ads $500 (+35 buzz, +50 fans), Full campaign $1,500 (+50 buzz, +200 fans). Ads are paid when you book, land a week before that city's show, and hold that city's buzz (no fading) until the show. The proposal shows the crowd and pay with the ads before you book.
   - **Tours on request**: pick 2 to 8 unlocked cities and a venue size. The manager plans for 5 days, then sends a proposal: one show per city, nearest cities first, starting at least 5 weeks out (inside the 12-week calendar), with each show's expected crowd and your pay (after the manager and the band), plus travel, hotels, and production. Accepting books every show and all the travel (city to city where it makes sense); declining scraps the plan. A tour needs a van.
 - **Flights**: National cities (open with a manager and a label) are 2 blocks each way by plane, $300 a person each way (you plus your bandmates).
 - **Label** (reputation 65 and 10,000 fans): an advance of $10,000 + $2 per fan (up to $50,000), the Top studio, and National cities (with a manager). The label keeps 80% of streaming until the advance is paid back.
