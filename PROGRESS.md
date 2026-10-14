@@ -4,6 +4,22 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14e: Epic title screen (2026-10-14)
+- **Concert background:** the title screen now sits on a painted 80s-poster picture
+  (`assets/title-stage.jpg`, made with Figma's image generator). A rock star seen from behind holds a guitar up to a
+  packed arena under colored light beams. The title and buttons sit on the right; on narrow windows they're centered.
+- **Chrome title:** "BAND / RISE" uses the font Russo One (saved in `assets/fonts/`, free license, works offline),
+  slanted, with a chrome gradient, a pink edge and glow, a black drop shadow, and a shine that sweeps across now and
+  then. Only the title uses this font.
+- **Intro (about 2 seconds, CSS only):**
+  - the stage fades and zooms in with flickering lights
+  - the title slams in, the tagline fades up, and the buttons rise one by one
+  - clicking anywhere skips it
+  - it plays once per page load (`Game.app.titleIntroPlayed`)
+  - computers set to "reduce motion" skip it
+  - afterwards the stage drifts slowly and the light behind the star breathes
+- No rule changes. **Tests:** 307 passing.
+
 ### Session 14d: Finances tab (2026-10-04)
 - **New 💰 Finances tab**, with filters for last week, last month, and last 3 months. It shows:
   - **Summary cards:** money in, money out, net, cash now, and any debt or label advance still owed.

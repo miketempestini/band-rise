@@ -258,6 +258,9 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   Yearly things use `isNewYear` and real months (awards: `awards.isNominationsDay` / `isCeremonyDay`).
 - **Two-year balance check**: `Game.balanceSim.renderYears` runs only on request (the button on tests.html, or
   `tests.html?years`); it takes about 5 minutes headless.
+- **Pictures and fonts** live in `assets/` (the title picture, `assets/fonts/` for the title font) and are loaded from
+  CSS by relative paths, which works from `file://`. The title screen's look and intro are all in styles.css
+  (`.title-screen--home`, scoped so other screens that reuse `.title-screen` aren't affected).
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

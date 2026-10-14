@@ -1,0 +1,7 @@
+Russo One (russo-one.woff2, Latin characters only)
+Copyright (c) 2011-2012, Jovanny Lemonad (jovanny.ru), with Reserved Font Name "Russo".
+Downloaded from Google Fonts (https://fonts.google.com/specimen/Russo+One).
+
+This font is licensed under the SIL Open Font License, Version 1.1.
+It is free to use, bundle, and share with software. The full license is at:
+https://openfontlicense.org/open-font-license-official-text/

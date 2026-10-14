@@ -136,6 +136,157 @@ body {
 .title-screen__tagline { margin: 12px 0 0; font-size: 22px; color: var(--text-muted); }
 .title-screen__menu { display: flex; flex-direction: column; gap: 12px; margin-top: 40px; width: 280px; }
 
+/* ---------- The home title screen: concert picture, chrome title, intro ----------
+   Layers, back to front: the stage picture, a pulsing glow behind the rock star, a dark shade so the words are easy
+   to read, then the title and buttons (on the right, since the rock star stands on the left of the picture).
+   The intro only runs while the screen has the class title-screen--intro (once per page load; a click removes it). */
+
+/* The title font: Russo One (free, SIL Open Font License; see assets/fonts/LICENSE.txt). It's saved in the project,
+   so it works offline and from a double-click. Only the big title uses it. */
+@font-face {
+  font-family: "Russo One";
+  src: url("assets/fonts/russo-one.woff2") format("woff2");
+  font-display: block;
+}
+
+.title-screen--home {
+  position: relative;
+  overflow: hidden;
+  align-items: flex-end;   /* content on the right */
+  background: #07050f;     /* black behind the picture while it fades in */
+  padding: 24px 6vw;
+}
+.title-screen__stage,
+.title-screen__glow,
+.title-screen__shade { position: absolute; inset: 0; }
+.title-screen__stage {
+  background: url("assets/title-stage.jpg") 30% center / cover no-repeat;
+  animation: stage-drift 24s ease-in-out infinite alternate;
+}
+/* A soft light behind the rock star that slowly breathes, so the stage feels alive. */
+.title-screen__glow {
+  background: radial-gradient(circle at 32% 52%, rgba(255, 214, 150, 0.35), transparent 32%);
+  mix-blend-mode: screen;
+  animation: glow-pulse 3.2s ease-in-out infinite alternate;
+}
+/* Darker on the right (behind the menu) and around the edges, lighter over the rock star. */
+.title-screen__shade {
+  background:
+    linear-gradient(90deg, rgba(7, 5, 15, 0) 25%, rgba(7, 5, 15, 0.55) 60%, rgba(7, 5, 15, 0.8) 100%),
+    radial-gradient(ellipse at center, transparent 55%, rgba(7, 5, 15, 0.7) 100%);
+}
+.title-screen__content {
+  position: relative;      /* sits above the picture layers */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(560px, 46vw);
+}
+
+/* "BAND RISE" in chrome. The title is slanted and gets a pink glow and a hard black drop shadow; each word gets its
+   own shine stripe and chrome gradient (sky, white, a dark steel horizon, then gold), painted only inside the
+   letters, with a hot pink edge. */
+.title-screen--home .title-screen__name {
+  font-family: "Russo One", Impact, "Arial Black", sans-serif;
+  font-weight: normal;
+  font-size: clamp(72px, 9.5vw, 148px);
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow: none;
+  transform: skew(-9deg);
+  filter: drop-shadow(0 0 14px rgba(255, 79, 160, 0.55)) drop-shadow(5px 6px 0 #000);
+}
+.title-screen--home .title-screen__name span {
+  display: block;          /* BAND on top of RISE */
+  color: transparent;
+  background:
+    linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.95) 50%, transparent 58%) 100% 0 / 250% 100% no-repeat,
+    linear-gradient(180deg, #a9e4ff 0%, #ffffff 40%, #5d7290 49%, #161a2c 51%, #ffb547 74%, #fff3c9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 2px #ff4fa0;
+  animation: title-shine 7s ease-in-out 1.4s infinite;
+}
+.title-screen--home .title-screen__name span + span { animation-delay: 1.55s; }  /* RISE shines just after BAND */
+.title-screen--home .title-screen__tagline {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: var(--text);
+  text-shadow: 0 2px 8px #000;
+}
+.title-screen--home .title-screen__menu .btn:not(.btn--primary) {
+  background: rgba(20, 16, 40, 0.72);
+  backdrop-filter: blur(4px);
+}
+.title-screen--home .notice { max-width: 100%; }
+
+/* The intro (about 2 seconds): the stage fades and zooms in with flickering lights, the title slams in and shines,
+   the tagline fades up, then the buttons rise one by one. "both" keeps each piece hidden until its turn. */
+.title-screen--intro .title-screen__stage {
+  animation: stage-in 1.6s ease-out both, stage-drift 24s ease-in-out 1.6s infinite alternate;
+}
+.title-screen--intro .title-screen__glow { animation: fade-in 1s ease-out 1s both, glow-pulse 3.2s ease-in-out 2s infinite alternate; }
+.title-screen--intro .title-screen__shade { animation: fade-in 1s ease-out both; }
+.title-screen--intro .title-screen__name {
+  animation: title-slam 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.9s both;
+}
+.title-screen--intro .title-screen__tagline { animation: title-rise 0.5s ease-out 1.5s both; }
+.title-screen--intro .title-screen__menu > .btn { animation: title-rise 0.45s ease-out 1.7s both; }
+.title-screen--intro .title-screen__menu > .btn:nth-of-type(2) { animation-delay: 1.8s; }
+.title-screen--intro .title-screen__menu > .btn:nth-of-type(3) { animation-delay: 1.9s; }
+.title-screen--intro .notice { animation: title-rise 0.45s ease-out 2s both; }
+
+@keyframes stage-in {
+  0% { opacity: 0; transform: scale(1.12); filter: brightness(0.3); }
+  25% { opacity: 1; filter: brightness(1.5); }
+  32% { filter: brightness(0.6); }
+  42% { filter: brightness(1.35); }
+  55% { filter: brightness(0.85); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
+@keyframes stage-drift {
+  from { transform: scale(1); }
+  to { transform: scale(1.05) translateX(-1%); }
+}
+@keyframes glow-pulse {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+@keyframes title-slam {
+  0% { opacity: 0; transform: skew(-9deg) scale(2.4); }
+  70% { opacity: 1; transform: skew(-9deg) scale(0.94); }
+  100% { opacity: 1; transform: skew(-9deg) scale(1); }
+}
+/* The shine stripe sweeps across the letters once, left to right, then waits for the next loop.
+   (The stripe layer is wider than the title, so 100% puts it off the left edge and 0% off the right.) */
+@keyframes title-shine {
+  0% { background-position: 100% 0, 0 0; }
+  18%, 100% { background-position: 0% 0, 0 0; }
+}
+@keyframes title-rise {
+  from { opacity: 0; transform: translateY(18px); }
+}
+
+/* Narrow windows: the content goes in the middle and the whole picture gets a little darker. */
+@media (max-width: 900px) {
+  .title-screen--home { align-items: center; }
+  .title-screen__content { width: min(560px, 100%); }
+  .title-screen__shade { background: rgba(7, 5, 15, 0.5); }
+}
+
+/* Players who asked their computer for less motion just see the finished screen. */
+@media (prefers-reduced-motion: reduce) {
+  .title-screen--home,
+  .title-screen--home * { animation: none !important; }
+}
+
 /* ---------- New career: instrument choices ---------- */
 
 .choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }

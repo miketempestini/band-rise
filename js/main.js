@@ -34,6 +34,7 @@ Game.app = {
   contractId: null,     // the residency offer being reviewed
   contractTerms: null,  // the terms you're editing on the contract screen: { weekday, rate, weeks }
   planWeekStart: null,  // the Monday of the week shown on the Plan week screen
+  titleIntroPlayed: false, // true once the title screen's intro has played (it plays once per page load)
   financeDays: 7,        // which period the Finances screen shows (7, 30, or 90 days)
   calendarPage: 0,      // which 4 weeks the Calendar shows (0 = from this week; up to 2 with a manager)
   tourDraft: null,      // a tour request being set up on the Manager screen: { cities, tier, earliestDay }
