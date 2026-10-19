@@ -139,7 +139,7 @@ body {
   --panel-2: #e2dbca;
   --accent: #a94f08;        /* amber is too pale on paper, so highlights become burnt-orange ink */
   --accent-text: #fff;
-  --good: #1e7a45;
+  --good: #17643a;
   --bad: var(--red-pen);
   --teal: #16677d;
   --pink: #b02d6a;
@@ -193,7 +193,7 @@ body {
 }
 .btn:hover:not(:disabled) { border-color: var(--metal); }
 .btn:active:not(:disabled) { transform: translateY(1px); }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
 /* The main button on a screen: lit like a stage light. */
 .btn--primary {
   color: var(--amber-ink);
@@ -280,7 +280,7 @@ body {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(20, 18, 38, 0.5), rgba(20, 18, 38, 0.74) 45%, rgba(20, 18, 38, 0.9)),
+    linear-gradient(180deg, rgba(20, 18, 38, 0.62), rgba(20, 18, 38, 0.8) 45%, rgba(20, 18, 38, 0.92)),
     radial-gradient(ellipse at center, transparent 40%, rgba(10, 8, 20, 0.6));
 }
 .backdrop--today::before { background-image: url("assets/backdrops/rehearsal.jpg"); }
@@ -513,23 +513,22 @@ body {
   padding: 9px 14px 7px;
   font: 17px/1 var(--font-hand);
   color: var(--ink);
-  background: linear-gradient(180deg, #f3f1ea, #dcd8cd);
+  background: linear-gradient(180deg, #d9d5ca, #c4bfb2);  /* tape for screens you're not on: a little greyer */
   border: none;
   border-radius: 1px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  opacity: 0.74;
   cursor: pointer;
 }
 .tab:nth-child(odd) { transform: rotate(-0.4deg); }
 .tab:nth-child(3n) { transform: rotate(0.5deg); }
 .tab::before { content: ""; position: absolute; top: -10px; left: 50%; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%;
   background: #3b3646; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.6) inset; }
-.tab:hover { opacity: 1; }
-.tab--active { opacity: 1; background: linear-gradient(180deg, #ffffff, #efece3); }
+.tab:hover { background: linear-gradient(180deg, #f3f1ea, #dcd8cd); }
+.tab--active { background: linear-gradient(180deg, #ffffff, #efece3); }
 .tab--active::before { background: var(--amber); box-shadow: 0 0 8px 2px rgba(255, 181, 71, 0.7); }
 /* New messages, or a bandmate who wants to talk: a small red light with a number. */
 .tab .badge--count { margin-left: 4px; padding: 0 6px; min-width: 18px; border: none; border-radius: 9px; font: 700 11px/18px var(--font-body);
-  text-align: center; color: #fff; background: #e23b3b; box-shadow: 0 0 8px rgba(255, 70, 70, 0.6); vertical-align: 2px; }
+  text-align: center; color: #fff; background: #c62828; box-shadow: 0 0 8px rgba(255, 70, 70, 0.6); vertical-align: 2px; }
 
 /* ---------- Today ----------
    Three columns: the previous day's sheet, today's day sheet, and the side panels (shows coming up, stats, this
@@ -651,7 +650,7 @@ button.block:hover { background: linear-gradient(transparent 14%, var(--highligh
 .choice-btn { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; font: inherit; text-align: left; color: var(--ink); background: transparent;
   border: 1.5px solid rgba(31, 34, 64, 0.4); border-radius: var(--radius); cursor: pointer; }
 .choice-btn:hover:not(:disabled) { border-color: var(--ink); background: var(--highlighter); }
-.choice-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.choice-btn:disabled { cursor: not-allowed; border-style: dashed; color: var(--ink-soft); }
 .choice-btn span { color: var(--accent); font-weight: 600; font-size: var(--size-s); }
 .choice-btn em { color: var(--ink-soft); font-size: var(--size-xs); }
 
@@ -732,7 +731,8 @@ button.block:hover { background: linear-gradient(transparent 14%, var(--highligh
   cursor: pointer;
 }
 .pick:hover:not(:disabled) { background: linear-gradient(transparent 6%, var(--highlighter) 6%, var(--highlighter) 94%, transparent 94%); }
-.pick:disabled { opacity: 0.45; cursor: not-allowed; }
+.pick:disabled { cursor: not-allowed; background: repeating-linear-gradient(135deg, rgba(31, 34, 64, 0.05) 0 6px, transparent 6px 12px); }
+.pick:disabled .pick__name, .pick:disabled .pick__effect { color: var(--ink-soft); }
 .pick--current { box-shadow: inset 4px 0 0 var(--red-pen); }
 .pick__head { display: flex; justify-content: space-between; gap: 12px; }
 .pick__name { font: 700 var(--size-l)/1.15 var(--font-head); }
@@ -789,7 +789,7 @@ button.recap:hover { transform: none; }
 .tag--original { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
 
 .stars { color: var(--accent); letter-spacing: 1px; white-space: nowrap; }
-.stars__empty { color: var(--line); }
+.stars__empty { color: color-mix(in srgb, var(--text-muted) 40%, transparent); }
 
 /* Bar sizes and colors (the plain bar is with the top bar's LED meters). */
 .meter--thin { height: 3px; }
@@ -826,7 +826,8 @@ button.recap:hover { transform: none; }
 .plan { display: flex; flex-direction: column; margin-bottom: 8px; }
 .plan__row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: color-mix(in srgb, var(--panel-2) 70%, transparent); border-radius: var(--radius); }
 .plan__row + .plan__row { margin-top: 6px; }
-.plan__row--past { opacity: 0.5; }
+.plan__row--past { background: transparent; border: 1px dashed var(--line); }
+.plan__row--past .plan__block, .plan__row--past .plan__task, .plan__row--past .muted { color: var(--text-muted); }
 .plan__block { width: 80px; flex-shrink: 0; font: 700 var(--size-s) var(--font-head); color: var(--text-muted); }
 .plan__task { flex: 1; font-weight: 600; }
 .plan__row .muted { flex: 1; }
@@ -1092,7 +1093,7 @@ button.recap:hover { transform: none; }
 .person::before { content: ""; position: absolute; top: 9px; left: 50%; z-index: 1; width: 46px; height: 8px; margin-left: -23px; border-radius: 4px;
   background: var(--house-deep); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6); }
 .person__pass { margin: 0 -16px 4px; padding: 26px 16px 6px; border-radius: 12px 12px 0 0; font: 800 var(--size-xl)/1 var(--font-head);
-  text-transform: uppercase; letter-spacing: 4px; text-align: right; color: #fff; background: var(--tape-studio); }
+  text-transform: uppercase; letter-spacing: 4px; text-align: right; color: #fff; background: #1d6fb8; }
 .person--member .person__pass { color: var(--amber-ink); background: var(--amber); }
 .person__head { display: flex; align-items: center; gap: 12px; }
 .person__photo { width: 72px; height: 72px; object-fit: cover; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
@@ -1120,7 +1121,7 @@ button.recap:hover { transform: none; }
 .venue__stats strong { color: var(--text); }
 .deal { padding: 10px 12px; background: color-mix(in srgb, var(--panel-2) 60%, transparent); border: 1px solid var(--line); border-radius: var(--radius); }
 .deal--chosen { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-.deal--locked { opacity: 0.7; }
+.deal--locked { border-style: dashed; }
 .deal__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .deal__chance { color: var(--accent); font-weight: 700; }
 .deal__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; font-size: var(--size-s); }
@@ -1159,7 +1160,9 @@ button.recap:hover { transform: none; }
 .cal__day:nth-child(7n) { border-right: none; }
 .cal__day:hover { background: color-mix(in srgb, var(--highlighter) 60%, transparent); }
 .cal__day--selected { background: color-mix(in srgb, var(--highlighter) 70%, transparent); box-shadow: inset 0 0 0 2px var(--ink); }
-.cal__day--past { opacity: 0.4; }
+.cal__day--past { background: repeating-linear-gradient(135deg, rgba(31, 34, 64, 0.06) 0 6px, transparent 6px 12px); }
+.cal__day--past .cal__date, .cal__day--past .cal__block { color: var(--ink-soft); font-weight: 400; }
+.cal__day--past .cal__block::before { opacity: 0.45; }
 .cal__date { font: 700 var(--size-s) var(--font-head); color: var(--ink-soft); }
 .cal__day--today .cal__date { align-self: flex-start; padding: 0 5px; white-space: nowrap; font-size: var(--size-xs); color: var(--red-pen);
   border: 2px solid var(--red-pen); border-radius: 50% 44% 52% 40%; }
@@ -1220,7 +1223,8 @@ button.recap:hover { transform: none; }
   clip-path: polygon(18% 0, 82% 0, 100% 13%, 100% 100%, 0 100%, 0 13%); }
 .shop-item::before { content: ""; position: absolute; top: 12px; left: 50%; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%;
   background: var(--house-deep); box-shadow: 0 0 0 3px #c7ad74; }
-.shop-item--locked { opacity: 0.65; }
+.shop-item { --accent: #8a3f05; --text-muted: #45434f; --bad: #9b1f19; }  /* darker inks, so they read on manila */
+.shop-item--locked { background: linear-gradient(170deg, rgba(255, 255, 255, 0.25), transparent 50%), #d9cfb8; }
 .shop-item__name { font: 800 var(--size-xl)/1.05 var(--font-head); color: var(--ink); }
 .shop-item__buy { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: auto; }
 
@@ -1247,7 +1251,7 @@ button.recap:hover { transform: none; }
 .map__city--locked text { fill: var(--ink-soft); }
 .city-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-2); }
 .city { padding: var(--space-2); background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); }
-.city--locked { opacity: 0.7; }
+.city--locked { border-style: dashed; }
 .city__head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 .city__head strong { font: 700 var(--size-l) var(--font-head); }
 

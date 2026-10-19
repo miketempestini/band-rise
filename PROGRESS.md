@@ -4,6 +4,23 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14g: Readability sweep (2026-10-19)
+- **Why some text was hard to read:** after the redesign went live, browsers could mix old saved copies of the
+  scripts with the new stylesheet, which put dark ink text on dark panels. Every file in index.html now carries a
+  version tag (`?v=...`), so a new publish always loads together. Change the tag before each publish (see CLAUDE.md).
+- **A contrast check of every screen** (late and early game, pop-ups, setup screens) measured each bit of text against
+  what's behind it. Fixed every spot under 4.5 to 1:
+  - unread-count light
+  - green and orange inks on paper
+  - Guest passes (deeper blue)
+  - price-tag inks
+  - locked deals, locked cities, and locked price tags (dashed or greyed instead of faded)
+  - past days on the Calendar and in Plan week (hatched instead of faded)
+  - unavailable choices in the action picker and on events (hatched; the reason stays full strength)
+  - inactive tabs (greyer tape instead of see-through)
+  - a slightly darker shade over screen backdrops
+  The check now finds no problem spots.
+
 ### Session 14f: Backstage redesign (2026-10-19)
 - **The whole game got a new look**, built with the frontend-design skill. Each screen is drawn as a real thing a
   working band uses. Paper is the bold part; everything around it is a quiet dark road-case panel.

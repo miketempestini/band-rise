@@ -287,6 +287,11 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.
+  **Before every publish, change the `?v=...` version tag on every file in index.html** (all at once, e.g. to the date
+  plus a letter). Otherwise browsers can mix old saved copies of the scripts with the new stylesheet.
+- **Readability**: text must reach a contrast of 4.5 to 1 against what's behind it (3 to 1 for big headings). Don't fade
+  things with `opacity` to show they're locked, past, or unavailable: use a dashed edge, hatching, or a greyer
+  background, and keep the words full strength.
 
 ## Saving
 
