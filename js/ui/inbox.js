@@ -201,7 +201,7 @@ Game.ui.inbox = {
       var buttons = d.shows.length ? self.jobButtonsHtml(state, m, 'acceptTour', e.jobDays.filter(function (x) { return Game.rules.job.worksOn(state, x); }),
         function (choice) { return Game.rules.manager.tourAcceptProblem(state, m.id, choice) || Game.rules.manager.adsProblem(state, m.id, ads); },
         'Book the tour' + (e.adCost ? ' + ads' : '')) + ' ' + decline : decline;
-      return self.cardHtml(m, 'Tour proposal: ' + d.shows.length + ' show' + (d.shows.length === 1 ? '' : 's'), body, buttons);
+      return self.cardHtml(m, 'Tour proposal: ' + (d.name ? d.name + ', ' : '') + d.shows.length + ' show' + (d.shows.length === 1 ? '' : 's'), body, buttons);
     }
     // Arena or festival offer.
     var venue = Game.content.venues[d.venueId];

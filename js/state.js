@@ -112,8 +112,10 @@ Game.state = {
       // amount, personId }); shows are one record per gig played (see Game.rules.finances).
       finances: { entries: [], shows: [] },
       adCampaigns: [],    // tour ad campaigns: { cityId, packageId, landDay, showDay, landed }
-      tourRequests: [],   // tours you asked the manager to plan: { id, cities, tier, earliestDay, readyDay }
+      tourRequests: [],   // tours you asked the manager to plan: { id, name, cities, tier, earliestDay, readyDay }
       nextTourRequestId: 1,
+      // Every tour you booked, for the Career screen: { id, name (or null), cities, firstDay, lastDay, shows }.
+      tours: [],
       // The label (Phase 12): owed is the part of the advance not yet paid back from streaming.
       label: { signed: false, signedDay: null, advance: 0, owed: 0, nextOfferDay: 0 },
       awards: [],         // every nomination: { year, category, title, chance, won (null until the ceremony) }

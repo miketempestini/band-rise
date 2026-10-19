@@ -265,7 +265,8 @@ Game.ui.calendar = {
 
     return '<div class="show">' +
       '<div class="show__head"><strong>' + h.escape(venue.name) + '</strong>' + (venue.cityId !== 'hometown' ? ', ' + h.escape(Game.content.cities[venue.cityId].name) : '') +
-        ' · ' + Game.content.calendar.blockNames[e.block] + '</div>' + tripText +
+        ' · ' + Game.content.calendar.blockNames[e.block] + '</div>' +
+      (e.tourName ? '<p class="hint">Part of <strong>' + h.escape(e.tourName) + '</strong></p>' : '') + tripText +
       '<p class="muted">' + h.escape(Game.rules.booking.dealLabel(venue, e.deal, e.fee)) + '</p>' +
       '<h4 class="show__sub">Setlist</h4>' + setlist +
       '<h4 class="show__sub">Session players</h4>' +

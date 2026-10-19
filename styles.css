@@ -836,6 +836,8 @@ button.recap:hover { transform: none; }
 /* Forms: rows of choices, and the date buttons (orange ones fall on the day job). */
 .form-row { display: flex; flex-direction: column; gap: 6px; }
 .form-row__btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.form-row--inline { flex-direction: row; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.form-row + .form-row { margin-top: 10px; }
 .dates { display: flex; flex-wrap: wrap; gap: 6px; }
 .date-btn { padding: 6px 8px; font: 600 var(--size-xs) var(--font-body); color: var(--text); background: transparent; border: 1px solid var(--line);
   border-radius: 3px; cursor: pointer; }
@@ -1204,6 +1206,7 @@ button.recap:hover { transform: none; }
 .milestone__num { display: flex; justify-content: center; }
 .milestone__name { font-weight: 600; }
 .milestone__when { font-size: var(--size-xs); }
+.tour-row__meta { display: block; font-size: var(--size-xs); color: var(--text-muted); }
 /* A record: black vinyl with grooves and a label holding the milestone's number. Gold once you've reached it. */
 .disc { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%;
   font: 700 11px var(--font-body); color: var(--text);

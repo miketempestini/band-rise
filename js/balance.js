@@ -108,8 +108,9 @@ Game.balance = {
       planDays: 5,                   // The manager takes this many days to plan a tour
       leadDays: 35,                  // The first show is at least 5 weeks after the proposal arrives
       proposalExpiryDays: 3,         // Answer a tour proposal within this many days
-      minCities: 2,
-      maxCities: 8,
+      minCities: 3,                  // A tour request needs at least this many cities (there's no most: any city that
+                                     // doesn't fit in your calendar is left out of the plan, with the reason)
+      nameMaxLength: 40,             // Longest tour name you can type (the name is optional)
       showDayOfWeekPreferred: [3, 4, 5, 6, 2, 1, 0], // Nights the manager tries first (Thursday first), as with residencies
       // Ad campaigns you can add per city to a tour proposal. They land a week before the show (and the city's
       // buzz doesn't fade while the ads run). fans: new fans in that city right away.
@@ -812,7 +813,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 16,                     // Save format version, bumped when the state shape changes
+    version: 17,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

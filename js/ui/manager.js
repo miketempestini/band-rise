@@ -57,6 +57,9 @@ Game.ui.manager = {
     });
     var start = root.querySelector('#tour-start');
     if (start) start.addEventListener('change', function () { app.tourDraftSet('earliestDay', Number(start.value)); });
+    // The tour's name is remembered as you type (without redrawing, so the box keeps its place).
+    var name = root.querySelector('#tour-name');
+    if (name) name.addEventListener('input', function () { app.tourDraftName(name.value); });
   },
 
   // Cities you've unlocked (for the rules and tours).
@@ -82,7 +85,7 @@ Game.ui.manager = {
       '<div class="form-row"><span class="muted">Cities:</span><div class="form-row__btns">' + cities + '</div></div>' +
       '<div class="form-row"><span class="muted">Venue sizes:</span><div class="form-row__btns">' + tiers + '</div></div>' +
       '<div class="form-row"><span class="muted">Nights:</span><div class="form-row__btns">' + nights + '</div></div>' +
-      '<div class="form-row"><span class="muted">At most</span><input type="number" id="rule-max" class="input input--money" min="1" max="' +
+      '<div class="form-row form-row--inline"><span class="muted">At most</span><input type="number" id="rule-max" class="input input--money" min="1" max="' +
         Game.balance.manager.autoBook.maxPerWeekLimit + '" value="' + r.maxPerWeek + '"><span class="muted">shows a week</span></div>' +
       '<button class="btn btn--primary btn--small" data-action="saveRules">Save rules</button></div>';
   },
@@ -108,11 +111,12 @@ Game.ui.manager = {
     var t = Game.balance.manager.tour;
     var pending = state.tourRequests[0];
     if (pending) {
-      return '<div class="panel"><h3 class="panel__title">Tour</h3><p>Your manager is planning a tour of ' +
+      return '<div class="panel"><h3 class="panel__title">Tour</h3><p>Your manager is planning ' +
+        (pending.name ? '<strong>' + h.escape(pending.name) + '</strong>, a tour of ' : 'a tour of ') +
         pending.cities.map(function (id) { return h.escape(Game.content.cities[id].name); }).join(', ') +
         '. The proposal arrives ' + h.dateLabel(pending.readyDay) + '.</p></div>';
     }
-    var d = app.tourDraft || { cities: [], tier: 2, earliestDay: null };
+    var d = app.tourDraft || { name: '', cities: [], tier: 2, earliestDay: null };
     var cities = self.openCities(state, false).map(function (id) {
       var on = d.cities.indexOf(id) !== -1;
       return '<button class="btn btn--small' + (on ? ' btn--primary' : '') + '" data-action="tourCity" data-city="' + id + '">' + (on ? '✓ ' : '') +
@@ -128,10 +132,14 @@ Game.ui.manager = {
     }
     var problem = Game.rules.manager.tourRequestProblem(state, d);
     return '<div class="panel"><h3 class="panel__title">Ask for a tour</h3>' +
-      '<p class="hint">Pick ' + t.minCities + ' to ' + t.maxCities + ' cities and a venue size. Your manager takes ' + t.planDays +
+      '<p class="hint">Pick ' + t.minCities + ' or more cities and a venue size. Your manager takes ' + t.planDays +
         ' days to plan it, then sends a proposal with dates, travel, and money estimates. Tours start at least ' + t.leadDays / Game.balance.time.daysPerWeek +
-        ' weeks out so every venue has room. A tour needs a van.</p>' +
-      '<div class="form-row"><span class="muted">Cities:</span><div class="form-row__btns">' + (cities || '<span class="muted">Unlock some cities first (see the Map).</span>') + '</div></div>' +
+        ' weeks out so every venue has room, and any city that won\'t fit in your calendar is left out (with the reason). A tour needs a van.</p>' +
+      '<label class="form-row"><span class="muted">Tour name (optional):</span>' +
+        '<input type="text" id="tour-name" class="input" maxlength="' + t.nameMaxLength + '" placeholder="Like The Neon Highway Tour" autocomplete="off" value="' +
+        h.escape(d.name || '') + '"></label>' +
+      '<div class="form-row"><span class="muted">Cities' + (d.cities.length ? ' (' + d.cities.length + ' picked)' : '') + ':</span>' +
+        '<div class="form-row__btns">' + (cities || '<span class="muted">Unlock some cities first (see the Map).</span>') + '</div></div>' +
       '<div class="form-row"><span class="muted">Venue size:</span><div class="form-row__btns">' + tiers + '</div></div>' +
       '<div class="form-row"><span class="muted">Start no earlier than:</span><select id="tour-start" class="input"><option value="">As soon as possible</option>' + weeks + '</select></div>' +
       '<button class="btn btn--primary btn--small" data-action="requestTour"' + (problem ? ' disabled' : '') + '>Ask for a tour plan</button>' +

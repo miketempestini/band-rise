@@ -1,6 +1,6 @@
 // career.js (screen)
 // The Career screen: your fame level, milestones reached (each one a gold record) and what's next, the shareable
-// career card, and lifetime stats.
+// career card, your tours, and lifetime stats.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
@@ -59,6 +59,7 @@ Game.ui.career = {
           '<h4 class="show__sub">Coming up</h4>' +
           ahead.map(function (m) { return milestoneRow(m, false); }).join('') +
         '</div>' +
+        Game.ui.career.toursHtml(state) +
         '<div class="panel">' +
           '<h3 class="panel__title">Lifetime</h3>' +
           '<dl class="rows">' +
@@ -87,5 +88,25 @@ Game.ui.career = {
         Game.ui.careerCard.draw(root.querySelector('#career-card'), Game.rules.progress.careerCard(state));
       });
     }
+  },
+
+  // Your tours, newest first: the name (or the cities), the dates, how many shows, and whether it's still ahead.
+  // Finished tours get a gold record; ones still ahead (or happening now) a black one.
+  toursHtml: function (state) {
+    var h = Game.ui.helpers;
+    var rows = state.tours.slice().reverse().map(function (t) {
+      var when = t.firstDay > state.day ? 'Coming up' : (t.lastDay >= state.day ? 'On tour now' : '');
+      return '<div class="milestone">' +
+        '<span class="milestone__num"><span class="disc' + (when ? '' : ' disc--gold') + '"></span></span>' +
+        '<span><span class="milestone__name">' + h.escape(Game.rules.manager.tourLabel(t.name, t.cities)) + '</span>' +
+          '<span class="tour-row__meta">' + Game.rules.day.spanLabel(t.firstDay, t.lastDay) + ', ' + t.shows + ' show' + (t.shows === 1 ? '' : 's') + '</span></span>' +
+        '<span class="milestone__when muted">' + when + '</span>' +
+        '</div>';
+    }).join('');
+    return '<div class="panel">' +
+      '<h3 class="panel__title">Tours</h3>' +
+      (rows || '<p class="hint">No tours yet. Once you have a manager, ask for one on the Manager screen (and give it a name if you like).</p>') +
+      '</div>';
   }
+
 };

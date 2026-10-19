@@ -171,14 +171,29 @@ Game.rules.manager = {
 
   // ----- Tours -----
 
-  // Why a tour request won't work, or null. request: { cities: [cityIds], tier, earliestDay }
+  // A tour's name as typed: trimmed, or null when it's left blank (the name is optional).
+  tourName: function (name) {
+    var clean = String(name || '').trim();
+    return clean ? clean : null;
+  },
+
+  // What to call a tour: its name, or "Tour of Harlow Falls, Redstone, and Sable Bay" when it has none.
+  tourLabel: function (name, cities) {
+    if (name) return name;
+    var names = cities.map(function (id) { return Game.content.cities[id].name; });
+    return 'Tour of ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1] : names.join(''));
+  },
+
+  // Why a tour request won't work, or null. request: { name (optional), cities: [cityIds], tier, earliestDay }
   tourRequestProblem: function (state, request) {
     var t = Game.balance.manager.tour;
     if (!Game.rules.manager.hired(state)) return 'You need a manager.';
     if (state.tourRequests.length) return 'Your manager is already planning a tour.';
     if (state.inbox.some(function (m) { return m.kind === 'tourProposal' && !m.resolved; })) return 'Answer the tour proposal in your Inbox first.';
     var cities = request.cities || [];
-    if (cities.length < t.minCities || cities.length > t.maxCities) return 'Pick ' + t.minCities + ' to ' + t.maxCities + ' cities.';
+    if (cities.length < t.minCities) return 'Pick at least ' + t.minCities + ' cities.';
+    var name = Game.rules.manager.tourName(request.name);
+    if (name && name.length > t.nameMaxLength) return 'Keep the tour name to ' + t.nameMaxLength + ' characters or fewer.';
     if (cities.some(function (id) { return id === 'hometown' || !state.cities[id] || !state.cities[id].unlocked; })) return 'Pick out-of-town cities you\'ve unlocked.';
     if ([1, 2, 3].indexOf(request.tier) === -1) return 'Pick a venue size.';
     return null;
@@ -189,10 +204,11 @@ Game.rules.manager = {
     var problem = Game.rules.manager.tourRequestProblem(state, request);
     if (problem) return { state: state, log: [problem] };
     var s = Game.util.clone(state);
-    s.tourRequests.push({ id: 'tr' + s.nextTourRequestId, cities: request.cities.slice(), tier: request.tier,
+    s.tourRequests.push({ id: 'tr' + s.nextTourRequestId, name: Game.rules.manager.tourName(request.name), cities: request.cities.slice(), tier: request.tier,
       earliestDay: request.earliestDay || s.day, readyDay: s.day + Game.balance.manager.tour.planDays });
     s.nextTourRequestId += 1;
-    return { state: s, log: [Game.content.business.manager.name + ' is planning your tour. The proposal will be in your Inbox in ' +
+    var name = Game.rules.manager.tourName(request.name);
+    return { state: s, log: [Game.content.business.manager.name + ' is planning ' + (name ? '"' + name + '"' : 'your tour') + '. The proposal will be in your Inbox in ' +
       Game.balance.manager.tour.planDays + ' days.'] };
   },
 
@@ -377,9 +393,10 @@ Game.rules.manager = {
     var log = [];
     ready.forEach(function (r) {
       var plan = Game.rules.manager.planTour(s, r.cities, r.tier, r.earliestDay);
+      plan.name = r.name || null;
       s.tourRequests = s.tourRequests.filter(function (x) { return x.id !== r.id; });
       s = Game.rules.booking.addInbox(s, 'tourProposal', plan, s.day + Game.balance.manager.tour.proposalExpiryDays);
-      log.push(Game.content.business.manager.name + ' sent you a tour proposal: ' + plan.shows.length + ' show' + (plan.shows.length === 1 ? '' : 's') + '. Check your Inbox.');
+      log.push(Game.content.business.manager.name + ' sent you a tour proposal' + (plan.name ? ' for "' + plan.name + '"' : '') + ': ' + plan.shows.length + ' show' + (plan.shows.length === 1 ? '' : 's') + '. Check your Inbox.');
     });
     return { state: s, log: log };
   },
@@ -416,12 +433,24 @@ Game.rules.manager = {
     if (problem) return { state: state, log: [problem] };
     var m = state.inbox.filter(function (x) { return x.id === messageId; })[0];
     var s = state;
-    m.data.shows.forEach(function (x) { s = Game.rules.travel.addShow(s, x.venueId, x.day, 'door', null).state; });
+    var name = m.data.name || null;
+    var entryIds = [];
+    m.data.shows.forEach(function (x) {
+      var added = Game.rules.travel.addShow(s, x.venueId, x.day, 'door', null);
+      s = added.state;
+      entryIds.push(added.entryId);
+    });
     var jobDays = Game.rules.travel.jobDaysNeeded(s);
     jobDays.forEach(function (d) { s = Game.rules.job.takeDayOff(s, d, jobChoice, true).state; });
     s = Game.util.clone(s);
     s.inbox.forEach(function (x) { if (x.id === messageId) { x.resolved = 'accepted'; x.read = true; } });
-    var log = ['Tour booked: ' + m.data.shows.length + ' shows and all the travel are on your Calendar.'];
+    // Each show remembers the tour's name, and the tour goes in the list on the Career screen.
+    entryIds.forEach(function (id) { if (s.entries[id]) s.entries[id].tourName = name; });
+    var days = m.data.shows.map(function (x) { return x.day; });
+    var cities = m.data.shows.map(function (x) { return Game.content.venues[x.venueId].cityId; });
+    s.tours.push({ id: 'tour' + (s.tours.length + 1), name: name, cities: cities,
+      firstDay: Math.min.apply(null, days), lastDay: Math.max.apply(null, days), shows: m.data.shows.length });
+    var log = [(name ? '"' + name + '" booked: ' : 'Tour booked: ') + m.data.shows.length + ' shows and all the travel are on your Calendar.'];
     // Ads: pay now; each lands a week before its city's show.
     var packages = Game.balance.manager.tour.ads;
     Object.keys(ads || {}).forEach(function (cityId) {

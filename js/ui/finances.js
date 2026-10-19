@@ -175,7 +175,7 @@ Game.ui.finances = {
       if (!g.tripId) return showRow(g.shows[0], false);
       var cities = g.shows.map(function (x) { return Game.content.cities[Game.content.venues[x.venueId].cityId].name; })
         .filter(function (n, i, all) { return all.indexOf(n) === i; });
-      return '<tr class="finance-trip"><td colspan="7"><strong>' + (g.tour ? 'Tour' : 'Trip') + ':</strong> ' + h.escape(cities.join(', ')) + ' · ' +
+      return '<tr class="finance-trip"><td colspan="7"><strong>' + (g.tourName ? h.escape(g.tourName) : (g.tour ? 'Tour' : 'Trip')) + ':</strong> ' + h.escape(cities.join(', ')) + ' · ' +
           g.shows.length + ' show' + (g.shows.length === 1 ? '' : 's') + ' · your travel and hotels ' + h.money(g.travel) + '</td>' +
           '<td>Trip net</td><td class="' + (g.net >= 0 ? 'pos' : 'neg') + '"><strong>' + h.money(g.net) + '</strong></td></tr>' +
         g.shows.map(function (x) { return showRow(x, true); }).join('');

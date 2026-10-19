@@ -283,6 +283,10 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
     at the bottom of styles.css; JavaScript animations check `matchMedia` like the gig crowd meter).
   - Screens that redraw often must not replay entrance animations: remember what was shown on `Game.app` (like
     `daySheetDay` and `titleIntroPlayed`).
+- **Tour names**: a tour request can carry a `name` (optional; `manager.tourName` trims it, blank means none). It goes on
+  the proposal (`m.data.name`), each booked show (`entry.tourName`), the show's finance record (`tourName`), and
+  `state.tours` (every accepted tour: { id, name, cities, firstDay, lastDay, shows }, listed on Career).
+  `manager.tourLabel(name, cities)` gives an unnamed tour a name from its cities. Tours need 3+ cities, with no most.
 - **Portraits**: every person has `portrait` (an id from `Game.content.art.portraits`), picked by
   `Game.rules.people.portraitFor` when you meet them (no dice roll; it avoids faces a current contact or bandmate has).
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at

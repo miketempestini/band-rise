@@ -320,7 +320,7 @@ Game.rules.gigs = {
     Game.rules.finances.add(s, { flow: 'band', cat: 'managerPay', amount: managerCut });
     Game.rules.finances.add(s, { flow: 'band', cat: 'bandTips', amount: tips - yourTips });
     Game.rules.finances.addShow(s, { venueId: venueId, deal: opts.deal || 'openMic', gross: grossPay, managerCut: managerCut, memberPay: memberPay,
-      yourPay: yourPay, tips: tips, yourTips: yourTips, merch: merch.revenue, production: 0, tripId: null, tour: false });
+      yourPay: yourPay, tips: tips, yourTips: yourTips, merch: merch.revenue, production: 0, tripId: null, tour: false, tourName: null });
 
     // Venue relationship (booked rooms): +5 after a Solid or better show, -10 after a Rough one.
     var venueChange = 0;

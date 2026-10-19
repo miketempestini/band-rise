@@ -121,7 +121,7 @@ Game.rules.finances = {
   // Shows in a period, newest first, grouped by trip: shows on the same trip (or tour) share one group with that
   // trip's travel (your part of gas, flights, and hotels). Each show's net to you = your pay + your tips + merch -
   // production; a group's net also takes off its travel.
-  // Returns [{ tripId, tour, shows: [show], travel, net }].
+  // Returns [{ tripId, tour, tourName (or null), shows: [show], travel, net }].
   showList: function (state, days) {
     var f = Game.rules.finances;
     var shows = f.inPeriod(state.finances.shows, state, days).slice().sort(function (a, b) { return b.day - a.day; });
@@ -139,6 +139,7 @@ Game.rules.finances = {
     });
     groups.forEach(function (g) {
       g.tour = g.shows.some(function (x) { return x.tour; });
+      g.tourName = (g.shows.filter(function (x) { return x.tourName; })[0] || { tourName: null }).tourName;
       g.shows.sort(function (a, b) { return a.day - b.day; });
       g.net = g.shows.reduce(function (t, x) { return t + x.net; }, 0) - g.travel;
     });

@@ -142,7 +142,8 @@ Game.ui.today = {
         return '<button class="block block--show" data-action="openCalendar">' +
           '<span class="block__time">' + name + '</span>' +
           '<span class="block__title">Show at ' + h.escape(venue.name) + '</span>' +
-          '<span class="block__detail">' + (row.problem ? '<span class="block__problem">' + h.escape(row.problem) + '</span>' :
+          '<span class="block__detail">' + (e.tourName ? 'Part of ' + h.escape(e.tourName) + ' · ' : '') +
+            (row.problem ? '<span class="block__problem">' + h.escape(row.problem) + '</span>' :
             h.escape(Game.rules.booking.dealLabel(venue, e.deal, e.fee)) + ' · ' + e.songIds.length + ' songs · -' + b.energy.cost.gig + ' energy') + '</span>' +
           energyLine +
           '</button>';

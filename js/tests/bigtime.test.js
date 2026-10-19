@@ -108,7 +108,7 @@
   Game.test('Tours: the manager plans one show per city, nearest first, starting 5+ weeks out, with estimates', function (t) {
     var s = withManager(bigState());
     s.player.gear.van = { kind: 'used', shows: 0, worn: false };
-    t.ok(Game.rules.manager.tourRequestProblem(s, { cities: ['harlowFalls'], tier: 1 }), 'needs at least 2 cities');
+    t.ok(Game.rules.manager.tourRequestProblem(s, { cities: ['harlowFalls', 'cedarJunction'], tier: 1 }), 'needs at least 3 cities');
     s = Game.rules.manager.requestTour(s, { cities: ['portEllery', 'harlowFalls', 'cedarJunction'], tier: 1 }).state;
     t.equal(s.tourRequests.length, 1, 'planning');
     t.equal(Game.rules.manager.processTourRequests(s).state.inbox.length, s.inbox.length, 'not ready yet');
@@ -145,6 +145,52 @@
     var trips = Object.keys(r.state.trips).length;
     t.ok(trips >= 1 && trips < 3, 'travel chains from city to city (' + trips + ' trip' + (trips === 1 ? '' : 's') + ')');
     t.equal(lastMessage(r.state, 'tourProposal').resolved, 'accepted');
+  });
+
+  Game.test('Tour names: optional, kept from the request to the proposal, the booked shows, and the list of tours', function (t) {
+    var s = withManager(bigState());
+    s.player.gear.van = { kind: 'used', shows: 0, worn: false };
+    var long = new Array(Game.balance.manager.tour.nameMaxLength + 2).join('x');
+    t.ok(Game.rules.manager.tourRequestProblem(s, { name: long, cities: ['harlowFalls', 'cedarJunction', 'portEllery'], tier: 1 }), 'too long a name');
+    s = Game.rules.manager.requestTour(s, { name: '  The Neon Highway Tour  ', cities: ['harlowFalls', 'cedarJunction', 'portEllery'], tier: 1 }).state;
+    t.equal(s.tourRequests[0].name, 'The Neon Highway Tour', 'trimmed and kept');
+    s.day += Game.balance.manager.tour.planDays;
+    s = Game.rules.manager.processTourRequests(s).state;
+    var m = lastMessage(s, 'tourProposal');
+    t.equal(m.data.name, 'The Neon Highway Tour', 'on the proposal');
+    var r = Game.rules.manager.acceptTour(s, m.id, null).state;
+    var shows = Game.rules.booking.upcomingShows(r);
+    t.ok(shows.length === 3 && shows.every(function (e) { return e.tourName === 'The Neon Highway Tour'; }), 'every show knows its tour');
+    t.equal(r.tours.length, 1, 'one tour in the list');
+    t.equal(r.tours[0].name, 'The Neon Highway Tour');
+    t.equal(r.tours[0].shows, 3, '3 shows');
+    t.equal(r.tours[0].firstDay, shows[0].day, 'starts with the first show');
+
+    var plain = withManager(bigState());
+    plain.player.gear.van = { kind: 'used', shows: 0, worn: false };
+    plain = Game.rules.manager.requestTour(plain, { name: '   ', cities: ['harlowFalls', 'cedarJunction', 'portEllery'], tier: 1 }).state;
+    t.equal(plain.tourRequests[0].name, null, 'a blank name means no name');
+    t.equal(Game.rules.manager.tourLabel(null, ['harlowFalls', 'cedarJunction', 'portEllery']), 'Tour of Harlow Falls, Cedar Junction, and Port Ellery', 'unnamed tours go by their cities');
+  });
+
+  Game.test('Tours: no most cities (any that don\'t fit are left out with a reason)', function (t) {
+    var s = withManager(bigState());
+    s.player.gear.van = { kind: 'used', shows: 0, worn: false };
+    var away = Object.keys(Game.content.cities).filter(function (id) { return id !== 'hometown' && Game.content.cities[id].region !== 'international'; });
+    away.forEach(function (id) { s.cities[id].unlocked = true; });
+    t.ok(away.length > 8, away.length + ' cities');
+    t.equal(Game.rules.manager.tourRequestProblem(s, { cities: away, tier: 1 }), null, 'all of them is fine');
+    var plan = Game.rules.manager.planTour(s, away, 1, null);
+    t.equal(plan.shows.length + plan.skipped.length, away.length, 'every city is either planned or left out with a reason');
+  });
+
+  Game.test('Save: a version 16 save upgrades with an empty list of tours', function (t) {
+    var old = Game.util.clone(bigState());
+    old.version = 16;
+    delete old.tours;
+    var loaded = Game.save.parse(JSON.stringify(old));
+    t.ok(loaded.ok, 'loaded: ' + loaded.message);
+    t.sameContents(loaded.state.tours, [], 'no tours yet');
   });
 
   // ----- Promotion -----
@@ -368,7 +414,7 @@
     var ads = Game.balance.manager.tour.ads;
     var s = withManager(bigState());
     s.player.gear.van = { kind: 'used', shows: 0, worn: false };
-    s = Game.rules.manager.requestTour(s, { cities: ['harlowFalls', 'cedarJunction'], tier: 1 }).state;
+    s = Game.rules.manager.requestTour(s, { cities: ['harlowFalls', 'cedarJunction', 'portEllery'], tier: 1 }).state;
     s.day += Game.balance.manager.tour.planDays;
     s = Game.rules.manager.processTourRequests(s).state;
     var m = lastMessage(s, 'tourProposal');

@@ -591,6 +591,7 @@ Game.rules.booking = {
     if (record && record.day === s.day && record.venueId === entry.venueId) {
       record.tripId = trip;
       record.tour = Game.rules.travel.isTourShow(state, entry);
+      record.tourName = entry.tourName || null;
       record.production = production;
     }
     if (production > 0) {

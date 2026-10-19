@@ -4,6 +4,23 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14i: Tour names and tours of any size (2026-10-19)
+- **Name your tours:** "Ask for a tour" on the Manager screen has an optional name box (up to 40 characters).
+  - A blank name means no name; an unnamed tour goes by its cities ("Tour of Harlow Falls, Cedar Junction, and Port Ellery").
+  - Where the name shows:
+    - the manager's note while planning
+    - the Inbox proposal ("Tour proposal: The Neon Highway Tour, 11 shows")
+    - each show on the Calendar and Today ("Part of The Neon Highway Tour")
+    - Finances' show-by-show list (the trip group is labeled with the name)
+    - a new **Tours** list on the Career screen (every tour you booked, with its dates and how many shows, and whether
+      it's coming up, happening now, or done)
+- **Any number of cities:** a tour needs 3 or more (it was 2 to 8) with no limit. Cities that won't fit in your calendar
+  are left out of the plan with the reason. Tested with all 11 travel cities: 11 shows planned.
+- **Saves:** version 17 adds `state.tours`; older saves (including the late-career test save) upgrade with an empty list.
+- **Bug fixed:** the Manager screen's Auto-booking panel closed too early, so its venue sizes, nights, and "At most"
+  spilled outside it. Fixed, and "At most [2] shows a week" now sits on one line.
+- **Tests:** 314 passing (3 new: names carried through, no most cities, save upgrade). Version tag `2026-10-19d`.
+
 ### Session 14h: Late-career test save (2026-10-19)
 - **`test-saves/late-career.json`**: a save for testing new features. Import it from the title screen or Settings.
   - **Who:** Alex Rivera (guitar) with three bandmates. It's July 18, 2029, about three and a half years in.
@@ -630,6 +647,9 @@ No gameplay numbers changed: the balance checks give the same results as before.
 - Promotion (flyers, social ads) still only reaches the hometown; the Big campaign and press push reach other cities.
 
 ## Known issues / open decisions
+- Auto-booking can clash with a tour proposal: if the manager's Monday auto-booking emails a venue for a date the
+  proposal uses, accepting the tour says that show "doesn't fit anymore" and you have to ask for a new plan. A fix
+  could be to skip auto-booking dates that an open tour proposal is using.
 - Portraits are given out without looking at names (names and faces are both random), so a name and a face may not
   match what a player expects. If it bothers players, people could get a portrait pool that matches their name list.
 - **Touring profit after the manager and touring upgrades hasn't been measured yet.** The re-run of the touring

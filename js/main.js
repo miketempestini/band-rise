@@ -38,7 +38,7 @@ Game.app = {
   daySheetDay: null,    // the day Today's day sheet was last drawn for (it slides in once when a new day starts)
   financeDays: 7,        // which period the Finances screen shows (7, 30, or 90 days)
   calendarPage: 0,      // which 4 weeks the Calendar shows (0 = from this week; up to 2 with a manager)
-  tourDraft: null,      // a tour request being set up on the Manager screen: { cities, tier, earliestDay }
+  tourDraft: null,      // a tour request being set up on the Manager screen: { name, cities, tier, earliestDay }
   tourAds: {},          // ads picked on a tour proposal in the Inbox: { messageId: { cityId: packageId } }
   planWeekPicks: {},    // Plan week choices not applied yet: { dayOfWeek: actionId | 'clear' }
   templateNameDraft: '', // the name typed for a new week template
@@ -601,7 +601,7 @@ Game.app = {
   // The tour request form on the Manager screen.
   tourDraftSet: function (field, value) {
     var app = Game.app;
-    app.tourDraft = app.tourDraft || { cities: [], tier: 2, earliestDay: null };
+    app.tourDraft = app.tourDraft || { name: '', cities: [], tier: 2, earliestDay: null };
     if (field === 'city') {
       var i = app.tourDraft.cities.indexOf(value);
       if (i === -1) app.tourDraft.cities.push(value); else app.tourDraft.cities.splice(i, 1);
@@ -609,6 +609,12 @@ Game.app = {
       app.tourDraft[field] = value;
     }
     app.render();
+  },
+  // The tour name box: just remembered (no redraw, so you can keep typing).
+  tourDraftName: function (name) {
+    var app = Game.app;
+    app.tourDraft = app.tourDraft || { name: '', cities: [], tier: 2, earliestDay: null };
+    app.tourDraft.name = name;
   },
   requestTour: function () {
     var app = Game.app;

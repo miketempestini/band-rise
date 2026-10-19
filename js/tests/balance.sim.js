@@ -390,7 +390,7 @@ Game.balanceSim = {
         var away = Object.keys(s.cities).filter(function (id) { return id !== 'hometown' && s.cities[id].unlocked && Game.content.cities[id].region !== 'international'; })
           .sort(function (a, b) { return s.cities[b].fans - s.cities[a].fans; }).slice(0, 6);
         var tier = s.player.reputation >= Game.balance.milestones.theaterReputation && s.releases.length ? 3 : 2;
-        if (away.length >= 2) s = Game.rules.manager.requestTour(s, { cities: away, tier: tier }).state;
+        if (away.length >= Game.balance.manager.tour.minCities) s = Game.rules.manager.requestTour(s, { cities: away, tier: tier }).state;
       }
     }
 
