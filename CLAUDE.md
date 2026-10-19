@@ -53,6 +53,7 @@ The owner is not a developer. Explain plans and results in plain language.
 index.html        The game page. Loads scripts in order (see below).
 styles.css        All the look and layout.
 tests.html        The test page. Open it to see passing/failing tests.
+assets/           Pictures (title, backdrops, venues, portraits) and fonts (with their licenses).
 Design.md         The game design (source of truth).
 PROGRESS.md       Running log: built, next, known issues.
 js/
@@ -242,7 +243,7 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   `housing.weeklyBills(state)` for rent, never `balance.housing[...]` directly. Fame: `progress.fame` / `fameLadder`;
   the career card's numbers: `progress.careerCard` (drawn by `Game.ui.careerCard` on a canvas).
 - **Screens**: every screen uses the same header (`.screen__head`: title on the left, "← Back" on the right), panels with a
-  `.panel__title`, and no emoji in screen titles (tabs have the icons).
+  `.panel__title`, and no emoji (the look comes from the design system below, not from icons).
 - **Manager and touring upgrades**: `manager.dailyPosts` (nightly), tour ads (`state.adCampaigns`, `manager.processAds`,
   `adsRunning` stops buzz fading), `manager.proposalEstimate(state, messageId, ads)`, word of mouth in `travel.afterShow` and
   `travel.isTourShow` (fanRate bonus in `booking.playShow`), road costs split with `travel.yourShareOf`, and production via
@@ -258,9 +259,31 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   Yearly things use `isNewYear` and real months (awards: `awards.isNominationsDay` / `isCeremonyDay`).
 - **Two-year balance check**: `Game.balanceSim.renderYears` runs only on request (the button on tests.html, or
   `tests.html?years`); it takes about 5 minutes headless.
-- **Pictures and fonts** live in `assets/` (the title picture, `assets/fonts/` for the title font) and are loaded from
-  CSS by relative paths, which works from `file://`. The title screen's look and intro are all in styles.css
-  (`.title-screen--home`, scoped so other screens that reuse `.title-screen` aren't affected).
+- **Pictures and fonts** live in `assets/` (`title-stage.jpg`, `backdrops/`, `venues/`, `portraits/`, `fonts/` with
+  licenses) and are loaded by relative paths, which works from `file://`. Which venue painting goes with which tier and
+  the portrait list are content in `js/content/art.js` (`venueSrc`, `portraitSrc`); screen backdrops are CSS classes
+  (`.backdrop--today`, `--people`, `--songs`, `--map`, `--shop`, `--openmic`). The title screen's look and intro are in
+  styles.css (`.title-screen--home`).
+- **Look and feel (the "backstage" design system)**: each screen is drawn as a real object a band uses (day sheet,
+  clipboard, wall planner, backstage passes, flyers, settlement sheet, green-bar printout, price tags, road map). Rules
+  for keeping it consistent:
+  - Colors, fonts, and sizes are variables at the top of styles.css (`--house`, `--case`, `--paper`, `--ink`, `--amber`,
+    the spike-tape colors `--tape-show / -studio / -money / -job / -event`, `--font-body / -head / -hand / -logo`,
+    `--size-xs` to `--size-4xl`). Use them; don't type new hex colors for UI.
+  - Paper is the one bold thing: put `paper` on a document-like element and the text variables switch to ink inside it
+    (pop-ups get the same through `.modal`). Everything else is a quiet `.panel` (road case).
+  - Spike tape colors mean kinds of things: yellow shows and travel, blue studio and business, green money and session
+    work, orange the day job, pink events. Reuse them when something new needs a kind color.
+  - Fonts: Barlow (reading), Barlow Condensed (headings, numbers on readouts), Permanent Marker (only handwritten things),
+    Russo One (only the chrome logo). Headings are sentence case, not uppercase labels.
+  - Helpers: `Game.ui.helpers.ledMeter` (top bar meters; `balance.ui.ledSegments`), `artBanner` (a painting across the
+    top of a panel; use with `.panel--art`).
+  - Motion only where it means something, and every animation must stop under `prefers-reduced-motion` (a global rule
+    at the bottom of styles.css; JavaScript animations check `matchMedia` like the gig crowd meter).
+  - Screens that redraw often must not replay entrance animations: remember what was shown on `Game.app` (like
+    `daySheetDay` and `titleIntroPlayed`).
+- **Portraits**: every person has `portrait` (an id from `Game.content.art.portraits`), picked by
+  `Game.rules.people.portraitFor` when you meet them (no dice roll; it avoids faces a current contact or bandmate has).
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

@@ -12,17 +12,18 @@ Game.ui.nameBand = {
     var member = Game.rules.people.members(app.state)[0];
 
     root.innerHTML =
+      '<div class="backdrop backdrop--today" aria-hidden="true"></div>' +
       '<section class="title-screen reveal">' +
         '<p class="reveal__kicker">' + h.escape(member ? member.name : 'Someone') + ' said yes!</p>' +
         '<h1 class="screen__title screen__title--big">We\'re a band now.</h1>' +
         '<p class="hint">Every song lost ' + (-Game.balance.people.newMemberTightnessDrop) +
           ' tightness while they learn it. Rehearse to tighten things back up.</p>' +
-        '<div class="panel reveal__name">' +
+        '<div class="reveal__name notebook paper">' +
           '<label class="field">' +
             '<span class="field__label">Name your band</span>' +
             '<span class="reveal__name-row">' +
               '<input type="text" id="band-name" class="input" maxlength="' + Game.balance.people.bandNameMaxLength + '" value="' + h.escape(app.bandNameDraft || '') + '" autocomplete="off">' +
-              '<button class="btn" data-action="suggest">🎲 Another</button>' +
+              '<button class="btn" data-action="suggest" title="Suggest another name">Suggest another</button>' +
             '</span>' +
           '</label>' +
           '<p class="form-error">' + (app.revealError ? h.escape(app.revealError) : '') + '</p>' +

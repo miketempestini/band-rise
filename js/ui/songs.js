@@ -1,7 +1,7 @@
 // songs.js
-// The Songs screen: your whole catalog at a glance.
-// Each song shows its title, cover or original, stars, quality, tightness, and days since last played.
-// The song in progress shows its progress bar on top.
+// The Songs screen: your whole catalog at a glance, in front of a dim picture of a bedroom studio.
+// The song in progress is a page in a spiral notebook, with its progress bar. The catalog is printed like a cassette
+// tracklist: each song's title, cover or original, stars, quality, tightness, and days since last played.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
@@ -20,7 +20,7 @@ Game.ui.songs = {
     if (writing) {
       var perBlock = Game.rules.songs.progressPerBlock(state.player.skills.songwriting);
       var blocksLeft = Math.ceil((b.progressToFinish - writing.progress) / perBlock);
-      progressPanel = '<div class="panel">' +
+      progressPanel = '<div class="notebook paper">' +
         '<h3 class="panel__title">Writing now</h3>' +
         '<div class="writing">' +
           '<span class="writing__title">' + h.escape(writing.title) + '</span>' +
@@ -31,7 +31,7 @@ Game.ui.songs = {
         '</div>' +
       '</div>';
     } else {
-      progressPanel = '<div class="panel"><h3 class="panel__title">Writing now</h3>' +
+      progressPanel = '<div class="notebook paper"><h3 class="panel__title">Writing now</h3>' +
         '<p class="hint">Nothing in progress. Plan a <strong>Write</strong> block to start a new original.</p></div>';
     }
 
@@ -58,13 +58,14 @@ Game.ui.songs = {
 
     root.innerHTML =
       Game.ui.topbar.html(state, app.screen) +
+      '<div class="backdrop backdrop--songs" aria-hidden="true"></div>' +
       '<section class="screen">' +
         '<div class="screen__head">' +
           '<h1 class="screen__title">Songs</h1>' +
           '<button class="btn" data-action="back">← Back</button>' +
         '</div>' +
         progressPanel +
-        '<div class="panel">' +
+        '<div class="tracklist paper">' +
           '<h3 class="panel__title">Catalog: ' + originals + ' original' + (originals === 1 ? '' : 's') + ', ' +
             (songs.length - originals) + ' covers</h3>' +
           '<table class="song-table">' +
@@ -118,7 +119,7 @@ Game.ui.songs = {
         Game.content.releaseTypes[type].name + ' (' + (size.min === size.max ? size.min : size.min + '-' + size.max) + ')</button>';
     }).join('');
     if (!ready.length) {
-      return '<div class="panel"><h3 class="panel__title">💿 Release music</h3>' +
+      return '<div class="panel"><h3 class="panel__title">Release music</h3>' +
         '<p class="hint">Record your originals first (Book → Studio time). Recorded songs you haven\'t released yet show up here.</p></div>';
     }
     var list = ready.map(function (s) {
@@ -135,7 +136,7 @@ Game.ui.songs = {
         (fans ? Game.util.signed(p.buzz) + ' buzz' + (p.halved ? ' (halved: your last release was under ' + Game.balance.releases.spamWindowWeeks + ' weeks ago)' : '') + ', +' + Math.round(fans) + ' fans' : 'no buzz or fans yet (you need fans first)') +
         ', ' + Game.util.signed(p.reputation) + ' reputation. Streaming pays from next Sunday.</p>';
     }
-    return '<div class="panel"><h3 class="panel__title">💿 Release music</h3>' +
+    return '<div class="panel"><h3 class="panel__title">Release music</h3>' +
       '<div class="form-row__btns">' + types + '</div>' +
       '<div class="setlist-edit release-list">' + list + '</div>' +
       preview +

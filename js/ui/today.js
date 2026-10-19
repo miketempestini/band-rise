@@ -1,7 +1,8 @@
 // today.js
-// The Today screen (main hub): top bar, the three blocks of the day, End Day,
-// and side panels with this week's money, debt, and the player's stats.
-// Clicking a free block opens the action picker on top of this screen.
+// The Today screen (main hub): top bar, today's plan, End Day, and side panels with the shows coming up,
+// this week's money, debt, and the player's stats. It sits in front of a dim picture of the rehearsal room.
+// Today's plan is drawn as a paper "day sheet" (the itinerary a touring band gets for each day): one row per
+// block, with what's planned written in marker. Clicking a free or planned row opens the action picker.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
@@ -11,10 +12,14 @@ Game.ui.today = {
   render: function (root, app) {
     var h = Game.ui.helpers;
     var state = app.state;
-    var dow = Game.rules.day.dayOfWeek(state.day);
+
+    // The day sheet slides in once when a new day starts (not every time the screen redraws).
+    var freshDay = app.daySheetDay !== state.day;
+    app.daySheetDay = state.day;
 
     root.innerHTML =
       Game.ui.topbar.html(state, app.screen) +
+      '<div class="backdrop backdrop--today" aria-hidden="true"></div>' +
       '<div class="dashboard">' +
         '<aside class="dashboard__recap">' + Game.ui.dayResults.boxHtml(state) + '</aside>' +
         '<section class="dashboard__main">' +
@@ -22,13 +27,18 @@ Game.ui.today = {
           Game.ui.today.tipHtml(state) +
           Game.ui.today.toastsHtml(state) +
           Game.ui.today.eventHtml(state) +
-          '<h2 class="section-title">' + Game.content.calendar.dayNames[dow] + '\'s plan</h2>' +
-          '<div class="blocks" data-tour="blocks">' + Game.ui.today.blocksHtml(state) + '</div>' +
+          '<article class="daysheet paper paper--taped' + (freshDay ? ' daysheet--new' : '') + '">' +
+            '<header class="daysheet__head">' +
+              '<h2 class="daysheet__title">' + h.escape(h.dateLabel(state.day)) + '</h2>' +
+              '<span class="daysheet__doc">Day sheet</span>' +
+            '</header>' +
+            '<div class="blocks" data-tour="blocks">' + Game.ui.today.blocksHtml(state) + '</div>' +
+            '<p class="daysheet__notes"><span class="daysheet__notes-label">Notes</span>' + Game.ui.today.tonightHint(state) + '</p>' +
+          '</article>' +
           '<div class="end-day" data-tour="endDay">' +
             '<button class="btn btn--primary btn--big" data-action="endDay">End Day</button>' +
             Game.ui.today.timeSaversHtml(state) +
           '</div>' +
-          '<p class="hint">' + Game.ui.today.tonightHint(state) + '</p>' +
         '</section>' +
         '<aside class="dashboard__side">' +
           Game.ui.today.bandAlertHtml(state) +
@@ -88,7 +98,7 @@ Game.ui.today = {
         '<strong>' + h.escape(c.label) + '</strong><span>' + h.escape(c.description) + '</span>' +
         (c.safe ? '<em>Happens if you don\'t answer</em>' : '') + '</button>';
     }).join('');
-    return '<div class="event-card"><div class="event-card__title">⚡ ' + h.escape(event.title) + '</div>' +
+    return '<div class="event-card paper"><div class="event-card__title">' + h.escape(event.title) + '</div>' +
       '<p>' + h.escape(event.text(state, pending.data)) + '</p>' +
       '<div class="event-card__choices">' + buttons + '</div></div>';
   },
@@ -98,7 +108,7 @@ Game.ui.today = {
     var h = Game.ui.helpers;
     var tip = Game.rules.progress.tutorialCard(state);
     if (!tip) return '';
-    return '<div class="tip-card"><div class="tip-card__title">💡 ' + h.escape(tip.title) + '</div>' +
+    return '<div class="tip-card paper"><div class="tip-card__title">' + h.escape(tip.title) + '</div>' +
       '<p>' + h.escape(tip.text) + '</p>' +
       '<div class="tip-card__actions"><button class="btn btn--small btn--primary" data-action="dismissTip" data-tip="' + tip.id + '">Got it</button>' +
       '<button class="btn btn--small btn--ghost" data-action="tipsOff">Turn off tips</button></div></div>';
@@ -111,9 +121,9 @@ Game.ui.today = {
     var repeatProblem = Game.rules.actions.repeatProblem(state);
     var last = state.lastEvening;
     return '<button class="btn" data-action="skipAhead"' + (skipProblem ? ' disabled title="' + h.escape(skipProblem) + '"' : '') +
-        ' title="Ends quiet days until a show, a planned task, an event, a message, or the weekly summary">⏩ Skip to next commitment</button>' +
+        ' title="Ends quiet days until a show, a planned task, an event, a message, or the weekly summary">Skip to next commitment</button>' +
       (last ? '<button class="btn" data-action="repeatEvening"' + (repeatProblem ? ' disabled title="' + h.escape(repeatProblem) + '"' : '') + '>' +
-        '🔁 Repeat yesterday\'s evening (' + h.escape(Game.content.actions[last.actionId].name) + ')</button>' : '');
+        'Repeat yesterday\'s evening (' + h.escape(Game.content.actions[last.actionId].name) + ')</button>' : '');
   },
 
   // The three block cards: locked day job, a planned action, or free time.
@@ -131,7 +141,7 @@ Game.ui.today = {
         var venue = Game.content.venues[row.venueId];
         return '<button class="block block--show" data-action="openCalendar">' +
           '<span class="block__time">' + name + '</span>' +
-          '<span class="block__title">🎤 Show at ' + h.escape(venue.name) + '</span>' +
+          '<span class="block__title">Show at ' + h.escape(venue.name) + '</span>' +
           '<span class="block__detail">' + (row.problem ? '<span class="block__problem">' + h.escape(row.problem) + '</span>' :
             h.escape(Game.rules.booking.dealLabel(venue, e.deal, e.fee)) + ' · ' + e.songIds.length + ' songs · -' + b.energy.cost.gig + ' energy') + '</span>' +
           energyLine +
@@ -139,9 +149,9 @@ Game.ui.today = {
       }
       if (row.kind === 'studio') {
         var se = state.entries[row.entryId];
-        return '<button class="block block--show" data-action="openCalendar">' +
+        return '<button class="block block--studio" data-action="openCalendar">' +
           '<span class="block__time">' + name + '</span>' +
-          '<span class="block__title">🎙️ ' + h.escape(Game.content.studios[se.studio].name) + '</span>' +
+          '<span class="block__title">Recording: ' + h.escape(Game.content.studios[se.studio].name) + '</span>' +
           '<span class="block__detail">Recording "' + h.escape(state.songs[se.songId].title) + '" · ' +
             h.money(b.recording.studios[se.studio].cost) + ' · -' + b.energy.cost.studio + ' energy</span>' +
           energyLine +
@@ -149,9 +159,9 @@ Game.ui.today = {
       }
       if (row.kind === 'sessionWork') {
         var work = state.sessionWork[state.entries[row.entryId].workId];
-        return '<button class="block block--show" data-action="openCalendar">' +
+        return '<button class="block block--sessionWork" data-action="openCalendar">' +
           '<span class="block__time">' + name + '</span>' +
-          '<span class="block__title">🎧 Session work: ' + h.escape(work.bandName) + '</span>' +
+          '<span class="block__title">Session work: ' + h.escape(work.bandName) + '</span>' +
           '<span class="block__detail">' + (row.problem ? '<span class="block__problem">' + h.escape(row.problem) + '</span>' :
             'Playing on "' + h.escape(work.songTitle) + '" · +' + h.money(work.fee) + ' · -' + b.energy.cost.sessionWork + ' energy') + '</span>' +
           energyLine +
@@ -161,7 +171,7 @@ Game.ui.today = {
         var te = state.entries[row.entryId];
         return '<button class="block block--travel" data-action="openCalendar">' +
           '<span class="block__time">' + name + '</span>' +
-          '<span class="block__title">🚐 ' + (te.to === 'hometown' ? 'Driving home from ' + h.escape(Game.content.cities[te.from].name)
+          '<span class="block__title">' + (te.to === 'hometown' ? 'Driving home from ' + h.escape(Game.content.cities[te.from].name)
             : 'Travel to ' + h.escape(Game.content.cities[te.to].name)) + '</span>' +
           '<span class="block__detail">' + (te.legStart ? (Game.rules.travel.isFlight(te.from, te.to) ? 'Flights ' : 'Gas ') + h.money(Game.rules.travel.legGas(te.from, te.to, state)) + ' · ' : '') +
             '-' + b.travel.energyPerBlock + ' energy</span>' +
@@ -230,11 +240,11 @@ Game.ui.today = {
     var h = Game.ui.helpers;
     var unread = Game.rules.booking.unreadCount(state);
     var inbox = unread
-      ? '<div class="toast toast--inbox"><span>📬 You have ' + unread + ' new message' + (unread === 1 ? '' : 's') + '.</span>' +
+      ? '<div class="toast toast--inbox paper"><span>You have ' + unread + ' new message' + (unread === 1 ? '' : 's') + '.</span>' +
         '<button class="btn btn--small btn--primary" data-action="openInbox">Open Inbox</button></div>'
       : '';
     return inbox + state.toasts.map(function (t) {
-      return '<div class="toast' + (t.milestone ? ' toast--milestone' : '') + '"><span>' + (t.milestone ? '🏆 ' : '🎉 ') + h.escape(t.text) + '</span>' +
+      return '<div class="toast paper' + (t.milestone ? ' toast--milestone' : '') + '"><span>' + h.escape(t.text) + '</span>' +
         '<button class="btn btn--small" data-action="dismissToast" data-toast="' + t.id + '">Got it</button></div>';
     }).join('');
   },
@@ -248,16 +258,21 @@ Game.ui.today = {
       'Each shift you work adds +' + Game.balance.job.standingPerShift + '.</p></div>';
   },
 
-  // The next few booked shows.
+  // The next few booked shows, drawn as little gig posters (click one to open the Calendar).
   upcomingHtml: function (state) {
     var h = Game.ui.helpers;
     var shows = Game.rules.booking.upcomingShows(state).filter(function (e) { return e.day > state.day; }).slice(0, Game.balance.ui.upcomingShows);
     if (!shows.length) return '';
-    return '<div class="panel"><h3 class="panel__title">Coming up</h3><ul class="log">' + shows.map(function (e) {
+    return '<section class="upcoming"><h3 class="panel__title">Coming up</h3><div class="posters">' + shows.map(function (e) {
+      var venue = Game.content.venues[e.venueId];
       var days = e.day - state.day;
-      return '<li>🎤 ' + h.escape(Game.content.venues[e.venueId].name) + ', ' + h.dateLabel(e.day) +
-        ' <span class="muted">(in ' + days + ' day' + (days === 1 ? '' : 's') + ')</span></li>';
-    }).join('') + '</ul></div>';
+      return '<button class="poster" data-action="openCalendar" title="Open the Calendar">' +
+        '<span class="poster__venue">' + h.escape(venue.name) + '</span>' +
+        '<span class="poster__date">' + Game.rules.day.shortDate(e.day) + '</span>' +
+        '<span class="poster__city">' + h.escape(Game.content.cities[venue.cityId].name) + '</span>' +
+        '<span class="poster__when">in ' + days + ' day' + (days === 1 ? '' : 's') + '</span>' +
+        '</button>';
+    }).join('') + '</div></section>';
   },
 
   // A red panel when a bandmate wants to talk (satisfaction under 30).

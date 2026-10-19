@@ -4,6 +4,46 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14f: Backstage redesign (2026-10-19)
+- **The whole game got a new look**, built with the frontend-design skill. Each screen is drawn as a real thing a
+  working band uses. Paper is the bold part; everything around it is a quiet dark road-case panel.
+  - **Top bar:** a road-case lid with LED meters for energy and morale (amber when tired, red when burned out).
+  - **Tabs:** a mixing desk's scribble strip, with names in marker on white tape and a lit amber light on the screen
+    you're on. No more emoji.
+  - **Today:** a day sheet taped down with gaffer tape. Plans are written in marker, free time is pencil grey, and
+    pointing at a row highlights it. The previous day is an older sheet with red check marks, upcoming shows are
+    day-glo gig posters, banners are paper slips, and tips are sticky notes. It sits in front of the rehearsal room.
+  - **Pop-ups:** the action picker and day readout are clipboards.
+  - **Calendar:** a paper wall planner (today circled in red pen) with an index card for the selected day.
+  - **People:** laminated backstage passes (Band or Guest) with portraits.
+  - **Book:** venue flyers under a painting of each venue size.
+  - **Gig result:** the venue painting behind an LED crowd counter, then the result stamped on.
+  - **Songs:** a notebook page and a cassette tracklist.
+  - **Inbox:** paper slips with colored tape by kind.
+  - **Weekly summary:** a settlement sheet signed in pen with your name.
+  - **Finances:** the show-by-show list is printed on green-bar computer paper.
+  - **Shop:** manila price tags.
+  - **Map:** a folded road map with push pins.
+  - **Career:** gold records for milestones.
+  - **New career:** an open mic sign-up sheet.
+- **Spike tape** colors are the color code for kinds of things everywhere: yellow shows, blue studio and business,
+  green money and session work, orange the day job, pink events.
+- **Fonts** (saved in `assets/fonts/`, free licenses, work offline): Barlow, Barlow Condensed, Permanent Marker, and
+  Russo One for the logo.
+- **New art** (23 paintings made with Figma, kept in a Figma file called "Band Rise art"):
+  - 6 venue sizes (open mic, small room, club, theater, arena, festival)
+  - 5 backdrops (rehearsal room, bedroom studio, backstage hallway, highway, merch table)
+  - 12 portraits
+  All are shrunk to about 3.4 MB in total.
+- **Portraits:** every person now has one (`people.portraitFor`, no dice roll, avoids repeats among people you know).
+  Save version 16 gives people in older saves a face.
+- **Under the hood:**
+  - styles.css is rewritten around named colors and fonts. Paper switches the text colors to ink by itself.
+  - The old Phase 7 overrides and dead rules are gone.
+  - Every animation stops under "reduce motion", including the crowd counter.
+  - The career card uses the new colors and fonts.
+- **Tests:** 310 passing (3 new portrait tests).
+
 ### Session 14e: Epic title screen (2026-10-14)
 - **Concert background:** the title screen now sits on a painted 80s-poster picture
   (`assets/title-stage.jpg`, made with Figma's image generator). A rock star seen from behind holds a guitar up to a
@@ -547,6 +587,8 @@ No gameplay numbers changed: the balance checks give the same results as before.
 - Promotion (flyers, social ads) still only reaches the hometown; the Big campaign and press push reach other cities.
 
 ## Known issues / open decisions
+- Portraits are given out without looking at names (names and faces are both random), so a name and a face may not
+  match what a player expects. If it bothers players, people could get a portrait pool that matches their name list.
 - **Touring profit after the manager and touring upgrades hasn't been measured yet.** The re-run of the touring
   simulation was stopped before it finished (owner's call). Re-run it to check that tours now pay and the manager is
   still worth 15%.

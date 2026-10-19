@@ -14,17 +14,18 @@ Game.ui.songReveal = {
     var stars = Game.rules.songs.stars(song.quality);
 
     root.innerHTML =
+      '<div class="backdrop backdrop--songs" aria-hidden="true"></div>' +
       '<section class="title-screen reveal">' +
         '<p class="reveal__kicker">You finished a song!</p>' +
         '<div class="reveal__stars">' + h.stars(song.quality) + '</div>' +
         '<p class="reveal__quality">Quality <strong>' + song.quality + '</strong> · ' + stars + ' star' + (stars === 1 ? '' : 's') + '</p>' +
         '<p class="reveal__why">' + h.escape(Game.ui.songReveal.whyLine(song)) + '</p>' +
-        '<div class="panel reveal__name">' +
+        '<div class="reveal__name notebook paper">' +
           '<label class="field">' +
             '<span class="field__label">Name your song</span>' +
             '<span class="reveal__name-row">' +
               '<input type="text" id="song-title" class="input" maxlength="' + b.titleMaxLength + '" value="' + h.escape(song.title) + '" autocomplete="off">' +
-              '<button class="btn" data-action="suggest" title="Suggest another name">🎲 Another</button>' +
+              '<button class="btn" data-action="suggest" title="Suggest another name">Suggest another</button>' +
             '</span>' +
           '</label>' +
           '<p class="form-error" id="song-error">' + (app.revealError ? h.escape(app.revealError) : '') + '</p>' +

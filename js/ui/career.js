@@ -1,5 +1,6 @@
 // career.js (screen)
-// The Career screen: your fame level, milestones reached (and what's next), and lifetime stats.
+// The Career screen: your fame level, milestones reached (each one a gold record) and what's next, the shareable
+// career card, and lifetime stats.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
@@ -17,7 +18,7 @@ Game.ui.career = {
 
     var milestoneRow = function (m, done) {
       return '<div class="milestone' + (done ? ' milestone--done' : '') + '">' +
-        '<span class="milestone__num">' + (done ? '🏆' : m.number) + '</span>' +
+        '<span class="milestone__num"><span class="disc' + (done ? ' disc--gold' : '') + '">' + (done ? '' : m.number) + '</span></span>' +
         '<span class="milestone__name">' + m.name + '</span>' +
         '<span class="milestone__when muted">' + (done ? h.dateLabel(state.milestones[m.id]) : m.trigger) + '</span>' +
         '</div>';
@@ -41,13 +42,13 @@ Game.ui.career = {
             : '<p class="hint">The top. Legend.</p>') +
           '<div class="fame-ladder">' + Game.rules.progress.fameLadder(state).map(function (l) {
             return '<div class="fame-step' + (l.reached ? ' fame-step--reached' : '') + (l.current ? ' fame-step--current' : '') + '">' +
-              '<span class="fame-step__mark">' + (l.current ? '⭐' : (l.reached ? '✓' : '')) + '</span>' +
+              '<span class="fame-step__mark">' + (l.reached ? '✓' : '') + '</span>' +
               '<span class="fame-step__name">' + l.name + '</span>' +
               '<span class="fame-step__fans">' + l.minFans.toLocaleString() + ' fans</span></div>';
           }).reverse().join('') + '</div>' +
         '</div>' +
         '<div class="panel">' +
-          '<h3 class="panel__title">🎴 Career card</h3>' +
+          '<h3 class="panel__title">Career card</h3>' +
           '<p class="hint">A snapshot of your career to share with other players. Save it as an image.</p>' +
           '<canvas id="career-card" class="career-card" width="' + Game.ui.careerCard.width + '" height="' + Game.ui.careerCard.height + '"></canvas>' +
           '<div class="actions actions--left"><button class="btn btn--primary" data-action="saveCard">Save as image</button></div>' +
@@ -80,5 +81,11 @@ Game.ui.career = {
       saveCard: function () { Game.ui.careerCard.save(root.querySelector('#career-card'), state); }
     });
     Game.ui.careerCard.draw(root.querySelector('#career-card'), Game.rules.progress.careerCard(state));
+    // The card uses the game's fonts: draw it again once they've finished loading (the first time, they may not be).
+    if (document.fonts) {
+      document.fonts.load('800 72px "Barlow Condensed"').then(function () {
+        Game.ui.careerCard.draw(root.querySelector('#career-card'), Game.rules.progress.careerCard(state));
+      });
+    }
   }
 };

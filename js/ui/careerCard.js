@@ -12,12 +12,14 @@ Game.ui.careerCard = {
   width: 1200,
   height: 630,
 
-  // The game's colors (the same as the variables at the top of styles.css).
-  colors: { bg: '#1b1a2e', panel: '#262443', panel2: '#312e52', line: '#423e6b', text: '#f7f3ea', muted: '#b3adcb',
-    accent: '#ffb547', teal: '#4fd1c5', pink: '#ff7eb6' },
+  // The game's colors (the same as the variables at the top of styles.css: house, case, case-raised, case-edge,
+  // text, text-muted, amber, teal, and the pink spike tape).
+  colors: { bg: '#1d1a2f', panel: '#27242f', panel2: '#332f3d', line: '#46414f', text: '#f4f0e6', muted: '#b2acc5',
+    accent: '#ffb547', teal: '#4fd1c5', pink: '#ff5fa2' },
 
-  font: function (size, weight) {
-    return (weight || 'normal') + ' ' + size + 'px ui-rounded, "SF Pro Rounded", "Nunito", "Trebuchet MS", "Segoe UI", system-ui, sans-serif';
+  // The game's fonts: Barlow for small text, Barlow Condensed (head: true) for the big words.
+  font: function (size, weight, head) {
+    return (weight || 'normal') + ' ' + size + 'px ' + (head ? '"Barlow Condensed", "Arial Narrow"' : 'Barlow, "Helvetica Neue", Arial') + ', sans-serif';
   },
 
   // A rounded rectangle path.
@@ -59,15 +61,15 @@ Game.ui.careerCard = {
     ctx.font = self.font(26, 'bold');
     ctx.fillText('BAND RISE · CAREER CARD', 64, 82);
     ctx.fillStyle = c.text;
-    ctx.font = self.font(64, 'bold');
+    ctx.font = self.font(72, '800', true);
     ctx.fillText(card.name, 64, 160);
     ctx.fillStyle = c.muted;
     ctx.font = self.font(28);
     ctx.fillText(card.instrument + (card.band ? ' · ' + card.band : ' · solo') + ' · ' + card.home, 64, 202);
 
     // Fame level badge.
-    ctx.font = self.font(34, 'bold');
-    var fameText = '⭐ ' + card.fame;
+    ctx.font = self.font(36, '800', true);
+    var fameText = card.fame;
     var fw = ctx.measureText(fameText).width + 48;
     ctx.fillStyle = c.accent;
     self.roundRect(ctx, 64, 232, fw, 64, 32);
@@ -92,7 +94,7 @@ Game.ui.careerCard = {
       ctx.font = self.font(18, 'bold');
       ctx.fillText(t[0], x + 22, 364);
       ctx.fillStyle = c.text;
-      ctx.font = self.font(t[1].length > 14 ? 26 : 38, 'bold');
+      ctx.font = self.font(t[1].length > 14 ? 30 : 44, '800', true);
       ctx.fillText(t[1], x + 22, 418);
     });
 
@@ -104,7 +106,7 @@ Game.ui.careerCard = {
     ctx.font = self.font(18, 'bold');
     ctx.fillText('BIGGEST SHOW', 88, 502);
     ctx.fillStyle = c.text;
-    ctx.font = self.font(28, 'bold');
+    ctx.font = self.font(30, 'bold', true);
     var big = card.biggestShow;
     ctx.fillText(big ? (big.venueName ? big.venueName + ', ' + big.cityName + ' · ' : '') + big.crowd.toLocaleString() + ' people' +
       (big.date ? ' · ' + big.date : '') : 'Still waiting for the first one', 88, 538);

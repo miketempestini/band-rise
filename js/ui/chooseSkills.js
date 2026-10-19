@@ -45,9 +45,10 @@ Game.ui.chooseSkills = {
     }).join('');
 
     root.innerHTML =
+      '<div class="backdrop backdrop--openmic" aria-hidden="true"></div>' +
       '<section class="screen screen--narrow">' +
         '<h1 class="screen__title">Choose your skills</h1>' +
-        '<div class="panel">' +
+        '<div class="signup paper paper--taped">' +
           '<div class="alloc-head">' +
             '<div>' +
               '<div class="alloc-head__left' + (left === 0 ? ' alloc-head__left--done' : '') + '">' +

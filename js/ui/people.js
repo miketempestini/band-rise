@@ -1,6 +1,7 @@
 // people.js
-// The People screen: your band and your contacts, each with their stats, trait,
-// and a relationship bar. Band members also show satisfaction and why it moved this week.
+// The People screen: your band and your contacts, each drawn as a laminated backstage pass (with their portrait,
+// stats, trait, and a relationship bar). Band members get a "Band" pass and also show satisfaction and why it moved
+// this week; contacts get a "Guest" pass. It sits in front of a dim picture of a backstage hallway.
 // Invite and Remove happen right here; Jam, Hang out, and Talk are planned in a block on Today.
 
 window.Game = window.Game || {};
@@ -30,6 +31,7 @@ Game.ui.people = {
 
     root.innerHTML =
       Game.ui.topbar.html(state, app.screen) +
+      '<div class="backdrop backdrop--people" aria-hidden="true"></div>' +
       '<section class="screen">' +
         '<div class="screen__head">' +
           '<h1 class="screen__title">People</h1>' +
@@ -93,10 +95,14 @@ Game.ui.people = {
         (problem ? '<p class="pick__reason">' + h.escape(problem) + '</p>' : '');
     }
 
-    return '<div class="person' + (isMember ? ' person--member' : '') + '">' +
+    return '<div class="person paper' + (isMember ? ' person--member' : '') + '">' +
+      '<div class="person__pass">' + (isMember ? 'Band' : 'Guest') + '</div>' +
       '<div class="person__head">' +
-        '<span class="person__name">' + h.escape(p.name) + '</span>' +
-        '<span class="tag tag--' + (isMember ? 'original' : 'cover') + '">' + Game.content.roles[p.role].name + '</span>' +
+        (p.portrait ? '<img class="person__photo" src="' + Game.content.art.portraitSrc(p.portrait) + '" alt="">' : '') +
+        '<div class="person__who">' +
+          '<span class="person__name">' + h.escape(p.name) + '</span>' +
+          '<span class="person__role">' + Game.content.roles[p.role].person.charAt(0).toUpperCase() + Game.content.roles[p.role].person.slice(1) + '</span>' +
+        '</div>' +
       '</div>' +
       '<div class="person__stats">' +
         '<span>Skill <strong>' + p.skill + '</strong></span>' +

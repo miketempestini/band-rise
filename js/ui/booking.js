@@ -1,5 +1,6 @@
 // booking.js (screen)
-// The Booking screen: a tab for each city, then that city's venues grouped by tier. Each shows its
+// The Booking screen: a button for each city, then that city's venues grouped by tier (each group under a painting
+// of that size of venue, each venue drawn as a paper flyer). Each shows its
 // requirements (met or not), booking window, deals, acceptance chance, and expected crowd. Pick a venue
 // and deal, then a date, then send the email (no block needed, a little energy). The reply comes 1 to 3
 // days later. Out of town, each date shows the trip it would take, and open mics are a quick sign-up.
@@ -25,7 +26,7 @@ Game.ui.booking = {
       var open = state.cities[id].unlocked;
       return '<button class="btn btn--small' + (id === cityId ? ' btn--primary' : '') + '" data-action="city" data-city="' + id + '"' +
         (open ? '' : ' disabled title="' + h.escape(Game.rules.travel.cityUnlockProblem(state, id) || '') + '"') + '>' +
-        (open ? '' : '🔒 ') + h.escape(Game.content.cities[id].name) + '</button>';
+        h.escape(Game.content.cities[id].name) + '</button>';
     }).join('');
 
     // Venues grouped by tier.
@@ -36,9 +37,9 @@ Game.ui.booking = {
     });
     var sections = Object.keys(groups).map(function (tier) {
       var w = tiers[tier].bookAhead;
-      return '<div class="panel">' +
-        '<h3 class="panel__title">' + tiers[tier].name + 's · book ' + w.min + ' to ' + w.max + ' days ahead · $' +
-          tiers[tier].ticket + ' tickets</h3>' +
+      return '<div class="panel panel--art">' +
+        h.artBanner(Game.content.art.venues[tier], tiers[tier].name + 's', 'Book ' + w.min + ' to ' + w.max + ' days ahead, $' +
+          tiers[tier].ticket + ' tickets') +
         '<div class="venue-grid">' + groups[tier].map(function (v) { return self.venueHtml(state, app, v); }).join('') + '</div>' +
         '</div>';
     }).join('');
@@ -48,7 +49,7 @@ Game.ui.booking = {
       '<section class="screen">' +
         '<div class="screen__head">' +
           '<h1 class="screen__title">Book a show</h1>' +
-          '<div class="actions actions--left"><button class="btn" data-action="openManager">💼 Manager</button>' +
+          '<div class="actions actions--left"><button class="btn" data-action="openManager">Manager</button>' +
           '<button class="btn" data-action="back">← Back</button></div>' +
         '</div>' +
         h.notice(app.notice) +
@@ -115,8 +116,8 @@ Game.ui.booking = {
           '<button class="btn btn--ghost btn--small" data-action="openMicCancel">Never mind</button>' +
           (problem && !(preview.jobDays.length && !draft.jobChoice) ? ' <span class="pick__reason">' + h.escape(problem) + '</span>' : '') + '</div>';
     }
-    return '<div class="panel">' +
-      '<h3 class="panel__title">🎤 Open mic: ' + h.escape(venue.name) + ' · ' + Game.content.calendar.dayNames[venue.openMicDay] + ' evenings</h3>' +
+    return '<div class="panel panel--art">' +
+      h.artBanner(Game.content.art.venues[0], 'Open mic: ' + h.escape(venue.name), Game.content.calendar.dayNames[venue.openMicDay] + ' evenings') +
       '<p class="hint">No email, no odds: just sign up for a night (' + Game.balance.travel.openMicSignupDays.min + ' to ' +
         Game.balance.travel.openMicSignupDays.max + ' days ahead) and play ' + Game.balance.songs.setlist.openMic.songs + ' songs. A cheap way to win your first fans here.</p>' +
       '<div class="dates">' + dates + '</div>' + (draft ? '<div class="booking-form">' + form + '</div>' : '') +
@@ -133,7 +134,7 @@ Game.ui.booking = {
         ' ' + Game.content.calendar.blockNames[tr.slotBlock(t)].toLowerCase();
     };
     var legs = preview.legs.map(function (leg) {
-      return '<li>' + (tr.isFlight(leg.from, leg.to) ? '✈️ ' : '🚐 ') + h.escape(Game.content.cities[leg.from].name) + ' → ' + h.escape(Game.content.cities[leg.to].name) + ': ' +
+      return '<li>' + (tr.isFlight(leg.from, leg.to) ? 'Fly ' : 'Drive ') + h.escape(Game.content.cities[leg.from].name) + ' → ' + h.escape(Game.content.cities[leg.to].name) + ': ' +
         leg.slots.map(when).join(', ') + '</li>';
     }).join('');
     return '<div class="trip"><strong>The trip' + (preview.showCount > 1 ? ' (with your other show' + (preview.showCount > 2 ? 's' : '') + ' nearby)' : '') + '</strong>' +
@@ -173,7 +174,7 @@ Game.ui.booking = {
         '<div class="deal__head"><strong>' + Game.content.studios[id].name + '</strong><span class="deal__chance">' +
           h.money(st.cost) + ' a block · +' + st.bonus + '</span></div>' +
         '<p class="hint">' + h.escape(Game.content.studios[id].blurb) + '</p>' +
-        (problem ? '<p class="pick__reason">🔒 ' + h.escape(problem) + '</p>'
+        (problem ? '<p class="pick__reason">' + h.escape(problem) + '</p>'
           : '<div class="deal__foot"><span></span><button class="btn btn--small' + (chosen ? ' btn--primary' : '') +
             '" data-action="studioPick" data-studio="' + id + '"' + (originals.length ? '' : ' disabled title="Write an original first"') + '>' +
             (chosen ? 'Chosen' : 'Book this') + '</button></div>') +
@@ -182,7 +183,7 @@ Game.ui.booking = {
 
     var form = draft ? Game.ui.booking.studioFormHtml(state, app, draft, originals) : '';
     return '<div class="panel">' +
-      '<h3 class="panel__title">🎙️ Studio time · book ' + r.bookAheadDays + ' to ' + r.bookAheadMaxDays + ' days ahead · one song per block</h3>' +
+      '<h3 class="panel__title">Studio time · book ' + r.bookAheadDays + ' to ' + r.bookAheadMaxDays + ' days ahead · one song per block</h3>' +
       '<p class="hint">Recording quality = half the song\'s quality + a quarter of band musicianship + a quarter of its tightness + the studio bonus. ' +
         'Rehearse a song before recording it. ' +
         (state.player.gear.homeStudio ? 'You own a home setup: use "Record at home" from any free block.' : 'A home setup (in the Shop after your first recording) records for free, capped at ' + r.studios.home.qualityCap + '.') +
@@ -305,7 +306,7 @@ Game.ui.booking = {
     if (banned) status = '<p class="panel__warn">Won\'t book you until ' + h.dateLabel(vs.bannedUntilDay) + ' (no-show).</p>';
     else if (vs.pendingRequestId) status = '<p class="hint">Request sent. Waiting for their reply.</p>';
 
-    return '<div class="venue' + (draft ? ' venue--open' : '') + '">' +
+    return '<div class="venue paper' + (draft ? ' venue--open' : '') + '">' +
       '<div class="venue__head"><span class="venue__name">' + h.escape(venue.name) + '</span>' +
         '<span class="muted">' + venue.capacity.toLocaleString() + ' capacity · ' + Game.content.calendar.blockNames[venue.showBlock] + ' shows</span></div>' +
       '<div class="venue__stats"><span>Expected crowd <strong>' + crowd.low + ' to ' + crowd.high + '</strong> of ' + venue.capacity.toLocaleString() + '</span>' +

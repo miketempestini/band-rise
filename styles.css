@@ -1,62 +1,212 @@
 /* styles.css
    All the look and layout for Band Rise. Desktop-first.
-   Colors and sizes are kept as named variables at the top so the look is easy to change in one place. */
+
+   The look is "backstage": each screen is drawn as the real thing a working band uses for that job.
+   - Paper is the one bold thing: today's plan is a day sheet taped down with gaffer tape, pop-ups are clipboards,
+     upcoming shows are little gig posters.
+   - Everything around the paper stays quiet: a dark room ("house lights down") and plain matte road-case panels.
+   - Spike tape (the colored tape crews use to mark a stage) is the color code for kinds of things: yellow for shows,
+     blue for the studio, green for money and session work, orange for the day job, pink for events, white for plans.
+
+   Colors, fonts, and sizes are named variables at the top, so the look is easy to change in one place.
+   Inside paper (.paper, and every pop-up), the text color variables switch to dark ink, so anything drawn on paper
+   turns dark by itself. */
+
+/* ---------- Fonts ----------
+   All saved in assets/fonts, so they work offline and from a double-click (licenses in assets/fonts/LICENSE.txt).
+   Barlow: everything you read. Barlow Condensed: headings and poster headlines. Permanent Marker: things written by
+   hand (plans on the day sheet, the tabs). Russo One: the chrome logo only. */
+
+@font-face { font-family: "Barlow"; src: url("assets/fonts/barlow-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Barlow"; src: url("assets/fonts/barlow-600.woff2") format("woff2"); font-weight: 500 700; font-display: swap; }
+@font-face { font-family: "Barlow Condensed"; src: url("assets/fonts/barlow-condensed-700.woff2") format("woff2"); font-weight: 600 700; font-display: swap; }
+@font-face { font-family: "Barlow Condensed"; src: url("assets/fonts/barlow-condensed-800.woff2") format("woff2"); font-weight: 800 900; font-display: swap; }
+@font-face { font-family: "Permanent Marker"; src: url("assets/fonts/permanent-marker-400.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Russo One"; src: url("assets/fonts/russo-one.woff2") format("woff2"); font-display: block; }
+
+/* ---------- Colors, type, and shapes ---------- */
 
 :root {
-  --bg: #1b1a2e;          /* page background: deep indigo night */
-  --panel: #262443;       /* panels and cards */
-  --panel-2: #312e52;     /* slightly lighter panels (locked blocks, inputs) */
-  --line: #423e6b;        /* borders */
-  --text: #f7f3ea;        /* main text: warm off-white */
-  --text-muted: #b3adcb;  /* secondary text */
-  --accent: #ffb547;      /* main highlight: stage-light amber */
-  --accent-text: #1b1a2e; /* text on top of the accent color */
-  --teal: #4fd1c5;        /* friendly second color: info, tips */
-  --pink: #ff7eb6;        /* third color: events and celebrations */
-  --good: #5fd38d;        /* success / passing */
-  --bad: #ff6b6b;         /* failure / warnings */
-  --radius: 14px;         /* rounded, cartoon-ish corners */
-  --shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); /* chunky "cartoon" offset shadow */
-  --space-1: 8px;         /* spacing scale: use these for gaps and padding */
+  /* The room */
+  --house: #1d1a2f;         /* page background: the room with the house lights down (matches the title picture) */
+  --house-deep: #141226;    /* darker strips: behind the tabs */
+
+  /* Road cases: the quiet panels */
+  --case: #27242f;          /* panels */
+  --case-raised: #332f3d;   /* inputs and rows inside a panel */
+  --case-edge: #46414f;     /* panel borders */
+  --metal: #b4b9c1;         /* aluminium trim */
+
+  /* Paper and ink: the documents */
+  --paper: #f1ede2;         /* copy paper under stage light */
+  --paper-old: #e8e0ca;     /* older paper (the previous day's sheet) */
+  --paper-rule: #d5ccb6;    /* ruled lines on paper */
+  --ink: #1f2240;           /* marker and printing ink */
+  --ink-soft: #5b5a6f;      /* lighter printing */
+  --red-pen: #c4302a;       /* problems, warnings, and check marks on paper */
+  --highlighter: rgba(255, 226, 64, 0.55); /* yellow highlighter: what your pointer is over, on paper */
+  --blue-pen: #1f3f9e;      /* signatures */
+  --sticky: #fff1a1;        /* sticky notes (tips) */
+
+  /* Light */
+  --amber: #ffb547;         /* stage light: main buttons, lit LEDs, cash */
+  --amber-deep: #e8921c;
+  --amber-ink: #2b1a02;     /* text on amber */
+
+  /* Spike tape: the color code for kinds of things */
+  --tape-show: #f5c518;     /* shows and the road to them */
+  --tape-studio: #3fa9f5;   /* recording, messages */
+  --tape-money: #3ccf7a;    /* money and session work */
+  --tape-job: #ff8a3d;      /* the day job */
+  --tape-event: #ff5fa2;    /* events and milestones */
+  --tape-plan: #ecebe6;     /* planned actions */
+  --gaffer: #2f2f35;        /* black cloth gaffer tape */
+
+  /* Good and bad news */
+  --good: #5fd38d;
+  --bad: #ff6b6b;
+
+  /* What the rest of the styles use. Inside paper these switch to ink colors (see "Paper" below). */
+  --bg: var(--house);
+  --panel: var(--case);
+  --panel-2: var(--case-raised);
+  --line: var(--case-edge);
+  --text: #f4f0e6;          /* main text: warm off-white */
+  --text-muted: #b2acc5;    /* secondary text */
+  --accent: var(--amber);   /* highlights in text */
+  --accent-text: var(--amber-ink);
+  --teal: #4fd1c5;          /* tips and links */
+  --pink: var(--tape-event);
+
+  /* Fonts */
+  --font-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --font-head: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-hand: "Permanent Marker", "Marker Felt", "Comic Sans MS", cursive;
+  --font-logo: "Russo One", Impact, sans-serif;
+
+  /* Type sizes: each step is about 1.25 times the one before */
+  --size-xs: 13px;
+  --size-s: 14px;
+  --size-m: 16px;
+  --size-l: 20px;
+  --size-xl: 25px;
+  --size-2xl: 31px;
+  --size-3xl: 39px;
+  --size-4xl: 49px;
+
+  /* Shapes and depth */
+  --radius: 6px;            /* road cases and buttons */
+  --radius-paper: 2px;      /* paper is nearly square */
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 24px -14px rgba(0, 0, 0, 0.8);
+  --shadow-paper: 0 2px 3px rgba(0, 0, 0, 0.35), 0 18px 30px -14px rgba(0, 0, 0, 0.8);
+  --case-grain: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1.3px); /* the pebbled covering on road cases */
+
+  --space-1: 8px;           /* spacing scale: use these for gaps and padding */
   --space-2: 12px;
   --space-3: 16px;
   --space-4: 24px;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  /* A faint warm work light from above, over the dark room. */
+  background: radial-gradient(ellipse 70% 40% at 50% -8%, rgba(255, 181, 71, 0.08), transparent 70%), var(--house);
   color: var(--text);
-  /* Rounded system fonts where available (no downloads, so it works offline). */
-  font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: var(--size-m);
   line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* Keyboard users always see where they are. */
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+/* Numbers line up in columns everywhere. */
+.stat__value, .rows dd, .num, .skill__value { font-variant-numeric: tabular-nums; }
+
+/* ---------- Paper ----------
+   Anything with .paper is a sheet of paper: light, nearly square, with a soft shadow. Inside it the text colors
+   switch to ink, so everything drawn on it turns dark by itself. Pop-ups (.modal) get the same ink colors. */
+
+.paper, .modal {
+  --text: var(--ink);
+  --text-muted: var(--ink-soft);
+  --line: var(--paper-rule);
+  --panel: #e9e3d4;
+  --panel-2: #e2dbca;
+  --accent: #a94f08;        /* amber is too pale on paper, so highlights become burnt-orange ink */
+  --accent-text: #fff;
+  --good: #1e7a45;
+  --bad: var(--red-pen);
+  --teal: #16677d;
+  --pink: #b02d6a;
+}
+.paper {
+  position: relative;
+  color: var(--ink);
+  background: linear-gradient(172deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.05)), var(--paper);
+  border-radius: var(--radius-paper);
+  box-shadow: var(--shadow-paper);
+}
+.paper--old { background-color: var(--paper-old); }
+
+/* A strip of black gaffer tape holding the paper down at the top, with torn ends. */
+.paper--taped::before {
+  content: "";
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  width: 136px;
+  height: 30px;
+  transform: translateX(-50%) rotate(-2deg);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #3d3d44, var(--gaffer));
+  clip-path: polygon(2% 0, 98% 0, 100% 22%, 97% 45%, 100% 70%, 97% 100%, 3% 100%, 0 76%, 3% 50%, 0 25%);
+}
+
+/* Buttons on paper are drawn in ink: an outline, no fill. Main (amber) buttons stay amber. */
+.paper .btn:not(.btn--primary), .modal .btn:not(.btn--primary) {
+  color: var(--ink);
+  background: transparent;
+  border-color: rgba(31, 34, 64, 0.45);
+  box-shadow: none;
+}
+.paper .btn:not(.btn--primary):hover:not(:disabled),
+.modal .btn:not(.btn--primary):hover:not(:disabled) { border-color: var(--ink); background: rgba(31, 34, 64, 0.06); }
 
 /* ---------- Buttons ---------- */
 
 .btn {
-  font: inherit;
+  font: 600 var(--size-s)/1.2 var(--font-body);
   color: var(--text);
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 18px;
+  background: linear-gradient(180deg, #3a3646, #2f2b3a);
+  border: 1px solid #4f4a5b;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 2px 0 rgba(0, 0, 0, 0.35);
+  padding: 9px 16px;
   cursor: pointer;
+  transition: transform 0.05s;
 }
-.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:hover:not(:disabled) { border-color: var(--metal); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn--primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: bold; }
-.btn--primary:hover:not(:disabled) { filter: brightness(1.08); }
-.btn--ghost { background: transparent; }
-.btn--big { padding: 14px 28px; font-size: 18px; }
-.btn--small { padding: 4px 10px; font-size: 14px; }
-.btn__note { display: block; font-size: 13px; font-weight: normal; opacity: 0.8; }
+/* The main button on a screen: lit like a stage light. */
+.btn--primary {
+  color: var(--amber-ink);
+  background: linear-gradient(180deg, #ffd083, var(--amber) 45%, var(--amber-deep));
+  border-color: #b8740f;
+  font-weight: 700;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 2px 0 rgba(0, 0, 0, 0.35), 0 0 22px rgba(255, 181, 71, 0.22);
+}
+.btn--primary:hover:not(:disabled) { border-color: #8a5508; filter: brightness(1.05); }
+.btn--ghost { background: transparent; box-shadow: none; }
+.btn--big { font: 800 var(--size-xl)/1 var(--font-head); letter-spacing: 0.5px; padding: 14px 34px; }
+.btn--small { padding: 4px 10px; font-size: var(--size-xs); }
+.btn__note { display: block; font: 400 var(--size-xs)/1.3 var(--font-body); opacity: 0.8; }
 
 /* ---------- Inputs ---------- */
 
@@ -65,55 +215,75 @@ body {
   color: var(--text);
   background: var(--panel-2);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) inset;
+  padding: 9px 12px;
   width: 100%;
 }
-.input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.input:focus { outline: 2px solid var(--amber); outline-offset: 1px; }
 .input--money { width: 110px; }
 .input--tiny { width: 64px; padding: 2px 6px; }
 .input--select { width: auto; padding: 2px 6px; }
 
 .field { display: block; margin-bottom: 20px; }
-.field__label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+.field__label { display: block; margin-bottom: 8px; color: var(--text-muted); font: 700 var(--size-m) var(--font-head); letter-spacing: 0.3px; }
 
 /* ---------- General layout ---------- */
 
 .screen { padding: 40px 48px; max-width: 1200px; margin: 0 auto; }
 .screen--narrow { max-width: 760px; }
-.screen__title { margin: 0 0 24px; font-size: 36px; color: var(--accent); }
+.screen__title { margin: 0 0 24px; font: 800 var(--size-4xl)/1 var(--font-head); letter-spacing: 0.3px; color: var(--text); }
 .screen__title--big { font-size: 64px; text-shadow: 3px 3px 0 #000; }
-.section-title { margin: 0 0 16px; font-size: 22px; }
+.section-title { margin: 0 0 16px; font: 800 var(--size-xl) var(--font-head); }
 
+/* A road-case panel: dark, matte, with a faint pebbled covering. The quiet surface for most things. */
 .panel {
-  background: var(--panel);
+  background: var(--case-grain) 0 0 / 4px 4px, var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
 }
-.panel__title { margin: 0 0 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+.panel__title { margin: 0 0 12px; font: 700 var(--size-l)/1.1 var(--font-head); letter-spacing: 0.3px; color: var(--text); }
 .panel__warn { margin: 12px 0 0; color: var(--bad); }
-.panel--debt { border-color: var(--bad); }
+/* Trouble (debt, an unhappy bandmate, job trouble): a red stripe down the side. */
+.panel--debt { border-left: 6px solid var(--bad); }
 .panel--gameover { max-width: 560px; text-align: left; }
 
 .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; }
 .actions--left { justify-content: flex-start; }
-.hint { color: var(--text-muted); font-size: 14px; margin: 8px 0 0; }
+.hint { color: var(--text-muted); font-size: var(--size-s); line-height: 1.5; margin: 8px 0 0; }
 .muted { color: var(--text-muted); }
 .form-error { color: var(--bad); min-height: 1.4em; margin: 0; }
 
-.notice { margin: 16px 0; padding: 12px 16px; border-radius: 8px; border: 1px solid; max-width: 560px; }
-.notice--error { border-color: var(--bad); color: var(--bad); background: rgba(255, 107, 107, 0.08); }
-.notice--info { border-color: var(--good); color: var(--good); background: rgba(95, 211, 141, 0.08); }
+/* A message box: a colored stripe down the side. */
+.notice { margin: 16px 0; padding: 12px 16px; border-radius: var(--radius); border: 1px solid var(--line); border-left-width: 6px;
+  max-width: 560px; background: var(--panel); }
+.notice--error { border-left-color: var(--bad); color: var(--bad); }
+.notice--info { border-left-color: var(--good); color: var(--text); }
 
 /* Label / value rows, like "Cash ...... $500" */
 .rows { display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; margin: 0; }
 .rows dt { color: var(--text-muted); }
-.rows dd { margin: 0; text-align: right; font-weight: bold; }
+.rows dd { margin: 0; text-align: right; font-weight: 600; }
 .rows--big { font-size: 18px; }
-.rows__total { border-top: 1px solid var(--line); padding-top: 8px; color: var(--text) !important; font-weight: bold; }
+.rows__total { border-top: 1px solid var(--line); padding-top: 8px; color: var(--text) !important; font-weight: 600; }
 .highlight { color: var(--accent); }
+
+/* A picture behind a whole screen (like the rehearsal room behind Today), dimmed and softened so whatever is in
+   front stays easy to read. */
+.backdrop { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+.backdrop::before { content: ""; position: absolute; inset: -12px; background: center / cover no-repeat; filter: blur(3px) saturate(0.9); }
+.backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(20, 18, 38, 0.5), rgba(20, 18, 38, 0.74) 45%, rgba(20, 18, 38, 0.9)),
+    radial-gradient(ellipse at center, transparent 40%, rgba(10, 8, 20, 0.6));
+}
+.backdrop--today::before { background-image: url("assets/backdrops/rehearsal.jpg"); }
 
 /* ---------- Title screen ---------- */
 
@@ -140,14 +310,6 @@ body {
    Layers, back to front: the stage picture, a pulsing glow behind the rock star, a dark shade so the words are easy
    to read, then the title and buttons (on the right, since the rock star stands on the left of the picture).
    The intro only runs while the screen has the class title-screen--intro (once per page load; a click removes it). */
-
-/* The title font: Russo One (free, SIL Open Font License; see assets/fonts/LICENSE.txt). It's saved in the project,
-   so it works offline and from a double-click. Only the big title uses it. */
-@font-face {
-  font-family: "Russo One";
-  src: url("assets/fonts/russo-one.woff2") format("woff2");
-  font-display: block;
-}
 
 .title-screen--home {
   position: relative;
@@ -287,650 +449,863 @@ body {
   .title-screen--home * { animation: none !important; }
 }
 
-/* ---------- New career: instrument choices ---------- */
-
-.choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.choice input { position: absolute; opacity: 0; }
-.choice__body {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  height: 100%;
-  padding: 16px;
-  background: var(--panel-2);
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-.choice input:checked + .choice__body { border-color: var(--accent); }
-.choice input:focus-visible + .choice__body { outline: 2px solid var(--accent); }
-.choice__title { font-size: 20px; font-weight: bold; }
-.choice__bonus { color: var(--accent); font-weight: bold; }
-.choice__blurb { color: var(--text-muted); font-size: 14px; }
-
-/* ---------- Top bar ---------- */
+/* ---------- Top bar: the lid of a road case ----------
+   The chrome logo and who you are on the left, then readouts: cash, debt, LED meters for energy and morale,
+   reputation, date, and rent. An aluminium edge runs along the bottom. */
 
 .topbar {
   display: flex;
-  align-items: center;
-  gap: 28px;
-  padding: 12px 24px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
+  align-items: stretch;    /* every readout is the same height, so their labels line up along the top */
+  padding: 12px 24px 12px;
+  background: var(--case-grain) 0 0 / 4px 4px, linear-gradient(180deg, #24212c, #1b1922);
+  border-bottom: 4px solid;
+  border-image: linear-gradient(180deg, #dfe2e6, #8b9099 50%, #555962) 1;
 }
-.topbar__who { display: flex; flex-direction: column; margin-right: auto; }
-.topbar__brand { color: var(--accent); font-weight: bold; font-size: 18px; }
-.topbar__name { color: var(--text-muted); font-size: 14px; }
-.topbar__nav { margin-left: 4px; }
+.topbar__who { display: flex; flex-direction: column; margin-right: auto; padding-right: 24px; line-height: 1.25; }
+/* The logo: small chrome letters, like the title screen. */
+.topbar__brand {
+  align-self: flex-start;
+  margin-bottom: 5px;
+  font: 23px/1 var(--font-logo);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transform: skew(-9deg);
+  color: transparent;
+  background: linear-gradient(180deg, #a9e4ff 0%, #ffffff 42%, #5d7290 50%, #161a2c 53%, #ffb547 78%, #fff3c9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 0 4px rgba(255, 79, 160, 0.6));
+}
+.topbar__name { color: var(--text); font-size: var(--size-s); }
+.topbar__fame { color: var(--amber); font: 700 var(--size-s) var(--font-head); letter-spacing: 0.4px; }
 
-.stat { display: flex; flex-direction: column; min-width: 70px; }
-.stat__label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-.stat__value { font-size: 18px; font-weight: bold; }
-.stat__value--cash { color: var(--accent); }
+.stat { display: flex; flex-direction: column; justify-content: flex-start; min-width: 70px; padding: 0 18px; border-left: 1px solid rgba(255, 255, 255, 0.08); }
+.stat__label { font: 700 var(--size-xs) var(--font-head); letter-spacing: 0.6px; color: var(--text-muted); }
+.stat__value { font: 700 var(--size-xl)/1.1 var(--font-head); color: var(--text); }
+.stat__value--cash { color: var(--amber); text-shadow: 0 0 14px rgba(255, 181, 71, 0.35); }
 .stat--debt .stat__value, .stat--warn .stat__value { color: var(--bad); }
 .stat--debt .btn { margin-top: 4px; }
 
-.meter { display: block; height: 6px; margin-top: 4px; background: var(--panel-2); border-radius: 3px; overflow: hidden; }
-.meter__fill { display: block; height: 100%; background: var(--accent); }
+/* LED meters (energy and morale): a row of little lights like on a mixing desk. Green normally, amber when tired,
+   red when burned out. */
+.led { display: flex; gap: 3px; margin-top: 5px; }
+.led__light { width: 7px; height: 9px; border-radius: 1.5px; background: #3a3542; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.5) inset; }
+.led__light--on { background: var(--good); box-shadow: 0 0 6px rgba(95, 211, 141, 0.7); }
+.led--warn .led__light--on { background: var(--amber); box-shadow: 0 0 6px rgba(255, 181, 71, 0.7); }
+.led--bad .led__light--on { background: var(--bad); box-shadow: 0 0 6px rgba(255, 107, 107, 0.7); }
 
-/* ---------- Today: dashboard ---------- */
+/* A plain bar (skills, tightness, and other meters around the game). On paper it's drawn in ink. */
+.meter { display: block; height: 6px; margin-top: 4px; background: rgba(0, 0, 0, 0.35); border-radius: 3px; overflow: hidden;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4) inset; }
+.meter__fill { display: block; height: 100%; background: var(--amber); }
+.paper .meter, .modal .meter { background: rgba(31, 34, 64, 0.12); box-shadow: none; }
+.paper .meter__fill, .modal .meter__fill { background: var(--ink); }
+
+/* ---------- Tabs: a mixing desk's scribble strip ----------
+   Each screen's name is written in marker on a piece of white console tape. The little light above a name is on
+   for the screen you're on. */
+
+.tabs { padding: 13px 24px 10px; background: linear-gradient(180deg, #110f1f, #1a1828); border-bottom: 1px solid #000;
+  box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.8); overflow-x: auto; }
+.tabs__strip { display: flex; gap: 3px; width: max-content; }
+.tab {
+  position: relative;
+  padding: 9px 14px 7px;
+  font: 17px/1 var(--font-hand);
+  color: var(--ink);
+  background: linear-gradient(180deg, #f3f1ea, #dcd8cd);
+  border: none;
+  border-radius: 1px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  opacity: 0.74;
+  cursor: pointer;
+}
+.tab:nth-child(odd) { transform: rotate(-0.4deg); }
+.tab:nth-child(3n) { transform: rotate(0.5deg); }
+.tab::before { content: ""; position: absolute; top: -10px; left: 50%; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%;
+  background: #3b3646; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.6) inset; }
+.tab:hover { opacity: 1; }
+.tab--active { opacity: 1; background: linear-gradient(180deg, #ffffff, #efece3); }
+.tab--active::before { background: var(--amber); box-shadow: 0 0 8px 2px rgba(255, 181, 71, 0.7); }
+/* New messages, or a bandmate who wants to talk: a small red light with a number. */
+.tab .badge--count { margin-left: 4px; padding: 0 6px; min-width: 18px; border: none; border-radius: 9px; font: 700 11px/18px var(--font-body);
+  text-align: center; color: #fff; background: #e23b3b; box-shadow: 0 0 8px rgba(255, 70, 70, 0.6); vertical-align: 2px; }
+
+/* ---------- Today ----------
+   Three columns: the previous day's sheet, today's day sheet, and the side panels (shows coming up, stats, this
+   week). All in front of the dimmed rehearsal room. */
 
 .dashboard {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr) 360px; /* the previous day, today's plan, the side panels */
+  grid-template-columns: 290px minmax(0, 1fr) 340px;
   grid-template-areas: "recap main side";
-  gap: 24px;
-  padding: 32px 24px;
+  gap: 32px;
+  padding: 36px 28px 48px;
   max-width: 1640px;
   margin: 0 auto;
   align-items: start;
 }
 .dashboard__recap { grid-area: recap; }
-.dashboard__main { grid-area: main; }
+.dashboard__main { grid-area: main; width: 100%; max-width: 820px; justify-self: center; }
 .dashboard__side { grid-area: side; }
-/* Narrower windows: the previous day sits above today's plan. */
+/* Narrower windows: the previous day sits above today's sheet. */
 @media (max-width: 1200px) {
-  .dashboard { grid-template-columns: minmax(0, 1fr) 360px; grid-template-rows: auto 1fr; grid-template-areas: "recap side" "main side"; }
+  .dashboard { grid-template-columns: minmax(0, 1fr) 320px; grid-template-rows: auto 1fr; grid-template-areas: "recap side" "main side"; }
 }
 
-.blocks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+/* The day sheet: today's plan on paper, taped down. It slides in once when a new day starts. */
+.daysheet { padding: 30px 34px 22px; margin: 14px 0 0; }
+.daysheet--new { animation: sheet-in 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+@keyframes sheet-in { from { opacity: 0; transform: translateY(-16px) rotate(-1deg); } }
+.daysheet__head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-bottom: 12px; border-bottom: 3px double var(--ink); }
+.daysheet__title { margin: 0; font: 800 var(--size-3xl)/1 var(--font-head); color: var(--ink); }
+.daysheet__doc { font: 700 var(--size-m) var(--font-head); color: var(--ink-soft); white-space: nowrap; }
+.daysheet__notes { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--paper-rule); font-size: var(--size-s); color: var(--ink-soft); }
+.daysheet__notes-label { margin-right: 10px; font: 700 var(--size-m) var(--font-head); color: var(--ink); }
+
+/* Each block of the day is a row on the sheet: the time on the left, the plan written in marker, details printed
+   under it, and energy before and after on the right. A strip of spike tape on the left says what kind it is. */
+.blocks { display: flex; flex-direction: column; }
 .block {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-height: 150px;
-  padding: 20px;
-  border-radius: var(--radius);
-  border: 2px dashed var(--line);
-  background: var(--panel);
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  grid-template-areas: "time title energy" "time detail energy";
+  column-gap: 16px;
+  row-gap: 3px;
+  align-items: center;
+  padding: 14px 12px 14px 18px;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--paper-rule);
 }
-.block--locked { border-style: solid; background: var(--panel-2); }
+.block:last-child { border-bottom: none; }
+button.block { width: 100%; font: inherit; text-align: left; cursor: pointer; }
+/* Pointing at a row runs a yellow highlighter across it. */
+button.block:hover { background: linear-gradient(transparent 14%, var(--highlighter) 14%, var(--highlighter) 86%, transparent 86%); }
+.block__time { grid-area: time; align-self: start; padding-top: 7px; font: 700 var(--size-m) var(--font-head); color: var(--ink-soft); }
+.block__title { grid-area: title; font: 26px/1.15 var(--font-hand); color: var(--ink); }
+.block__detail { grid-area: detail; font-size: var(--size-s); color: var(--ink-soft); }
+.block__energy { grid-area: energy; font-size: var(--size-xs); color: var(--ink-soft); text-align: right; white-space: nowrap; }
+.block__problem { color: var(--red-pen); font-weight: 600; }
+.block::before { content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: 7px; border-radius: 1px; }
+.block--show::before, .block--travel::before { background: var(--tape-show); }
+.block--studio::before { background: var(--tape-studio); }
+.block--sessionWork::before { background: var(--tape-money); }
+.block--locked::before { background: var(--tape-job); }
+/* Free time: nothing written yet, so it's pencil grey. */
+.block--free .block__title { color: rgba(31, 34, 64, 0.36); }
+/* The day job is printed, not handwritten: it's the same every time. */
+.block--locked .block__title { font: 700 var(--size-xl) var(--font-head); color: var(--ink-soft); }
 
-/* Free and planned blocks are buttons you can click to open the action picker. */
-button.block { font: inherit; color: inherit; text-align: left; cursor: pointer; }
-button.block:hover { border-color: var(--accent); }
-.block--action { border-style: solid; border-color: var(--accent); }
-.block__energy { font-size: 13px; color: var(--text-muted); }
-.block__problem { color: var(--bad); }
-.block__time { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-.block__title { font-size: 22px; font-weight: bold; }
-.block__detail { color: var(--text-muted); font-size: 14px; margin-top: auto; }
-.block--locked .block__title::before { content: "🔒 "; font-size: 18px; }
-
-.end-day { display: flex; align-items: center; gap: 20px; margin-top: 24px; }
-.end-day .hint { margin: 0; }
+.end-day { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-top: 28px; }
+.end-day .btn--primary { min-width: 220px; }
 
 .log { margin: 0; padding-left: 18px; color: var(--text-muted); }
 .log li { margin-bottom: 4px; }
-
 .payback { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
 
-/* ---------- Weekly summary ---------- */
-
-.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-/* ---------- Game over ---------- */
-
-.gameover__message { font-size: 20px; margin: 0 0 20px; }
-
-/* ---------- Debug panel ---------- */
-
-.debug {
-  position: fixed;
-  left: 16px;
-  bottom: 16px;
-  padding: 12px;
-  background: #000;
-  border: 1px dashed var(--accent);
-  border-radius: 8px;
-  font-size: 13px;
-  opacity: 0.92;
+/* Shows coming up: little gig posters on day-glo paper. Clicking one opens the Calendar. */
+.upcoming { margin-bottom: var(--space-4); }
+.posters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.poster {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 136px;
+  padding: 12px 10px 10px;
+  font: inherit;
+  text-align: left;
+  color: #141414;
+  background: linear-gradient(170deg, rgba(255, 255, 255, 0.3), transparent 50%), #f7d83e;
+  border: none;
+  border-radius: 1px;
+  box-shadow: var(--shadow-paper);
+  transform: rotate(-1.2deg);
+  cursor: pointer;
 }
-.debug__title { color: var(--accent); font-weight: bold; margin-bottom: 8px; }
-.debug__row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.poster:nth-child(2) { background-color: #ff8ec0; transform: rotate(0.8deg); }
+.poster:nth-child(3) { background-color: #7dd8ea; transform: rotate(-0.5deg); }
+.poster:hover { transform: translateY(-2px); }
+.poster__venue { font: 800 19px/0.95 var(--font-head); text-transform: uppercase; overflow-wrap: break-word; }
+.poster__date { margin-top: auto; font: 700 var(--size-m) var(--font-head); }
+.poster__city { font-size: var(--size-xs); }
+.poster__when { margin-top: 2px; font: 15px var(--font-hand); color: #b3261e; }
 
-/* ---------- Badges ---------- */
+/* ---------- Today: banners, events, and tips ---------- */
 
-.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: bold; background: var(--panel-2); color: var(--text-muted); vertical-align: middle; }
-.badge--warn { background: rgba(255, 181, 71, 0.18); color: var(--accent); }
-.badge--bad { background: rgba(255, 107, 107, 0.18); color: var(--bad); }
+/* Banners (new messages, unlocks, milestones) are paper slips with a strip of spike tape down the left. */
+.toast { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 10px; padding: 10px 14px 10px 26px;
+  font-size: var(--size-s); font-weight: 600; }
+.toast::before { content: ""; position: absolute; left: 9px; top: 8px; bottom: 8px; width: 7px; background: var(--tape-show); }
+.toast--inbox::before { background: var(--tape-studio); }
+.toast--milestone::before { background: var(--tape-event); }
+.toast .btn { white-space: nowrap; }
 
-/* ---------- Action picker (pop-up) ---------- */
+/* Today's event: a sheet with pink tape across the top, and its choices. */
+.event-card { margin-bottom: 22px; padding: 20px 24px; border-top: 6px solid var(--tape-event); }
+.event-card__title { font: 800 var(--size-xl)/1.1 var(--font-head); color: var(--ink); }
+.event-card p { margin: 6px 0 14px; }
+.event-card__choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-2); }
+.choice-btn { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; font: inherit; text-align: left; color: var(--ink); background: transparent;
+  border: 1.5px solid rgba(31, 34, 64, 0.4); border-radius: var(--radius); cursor: pointer; }
+.choice-btn:hover:not(:disabled) { border-color: var(--ink); background: var(--highlighter); }
+.choice-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.choice-btn span { color: var(--accent); font-weight: 600; font-size: var(--size-s); }
+.choice-btn em { color: var(--ink-soft); font-size: var(--size-xs); }
+
+/* Tutorial tips are sticky notes. What a tip points at gets a pulsing amber outline. */
+.tip-card { max-width: 560px; margin-bottom: 22px; padding: 18px 20px 16px; background: linear-gradient(170deg, rgba(255, 255, 255, 0.35), transparent 50%), var(--sticky);
+  transform: rotate(0.6deg); }
+.tip-card__title { font: 22px/1.2 var(--font-hand); color: var(--ink); }
+.tip-card p { margin: 6px 0 12px; }
+.tip-card__actions { display: flex; gap: var(--space-1); }
+.tour-highlight { outline: 3px dashed var(--amber) !important; outline-offset: 5px; animation: tour-pulse 1.6s ease-in-out infinite; }
+@keyframes tour-pulse { 50% { outline-color: rgba(255, 181, 71, 0.3); } }
+
+/* ---------- Pop-ups: a clipboard ----------
+   The action picker and the full day readout. A hardboard clipboard with a metal clip at the top, holding a sheet
+   of paper (.modal__paper) that scrolls if there's a lot on it. */
 
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 8, 16, 0.7);
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  background: rgba(10, 8, 20, 0.72);
+  backdrop-filter: blur(2px);
 }
 .modal {
-  width: 640px;
-  max-height: 90vh;
-  overflow-y: auto;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 24px;
+  position: relative;
+  width: 660px;
+  max-width: calc(100vw - 32px);
+  padding: 34px 12px 12px;
+  background: linear-gradient(160deg, #9a6a44, #74482c);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px #4f3220, 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 30px 60px -20px rgba(0, 0, 0, 0.9);
 }
-.modal__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.modal__title { margin: 0; font-size: 22px; }
+/* The metal clip. */
+.modal::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  z-index: 1;
+  width: 150px;
+  height: 42px;
+  transform: translateX(-50%);
+  border-radius: 10px 10px 4px 4px;
+  background: linear-gradient(180deg, #eef0f3, #a5abb4 55%, #6b7079);
+  box-shadow: 0 1px 0 #fff inset, 0 3px 4px rgba(0, 0, 0, 0.45);
+}
+.modal__paper {
+  max-height: calc(90vh - 46px);
+  overflow-y: auto;
+  padding: 26px 26px 22px;
+  color: var(--ink);
+  background: var(--paper);
+  border-radius: var(--radius-paper);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.modal--wide { width: 780px; }
+.modal__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 8px; padding-bottom: 12px;
+  border-bottom: 2px solid var(--ink); }
+.modal__title { margin: 0; font: 800 var(--size-xl)/1.1 var(--font-head); color: var(--ink); }
 
-.picks { display: flex; flex-direction: column; gap: 8px; }
+/* The choices are rows on the sheet. Pointing at one runs a highlighter over it; the one already planned has a
+   red pen mark down its side. */
+.picks { display: flex; flex-direction: column; }
 .pick {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
+  gap: 3px;
+  padding: 12px 10px;
   font: inherit;
-  color: var(--text);
   text-align: left;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--paper-rule);
   cursor: pointer;
 }
-.pick:hover:not(:disabled) { border-color: var(--accent); }
+.pick:hover:not(:disabled) { background: linear-gradient(transparent 6%, var(--highlighter) 6%, var(--highlighter) 94%, transparent 94%); }
 .pick:disabled { opacity: 0.45; cursor: not-allowed; }
-.pick--current { border-color: var(--accent); }
+.pick--current { box-shadow: inset 4px 0 0 var(--red-pen); }
 .pick__head { display: flex; justify-content: space-between; gap: 12px; }
-.pick__name { font-weight: bold; font-size: 18px; }
-.pick__costs { color: var(--text-muted); white-space: nowrap; }
-.pick__desc { color: var(--text-muted); font-size: 14px; }
-.pick__effect { color: var(--accent); font-weight: bold; }
-.pick__reason { color: var(--bad); font-size: 14px; }
+.pick__name { font: 700 var(--size-l)/1.15 var(--font-head); }
+.pick__costs { color: var(--ink-soft); white-space: nowrap; font-size: var(--size-s); }
+.pick__desc { color: var(--ink-soft); font-size: var(--size-s); }
+.pick__effect { color: var(--accent); font-weight: 600; font-size: var(--size-s); }
+.pick__reason { color: var(--bad); font-size: var(--size-s); }
 
-/* ---------- Stats panel ---------- */
+/* ---------- Badges: little rubber-stamp labels ---------- */
+
+.badge { display: inline-block; padding: 0 7px; border: 1px solid currentColor; border-radius: 3px; font: 700 11px/1.6 var(--font-body);
+  letter-spacing: 0.2px; color: var(--text-muted); vertical-align: middle; }
+.badge--warn { color: var(--accent); }
+.badge--bad { color: var(--bad); }
+
+/* ---------- The "Previous day" box on Today (an older day sheet), and its full readout ---------- */
+
+.recap { display: block; width: 100%; margin-top: 14px; padding: 22px 22px 18px; font: inherit; text-align: left; color: var(--ink);
+  border: none; transform: rotate(-0.7deg); cursor: pointer; }
+button.recap:hover { transform: none; }
+.recap--empty { cursor: default; }
+.recap__title { margin: 0; font: 800 var(--size-xl)/1 var(--font-head); color: var(--ink); }
+.recap__date { display: block; margin: 3px 0 12px; font-size: var(--size-s); color: var(--ink-soft); }
+.recap__numbers { margin-bottom: var(--space-2); padding-bottom: var(--space-2); border-bottom: 1px solid var(--paper-rule); }
+.recap__list { list-style: none; margin: 0 0 var(--space-2); padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: var(--size-s); }
+/* Each big moment gets a check mark in red pen. */
+.recap__list li { position: relative; padding-left: 24px; }
+.recap__list li::before { content: ""; position: absolute; left: 4px; top: 1px; width: 6px; height: 12px; border: solid var(--red-pen);
+  border-width: 0 3px 3px 0; border-radius: 1px; transform: rotate(40deg); }
+.recap__list li.muted::before { display: none; }
+.recap__more { font: 600 var(--size-s) var(--font-body); color: var(--ink); text-decoration: underline 2px var(--red-pen); text-underline-offset: 3px; }
+.recap__strip { color: var(--text-muted); margin-top: 0; font-variant-numeric: tabular-nums; }
+
+/* ---------- Shared pieces used on many screens ---------- */
+
+.screen__head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 8px; }
+.screen__head .screen__title { margin-bottom: 16px; }
+.pos { color: var(--good); }
+.neg { color: var(--bad); }
+
+/* A button that looks like a link (like the Job row in the Stats panel). */
+.link-btn { font: inherit; color: var(--teal); background: none; border: none; padding: 0; cursor: pointer; text-align: right; }
+.link-btn:hover { text-decoration: underline; }
+
+/* A row of buttons where one is picked (a city, a period, a page, a sort): the picked one is lit. */
+.sort-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 14px 0 12px; font-size: var(--size-s); }
+.sort-bar .btn { border-radius: 3px; }
+.list-controls { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0 16px; }
+.actions--split { justify-content: space-between; align-items: center; }
+
+/* Little labels: cover or original, release types. */
+.tag { display: inline-block; padding: 1px 7px; border-radius: 3px; font: 700 11px/1.6 var(--font-body); letter-spacing: 0.2px; }
+.tag--cover { color: var(--text-muted); background: color-mix(in srgb, var(--text-muted) 16%, transparent); }
+.tag--original { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+
+.stars { color: var(--accent); letter-spacing: 1px; white-space: nowrap; }
+.stars__empty { color: var(--line); }
+
+/* Bar sizes and colors (the plain bar is with the top bar's LED meters). */
+.meter--thin { height: 3px; }
+.meter--tight { display: inline-block; width: 90px; height: 6px; margin-top: 0; vertical-align: middle; }
+.meter--big { height: 12px; border-radius: 6px; }
+.meter--rel .meter__fill { background: var(--tape-studio); }
+.meter--good .meter__fill { background: var(--good); }
+.meter--bad .meter__fill { background: var(--bad); }
+
+/* A tick box, ticked in red pen. */
+.check { display: inline-block; width: 20px; height: 20px; margin-right: 10px; border: 2px solid var(--line); border-radius: 3px; text-align: center;
+  line-height: 16px; font-size: 14px; color: #fff; vertical-align: middle; }
+.pick--current .check, .setlist-song--on .check { background: var(--red-pen); border-color: var(--red-pen); }
+
+/* Check boxes and radio buttons with a label. */
+.switch { display: flex; align-items: center; gap: var(--space-1); cursor: pointer; }
+.switch input { width: 18px; height: 18px; accent-color: var(--amber); }
+
+/* Tables of numbers (quitting, tour proposals, show by show). */
+.quit-table { width: 100%; border-collapse: collapse; margin-bottom: var(--space-2); font-variant-numeric: tabular-nums; }
+.quit-table th, .quit-table td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+.quit-table th:first-child, .quit-table td:first-child { text-align: left; }
+.quit-table th { color: var(--text-muted); font: 700 var(--size-s) var(--font-head); }
+
+/* A painting across the top of a panel (like a venue's size on Book), with its title over it. */
+.panel--art { padding-top: 0; overflow: hidden; }
+.art-banner { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 150px;
+  margin: 0 calc(-1 * var(--space-4)) var(--space-3); padding: 18px var(--space-4); background: center 40% / cover no-repeat; }
+.art-banner::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20, 18, 38, 0) 15%, rgba(20, 18, 38, 0.88)); }
+.art-banner__title { position: relative; margin: 0; font: 800 var(--size-3xl)/1 var(--font-head); color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); }
+.art-banner__sub { position: relative; margin-top: 2px; font-size: var(--size-s); color: rgba(255, 255, 255, 0.85); }
+
+/* Planning rows (a block of a day, a day of the week): the time, what's planned, and buttons. */
+.plan { display: flex; flex-direction: column; margin-bottom: 8px; }
+.plan__row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: color-mix(in srgb, var(--panel-2) 70%, transparent); border-radius: var(--radius); }
+.plan__row + .plan__row { margin-top: 6px; }
+.plan__row--past { opacity: 0.5; }
+.plan__block { width: 80px; flex-shrink: 0; font: 700 var(--size-s) var(--font-head); color: var(--text-muted); }
+.plan__task { flex: 1; font-weight: 600; }
+.plan__row .muted { flex: 1; }
+.plan-week__select { max-width: 220px; }
+
+/* Forms: rows of choices, and the date buttons (orange ones fall on the day job). */
+.form-row { display: flex; flex-direction: column; gap: 6px; }
+.form-row__btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.dates { display: flex; flex-wrap: wrap; gap: 6px; }
+.date-btn { padding: 6px 8px; font: 600 var(--size-xs) var(--font-body); color: var(--text); background: transparent; border: 1px solid var(--line);
+  border-radius: 3px; cursor: pointer; }
+.date-btn:hover:not(:disabled) { border-color: var(--text); }
+.date-btn:disabled { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+.date-btn--job { border-color: var(--tape-job); background: color-mix(in srgb, var(--tape-job) 20%, transparent); }
+.date-btn--on { color: var(--amber-ink); background: var(--amber); border-color: #b8740f; font-weight: 700; }
+
+/* A trip's legs, costs, and energy: a box with a strip of yellow (shows) tape down the side. */
+.trip { margin: 8px 0; padding: 8px 12px; background: color-mix(in srgb, var(--panel-2) 70%, transparent); border-left: 5px solid var(--tape-show); border-radius: var(--radius); }
+.trip .log { margin: 6px 0; }
+
+/* A setlist and the list of songs to pick from. */
+.setlist { margin: 0 0 8px; padding-left: 20px; font-size: var(--size-s); }
+.setlist-edit { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.setlist-song { padding: 6px 8px; font: inherit; font-size: var(--size-s); text-align: left; color: var(--text); background: transparent;
+  border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
+.setlist-song:hover { border-color: var(--text); }
+.setlist-song--on { border-color: var(--accent); }
+
+/* A small heading inside a panel. */
+.show__sub { margin: 14px 0 4px; font: 700 var(--size-m) var(--font-head); color: var(--text-muted); }
+
+/* Sticky notes (tips). */
+.panel--tip { margin-bottom: var(--space-3); padding: 16px 20px; background: linear-gradient(170deg, rgba(255, 255, 255, 0.35), transparent 50%), var(--sticky);
+  transform: rotate(-0.5deg); }
+
+/* A picture behind other screens (see .backdrop at the top). */
+.backdrop--people::before { background-image: url("assets/backdrops/backstage.jpg"); }
+.backdrop--songs::before { background-image: url("assets/backdrops/bedroom.jpg"); }
+.backdrop--map::before { background-image: url("assets/backdrops/highway.jpg"); }
+.backdrop--shop::before { background-image: url("assets/backdrops/merch.jpg"); }
+.backdrop--openmic::before { background-image: url("assets/venues/openmic.jpg"); }
+
+/* ---------- Stats panel (beside Today) ---------- */
 
 .skills { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .skill { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: baseline; }
 .skill__name { color: var(--text-muted); }
-.skill__value { font-weight: bold; text-align: right; }
+.skill__value { font: 700 var(--size-l) var(--font-head); text-align: right; }
 .skill .meter { grid-column: 1 / -1; margin-top: 0; }
-.meter--thin { height: 3px; }
-.rust { font-size: 12px; font-weight: bold; cursor: help; }
+.rust { font-size: 12px; font-weight: 700; cursor: help; }
 .rust--warning { color: var(--accent); }
 .rust--rusting { color: var(--bad); }
 .rows--stats { border-top: 1px solid var(--line); padding-top: 12px; }
 
-/* ---------- Day results ---------- */
+/* ---------- The full day readout, and Skip summary ---------- */
 
-.result-row {
-  display: grid;
-  grid-template-columns: 100px 140px 1fr;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line);
-}
+.result-row { display: grid; grid-template-columns: 100px 140px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .result-row:last-child { border-bottom: none; }
-.result-row__time { color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; padding-top: 2px; }
-.result-row__title { font-weight: bold; }
+.result-row__time { color: var(--text-muted); font: 700 var(--size-m) var(--font-head); }
+.result-row__title { font: 700 var(--size-l)/1.2 var(--font-head); }
 .result-row__lines { display: flex; flex-direction: column; gap: 2px; }
+.skip-days .result-row { grid-template-columns: 170px 1fr; }
 
-/* ---------- Skills page (New career) ---------- */
+/* ---------- New career and the skills page: an open mic sign-up sheet ---------- */
+
+.signup { margin-top: 18px; padding: 30px 32px 26px; }
+/* What you type on the sheet is written in marker, on a line. */
+.signup .input, .reveal__name .input { font: 26px var(--font-hand); color: var(--ink); background: transparent; border: none;
+  border-bottom: 2px solid var(--ink); border-radius: 0; box-shadow: none; padding: 4px 2px; }
+.signup .input:focus, .reveal__name .input:focus { outline: none; border-bottom-color: var(--red-pen); }
+
+.choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.choice input { position: absolute; opacity: 0; }
+.choice__body { display: flex; flex-direction: column; gap: 4px; height: 100%; padding: 16px; background: transparent; border: 2px solid var(--line);
+  border-radius: var(--radius); cursor: pointer; }
+/* The picked instrument is circled in red pen. */
+.choice input:checked + .choice__body { border-color: var(--red-pen); border-radius: 26px 34px 28px 38px; }
+.choice input:focus-visible + .choice__body { outline: 2px solid var(--amber); }
+.choice__title { font: 800 var(--size-xl) var(--font-head); }
+.choice__bonus { color: var(--accent); font-weight: 700; }
+.choice__blurb { color: var(--text-muted); font-size: var(--size-s); }
 
 .alloc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 8px; }
-.alloc-head__left { font-size: 22px; }
+.alloc-head__left { font: 700 var(--size-xl) var(--font-head); }
 .alloc-head__left strong { color: var(--accent); }
 .alloc-head__left--done strong { color: var(--good); }
 .alloc-head__helpers { display: flex; gap: 8px; flex-shrink: 0; }
-
-.alloc {
-  display: grid;
-  grid-template-columns: 1fr auto 150px;
-  gap: 16px;
-  align-items: center;
-  padding: 14px 0;
-  border-top: 1px solid var(--line);
-}
+.alloc { display: grid; grid-template-columns: 1fr auto 150px; gap: 16px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
 .alloc__info { display: flex; flex-direction: column; gap: 2px; }
-.alloc__name { font-weight: bold; font-size: 18px; }
-.alloc__desc { color: var(--text-muted); font-size: 14px; }
+.alloc__name { font: 700 var(--size-l) var(--font-head); }
+.alloc__desc { color: var(--text-muted); font-size: var(--size-s); }
 .alloc__controls { display: flex; align-items: center; gap: 6px; }
-.alloc__value { width: 40px; text-align: center; font-size: 22px; font-weight: bold; }
-.alloc__total { display: flex; flex-direction: column; align-items: flex-end; font-size: 14px; color: var(--text-muted); }
-.alloc__total strong { color: var(--text); font-size: 18px; }
-.alloc__bonus { color: var(--accent); font-weight: bold; }
+.alloc__value { width: 40px; text-align: center; font: 800 var(--size-xl) var(--font-head); }
+.alloc__total { display: flex; flex-direction: column; align-items: flex-end; font-size: var(--size-s); color: var(--text-muted); }
+.alloc__total strong { color: var(--text); font: 700 var(--size-l) var(--font-head); }
+.alloc__bonus { color: var(--accent); font-weight: 700; }
 .step { min-width: 40px; }
 
-/* ---------- Weekly summary: skill changes ---------- */
+/* ---------- Weekly wrap-up: a settlement sheet ---------- */
+
+.settlement { margin: 18px 0 var(--space-3); padding: 34px 36px 26px; }
+.settlement__head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 18px; padding-bottom: 12px;
+  border-bottom: 3px double var(--ink); }
+.settlement__title { margin: 0; font: 800 var(--size-3xl)/1 var(--font-head); color: var(--ink); }
+.settlement__week { font: 700 var(--size-m) var(--font-head); color: var(--ink-soft); white-space: nowrap; }
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.settlement__totals { margin-top: 18px; padding-top: 14px; border-top: 2px solid var(--ink); }
+/* Signed at the bottom, in pen, with your name. */
+.settlement__sign { display: flex; flex-direction: column; align-items: flex-end; margin-top: 24px; }
+.settlement__signature { padding: 0 18px 2px; font: 30px var(--font-hand); color: var(--blue-pen); transform: rotate(-4deg); }
+.settlement__line { width: 260px; padding-top: 4px; border-top: 1.5px solid var(--ink); text-align: right; font: 700 var(--size-xs) var(--font-head); color: var(--ink-soft); }
 
 .skill-changes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-.skill-change { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; background: var(--panel-2); border-radius: 8px; }
-.skill-change__name { font-size: 13px; color: var(--text-muted); }
-.skill-change__value { font-size: 22px; font-weight: bold; }
-.skill-change__delta { font-weight: bold; }
+.skill-change { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; background: var(--panel-2); border-radius: var(--radius); }
+.skill-change__name { font-size: var(--size-xs); color: var(--text-muted); }
+.skill-change__value { font: 800 var(--size-xl) var(--font-head); }
+.skill-change__delta { font-weight: 700; }
 .skill-change__delta--up { color: var(--good); }
 .skill-change__delta--down { color: var(--bad); }
 .skill-change__delta--same { color: var(--text-muted); }
 
-/* ---------- Songs: stars, tags, bars ---------- */
+/* ---------- Songs: a notebook page and a cassette tracklist ---------- */
 
-.stars { color: var(--accent); letter-spacing: 1px; white-space: nowrap; }
-.stars__empty { color: var(--line); }
-.tag { display: inline-block; padding: 1px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
-.tag--cover { background: var(--panel-2); color: var(--text-muted); }
-.tag--original { background: rgba(255, 181, 71, 0.18); color: var(--accent); }
-.meter--tight { width: 90px; height: 6px; margin-top: 0; display: inline-block; vertical-align: middle; }
-.meter--big { height: 12px; border-radius: 6px; }
-.block__song { display: block; color: var(--text); margin-bottom: 2px; }
-.pick__more { font-size: 13px; font-weight: normal; color: var(--text-muted); }
-.pick__song-stats { display: flex; align-items: center; gap: 12px; font-size: 14px; }
-.pick__song-stats strong { color: var(--accent); }
-
-/* ---------- Songs screen ---------- */
-
-.screen__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.screen__head .screen__title { margin-bottom: 16px; }
+/* A page from a spiral notebook: holes down the left, a red margin line, and blue ruled lines. */
+.notebook {
+  margin-bottom: var(--space-3);
+  padding: 22px 26px 20px 66px;
+  background:
+    radial-gradient(circle, var(--house-deep) 0 5px, transparent 5.5px) 6px 8px / 28px 28px repeat-y,
+    linear-gradient(90deg, transparent 48px, rgba(196, 48, 42, 0.5) 48px 50px, transparent 50px),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(63, 120, 200, 0.25) 27px 28px),
+    var(--paper);
+}
 .writing { display: flex; flex-direction: column; gap: 8px; }
-.writing__title { font-size: 20px; font-weight: bold; }
-.writing__numbers { color: var(--text-muted); font-size: 14px; }
+.writing__title { font: 30px/1.2 var(--font-hand); color: var(--ink); }
+.writing__numbers { color: var(--text-muted); font-size: var(--size-s); }
 
+/* The catalog: printed like a cassette tracklist, with a colored stripe across the top. */
+.tracklist { margin-bottom: var(--space-3); padding: 24px 26px 18px; border-top: 10px solid; border-image: linear-gradient(90deg, var(--tape-event), var(--amber), var(--tape-studio)) 1; }
 .song-table { width: 100%; border-collapse: collapse; }
-.song-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: normal; padding: 8px; border-bottom: 1px solid var(--line); }
-.song-table td { padding: 10px 8px; border-bottom: 1px solid var(--line); }
+.song-table th { padding: 8px; text-align: left; font: 700 var(--size-s) var(--font-head); color: var(--text-muted); border-bottom: 2px solid var(--text); }
+.song-table td { padding: 9px 8px; border-bottom: 1px solid var(--line); }
 .song-table .num { text-align: right; }
-.song__title { font-weight: bold; }
+.song__title { font-weight: 600; }
 .song__tight { display: flex; align-items: center; gap: 8px; }
 .song__fading { color: var(--bad); }
+.release-list { margin-top: var(--space-2); }
 
-/* ---------- Song reveal ---------- */
+/* ---------- Song reveal, naming the band, three weeks in, game over ---------- */
 
-.reveal__kicker { margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 3px; color: var(--text-muted); }
-.reveal__stars { font-size: 72px; margin: 8px 0; animation: reveal-pop 0.6s ease-out; }
-.reveal__quality { margin: 0; font-size: 22px; }
-.reveal__quality strong { color: var(--accent); }
+.reveal__kicker { margin: 0; font: 700 var(--size-l) var(--font-head); letter-spacing: 0.5px; color: var(--text-muted); }
+.reveal__stars { margin: 8px 0; font-size: 72px; color: var(--amber); text-shadow: 0 0 24px rgba(255, 181, 71, 0.5); animation: reveal-pop 0.6s ease-out; }
+.reveal__stars .stars { color: inherit; }
+.reveal__quality { margin: 0; font: 700 var(--size-xl) var(--font-head); }
+.reveal__quality strong { color: var(--amber); }
 .reveal__why { color: var(--text-muted); max-width: 560px; }
-.reveal__name { width: 560px; text-align: left; margin-top: 16px; }
-.reveal__name-row { display: flex; gap: 8px; }
+.reveal__name { width: 600px; max-width: 100%; margin-top: 16px; text-align: left; }
+.reveal__name-row { display: flex; gap: 8px; align-items: flex-end; }
 .reveal__name-row .btn { white-space: nowrap; }
 @keyframes reveal-pop {
   0% { transform: scale(0.4); opacity: 0; }
   70% { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); }
 }
+.slice__headline { font-size: 48px; max-width: 900px; }
+.slice__sub { color: var(--text-muted); max-width: 640px; font-size: 18px; }
+.slice__panel { width: 620px; max-width: 100%; text-align: left; }
+.gameover__message { font-size: var(--size-l); margin: 0 0 20px; }
 
-/* ---------- Open mic set picker ---------- */
+/* ---------- The action picker's extra bits ---------- */
 
-.picker-note { margin: -8px 0 12px; }
-.check { display: inline-block; width: 20px; height: 20px; margin-right: 10px; border: 2px solid var(--line); border-radius: 5px; text-align: center; line-height: 16px; font-size: 14px; color: var(--accent-text); vertical-align: middle; }
-.pick--current .check { background: var(--accent); border-color: var(--accent); }
+.pick--all { border-bottom-style: dashed; }
+.pick__more { font: 400 var(--size-xs) var(--font-body); color: var(--text-muted); }
+.pick__song-stats { display: flex; align-items: center; gap: 12px; font-size: var(--size-s); }
+.pick__song-stats strong { color: var(--accent); }
+.picker-note { margin: 4px 0 12px; }
 .tight-num { color: var(--text) !important; }
-.actions--split { justify-content: space-between; align-items: center; }
+.block__song { display: block; color: var(--text); margin-bottom: 2px; }
 
-/* ---------- Gig: crowd meter ---------- */
+/* ---------- Gig: the crowd counter, in front of the venue ---------- */
 
-.gig-meter__count { font-size: 96px; font-weight: bold; color: var(--accent); line-height: 1; margin: 16px 0; }
-.gig-meter__unit { font-size: 28px; color: var(--text-muted); }
-.meter--crowd { width: 520px; max-width: 100%; height: 18px; border-radius: 9px; margin: 8px 0 16px; }
+.gig-meter { position: relative; z-index: 0; overflow: hidden; }
+.gig-meter__stage { position: absolute; inset: 0; z-index: -1; background: center / cover no-repeat; animation: stage-push 3s ease-out both; }
+.gig-meter__stage::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(20, 18, 38, 0.5), rgba(10, 8, 20, 0.92)); }
+@keyframes stage-push { from { transform: scale(1.08); filter: brightness(0.4); } }
+/* The headcount, lit up like a scoreboard. */
+.gig-meter__count { margin: 14px 0; padding: 10px 28px 6px; font: 800 120px/1 var(--font-head); color: var(--amber); font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 30px rgba(255, 181, 71, 0.6); background: rgba(10, 8, 20, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; }
+.gig-meter__unit { font-size: 32px; color: var(--text-muted); }
+/* The crowd bar is a strip of green LEDs. */
+.meter--crowd { width: 560px; max-width: 100%; height: 22px; margin: 8px 0 16px; padding: 3px; border-radius: 3px; background: rgba(0, 0, 0, 0.55); }
+.meter--crowd .meter__fill { border-radius: 1px; background: repeating-linear-gradient(90deg, var(--good) 0 12px, transparent 12px 16px);
+  filter: drop-shadow(0 0 4px rgba(95, 211, 141, 0.6)); }
 .gig-meter .meter--crowd .meter__fill { transition: none; }
 
-/* ---------- Gig: result ---------- */
+/* ---------- Gig: the result ---------- */
 
-.gig-result .reveal__kicker { margin-bottom: 4px; }
-.gig-result__headline { font-size: 40px; }
+/* The venue's painting with the headline over it, and the result stamped on like a rubber stamp. */
+.gig-hero { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 280px; margin-bottom: var(--space-3);
+  padding: 24px 28px; border-radius: var(--radius); overflow: hidden; background: center / cover no-repeat; box-shadow: var(--shadow); }
+.gig-hero::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20, 18, 38, 0.05), rgba(20, 18, 38, 0.9)); }
+.gig-hero > * { position: relative; }
+.gig-hero__kicker { margin: 0 0 4px; font: 700 var(--size-m) var(--font-head); color: rgba(255, 255, 255, 0.85); }
+.gig-hero__headline { max-width: 75%; margin: 0; font: 800 var(--size-3xl)/1.05 var(--font-head); color: #fff; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6); }
+.gig-hero > .stamp { position: absolute; }
+.stamp { top: 22px; right: 24px; padding: 4px 14px 2px; font: 800 var(--size-2xl)/1 var(--font-head); text-transform: uppercase; letter-spacing: 2px;
+  border: 4px solid currentColor; border-radius: 6px; background: rgba(10, 8, 20, 0.4); transform: rotate(-8deg);
+  animation: stamp-in 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) 0.15s both; }
+@keyframes stamp-in { from { opacity: 0; transform: rotate(-8deg) scale(2.2); } }
+.stamp--rough { color: var(--bad); }
+.stamp--solid { color: var(--text); }
+.stamp--great { color: var(--good); }
+.stamp--legendary { color: var(--amber); text-shadow: 0 0 14px rgba(255, 181, 71, 0.6); }
+
 .gig-result__headline--rough { color: var(--bad); }
 .gig-result__headline--solid { color: var(--text); }
 .gig-result__headline--great { color: var(--good); }
 .gig-result__headline--legendary { color: var(--accent); }
 .gig-crowd { font-size: 18px; margin-bottom: 4px; }
-.gig-crowd strong { font-size: 28px; color: var(--accent); }
+.gig-crowd strong { font: 800 var(--size-2xl) var(--font-head); color: var(--amber); }
 .gig-result .meter--crowd { width: 100%; }
+.gig-notes { margin-top: 12px; }
 
-.breakdown { display: flex; height: 54px; border-radius: 8px; overflow: hidden; background: var(--panel-2); }
-.seg { display: flex; flex-direction: column; justify-content: center; padding: 0 8px; min-width: 0; overflow: hidden; white-space: nowrap; color: var(--accent-text); border-right: 2px solid var(--panel); }
-.seg__label { font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
-.seg__value { font-weight: bold; }
-.seg--bandSkill { background: #ffb547; }
-.seg--stagePresence { background: #ffc773; }
-.seg--songs { background: #ffd89e; }
-.seg--tightness { background: #ffe7c4; }
-.seg--instrument, .seg--morale { background: #5fd38d; }
-.seg--luck { background: #9ec9ff; }
-.seg--debug { background: #c9a2ff; }
-
+/* Why it went this way: a bar of the score's parts, chips naming each one, and the scale of results. */
+.breakdown { display: flex; height: 54px; border-radius: var(--radius); overflow: hidden; background: var(--panel-2); }
+.seg { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 0 8px; overflow: hidden; white-space: nowrap;
+  color: var(--amber-ink); border-right: 2px solid var(--panel); }
+.seg__value { font-weight: 700; }
+.seg--bandSkill { background: var(--amber); }
+.seg--stagePresence { background: color-mix(in srgb, var(--amber) 75%, #fff); }
+.seg--songs { background: color-mix(in srgb, var(--amber) 55%, #fff); }
+.seg--tightness { background: color-mix(in srgb, var(--amber) 35%, #fff); }
+.seg--instrument, .seg--morale { background: var(--good); }
+.seg--traits { background: var(--tape-event); }
+.seg--room { background: color-mix(in srgb, var(--good) 55%, #fff); }
+.seg--luck { background: var(--tape-studio); }
+.seg--debug { background: var(--tape-event); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.chip { padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: bold; background: var(--panel-2); color: var(--text-muted); }
-.chip--bad { background: rgba(255, 107, 107, 0.18); color: var(--bad); }
-
+.chip { padding: 3px 10px; border-radius: 999px; font-size: var(--size-xs); font-weight: 700; color: var(--text); background: var(--panel-2); }
+.chip--bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 18%, transparent); }
+.swatch { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; vertical-align: middle; }
 .scale { position: relative; margin: 18px 0 30px; }
 .scale__track { height: 8px; border-radius: 4px; background: var(--panel-2); overflow: hidden; }
 .scale__score { display: block; height: 100%; background: var(--text); }
 .scale__mark { position: absolute; top: -4px; height: 16px; border-left: 2px dashed var(--text-muted); }
 .scale__mark span { position: absolute; top: 18px; left: -30px; width: 60px; text-align: center; font-size: 11px; color: var(--text-muted); }
 .gig-score { margin: 0; font-size: 18px; }
-.panel--tip { border-color: var(--accent); background: rgba(255, 181, 71, 0.08); }
-.gig-notes { margin-top: 12px; }
 
-.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
-.chip { color: var(--text); }
+/* ---------- People: laminated backstage passes ---------- */
 
-/* ---------- Practice: all songs + sorting ---------- */
-
-.pick--all { border-style: dashed; }
-.sort-bar { display: flex; align-items: center; gap: 6px; margin: 14px 0 8px; font-size: 14px; }
-.list-controls { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0 16px; }
-
-/* ---------- People ---------- */
-
-.people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
-.person { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
-.person--member { border-color: var(--accent); }
-.person__head { display: flex; justify-content: space-between; align-items: center; }
-.person__name { font-size: 18px; font-weight: bold; }
-.person__stats { display: flex; gap: 14px; font-size: 14px; color: var(--text-muted); }
+.people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px 16px; }
+/* A white card under glossy plastic, with a slot for the lanyard and a colored band across the top
+   (amber for the band, blue for guests). */
+.person {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, 0.3)), #fbfaf6;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7) inset, 0 0 0 4px rgba(255, 255, 255, 0.14), var(--shadow-paper);
+}
+.person::before { content: ""; position: absolute; top: 9px; left: 50%; z-index: 1; width: 46px; height: 8px; margin-left: -23px; border-radius: 4px;
+  background: var(--house-deep); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6); }
+.person__pass { margin: 0 -16px 4px; padding: 26px 16px 6px; border-radius: 12px 12px 0 0; font: 800 var(--size-xl)/1 var(--font-head);
+  text-transform: uppercase; letter-spacing: 4px; text-align: right; color: #fff; background: var(--tape-studio); }
+.person--member .person__pass { color: var(--amber-ink); background: var(--amber); }
+.person__head { display: flex; align-items: center; gap: 12px; }
+.person__photo { width: 72px; height: 72px; object-fit: cover; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
+.person__who { display: flex; flex-direction: column; }
+.person__name { font: 800 var(--size-xl)/1.05 var(--font-head); color: var(--ink); }
+.person__role { font-size: var(--size-s); color: var(--ink-soft); }
+.person__stats { display: flex; gap: 14px; font-size: var(--size-s); color: var(--text-muted); }
 .person__stats strong { color: var(--text); }
-.person__trait { font-size: 13px; }
-.person__bar { display: grid; grid-template-columns: 90px 1fr 30px; align-items: center; gap: 8px; font-size: 13px; }
+.person__trait { font-size: var(--size-xs); }
+.person__bar { display: grid; grid-template-columns: 90px 1fr 30px; align-items: center; gap: 8px; font-size: var(--size-xs); }
 .person__bar .meter { margin-top: 0; }
 .person__bar strong { text-align: right; }
-.meter--rel .meter__fill { background: #9ec9ff; }
-.meter--good .meter__fill { background: var(--good); }
-.meter--bad .meter__fill { background: var(--bad); }
-.pos { color: var(--good); }
-.neg { color: var(--bad); }
-.reasons { list-style: none; margin: 0; padding: 0; font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.reasons { list-style: none; margin: 0; padding: 0; font-size: var(--size-xs); display: flex; flex-wrap: wrap; gap: 4px 12px; }
 .person .actions { margin-top: 4px; }
-.debug__toggle { background: none; border: none; padding: 0; font: inherit; cursor: pointer; display: block; }
 
-/* ---------- Tabs under the top bar ---------- */
+/* ---------- Book: venue flyers under each venue size's painting ---------- */
 
-.tabs { display: flex; gap: 4px; padding: 0 24px; background: var(--panel); border-bottom: 1px solid var(--line); }
-.tab { font: inherit; color: var(--text-muted); background: none; border: none; border-bottom: 3px solid transparent; padding: 10px 14px; cursor: pointer; }
-.tab:hover { color: var(--text); }
-.tab--active { color: var(--accent); border-bottom-color: var(--accent); font-weight: bold; }
-
-/* ---------- Today: banners and show cards ---------- */
-
-.toast { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 16px;
-  border: 1px solid var(--accent); border-radius: var(--radius); background: rgba(255, 181, 71, 0.10); }
-.toast--inbox { border-color: var(--good); background: rgba(95, 211, 141, 0.08); }
-.block--show { border-style: solid; border-color: var(--good); background: rgba(95, 211, 141, 0.06); }
-
-/* ---------- Booking ---------- */
-
-.venue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; }
-.venue { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-.venue--open { border-color: var(--accent); }
-.venue__head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.venue__name { font-size: 18px; font-weight: bold; }
-.venue__stats { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; color: var(--text-muted); }
+.venue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 18px; }
+/* Each venue is a paper flyer with its name big, like a gig poster, and a strip of yellow tape across the top. */
+.venue { display: flex; flex-direction: column; gap: 10px; padding: 18px 18px 16px; border-top: 6px solid var(--tape-show); }
+.venue--open { box-shadow: 0 0 0 3px var(--amber), var(--shadow-paper); }
+.venue__head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
+.venue__name { font: 800 var(--size-2xl)/1 var(--font-head); text-transform: uppercase; color: var(--ink); }
+.venue__stats { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: var(--size-s); color: var(--text-muted); }
 .venue__stats strong { color: var(--text); }
-.deal { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--panel); }
-.deal--chosen { border-color: var(--accent); }
-.deal--locked { opacity: 0.75; }
+.deal { padding: 10px 12px; background: color-mix(in srgb, var(--panel-2) 60%, transparent); border: 1px solid var(--line); border-radius: var(--radius); }
+.deal--chosen { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.deal--locked { opacity: 0.7; }
 .deal__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.deal__chance { color: var(--accent); font-weight: bold; }
-.deal__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; font-size: 14px; }
-.reqs { list-style: none; margin: 6px 0 0; padding: 0; font-size: 13px; }
-.booking-form { border-top: 1px dashed var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 10px; }
-.form-row { display: flex; flex-direction: column; gap: 6px; }
-.form-row__btns { display: flex; gap: 6px; flex-wrap: wrap; }
-.dates { display: flex; flex-wrap: wrap; gap: 6px; }
-.date-btn { font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; }
-.date-btn:hover:not(:disabled) { border-color: var(--accent); }
-.date-btn:disabled { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
-.date-btn--job { border-color: #c98a2c; }
-.date-btn--on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: bold; }
+.deal__chance { color: var(--accent); font-weight: 700; }
+.deal__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; font-size: var(--size-s); }
+.reqs { list-style: none; margin: 6px 0 0; padding: 0; font-size: var(--size-xs); }
+.booking-form { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
 
-/* ---------- Inbox ---------- */
+/* ---------- Inbox: slips of paper ---------- */
 
-.message { padding: 12px 0; border-bottom: 1px solid var(--line); }
-.message:last-child { border-bottom: none; }
-.message--new { background: rgba(255, 181, 71, 0.05); }
-.message__head { display: flex; align-items: center; gap: 8px; }
-.message__date { margin-left: auto; font-size: 13px; }
+.mail { margin-bottom: var(--space-4); }
+.mail > .panel__title { margin-bottom: 14px; }
+/* Each message has a strip of tape down the left in its kind's color: yellow for shows, green for session work,
+   blue for business offers, pink for events and notes, plain for a "no". New ones are outlined in amber. */
+.message { margin-bottom: 12px; padding: 14px 18px 14px 32px; }
+.message::before { content: ""; position: absolute; left: 11px; top: 12px; bottom: 12px; width: 7px; background: var(--tape-show); }
+.message--sessionWork::before, .message--sessionRelease::before { background: var(--tape-money); }
+.message--managerOffer::before, .message--labelOffer::before { background: var(--tape-studio); }
+.message--event::before, .message--note::before { background: var(--tape-event); }
+.message--no::before { background: var(--paper-rule); }
+.message--new { box-shadow: 0 0 0 2px var(--amber), var(--shadow-paper); }
+.message__head { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+.message__head strong { font: 700 var(--size-l)/1.2 var(--font-head); color: var(--ink); }
+.message__head .neg { color: var(--red-pen); }
+.message__date { margin-left: auto; font-size: var(--size-xs); white-space: nowrap; }
 .message p { margin: 6px 0; }
 .message__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 
-/* ---------- Calendar ---------- */
+/* ---------- Calendar: a paper wall planner and an index card ---------- */
 
-.cal-layout { display: grid; grid-template-columns: 1fr 380px; gap: 16px; align-items: start; }
-.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.cal__dow { text-align: center; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); padding-bottom: 4px; }
-.cal__day { font: inherit; text-align: left; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
-  padding: 6px; min-height: 92px; display: flex; flex-direction: column; gap: 2px; cursor: pointer; min-width: 0; }
-.cal__day:hover { border-color: var(--accent); }
-.cal__day--today { border-color: var(--accent); }
-.cal__day--selected { outline: 2px solid var(--accent); }
-.cal__day--past { opacity: 0.45; }
-.cal__date { font-size: 11px; color: var(--text-muted); }
-.cal__block { font-size: 11px; padding: 1px 4px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cal__block--job { background: var(--panel-2); color: var(--text-muted); }
-.cal__block--off { background: rgba(95, 211, 141, 0.15); color: var(--good); }
-.cal__block--show { background: var(--good); color: var(--accent-text); font-weight: bold; }
-.cal__block--pending { background: rgba(255, 181, 71, 0.15); color: var(--accent); }
-.cal__block--plan { background: rgba(158, 201, 255, 0.15); color: #9ec9ff; }
+.cal-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+/* The planner: a ruled grid on paper. Each block in a day gets a dab of spike tape for its kind, and today's date is
+   circled in red pen. */
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); padding: 16px 18px 18px; }
+.cal__dow { padding: 0 6px 6px; font: 700 var(--size-s) var(--font-head); color: var(--ink-soft); border-bottom: 2px solid var(--ink); }
+.cal__day { display: flex; flex-direction: column; gap: 2px; min-width: 0; min-height: 96px; padding: 5px; font: inherit; text-align: left; color: var(--ink);
+  background: none; border: none; border-right: 1px solid var(--paper-rule); border-bottom: 1px solid var(--paper-rule); cursor: pointer; }
+.cal__day:nth-child(7n) { border-right: none; }
+.cal__day:hover { background: color-mix(in srgb, var(--highlighter) 60%, transparent); }
+.cal__day--selected { background: color-mix(in srgb, var(--highlighter) 70%, transparent); box-shadow: inset 0 0 0 2px var(--ink); }
+.cal__day--past { opacity: 0.4; }
+.cal__date { font: 700 var(--size-s) var(--font-head); color: var(--ink-soft); }
+.cal__day--today .cal__date { align-self: flex-start; padding: 0 5px; white-space: nowrap; font-size: var(--size-xs); color: var(--red-pen);
+  border: 2px solid var(--red-pen); border-radius: 50% 44% 52% 40%; }
+.cal__block { position: relative; padding: 1px 4px 1px 9px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+.cal__block::before { content: ""; position: absolute; left: 0; top: 2px; bottom: 2px; width: 5px; }
+.cal__block--job { color: var(--ink-soft); }
+.cal__block--job::before { background: var(--tape-job); }
+.cal__block--off::before, .cal__block--sessionWork::before { background: var(--tape-money); }
+.cal__block--show::before, .cal__block--travel::before { background: var(--tape-show); }
+.cal__block--studio::before { background: var(--tape-studio); }
+.cal__block--plan::before { background: var(--ink-soft); }
+.cal__block--pending::before { background: repeating-linear-gradient(180deg, var(--tape-show) 0 3px, transparent 3px 5px); }
+.cal__block--away::before { background: var(--tape-show); opacity: 0.4; }
+.cal__block--show, .cal__block--studio, .cal__block--sessionWork, .cal__block--travel { font-weight: 700; }
+.cal__block--pending, .cal__block--away { color: var(--ink-soft); font-style: italic; }
+
+/* The selected day, on an index card: a red line under the heading and faint blue lines below. */
+.cal-card { padding: 20px 22px; background: repeating-linear-gradient(180deg, transparent 0 25px, rgba(63, 120, 200, 0.16) 25px 26px) 0 60px / 100% calc(100% - 60px) no-repeat, #fbfaf4; }
+.cal-card > .panel__title:first-child { padding-bottom: 8px; border-bottom: 2px solid rgba(196, 48, 42, 0.6); }
 .dayoff { display: flex; flex-wrap: wrap; gap: 6px; }
-.show { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
-.show__head { font-size: 17px; }
-.show__sub { margin: 12px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-.setlist { margin: 0 0 8px; padding-left: 20px; font-size: 14px; }
-.setlist-edit { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
-.setlist-song { font: inherit; font-size: 14px; text-align: left; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; cursor: pointer; }
-.setlist-song--on { border-color: var(--accent); }
-.setlist-song--on .check { background: var(--accent); border-color: var(--accent); }
+.show { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.show__head { font: 700 var(--size-l) var(--font-head); }
 .session { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-/* ---------- Calendar: planning a day ---------- */
+/* ---------- Career: fame, gold records, the career card ---------- */
 
-.plan { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
-.plan__row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--panel-2); border-radius: 6px; }
-.plan__block { width: 80px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-.plan__task { flex: 1; font-weight: bold; }
-.plan__row .muted { flex: 1; }
+.fame__name { font: 800 var(--size-4xl)/1 var(--font-head); color: var(--amber); text-shadow: 0 0 18px rgba(255, 181, 71, 0.35); }
+.fame__fans { margin: 4px 0 var(--space-1); color: var(--text-muted); }
+.fame-ladder { display: flex; flex-direction: column; gap: 4px; margin-top: var(--space-2); }
+.fame-step { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; padding: 6px 10px; border-radius: var(--radius);
+  color: var(--text-muted); background: var(--panel-2); font-variant-numeric: tabular-nums; }
+.fame-step--reached { color: var(--text); }
+.fame-step--current { color: var(--amber-ink); background: var(--amber); font-weight: 700; box-shadow: 0 0 16px rgba(255, 181, 71, 0.35); }
+.fame-step__mark { text-align: center; }
+.career-card { display: block; width: 100%; height: auto; margin: var(--space-2) 0; border-radius: var(--radius); box-shadow: var(--shadow); }
 
+.milestone { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: var(--space-2); margin-bottom: 6px;
+  padding: 6px var(--space-2); background: var(--panel-2); border-radius: var(--radius); }
+.milestone__num { display: flex; justify-content: center; }
+.milestone__name { font-weight: 600; }
+.milestone__when { font-size: var(--size-xs); }
+/* A record: black vinyl with grooves and a label holding the milestone's number. Gold once you've reached it. */
+.disc { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%;
+  font: 700 11px var(--font-body); color: var(--text);
+  background: radial-gradient(circle, var(--case-edge) 0 9px, transparent 9.5px), repeating-radial-gradient(circle, #15131b 0 1px, #2c2935 1px 2px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
+.disc--gold { background: radial-gradient(circle, #fff3c4 0 4px, #b8860b 4.5px 8px, transparent 8.5px),
+  repeating-radial-gradient(circle, #f6cd4c 0 1px, #c4931a 1px 2.5px); box-shadow: 0 0 10px rgba(246, 205, 76, 0.5); }
 
-/* =====================================================================
-   Visual pass (Phase 7): friendlier cards, consistent spacing, readable numbers.
-   ===================================================================== */
+/* ---------- Shop: manila price tags ---------- */
 
-.panel { border-width: 2px; box-shadow: var(--shadow); padding: var(--space-4); margin-bottom: var(--space-3); }
-.panel__title { font-weight: bold; letter-spacing: 1.5px; }
-.btn { border-width: 2px; border-radius: 10px; font-weight: 600; transition: transform 0.05s; }
-.btn:active:not(:disabled) { transform: translate(1px, 1px); }
-.btn--primary { box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); }
-.block { border-width: 2px; box-shadow: var(--shadow); border-radius: var(--radius); }
-.block__title { font-size: 20px; }
-.topbar { border-bottom-width: 2px; padding: var(--space-2) var(--space-4); }
-.stat__value { font-size: 20px; font-variant-numeric: tabular-nums; }
-.rows dd, .num, .skill__value { font-variant-numeric: tabular-nums; }
-.tabs { padding: 0 var(--space-4); border-bottom-width: 2px; }
-.tab { font-weight: 600; }
-.tab--active { border-bottom-width: 4px; }
-.screen__title { letter-spacing: 0.5px; }
-.modal { border-width: 2px; box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45); border-radius: 18px; }
-.pick, .venue, .deal, .person, .cal__day, .message, .setlist-song { border-radius: 12px; }
-.venue, .person { border-width: 2px; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3); }
-.notice { border-radius: 12px; border-width: 2px; }
-.badge { padding: 2px 9px; }
-.hint { line-height: 1.5; }
-.end-day { flex-wrap: wrap; gap: var(--space-2); }
+/* The shadow is on the whole grid, so it follows each tag's clipped shape. */
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 22px 16px; margin-bottom: var(--space-3);
+  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.55)); }
+/* A tag with its top corners cut off, a punched hole, and the name printed big. */
+.shop-item { display: flex; flex-direction: column; gap: var(--space-1); padding: 36px 18px 18px; text-align: center;
+  background: linear-gradient(170deg, rgba(255, 255, 255, 0.3), transparent 50%), #e8d3a0; border-radius: 3px; box-shadow: none;
+  clip-path: polygon(18% 0, 82% 0, 100% 13%, 100% 100%, 0 100%, 0 13%); }
+.shop-item::before { content: ""; position: absolute; top: 12px; left: 50%; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%;
+  background: var(--house-deep); box-shadow: 0 0 0 3px #c7ad74; }
+.shop-item--locked { opacity: 0.65; }
+.shop-item__name { font: 800 var(--size-xl)/1.05 var(--font-head); color: var(--ink); }
+.shop-item__buy { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: auto; }
 
-/* ---------- Today: event card ---------- */
-
-.event-card { border: 2px solid var(--pink); background: rgba(255, 126, 182, 0.08); border-radius: var(--radius);
-  box-shadow: var(--shadow); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-3); }
-.event-card__title { font-size: 20px; font-weight: bold; color: var(--pink); }
-.event-card p { margin: var(--space-1) 0 var(--space-2); }
-.event-card__choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-2); }
-.choice-btn { font: inherit; text-align: left; color: var(--text); background: var(--panel); border: 2px solid var(--line);
-  border-radius: 12px; padding: var(--space-2) var(--space-3); cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
-.choice-btn:hover:not(:disabled) { border-color: var(--pink); }
-.choice-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.choice-btn span { color: var(--accent); font-weight: bold; font-size: 14px; }
-.choice-btn em { color: var(--text-muted); font-size: 12px; }
-
-/* ---------- Today: tutorial tips ---------- */
-
-.tip-card { border: 2px solid var(--teal); background: rgba(79, 209, 197, 0.08); border-radius: var(--radius);
-  box-shadow: var(--shadow); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-3); }
-.tip-card__title { font-weight: bold; color: var(--teal); font-size: 18px; }
-.tip-card p { margin: 6px 0 var(--space-2); }
-.tip-card__actions { display: flex; gap: var(--space-1); }
-.tour-highlight { outline: 3px dashed var(--teal) !important; outline-offset: 4px; border-radius: 12px; animation: tour-pulse 1.6s ease-in-out infinite; }
-@keyframes tour-pulse { 50% { outline-color: rgba(79, 209, 197, 0.35); } }
-
-/* ---------- Banners ---------- */
-
-.toast { border-width: 2px; box-shadow: var(--shadow); }
-.toast--milestone { border-color: var(--pink); background: rgba(255, 126, 182, 0.10); font-weight: 600; }
-
-/* ---------- Career ---------- */
-
-.fame__name { font-size: 32px; font-weight: bold; color: var(--accent); }
-.fame__fans { color: var(--text-muted); margin-bottom: var(--space-1); }
-.milestone { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: var(--space-2);
-  padding: var(--space-1) var(--space-2); border-radius: 10px; margin-bottom: 6px; background: var(--panel-2); opacity: 0.7; }
-.milestone--done { opacity: 1; border: 2px solid var(--pink); }
-.milestone__num { text-align: center; font-weight: bold; }
-.milestone__name { font-weight: bold; }
-.milestone__when { font-size: 13px; }
-
-/* ---------- Three weeks in ---------- */
-
-.slice__headline { font-size: 48px; max-width: 900px; }
-.slice__sub { color: var(--text-muted); max-width: 640px; font-size: 18px; }
-.slice__panel { width: 620px; max-width: 100%; text-align: left; }
-
-/* ---------- Skip summary ---------- */
-
-.skip-days .result-row { grid-template-columns: 170px 1fr; }
-
-/* ---------- Settings ---------- */
-
-.switch { display: flex; align-items: center; gap: var(--space-1); cursor: pointer; }
-.switch input { width: 18px; height: 18px; accent-color: var(--accent); }
-
-/* ---------- Shop, studio, releases (Phase 8) ---------- */
-
-.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-3); }
-.shop-item { background: var(--panel); border: 2px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
-  padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-1); }
-.shop-item--locked { opacity: 0.7; }
-.shop-item__icon { font-size: 40px; }
-.shop-item__name { font-size: 18px; font-weight: bold; }
-.shop-item__buy { margin-top: auto; }
-.cal__block--studio { background: rgba(255, 126, 182, 0.18); color: var(--pink); font-weight: bold; }
-.release-list { margin-top: var(--space-2); }
-
-/* ---------- Residency contract (Phase 9) ---------- */
+/* ---------- Residency contract ---------- */
 
 .contract__terms { font-size: 18px; }
 .contract-edit { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); }
 .contract-edit .field { margin-bottom: var(--space-1); }
 
-/* ---------- Phase 10: day job, session work, Plan week ---------- */
+/* ---------- Map: a folded paper road map with push pins ---------- */
 
-/* A button that looks like a link (the Job row in the Stats panel). */
-.link-btn { font: inherit; color: var(--teal); background: none; border: none; padding: 0; cursor: pointer; text-align: right; }
-.link-btn:hover { text-decoration: underline; }
-
-/* Session work on the Calendar grid. */
-.cal__block--sessionWork { background: rgba(79, 209, 197, 0.18); color: var(--teal); font-weight: bold; }
-
-/* The quit confirm table: week, music income, bills, left over. */
-.quit-table { width: 100%; border-collapse: collapse; margin-bottom: var(--space-2); font-variant-numeric: tabular-nums; }
-.quit-table th, .quit-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); }
-.quit-table th:first-child, .quit-table td:first-child { text-align: left; }
-.quit-table th { color: var(--text-muted); font-weight: normal; }
-
-/* Plan week rows: the day, what's planned, the task list, and "Change picks". */
-.plan__row + .plan__row { margin-top: 6px; }
-.plan__row--past { opacity: 0.5; }
-.plan-week__select { max-width: 220px; }
-
-/* ---------- Phase 11: the Map, trips, and travel ---------- */
-
-.map-layout { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: var(--space-3); align-items: start; }
-.map { width: 100%; height: auto; display: block; }
-.map__ring { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 5; }
-.map__city circle { fill: var(--accent); stroke: var(--bg); stroke-width: 2; }
-.map__city text { fill: var(--text); font-size: 11px; font-family: inherit; }
-.map__city--locked circle { fill: var(--panel-2); stroke: var(--line); }
-.map__city--locked text { fill: var(--text-muted); }
-
+.map-layout { display: grid; grid-template-columns: minmax(300px, 440px) 1fr; gap: var(--space-3); align-items: start; margin-bottom: var(--space-3); }
+/* Fold creases down the middle both ways, roads (the rings) in red, and cities as red push pins. */
+.map-sheet { padding: 16px;
+  background:
+    linear-gradient(90deg, transparent 49.6%, rgba(0, 0, 0, 0.07) 50%, rgba(255, 255, 255, 0.5) 50.4%, transparent 51%),
+    linear-gradient(180deg, transparent 49.6%, rgba(0, 0, 0, 0.07) 50%, rgba(255, 255, 255, 0.5) 50.4%, transparent 51%),
+    #f3eedb; }
+.map { display: block; width: 100%; height: auto; }
+.map__ring { fill: none; stroke: rgba(196, 48, 42, 0.45); stroke-width: 2; stroke-dasharray: 6 5; }
+.map__city circle { fill: var(--red-pen); stroke: #fff; stroke-width: 2; filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.4)); }
+.map__city text { fill: var(--ink); font: 700 12px var(--font-head); }
+.map__city--locked circle { fill: #a9a395; }
+.map__city--locked text { fill: var(--ink-soft); }
 .city-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-2); }
-.city { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: var(--space-2); }
+.city { padding: var(--space-2); background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); }
 .city--locked { opacity: 0.7; }
 .city__head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.city__head strong { font: 700 var(--size-l) var(--font-head); }
 
-.trip { background: var(--panel-2); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
-.trip .log { margin: 6px 0; }
-
-/* Travel and "on the road" on the Calendar grid. */
-.cal__block--travel { background: rgba(255, 181, 71, 0.18); color: var(--accent); font-weight: bold; }
-.cal__block--away { background: rgba(255, 181, 71, 0.08); color: var(--text-muted); font-style: italic; }
-.block--travel { border-style: solid; border-color: var(--accent); background: rgba(255, 181, 71, 0.06); }
-
-/* ---------- Phase 13: fame ladder, career card, top bar fame ---------- */
-
-.topbar__fame { color: var(--accent); font-size: 13px; font-weight: bold; }
-
-.fame-ladder { display: flex; flex-direction: column; gap: 4px; margin-top: var(--space-2); }
-.fame-step { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; padding: 6px 10px; border-radius: 8px;
-  background: var(--panel-2); color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.fame-step--reached { color: var(--text); }
-.fame-step--current { background: var(--accent); color: var(--accent-text); font-weight: bold; }
-.fame-step__mark { text-align: center; }
-
-.career-card { width: 100%; height: auto; display: block; border-radius: var(--radius); margin: var(--space-2) 0; box-shadow: var(--shadow); }
-
-/* ---------- The "Previous day" box on Today, and its full readout ---------- */
-
-.recap { display: block; width: 100%; text-align: left; font: inherit; color: var(--text); cursor: pointer; }
-button.recap:hover { border-color: var(--accent); }
-.recap--empty { cursor: default; }
-.recap__numbers { margin-bottom: var(--space-2); font-variant-numeric: tabular-nums; }
-.recap__list { list-style: none; margin: 0 0 var(--space-2); padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
-.recap__list li { display: flex; gap: 8px; align-items: baseline; }
-.recap__icon { flex: 0 0 auto; }
-.recap__more { color: var(--teal); font-size: 14px; font-weight: bold; }
-.recap__strip { color: var(--text-muted); margin-top: 0; font-variant-numeric: tabular-nums; }
-.modal--wide { width: 760px; max-width: calc(100vw - 32px); }
-
-/* ---------- Finances screen ---------- */
+/* ---------- Finances ---------- */
 
 .finance-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-2); margin-bottom: var(--space-3); }
-.finance-card { background: var(--panel); border: 2px solid var(--line); border-radius: var(--radius); padding: var(--space-2) var(--space-3); box-shadow: var(--shadow); }
-.finance-card__label { display: block; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
-.finance-card__value { display: block; font-size: 26px; font-weight: bold; font-variant-numeric: tabular-nums; }
+/* Readouts, like the top bar's. */
+.finance-card { padding: var(--space-2) var(--space-3); background: var(--case-grain) 0 0 / 4px 4px, linear-gradient(180deg, #24212c, #1b1922);
+  border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.finance-card__label { display: block; font: 700 var(--size-s) var(--font-head); color: var(--text-muted); }
+.finance-card__value { display: block; font: 800 var(--size-2xl)/1.1 var(--font-head); font-variant-numeric: tabular-nums; }
 .finance-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-3); }
 @media (max-width: 900px) { .finance-grid { grid-template-columns: minmax(0, 1fr); } }
-.finance-bar { display: grid; grid-template-columns: 1fr 120px 44px; align-items: center; gap: 8px; margin: 4px 0; font-size: 14px; }
-.finance-bar__track { height: 10px; background: var(--panel-2); border-radius: 5px; overflow: hidden; }
+.finance-bar { display: grid; grid-template-columns: 1fr 120px 44px; align-items: center; gap: 8px; margin: 4px 0; font-size: var(--size-s); }
+.finance-bar__track { height: 10px; background: rgba(0, 0, 0, 0.35); border-radius: 5px; overflow: hidden; }
 .finance-bar__fill { display: block; height: 100%; }
 .finance-bar__fill--in { background: var(--good); }
 .finance-bar__fill--out { background: var(--bad); }
 .finance-bar__pct { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-muted); }
-.chart { width: 100%; height: auto; display: block; }
+.chart { display: block; width: 100%; height: auto; }
 .chart__in { fill: var(--good); }
 .chart__out { fill: var(--bad); }
 .chart__axis { stroke: var(--line); stroke-width: 1; }
-.chart__label { fill: var(--text-muted); font-size: 12px; font-family: inherit; }
-.finance-trip td { background: var(--panel-2); }
+.chart__label { fill: var(--text-muted); font: 12px var(--font-body); }
+
+/* Show by show, printed on 80s green-bar computer paper: pale green bands, and tractor-feed holes down both edges
+   past a perforated line. */
+.printout {
+  margin-bottom: var(--space-3);
+  padding: 22px 44px 18px;
+  background:
+    radial-gradient(circle, var(--house-deep) 0 4px, transparent 4.5px) 0 6px / 22px 24px repeat-y,
+    radial-gradient(circle, var(--house-deep) 0 4px, transparent 4.5px) right 0 top 6px / 22px 24px repeat-y,
+    linear-gradient(90deg, transparent 27px, rgba(0, 0, 0, 0.14) 27px 28px, transparent 28px calc(100% - 28px), rgba(0, 0, 0, 0.14) calc(100% - 28px) calc(100% - 27px), transparent calc(100% - 27px)),
+    repeating-linear-gradient(180deg, rgba(120, 190, 120, 0.26) 0 32px, transparent 32px 64px),
+    #f7f7ef;
+}
+.finance-trip td { background: rgba(31, 34, 64, 0.06); }
 .finance-trip__show td:first-child { padding-left: 24px; }
-.finance-shows td, .finance-shows th { font-size: 14px; }
+.finance-shows td, .finance-shows th { font-size: var(--size-s); }
 .finance-shows td:nth-child(2), .finance-shows th:nth-child(2), .finance-trip td:first-child { text-align: left; }
+
+/* ---------- Debug panel (only with ?debug) ---------- */
+
+.debug { position: fixed; left: 16px; bottom: 16px; padding: 12px; font-size: var(--size-xs); background: var(--house-deep);
+  border: 1px dashed var(--amber); border-radius: var(--radius); opacity: 0.94; }
+.debug__title { color: var(--amber); font-weight: 700; margin-bottom: 8px; }
+.debug__row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.debug__toggle { display: block; padding: 0; font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+
+/* ---------- Less motion ----------
+   Players who asked their computer for less motion get everything in its final place right away. */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

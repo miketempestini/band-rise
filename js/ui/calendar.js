@@ -1,6 +1,7 @@
 // calendar.js
 // The Calendar screen: a 4-week grid of everything booked (job shifts, days off, shows, requests,
-// today's plans). Click a day to see it: take a workday off, or manage a booked show
+// today's plans), drawn as a paper wall planner with a strip of colored tape for each kind of thing.
+// Click a day to see it on an index card beside the planner: take a workday off, or manage a booked show
 // (setlist, session players, cancel).
 
 window.Game = window.Game || {};
@@ -41,8 +42,8 @@ Game.ui.calendar = {
         '<div class="screen__head">' +
           '<h1 class="screen__title">Calendar</h1>' +
           '<div class="actions actions--left">' +
-            '<button class="btn" data-action="planWeek">🗓️ Plan week</button>' +
-            '<button class="btn" data-action="openJob">💼 Day job</button>' +
+            '<button class="btn" data-action="planWeek">Plan week</button>' +
+            '<button class="btn" data-action="openJob">Day job</button>' +
             '<button class="btn" data-action="back">← Back</button>' +
           '</div>' +
         '</div>' +
@@ -53,7 +54,7 @@ Game.ui.calendar = {
           ' (page ' + (page + 1) + ' of ' + pages + ')</span>' +
           '<button class="btn btn--small" data-action="calPage" data-page="' + (page + 1) + '"' + (page >= pages - 1 ? ' disabled' : '') + '>Later ▶</button></div>' : '') +
         '<div class="cal-layout">' +
-          '<div class="cal">' + head + cells + '</div>' +
+          '<div class="cal paper">' + head + cells + '</div>' +
           '<div class="cal-detail">' + self.detailHtml(state, app, selected) + '</div>' +
         '</div>' +
       '</section>' +
@@ -86,10 +87,10 @@ Game.ui.calendar = {
   blockInfo: function (state, day, block) {
     var c = Game.rules.booking.blockContents(state, day, block);
     var text = {
-      show: function () { return '🎤 ' + Game.content.venues[c.entry.venueId].name; },
-      studio: function () { return '🎙️ ' + Game.content.studios[c.entry.studio].name; },
-      sessionWork: function () { return '🎧 ' + state.sessionWork[c.entry.workId].bandName; },
-      travel: function () { return '🚐 ' + (c.entry.to === 'hometown' ? 'Home' : Game.content.cities[c.entry.to].name); },
+      show: function () { return Game.content.venues[c.entry.venueId].name; },
+      studio: function () { return Game.content.studios[c.entry.studio].name; },
+      sessionWork: function () { return state.sessionWork[c.entry.workId].bandName; },
+      travel: function () { return (c.entry.to === 'hometown' ? 'Home' : Game.content.cities[c.entry.to].name); },
       away: function () { return 'On the road'; },
       plan: function () { return Game.content.actions[c.entry.actionId].name; },
       pending: function () { return '? ' + c.reason.replace('Waiting to hear from ', ''); },
@@ -153,7 +154,7 @@ Game.ui.calendar = {
     shows.forEach(function (e) { parts.push(self.showHtml(state, app, e)); });
     if (!shows.length) parts.push('<p class="hint">No show booked. Use Book to email a venue.</p>');
 
-    return '<div class="panel">' + parts.join('') + '</div>';
+    return '<div class="cal-card paper">' + parts.join('') + '</div>';
   },
 
   // The three blocks of a day with Plan / Change / Clear buttons. Energy and cash for a later day are
@@ -170,16 +171,16 @@ Game.ui.calendar = {
       if (info.kind === 'job') right = '<span class="muted">Day job</span>';
       else if (info.kind === 'show') right = '<span class="muted">Show (see below)</span>';
       else if (info.kind === 'travel') {
-        right = '<span class="plan__task">🚐 ' + (entry.to === 'hometown' ? 'Driving home from ' + h.escape(Game.content.cities[entry.from].name)
+        right = '<span class="plan__task">' + (entry.to === 'hometown' ? 'Driving home from ' + h.escape(Game.content.cities[entry.from].name)
           : 'Travel to ' + h.escape(Game.content.cities[entry.to].name)) + '</span><span class="muted">-' + Game.balance.travel.energyPerBlock + ' energy</span>';
       }
       else if (info.kind === 'sessionWork') {
         var work = state.sessionWork[entry.workId];
-        right = '<span class="plan__task">🎧 Session work: ' + h.escape(work.bandName) + ', "' + h.escape(work.songTitle) + '" (+' + h.money(work.fee) + ')</span>' +
+        right = '<span class="plan__task">Session work: ' + h.escape(work.bandName) + ', "' + h.escape(work.songTitle) + '" (+' + h.money(work.fee) + ')</span>' +
           '<button class="btn btn--small btn--ghost" data-action="cancelSessionWork" data-work="' + work.id + '">Cancel</button>';
       }
       else if (info.kind === 'studio') {
-        right = '<span class="plan__task">🎙️ ' + h.escape(Game.content.studios[entry.studio].name) + ': "' + h.escape(state.songs[entry.songId].title) + '"</span>' +
+        right = '<span class="plan__task">Recording at ' + h.escape(Game.content.studios[entry.studio].name) + ': "' + h.escape(state.songs[entry.songId].title) + '"</span>' +
           '<button class="btn btn--small btn--ghost" data-action="cancelStudio" data-entry="' + entry.id + '">Cancel</button>';
       }
       else if (entry && entry.type === 'action') {
@@ -255,7 +256,7 @@ Game.ui.calendar = {
     if (trip) {
       var tr = Game.rules.travel;
       var legs = tr.tripLegs(state, trip);
-      tripText = '<p class="hint">🚐 Trip: ' + legs.map(function (leg) {
+      tripText = '<p class="hint">Trip: ' + legs.map(function (leg) {
         return Game.content.cities[leg.from].name + ' → ' + Game.content.cities[leg.to].name + ' (' + h.dateLabel(tr.slotDay(leg.slots[0])) + ' ' +
           Game.content.calendar.blockNames[tr.slotBlock(leg.slots[0])].toLowerCase() + ')';
       }).join(', ') + ' · gas ' + h.money(legs.reduce(function (sum, leg) { return sum + tr.legGas(leg.from, leg.to, state); }, 0)) +
@@ -263,7 +264,7 @@ Game.ui.calendar = {
     }
 
     return '<div class="show">' +
-      '<div class="show__head">🎤 <strong>' + h.escape(venue.name) + '</strong>' + (venue.cityId !== 'hometown' ? ', ' + h.escape(Game.content.cities[venue.cityId].name) : '') +
+      '<div class="show__head"><strong>' + h.escape(venue.name) + '</strong>' + (venue.cityId !== 'hometown' ? ', ' + h.escape(Game.content.cities[venue.cityId].name) : '') +
         ' · ' + Game.content.calendar.blockNames[e.block] + '</div>' + tripText +
       '<p class="muted">' + h.escape(Game.rules.booking.dealLabel(venue, e.deal, e.fee)) + '</p>' +
       '<h4 class="show__sub">Setlist</h4>' + setlist +

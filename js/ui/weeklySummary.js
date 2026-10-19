@@ -1,5 +1,6 @@
 // weeklySummary.js
-// The Sunday night wrap-up: money in, money out, ending cash, and debt.
+// The Sunday night wrap-up, drawn as a settlement sheet (the money sheet a band signs at the end of a night):
+// money in, money out, ending cash, and debt, signed with your name. Skills and band news follow below it.
 // It shows the most recent week in the ledger.
 
 window.Game = window.Game || {};
@@ -30,18 +31,16 @@ Game.ui.weeklySummary = {
     root.innerHTML =
       Game.ui.topbar.html(state, app.screen) +
       '<section class="screen screen--narrow">' +
-        '<h1 class="screen__title">Week of ' + Game.rules.day.weekLabel(Game.rules.day.firstDayOfWeek(week.week)) + ': wrap-up</h1>' +
-        '<div class="summary-grid">' +
-          self.listPanel('Money in', inRows, h.money(totals.totalIn), 'Nothing came in this week.') +
-          self.listPanel('Money out', outRows, h.money(totals.totalOut), 'Nothing went out this week.') +
-        '</div>' +
-        self.skillsPanel(week) +
-        (week.bandNotes && week.bandNotes.length
-          ? '<div class="panel"><h3 class="panel__title">Band this week</h3><ul class="log">' +
-              week.bandNotes.map(function (line) { return '<li>' + h.escape(line) + '</li>'; }).join('') + '</ul></div>'
-          : '') +
-        '<div class="panel">' +
-          '<dl class="rows rows--big">' +
+        '<article class="settlement paper paper--taped">' +
+          '<header class="settlement__head">' +
+            '<h1 class="settlement__title">Weekly settlement</h1>' +
+            '<span class="settlement__week">Week of ' + Game.rules.day.weekLabel(Game.rules.day.firstDayOfWeek(week.week)) + '</span>' +
+          '</header>' +
+          '<div class="summary-grid">' +
+            self.listPanel('Money in', inRows, h.money(totals.totalIn), 'Nothing came in this week.') +
+            self.listPanel('Money out', outRows, h.money(totals.totalOut), 'Nothing went out this week.') +
+          '</div>' +
+          '<dl class="rows rows--big settlement__totals">' +
             '<dt>Starting cash</dt><dd>' + h.money(week.startCash) + '</dd>' +
             '<dt>Ending cash</dt><dd class="highlight">' + h.money(week.endCash) + '</dd>' +
             (week.startDebt > 0 || week.endDebt > 0
@@ -50,7 +49,14 @@ Game.ui.weeklySummary = {
             '<dt>Day job shifts worked</dt><dd>' + week.shiftsWorked + '</dd>' +
           '</dl>' +
           debtWarning +
-        '</div>' +
+          '<div class="settlement__sign"><span class="settlement__signature">' + h.escape(state.player.name) + '</span>' +
+            '<span class="settlement__line">Signed</span></div>' +
+        '</article>' +
+        self.skillsPanel(week) +
+        (week.bandNotes && week.bandNotes.length
+          ? '<div class="panel"><h3 class="panel__title">Band this week</h3><ul class="log">' +
+              week.bandNotes.map(function (line) { return '<li>' + h.escape(line) + '</li>'; }).join('') + '</ul></div>'
+          : '') +
         '<div class="actions">' +
           '<button class="btn btn--primary btn--big" data-action="continue">Start the week of ' + Game.rules.day.weekLabel(Game.rules.day.firstDayOfWeek(week.week + 1)) + '</button>' +
         '</div>' +
@@ -81,12 +87,12 @@ Game.ui.weeklySummary = {
       '</div>';
   },
 
-  // A panel with a list of label/amount rows and a total.
+  // One column of the settlement sheet: a list of label/amount rows and a total.
   listPanel: function (title, rows, total, emptyText) {
     var body = rows.length
       ? rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>'; }).join('')
       : '<dt class="muted">' + emptyText + '</dt><dd></dd>';
-    return '<div class="panel">' +
+    return '<div class="settlement__col">' +
       '<h3 class="panel__title">' + title + '</h3>' +
       '<dl class="rows">' + body + '<dt class="rows__total">Total</dt><dd class="rows__total">' + total + '</dd></dl>' +
       '</div>';

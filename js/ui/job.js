@@ -50,17 +50,17 @@ Game.ui.job = {
     if (job.status !== 'none' && !(job.pending && job.pending.status === 'none')) {
       var partProblem = rules.partTimeProblem(state);
       var partCard = job.status === 'full' && !job.pending
-        ? '<div class="shop-item">' +
+        ? '<div class="shop-item paper">' +
             '<div class="shop-item__name">Go part-time</div>' +
             '<p class="hint">Work ' + rules.workdayNames('part') + ' only (' + h.money(b.partTimeDays.length * b.payPerShift) +
               ' a week instead of ' + h.money(b.fullTimeDays.length * b.payPerShift) + '), starting next Monday. ' +
               'Needs reputation ' + b.partTimeMinReputation + ' and job standing ' + b.partTimeMinStanding + '.</p>' +
             '<div class="shop-item__buy">' + (partProblem
-              ? '<span class="pick__reason">🔒 ' + h.escape(partProblem) + '</span>'
+              ? '<span class="pick__reason">' + h.escape(partProblem) + '</span>'
               : '<button class="btn btn--primary" data-action="partTime">Go part-time</button>') + '</div>' +
           '</div>'
         : '';
-      var quitCard = '<div class="shop-item">' +
+      var quitCard = '<div class="shop-item paper">' +
           '<div class="shop-item__name">Quit the day job</div>' +
           '<p class="hint">Every weekday block becomes yours, from next Monday. See your music income next to your bills before you decide.</p>' +
           '<div class="shop-item__buy"><button class="btn" data-action="quitScreen">Quit the day job…</button></div>' +

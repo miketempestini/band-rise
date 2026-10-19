@@ -1,7 +1,17 @@
-Russo One (russo-one.woff2, Latin characters only)
-Copyright (c) 2011-2012, Jovanny Lemonad (jovanny.ru), with Reserved Font Name "Russo".
-Downloaded from Google Fonts (https://fonts.google.com/specimen/Russo+One).
+Fonts used by Band Rise (Latin characters only). All were downloaded from Google Fonts and are free to use,
+bundle, and share with software.
 
-This font is licensed under the SIL Open Font License, Version 1.1.
-It is free to use, bundle, and share with software. The full license is at:
-https://openfontlicense.org/open-font-license-official-text/
+russo-one.woff2
+  Russo One. Copyright (c) 2011-2012, Jovanny Lemonad (jovanny.ru), with Reserved Font Name "Russo".
+  SIL Open Font License, Version 1.1.
+
+barlow-400.woff2, barlow-600.woff2, barlow-condensed-700.woff2, barlow-condensed-800.woff2
+  Barlow and Barlow Condensed. Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow).
+  SIL Open Font License, Version 1.1.
+
+permanent-marker-400.woff2
+  Permanent Marker. Copyright (c) 2010 by Font Diner, Inc. Apache License, Version 2.0.
+
+License texts:
+  SIL Open Font License 1.1: https://openfontlicense.org/open-font-license-official-text/
+  Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0

@@ -1,7 +1,8 @@
 // finances.js (screen)
 // The Finances tab: every dollar in and out for a period (last week, last month, last 3 months): the band's
 // show money (ticket sales, the manager, each bandmate, you), your money in and out by category, what others
-// covered, the top earners and costs, a weekly chart, and a show-by-show list with trips and tours grouped.
+// covered, the top earners and costs, a weekly chart, and a show-by-show list with trips and tours grouped (printed
+// on 80s green-bar computer paper).
 // Draw only: the numbers come from Game.rules.finances.
 
 window.Game = window.Game || {};
@@ -160,7 +161,7 @@ Game.ui.finances = {
   showsHtml: function (state, days) {
     var h = Game.ui.helpers;
     var groups = Game.rules.finances.showList(state, days);
-    if (!groups.length) return '<div class="panel"><h3 class="panel__title">Show by show</h3><p class="hint">No shows in this period.</p></div>';
+    if (!groups.length) return '<div class="printout paper"><h3 class="panel__title">Show by show</h3><p class="hint">No shows in this period.</p></div>';
     var showRow = function (x, inTrip) {
       var v = Game.content.venues[x.venueId];
       var band = Object.keys(x.memberPay).reduce(function (t, id) { return t + x.memberPay[id]; }, 0);
@@ -174,12 +175,12 @@ Game.ui.finances = {
       if (!g.tripId) return showRow(g.shows[0], false);
       var cities = g.shows.map(function (x) { return Game.content.cities[Game.content.venues[x.venueId].cityId].name; })
         .filter(function (n, i, all) { return all.indexOf(n) === i; });
-      return '<tr class="finance-trip"><td colspan="7"><strong>' + (g.tour ? '🚐 Tour' : '🚐 Trip') + ':</strong> ' + h.escape(cities.join(', ')) + ' · ' +
+      return '<tr class="finance-trip"><td colspan="7"><strong>' + (g.tour ? 'Tour' : 'Trip') + ':</strong> ' + h.escape(cities.join(', ')) + ' · ' +
           g.shows.length + ' show' + (g.shows.length === 1 ? '' : 's') + ' · your travel and hotels ' + h.money(g.travel) + '</td>' +
           '<td>Trip net</td><td class="' + (g.net >= 0 ? 'pos' : 'neg') + '"><strong>' + h.money(g.net) + '</strong></td></tr>' +
         g.shows.map(function (x) { return showRow(x, true); }).join('');
     }).join('');
-    return '<div class="panel"><h3 class="panel__title">Show by show</h3>' +
+    return '<div class="printout paper"><h3 class="panel__title">Show by show</h3>' +
       '<table class="quit-table finance-shows"><thead><tr><th>Date</th><th>Venue</th><th>Ticket sales / fee</th><th>Manager</th><th>Band</th><th>You</th>' +
         '<th>Merch</th><th>Production</th><th>Net to you</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<p class="hint">Net to you: your pay and tips, plus merch, minus production (and, for a trip, minus your part of the travel and hotels).</p></div>';

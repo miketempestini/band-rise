@@ -828,7 +828,38 @@ Sixteen screens, most of them panels around one main Today view. The vertical sl
 | 15b | Finances | Every dollar in and out for the last week, month, or 3 months: the band's show money (ticket sales, manager, each bandmate, you), your money in and out by category, what others covered, top earners and costs, a 13-week chart, and show-by-show profit with trips and tours grouped | Filter | No |
 | 16 | Settings and saves | Export, import, reset | Manage saves | Partly (export and import) |
 
-Visual style: simple and cartoonish, with details to come. Until then, plain colored panels and placeholder icons are fine.
+### Visual style: backstage
+
+Each screen is drawn as the real thing a working band uses for that job. Paper is the one bold thing; everything
+around it stays quiet (a dark room with the house lights down, and plain matte road-case panels).
+
+| Screen | Drawn as |
+| --- | --- |
+| Title | An 80s airbrushed arena painting with a chrome "BAND RISE" logo |
+| Top bar and tabs | The lid of a road case (LED meters for energy and morale), and a mixing desk's scribble strip (tab names in marker on white tape) |
+| Today | A day sheet taped down with gaffer tape, the previous day's older sheet, and upcoming shows as little gig posters, in front of a rehearsal room |
+| Pop-ups | A clipboard |
+| Calendar | A paper wall planner and an index card for the selected day |
+| People | Laminated backstage passes with portraits (Band or Guest), in front of a backstage hallway |
+| Book | Venue flyers under a painting of each size of venue |
+| Gig result | The venue's painting behind a lit crowd counter, then the result rubber-stamped on it |
+| Songs | A spiral notebook page and a cassette tracklist, in front of a bedroom studio |
+| Inbox | Paper slips, each with a strip of colored tape for its kind |
+| Weekly summary | A settlement sheet signed with your name |
+| Finances | Readouts, and the show-by-show list on 80s green-bar printer paper |
+| Shop | Manila price tags, in front of a merch table |
+| Map | A folded paper road map with push pins, in front of a van on the highway |
+| Career | Gold records for milestones reached |
+| New career | An open mic sign-up sheet, in front of the open mic bar |
+
+**Spike tape** (the colored tape crews use to mark a stage) is the color code for kinds of things everywhere:
+yellow for shows, blue for the studio and business, green for money and session work, orange for the day job, pink
+for events.
+
+**Type:** Barlow for reading, Barlow Condensed for headings and posters, Permanent Marker for anything handwritten,
+Russo One for the chrome logo. Everything works offline. Motion is used only where it means something (the title
+intro, a new day sheet, the crowd counter, the result stamp), and none of it plays when the computer asks for less
+motion.
 
 ## Open questions
 

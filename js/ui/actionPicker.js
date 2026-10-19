@@ -1,5 +1,5 @@
 // actionPicker.js
-// The list of actions that pops up when you click a free block on the Today screen.
+// The list of actions that pops up when you click a free block on the Today screen (drawn as a clipboard).
 // Each action shows its money cost, energy cost, and expected effect.
 // Actions you can't afford (money or energy) are greyed out with the reason.
 // Actions that need a song (Practice) open a second step to pick the song.
@@ -38,11 +38,13 @@ Game.ui.actionPicker = {
 
     return '<div class="overlay" data-action="closePicker">' +
       '<div class="modal" role="dialog" aria-label="' + title + '">' +
-        '<div class="modal__head">' +
-          '<h2 class="modal__title">' + title + '</h2>' +
-          '<button class="btn btn--ghost btn--small" data-action="closePicker">Close</button>' +
+        '<div class="modal__paper">' +
+          '<div class="modal__head">' +
+            '<h2 class="modal__title">' + title + '</h2>' +
+            '<button class="btn btn--ghost btn--small" data-action="closePicker">Close</button>' +
+          '</div>' +
+          body +
         '</div>' +
-        body +
       '</div>' +
     '</div>';
   },

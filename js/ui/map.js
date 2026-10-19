@@ -1,5 +1,6 @@
 // map.js
-// The Map screen: a simple ring map (Millbrook in the middle, then Near, Mid, and Far cities), and a card for
+// The Map screen, in front of a dim picture of a van on the highway: a paper road map with push pins (Millbrook in
+// the middle, then rings of Near, Mid, and Far cities), and a card for
 // every city with its distance, travel time and gas, fans out of its fan ceiling, buzz, venues, and whether
 // it's unlocked (or exactly what it still needs). "Book here" opens the Book screen on that city.
 
@@ -30,6 +31,7 @@ Game.ui.map = {
 
     root.innerHTML =
       Game.ui.topbar.html(state, app.screen) +
+      '<div class="backdrop backdrop--map" aria-hidden="true"></div>' +
       '<section class="screen">' +
         '<div class="screen__head">' +
           '<h1 class="screen__title">Map</h1>' +
@@ -37,7 +39,7 @@ Game.ui.map = {
         '</div>' +
         h.notice(app.notice) +
         '<div class="map-layout">' +
-          '<div class="panel">' + self.svg(state, byRegion) + '</div>' +
+          '<div class="map-sheet paper">' + self.svg(state, byRegion) + '</div>' +
           '<div class="panel">' + self.vanHtml(state) + '</div>' +
         '</div>' +
         cards +
@@ -71,7 +73,7 @@ Game.ui.map = {
         return '<g class="map__city' + (open ? '' : ' map__city--locked') + '">' +
           '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + radius.toFixed(1) + '"/>' +
           '<text x="' + x.toFixed(1) + '" y="' + (y + radius + 13).toFixed(1) + '" text-anchor="middle">' +
-            Game.ui.helpers.escape(Game.content.cities[id].name) + (open ? '' : ' 🔒') + '</text></g>';
+            Game.ui.helpers.escape(Game.content.cities[id].name) + '</text></g>';
       }).join('');
     }).join('');
     return '<svg class="map" viewBox="0 0 ' + size + ' ' + size + '" role="img" aria-label="Map of cities around Millbrook">' + rings + dots + '</svg>' +
@@ -83,7 +85,7 @@ Game.ui.map = {
     var h = Game.ui.helpers;
     var van = state.player.gear.van;
     var left = Game.rules.travel.vanShowsLeft(state);
-    return '<h3 class="panel__title">🚐 Your van</h3>' +
+    return '<h3 class="panel__title">Your van</h3>' +
       (van
         ? '<p><strong>' + h.escape(Game.content.vans[van.kind].name) + '</strong> · ' + (left === null ? 'never breaks down' : left + ' out-of-town show' + (left === 1 ? '' : 's') + ' left') +
           (van.worn ? ' · on its last trip' : '') + '</p>'
@@ -111,7 +113,7 @@ Game.ui.map = {
     var played = state.stats.citiesPlayed[cityId] || 0;
     var fadeDays = state.day - cs.lastActivityDay;
     return '<div class="city' + (cs.unlocked ? '' : ' city--locked') + '">' +
-      '<div class="city__head"><strong>' + h.escape(city.name) + '</strong>' + (cs.unlocked ? '' : ' <span class="badge">🔒 Locked</span>') + '</div>' +
+      '<div class="city__head"><strong>' + h.escape(city.name) + '</strong>' + (cs.unlocked ? '' : ' <span class="badge">Locked</span>') + '</div>' +
       '<p class="hint">' + h.escape(city.blurb) + '</p>' +
       '<dl class="rows">' +
         (drive ? '<dt>Travel</dt><dd>' + tr.legBlocks('hometown', cityId) + ' block' + (tr.legBlocks('hometown', cityId) === 1 ? '' : 's') + ' each way · ' +

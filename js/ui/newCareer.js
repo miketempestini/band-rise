@@ -1,5 +1,6 @@
 // newCareer.js
-// The New career screen: enter a name and pick a starting instrument.
+// The New career screen: enter a name and pick a starting instrument, on an open mic sign-up sheet (in front of a
+// dim picture of the bar where it all starts).
 // "Next" moves on to the skills page (chooseSkills.js) to spend starting points.
 
 window.Game = window.Game || {};
@@ -28,9 +29,10 @@ Game.ui.newCareer = {
     }).join('');
 
     root.innerHTML =
+      '<div class="backdrop backdrop--openmic" aria-hidden="true"></div>' +
       '<section class="screen screen--narrow">' +
         '<h1 class="screen__title">New career</h1>' +
-        '<div class="panel">' +
+        '<div class="signup paper paper--taped">' +
           '<label class="field">' +
             '<span class="field__label">Your name</span>' +
             '<input type="text" id="career-name" class="input" maxlength="' + Game.balance.ui.playerNameMaxLength + '" placeholder="Type a name" autocomplete="off" value="' + h.escape(draft.name || '') + '">' +

@@ -25,7 +25,7 @@ Game.ui.dayResults = {
     var self = Game.ui.dayResults;
     var report = state.lastDayReport;
     if (!report) {
-      return '<div class="panel recap recap--empty"><h3 class="panel__title">Previous day</h3>' +
+      return '<div class="recap recap--empty paper paper--old"><h3 class="recap__title">Previous day</h3>' +
         '<p class="hint">End the day to see a summary here: money, energy, and anything big that happened.</p></div>';
     }
     var sum = report.summary;
@@ -40,13 +40,14 @@ Game.ui.dayResults = {
     var highlights = sum ? sum.highlights : report.overnight.slice(0, self.boxHighlights).map(function (line) { return { icon: '•', text: line }; });
     var shown = highlights.slice(0, self.boxHighlights);
     var list = shown.length
-      ? '<ul class="recap__list">' + shown.map(function (x) { return '<li><span class="recap__icon">' + x.icon + '</span>' + h.escape(x.text) + '</li>'; }).join('') +
+      ? '<ul class="recap__list">' + shown.map(function (x) { return '<li>' + h.escape(x.text) + '</li>'; }).join('') +
         (highlights.length > shown.length ? '<li class="muted">+' + (highlights.length - shown.length) + ' more</li>' : '') + '</ul>'
       : '<p class="hint">A quiet day.</p>';
-    return '<button class="panel recap" data-action="openDayReport" title="See the full day">' +
-      '<h3 class="panel__title">Previous day · ' + h.escape(h.dateLabel(report.day)) + '</h3>' +
+    return '<button class="recap paper paper--old" data-action="openDayReport" title="See the full day">' +
+      '<h3 class="recap__title">Previous day</h3>' +
+      '<span class="recap__date">' + h.escape(h.dateLabel(report.day)) + '</span>' +
       numbers + list +
-      '<span class="recap__more">See the full day ›</span>' +
+      '<span class="recap__more">See the full day</span>' +
       '</button>';
   },
 
@@ -73,9 +74,11 @@ Game.ui.dayResults = {
     var h = Game.ui.helpers;
     return '<div class="overlay" data-action="closeDayReport">' +
       '<div class="modal modal--wide" role="dialog" aria-label="The previous day">' +
-        '<div class="modal__head"><h2 class="modal__title">' + h.escape(h.dateLabel(state.lastDayReport.day)) + '</h2>' +
-          '<button class="btn btn--ghost btn--small" data-action="closeDayReport">Close</button></div>' +
-        '<div class="modal__body">' + Game.ui.dayResults.boxNumbersOnly(state) + Game.ui.dayResults.bodyHtml(state) + '</div>' +
+        '<div class="modal__paper">' +
+          '<div class="modal__head"><h2 class="modal__title">' + h.escape(h.dateLabel(state.lastDayReport.day)) + '</h2>' +
+            '<button class="btn btn--ghost btn--small" data-action="closeDayReport">Close</button></div>' +
+          '<div class="modal__body">' + Game.ui.dayResults.boxNumbersOnly(state) + Game.ui.dayResults.bodyHtml(state) + '</div>' +
+        '</div>' +
       '</div></div>';
   },
 

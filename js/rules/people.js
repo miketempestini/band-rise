@@ -3,7 +3,7 @@
 // band musicianship, trait effects, rehearsals, splitting gig pay, and the weekly satisfaction check.
 //
 // A person looks like:
-//   { id, name, role, skill, reliability, ambition, trait, relationship, satisfaction,
+//   { id, name, portrait, role, skill, reliability, ambition, trait, relationship, satisfaction,
 //     status: 'contact' | 'member' | 'former', metDay, lastSeenDay, joinedDay, lastTalkDay,
 //     interactedThisWeek, week: { gigs: [results], earned, rehearsals }, gigDays: [days],
 //     satisfactionReasons: [{ text, amount }] (this week), lastWeekReasons: [...] }
@@ -127,6 +127,24 @@ Game.rules.people = {
     });
   },
 
+  // The portrait for the Nth person you meet (an id from Game.content.art.portraits). It steps along the list so faces
+  // don't come in order, and skips any face a current contact or bandmate already has (if every face is taken, it
+  // reuses one). No dice roll, so it never changes any other random result.
+  portraitFor: function (state, personNumber) {
+    var list = Game.content.art.portraits;
+    var used = {};
+    Object.keys(state.people).forEach(function (id) {
+      var p = state.people[id];
+      if (p.status !== 'former' && p.portrait) used[p.portrait] = true;
+    });
+    var start = (personNumber * Game.balance.people.portraitStep) % list.length;
+    for (var i = 0; i < list.length; i++) {
+      var pick = list[(start + i) % list.length];
+      if (!used[pick]) return pick;
+    }
+    return list[start];
+  },
+
   // ----- Changing things (each returns a new state) -----
 
   // Makes a brand-new person (not added to the game yet). rng: a random generator.
@@ -159,6 +177,7 @@ Game.rules.people = {
     s.rngState = rng.getState();
 
     var id = 'p' + s.nextPersonId;
+    person.portrait = Game.rules.people.portraitFor(s, s.nextPersonId);
     s.nextPersonId += 1;
     person.id = id;
     person.relationship = b.startRelationship;

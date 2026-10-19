@@ -1,6 +1,7 @@
 // inbox.js
 // The Inbox screen: replies from venues, opening slot offers, residency contracts, session work offers
-// (and news when a song you played on comes out), and event records.
+// (and news when a song you played on comes out), and event records. Each message is a slip of paper with a strip
+// of colored tape for its kind (yellow for shows, green for session work, blue for business, pink for events).
 // Open offers have Accept (or Review contract) and Decline, and an answer-by date.
 // If a show lands on your day job, Accept asks how you'll take the day off.
 
@@ -29,8 +30,8 @@ Game.ui.inbox = {
         h.notice(app.notice) +
         (messages.length ? '' : '<p class="hint">No messages yet. Email a venue from Book; their reply lands here in ' +
           Game.balance.venues.replyDays.min + ' to ' + Game.balance.venues.replyDays.max + ' days.</p>') +
-        (open.length ? '<div class="panel"><h3 class="panel__title">Offers waiting for you</h3>' + open.map(function (m) { return self.messageHtml(state, m); }).join('') + '</div>' : '') +
-        (rest.length ? '<div class="panel"><h3 class="panel__title">Earlier</h3>' + rest.map(function (m) { return self.messageHtml(state, m); }).join('') + '</div>' : '') +
+        (open.length ? '<section class="mail"><h3 class="panel__title">Offers waiting for you</h3>' + open.map(function (m) { return self.messageHtml(state, m); }).join('') + '</section>' : '') +
+        (rest.length ? '<section class="mail"><h3 class="panel__title">Earlier</h3>' + rest.map(function (m) { return self.messageHtml(state, m); }).join('') + '</section>' : '') +
       '</section>';
 
     root.querySelectorAll('.tour-ad').forEach(function (sel) {
@@ -58,7 +59,7 @@ Game.ui.inbox = {
     var venue = Game.content.venues[d.venueId];
     var head, body, buttons = '';
     if (m.kind === 'opening') {
-      head = '🎸 ' + venue.name + ' wants you to open!';
+      head = venue.name + ' wants you to open!';
       body = 'A touring band is headlining on ' + h.dateLabel(d.day) + '. You\'d play a ' + Game.balance.offers.openingSlot.setSize +
         '-song opening set to their crowd (' + Math.round(Game.balance.offers.openingSlot.crowdShare.min * 100) + '-' +
         Math.round(Game.balance.offers.openingSlot.crowdShare.max * 100) + '% of ' + venue.capacity + ' people) for $' + d.fee +
@@ -69,7 +70,7 @@ Game.ui.inbox = {
       }
     } else {
       var terms = d.signed || d;
-      head = '📜 Residency offer from ' + venue.name;
+      head = 'Residency offer from ' + venue.name;
       body = terms.weeks + ' ' + Game.content.calendar.dayNames[terms.weekday] + ' nights at $' + terms.rate + ' a night, starting at least a week from now.' +
         (d.counter && !m.resolved ? ' Your counter-offer: ' + d.counter.weeks + ' ' + Game.content.calendar.dayNames[d.counter.weekday] +
           's at $' + d.counter.rate + ' (' + (d.counter.status === 'pending' ? 'answer tomorrow' : 'they said no') + ').' : '');
@@ -81,7 +82,7 @@ Game.ui.inbox = {
     var status = m.resolved
       ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired' }[m.resolved] || m.resolved) + '</span>'
       : '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>';
-    return '<div class="message' + (m.read ? '' : ' message--new') + '">' +
+    return '<div class="message paper message--' + m.kind + (m.read ? '' : ' message--new') + '">' +
       '<div class="message__head"><strong class="pos">' + h.escape(head) + '</strong>' + (m.read ? '' : ' <span class="badge badge--warn">New</span>') +
         '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' +
       '<p>' + h.escape(body) + '</p>' +
@@ -106,8 +107,8 @@ Game.ui.inbox = {
     var status = m.resolved
       ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired' }[m.resolved] || m.resolved) + '</span>'
       : '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>';
-    return '<div class="message' + (m.read ? '' : ' message--new') + '">' +
-      '<div class="message__head"><strong class="pos">🎧 ' + h.escape(d.bandName) + ' want you on their recording</strong>' +
+    return '<div class="message paper message--' + m.kind + (m.read ? '' : ' message--new') + '">' +
+      '<div class="message__head"><strong class="pos">' + h.escape(d.bandName) + ' want you on their recording</strong>' +
         (m.read ? '' : ' <span class="badge badge--warn">New</span>') + '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' +
       '<p>' + d.sessions.length + ' studio sessions for their song "' + h.escape(d.songTitle) + '": ' + h.escape(times) + '. ' +
         h.money(d.fee) + ' a session, -' + Game.balance.energy.cost.sessionWork + ' energy each. Play every session and you get ' +
@@ -121,7 +122,7 @@ Game.ui.inbox = {
     var status = m.resolved
       ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired' }[m.resolved] || m.resolved) + '</span>'
       : (m.expiresDay !== null ? '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>' : '');
-    return '<div class="message' + (m.read ? '' : ' message--new') + '">' +
+    return '<div class="message paper message--' + m.kind + (m.read ? '' : ' message--new') + '">' +
       '<div class="message__head"><strong class="pos">' + h.escape(head) + '</strong>' + (m.read ? '' : ' <span class="badge badge--warn">New</span>') +
         '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' + body +
       (buttons || status ? '<div class="message__foot">' + (m.resolved ? '' : buttons || '') + ' ' + status + '</div>' : '') + '</div>';
@@ -154,13 +155,13 @@ Game.ui.inbox = {
     if (m.kind === 'note') return self.cardHtml(m, d.title, '<p>' + h.escape(d.text) + '</p>', '');
     if (m.kind === 'managerOffer') {
       var who = Game.content.business.manager;
-      return self.cardHtml(m, '💼 ' + who.name + ' wants to manage you',
+      return self.cardHtml(m, who.name + ' wants to manage you',
         '<p>' + h.escape(who.company) + ' takes ' + Math.round(b.manager.gigPayCut * 100) + '% of your gig pay. In return: a ' + b.time.managerBookingWeeks +
         '-week calendar, auto-booking by your rules, tours planned on request, and the press and radio push.</p>',
         '<button class="btn btn--small btn--primary" data-action="hireManager" data-id="' + m.id + '">Hire them</button> ' + decline);
     }
     if (m.kind === 'labelOffer') {
-      return self.cardHtml(m, '📀 ' + Game.content.business.label.name + ' wants to sign you',
+      return self.cardHtml(m, Game.content.business.label.name + ' wants to sign you',
         '<p>A <strong>' + h.money(d.advance) + '</strong> advance, paid now. You get the Top studio' + (Game.rules.manager.hired(state) ? ' and the National cities' : ' (and National cities once you have a manager)') +
         '. The label keeps ' + Math.round(b.label.streamingCut * 100) + '% of your streaming money until the advance is paid back. Turn it down and they\'ll ask again in ' +
         b.label.reofferWeeks + ' weeks.</p>',
@@ -200,7 +201,7 @@ Game.ui.inbox = {
       var buttons = d.shows.length ? self.jobButtonsHtml(state, m, 'acceptTour', e.jobDays.filter(function (x) { return Game.rules.job.worksOn(state, x); }),
         function (choice) { return Game.rules.manager.tourAcceptProblem(state, m.id, choice) || Game.rules.manager.adsProblem(state, m.id, ads); },
         'Book the tour' + (e.adCost ? ' + ads' : '')) + ' ' + decline : decline;
-      return self.cardHtml(m, '🚐 Tour proposal: ' + d.shows.length + ' show' + (d.shows.length === 1 ? '' : 's'), body, buttons);
+      return self.cardHtml(m, 'Tour proposal: ' + d.shows.length + ' show' + (d.shows.length === 1 ? '' : 's'), body, buttons);
     }
     // Arena or festival offer.
     var venue = Game.content.venues[d.venueId];
@@ -210,7 +211,7 @@ Game.ui.inbox = {
       h.dateLabel(d.day) + ' (' + Game.content.calendar.blockNames[venue.showBlock].toLowerCase() + '): <strong>' + h.money(d.fee) + '</strong> flat, ' +
       Game.rules.booking.setFor(venue, arena ? 'arena' : 'festival').size + '-song set. ' +
       (arena ? 'Production costs ' + h.money(b.production.arena) + ' on the night.' : 'The festival provides production.') + '</p>' + Game.ui.booking.tripHtml(preview);
-    return self.cardHtml(m, (arena ? '🏟️ Arena offer: ' : '🎪 Festival offer: ') + venue.name, bodyBig,
+    return self.cardHtml(m, (arena ? 'Arena offer: ' : 'Festival offer: ') + venue.name, bodyBig,
       self.jobButtonsHtml(state, m, 'acceptBigShow', Game.rules.bigShows.jobDays(state, m.id),
         function (choice) { return Game.rules.bigShows.acceptProblem(state, m.id, choice); }, 'Accept') + ' ' + decline);
   },
@@ -223,16 +224,16 @@ Game.ui.inbox = {
     if (m.kind === 'sessionWork') return Game.ui.inbox.sessionWorkHtml(state, m);
     if (m.kind === 'sessionRelease') {
       var work = state.sessionWork[d.workId];
-      return '<div class="message' + (m.read ? '' : ' message--new') + '">' +
-        '<div class="message__head"><strong class="pos">🎶 ' + h.escape(work.bandName) + ' released "' + h.escape(work.songTitle) + '"</strong>' +
+      return '<div class="message paper message--' + m.kind + (m.read ? '' : ' message--new') + '">' +
+        '<div class="message__head"><strong class="pos">' + h.escape(work.bandName) + ' released "' + h.escape(work.songTitle) + '"</strong>' +
           (m.read ? '' : ' <span class="badge badge--warn">New</span>') + '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' +
         '<p>You played on it, so ' + Math.round(Game.balance.sessionWork.streamingShare * 100) +
           '% of its streaming money is yours, paid every Sunday as "Session credits".</p></div>';
     }
     if (m.kind === 'event') {
       // A record of a morning event and how you answered it.
-      return '<div class="message">' +
-        '<div class="message__head"><strong>⚡ ' + h.escape(d.title) + '</strong>' +
+      return '<div class="message paper message--' + m.kind + '">' +
+        '<div class="message__head"><strong>' + h.escape(d.title) + '</strong>' +
           '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' +
         '<p>' + h.escape(d.text) + '</p>' +
         '<div class="message__foot"><span class="badge">' + h.escape(d.answer ? 'You chose: ' + d.answer : 'Waiting on Today') + '</span></div>' +
@@ -277,7 +278,7 @@ Game.ui.inbox = {
       status = '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>';
     }
 
-    return '<div class="message' + (m.read ? '' : ' message--new') + '">' +
+    return '<div class="message paper message--' + m.kind + (d.yes ? '' : ' message--no') + (m.read ? '' : ' message--new') + '">' +
       '<div class="message__head">' + head + (m.read ? '' : ' <span class="badge badge--warn">New</span>') +
         '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' +
       '<p>' + body + '</p>' +

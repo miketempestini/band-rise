@@ -363,6 +363,8 @@ Game.balance = {
     ambitionRange: { min: 10, max: 90 },    // A new person's ambition
     bandNameMaxLength: 40,           // Longest band name the player can type
     maxContacts: 12,                 // Contacts list size; the coldest contact drops off when full
+    portraitStep: 5,                 // Each new person's portrait is this many places along the list from the last one
+                                     // (so faces don't come in order), skipping any face someone you know already has
     startRelationship: 20,           // Relationship with a new contact
     startSatisfaction: 70,           // Satisfaction when someone joins the band
     relationship: {                  // Relationship gains
@@ -810,7 +812,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 15,                     // Save format version, bumped when the state shape changes
+    version: 16,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 
@@ -888,7 +890,8 @@ Game.balance = {
     playerNameMaxLength: 24,         // Longest player name you can type at New career
     skillBigStep: 5,                 // The skills page has -5/-1/+1/+5 buttons: this is the big step
     upcomingMilestones: 4,           // The Career screen lists this many milestones under "Coming up"
-    upcomingShows: 3                 // Today's "Coming up" panel lists this many booked shows
+    upcomingShows: 3,                // Today's "Coming up" panel lists this many booked shows
+    ledSegments: 10                  // How many little lights the top bar's Energy and Morale meters have
   },
 
   // ---------------------------------------------------------------

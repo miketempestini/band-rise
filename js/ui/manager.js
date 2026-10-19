@@ -108,7 +108,7 @@ Game.ui.manager = {
     var t = Game.balance.manager.tour;
     var pending = state.tourRequests[0];
     if (pending) {
-      return '<div class="panel"><h3 class="panel__title">🚐 Tour</h3><p>Your manager is planning a tour of ' +
+      return '<div class="panel"><h3 class="panel__title">Tour</h3><p>Your manager is planning a tour of ' +
         pending.cities.map(function (id) { return h.escape(Game.content.cities[id].name); }).join(', ') +
         '. The proposal arrives ' + h.dateLabel(pending.readyDay) + '.</p></div>';
     }
@@ -127,7 +127,7 @@ Game.ui.manager = {
       weeks += '<option value="' + day + '"' + (d.earliestDay === day ? ' selected' : '') + '>The week of ' + Game.rules.day.weekLabel(day) + '</option>';
     }
     var problem = Game.rules.manager.tourRequestProblem(state, d);
-    return '<div class="panel"><h3 class="panel__title">🚐 Ask for a tour</h3>' +
+    return '<div class="panel"><h3 class="panel__title">Ask for a tour</h3>' +
       '<p class="hint">Pick ' + t.minCities + ' to ' + t.maxCities + ' cities and a venue size. Your manager takes ' + t.planDays +
         ' days to plan it, then sends a proposal with dates, travel, and money estimates. Tours start at least ' + t.leadDays / Game.balance.time.daysPerWeek +
         ' weeks out so every venue has room. A tour needs a van.</p>' +

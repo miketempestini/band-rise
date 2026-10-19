@@ -41,13 +41,28 @@ Game.ui.helpers = {
       .replace(/"/g, '&quot;');
   },
 
-  // A small labeled bar, like the energy and morale meters in the top bar.
-  meter: function (label, value, max) {
-    var percent = Math.round((value / max) * 100);
-    return '<div class="stat">' +
+  // A labeled LED meter, like the energy and morale meters in the top bar: a row of little lights, as on a
+  // mixing desk, with as many lit as the value fills (balance.ui.ledSegments lights in all).
+  // mood: '' normally, 'warn' (amber lights) or 'bad' (red lights) when the value is in trouble.
+  ledMeter: function (label, value, max, mood) {
+    var count = Game.balance.ui.ledSegments;
+    var lit = Math.round((value / max) * count);
+    var lights = '';
+    for (var i = 0; i < count; i++) lights += '<i class="led__light' + (i < lit ? ' led__light--on' : '') + '"></i>';
+    return '<div class="stat stat--led">' +
       '<span class="stat__label">' + label + '</span>' +
       '<span class="stat__value">' + Math.round(value) + '</span>' +
-      '<span class="meter"><span class="meter__fill" style="width:' + percent + '%"></span></span>' +
+      '<span class="led' + (mood ? ' led--' + mood : '') + '" role="meter" aria-label="' + label + '" aria-valuemin="0" aria-valuemax="' + max +
+        '" aria-valuenow="' + Math.round(value) + '">' + lights + '</span>' +
+      '</div>';
+  },
+
+  // A wide painted banner (like a venue's picture) with a title and a line under it, for the top of a panel.
+  // src: the picture (from Game.content.art). sub: optional small print under the title.
+  artBanner: function (src, title, sub) {
+    return '<div class="art-banner" style="background-image: url(\'' + src + '\')">' +
+      '<h3 class="art-banner__title">' + title + '</h3>' +
+      (sub ? '<span class="art-banner__sub">' + sub + '</span>' : '') +
       '</div>';
   },
 

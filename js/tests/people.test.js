@@ -55,6 +55,38 @@
     t.ok(true);
   });
 
+  Game.test('Portraits: everyone you meet gets a face, and nobody you know shares one while faces are left', function (t) {
+    var s = freshState();
+    var count = Game.content.art.portraits.length;
+    for (var i = 0; i < count; i++) s = Game.rules.people.meet(s).state;
+    var faces = Object.keys(s.people).map(function (id) { return s.people[id].portrait; });
+    t.ok(faces.every(function (f) { return Game.content.art.portraits.indexOf(f) !== -1; }), 'every face is a real portrait');
+    t.equal(faces.filter(function (f, i) { return faces.indexOf(f) === i; }).length, faces.length, 'no repeats');
+    t.equal(faces[0] === faces[1], false, 'faces don\'t come in list order');
+  });
+
+  Game.test('Portraits: a former bandmate\'s face can go to someone new', function (t) {
+    var s = freshState();
+    s = Game.rules.people.meet(s).state;
+    var first = Object.keys(s.people)[0];
+    var face = s.people[first].portrait;
+    s.people[first].status = 'former';
+    t.equal(Game.rules.people.portraitFor(s, Number(first.slice(1))), face, 'the same face is free again');
+  });
+
+  Game.test('Save: a version 15 save upgrades, and its people get portraits', function (t) {
+    var s = freshState();
+    for (var i = 0; i < 3; i++) s = Game.rules.people.meet(s).state;
+    var old = Game.util.clone(s);
+    old.version = 15;
+    Object.keys(old.people).forEach(function (id) { delete old.people[id].portrait; });
+    var loaded = Game.save.parse(JSON.stringify(old));
+    t.ok(loaded.ok, 'loaded: ' + loaded.message);
+    var faces = Object.keys(loaded.state.people).map(function (id) { return loaded.state.people[id].portrait; });
+    t.ok(faces.every(function (f) { return !!f; }), 'everyone has a portrait');
+    t.equal(faces.filter(function (f, i) { return faces.indexOf(f) === i; }).length, faces.length, 'all different');
+  });
+
   Game.test('Meeting: a new contact starts at relationship 20, and the 13th pushes out the coldest', function (t) {
     var s = freshState();
     for (var i = 0; i < 12; i++) s = Game.rules.people.meet(s).state;

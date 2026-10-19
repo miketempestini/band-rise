@@ -1,7 +1,8 @@
 // gigResult.js
 // The gig result screen. First a short crowd meter fills up while the headcount counts up
-// (about 2.5 seconds, skippable). Then the result: headline, crowd, a score breakdown bar
-// split into labeled parts, what you got, and one plain tip when something hurt the score.
+// (about 2.5 seconds, skippable), in front of a painting of that size of venue. Then the result: the painting with
+// the headline and the result stamped on it, the crowd, a score breakdown bar split into labeled parts, what you got,
+// and one plain tip (on a sticky note) when something hurt the score.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
@@ -20,12 +21,18 @@ Game.ui.gigResult = {
     return Math.max(gig.crowd, Math.round(gig.expectedCrowd * Game.balance.crowd.randomMax));
   },
 
+  // The painting for this gig's venue.
+  artFor: function (gig) {
+    return Game.content.art.venueSrc(Game.content.venues[gig.venueId], gig.deal);
+  },
+
   // ----- Part 1: the crowd meter -----
 
   renderMeter: function (root, app, gig) {
     var scale = Game.ui.gigResult.crowdScale(gig);
     root.innerHTML =
       '<section class="title-screen gig-meter">' +
+        '<div class="gig-meter__stage" style="background-image: url(\'' + Game.ui.gigResult.artFor(gig) + '\')" aria-hidden="true"></div>' +
         '<p class="reveal__kicker">' + Game.ui.helpers.escape(gig.venueName) + ' · ' + (gig.kind === 'show' ? 'show' : 'open mic') + '</p>' +
         '<div class="gig-meter__count"><span id="crowd-count">0</span> <span class="gig-meter__unit">people</span></div>' +
         '<div class="meter meter--crowd"><span class="meter__fill" id="crowd-fill" style="width:0%"></span></div>' +
@@ -35,7 +42,9 @@ Game.ui.gigResult = {
 
     var count = root.querySelector('#crowd-count');
     var fill = root.querySelector('#crowd-fill');
-    var duration = Game.balance.gigs.crowdMeterSeconds * 1000;
+    // Players who asked their computer for less motion see the final count straight away.
+    var lessMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var duration = lessMotion ? 0 : Game.balance.gigs.crowdMeterSeconds * 1000;
     var started = null;
     var token = {}; // stops this animation if the screen changes before it ends
     app.gigAnimation = token;
@@ -43,7 +52,7 @@ Game.ui.gigResult = {
     function step(now) {
       if (app.gigAnimation !== token) return;
       if (started === null) started = now;
-      var t = Math.min(1, (now - started) / duration);
+      var t = duration ? Math.min(1, (now - started) / duration) : 1;
       var eased = 1 - Math.pow(1 - t, 3); // starts fast, slows near the end
       count.textContent = Math.round(gig.crowd * eased);
       fill.style.width = (gig.crowd / scale * 100 * eased) + '%';
@@ -104,9 +113,11 @@ Game.ui.gigResult = {
     root.innerHTML =
       Game.ui.topbar.html(app.state, app.screen) +
       '<section class="screen screen--narrow gig-result">' +
-        '<p class="reveal__kicker">' + h.dateLabel(gig.day) + ' · ' + (gig.kind === 'show' ? h.escape(Game.rules.booking.dealLabel(Game.content.venues[gig.venueId], gig.deal, gig.fee)) : 'open mic') + '</p>' +
-        '<h1 class="screen__title gig-result__headline gig-result__headline--' + gig.result + '">' +
-          h.escape(text.headlines[gig.result].replace('{venue}', gig.venueName)) + '</h1>' +
+        '<header class="gig-hero" style="background-image: url(\'' + self.artFor(gig) + '\')">' +
+          '<p class="gig-hero__kicker">' + h.dateLabel(gig.day) + ' · ' + (gig.kind === 'show' ? h.escape(Game.rules.booking.dealLabel(Game.content.venues[gig.venueId], gig.deal, gig.fee)) : 'open mic') + '</p>' +
+          '<h1 class="gig-hero__headline">' + h.escape(text.headlines[gig.result].replace('{venue}', gig.venueName)) + '</h1>' +
+          '<span class="stamp stamp--' + gig.result + '">' + gig.result.charAt(0).toUpperCase() + gig.result.slice(1) + '</span>' +
+        '</header>' +
 
         '<div class="panel">' +
           '<h3 class="panel__title">Crowd</h3>' +
@@ -120,7 +131,7 @@ Game.ui.gigResult = {
           self.breakdownHtml(gig) +
         '</div>' +
 
-        (gig.tipId ? '<div class="panel panel--tip"><strong>Tip:</strong> ' + h.escape(text.tips[gig.tipId]) + '</div>' : '') +
+        (gig.tipId ? '<div class="panel--tip paper"><strong>Tip:</strong> ' + h.escape(text.tips[gig.tipId]) + '</div>' : '') +
 
         '<div class="panel">' +
           '<h3 class="panel__title">What you got</h3>' +

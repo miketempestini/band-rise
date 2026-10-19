@@ -63,6 +63,11 @@ Game.save = {
     // Version 11 turned "do you have a van" (true/false) into the van itself (or null).
     if (data.player.gear.van === false || data.player.gear.van === true) data.player.gear.van = null;
 
+    // Version 16 gave every person a portrait: people from older saves get one, in the order you met them.
+    Object.keys(data.people).sort(function (a, b) { return Number(a.slice(1)) - Number(b.slice(1)); }).forEach(function (id) {
+      if (!data.people[id].portrait) data.people[id].portrait = Game.rules.people.portraitFor(data, Number(id.slice(1)));
+    });
+
     data.version = Game.balance.save.version;
     return data;
   },
