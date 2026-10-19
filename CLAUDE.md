@@ -54,6 +54,7 @@ index.html        The game page. Loads scripts in order (see below).
 styles.css        All the look and layout.
 tests.html        The test page. Open it to see passing/failing tests.
 assets/           Pictures (title, backdrops, venues, portraits) and fonts (with their licenses).
+test-saves/       Save files for testing (late-career.json: a rich, famous, everything-unlocked career). Import them.
 Design.md         The game design (source of truth).
 PROGRESS.md       Running log: built, next, known issues.
 js/

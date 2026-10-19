@@ -285,6 +285,23 @@
     t.equal(Game.rules.booking.setFor(Game.content.venues[fm.data.venueId], 'festival').size, Game.balance.bigOffers.festivalSetSize, '8-song set');
   });
 
+  Game.test('Arenas and festivals: an offer whose date has passed shows no trip, and nothing breaks', function (t) {
+    var s = withBand(withManager(bigState()), 2);
+    for (var i = 0; i < 12; i++) { var st = Game.rules.songs.startSong(s); s = Game.rules.songs.finishSong(st.state, st.songId).state; }
+    s.player.reputation = 85;
+    s.cities.hometown.fans = 50000;
+    s.cities.harlowFalls.fans = 30000;
+    s.cities.portEllery.fans = 25000;
+    s.label = { signed: true, signedDay: 0, advance: 0, owed: 0, nextOfferDay: 0 };
+    s = Game.rules.progress.checkUnlocks(s).state;
+    var m = lastMessage(Game.rules.bigShows.roll(s, 'arena').state, 'arenaOffer');
+    var later = Game.util.clone(s);
+    later.day = m.data.day + 1;                       // the show's date is now in the past
+    var preview = Game.rules.travel.preview(later, m.data.venueId, m.data.day, 'arena');
+    t.ok(!!preview.problem, 'a past date gets a reason, not a trip: ' + preview.problem);
+    t.equal(preview.legs.length, 0, 'no legs');
+  });
+
   // ----- Awards -----
 
   Game.test('Awards: nominations from this year\'s releases and new fans, with odds; a win adds reputation', function (t) {

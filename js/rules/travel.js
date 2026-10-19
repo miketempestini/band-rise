@@ -422,6 +422,8 @@ Game.rules.travel = {
     var s = tr.addShow(state, venueId, day, deal || 'door', null);
     var trip = Object.keys(s.state.trips).map(function (id) { return s.state.trips[id]; })
       .filter(function (x) { return x.showIds.indexOf(s.entryId) !== -1; })[0];
+    // No trip could be planned (for example, the date has already passed): say so instead of drawing one.
+    if (!trip) return { problem: 'No trip can be planned for that date.', legs: [], gas: 0, hotelNights: 0, hotelCost: 0, yourCost: 0, energy: 0, jobDays: [] };
     var legs = tr.tripLegs(s.state, trip);
     var gas = legs.reduce(function (sum, leg) { return sum + tr.legGas(leg.from, leg.to, state); }, 0);
     var blocks = legs.reduce(function (sum, leg) { return sum + leg.slots.length; }, 0);

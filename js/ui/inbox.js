@@ -30,8 +30,8 @@ Game.ui.inbox = {
         h.notice(app.notice) +
         (messages.length ? '' : '<p class="hint">No messages yet. Email a venue from Book; their reply lands here in ' +
           Game.balance.venues.replyDays.min + ' to ' + Game.balance.venues.replyDays.max + ' days.</p>') +
-        (open.length ? '<section class="mail"><h3 class="panel__title">Offers waiting for you</h3>' + open.map(function (m) { return self.messageHtml(state, m); }).join('') + '</section>' : '') +
-        (rest.length ? '<section class="mail"><h3 class="panel__title">Earlier</h3>' + rest.map(function (m) { return self.messageHtml(state, m); }).join('') + '</section>' : '') +
+        (open.length ? '<section class="mail"><h3 class="panel__title">Offers waiting for you</h3>' + open.map(function (m) { return self.safeMessageHtml(state, m); }).join('') + '</section>' : '') +
+        (rest.length ? '<section class="mail"><h3 class="panel__title">Earlier</h3>' + rest.map(function (m) { return self.safeMessageHtml(state, m); }).join('') + '</section>' : '') +
       '</section>';
 
     root.querySelectorAll('.tour-ad').forEach(function (sel) {
@@ -206,14 +206,26 @@ Game.ui.inbox = {
     // Arena or festival offer.
     var venue = Game.content.venues[d.venueId];
     var arena = m.kind === 'arenaOffer';
-    var preview = Game.rules.travel.preview(Game.rules.booking.withoutMessage(state, m.id), d.venueId, d.day, arena ? 'arena' : 'festival');
+    // The trip is only shown while the offer is still open (an answered or expired offer's date may have passed).
+    var preview = m.resolved ? null : Game.rules.travel.preview(Game.rules.booking.withoutMessage(state, m.id), d.venueId, d.day, arena ? 'arena' : 'festival');
     var bodyBig = '<p>' + (arena ? 'Headline ' : 'Play a slot at ') + h.escape(venue.name) + ' in ' + h.escape(Game.content.cities[venue.cityId].name) + ', ' +
       h.dateLabel(d.day) + ' (' + Game.content.calendar.blockNames[venue.showBlock].toLowerCase() + '): <strong>' + h.money(d.fee) + '</strong> flat, ' +
       Game.rules.booking.setFor(venue, arena ? 'arena' : 'festival').size + '-song set. ' +
-      (arena ? 'Production costs ' + h.money(b.production.arena) + ' on the night.' : 'The festival provides production.') + '</p>' + Game.ui.booking.tripHtml(preview);
+      (arena ? 'Production costs ' + h.money(b.production.arena) + ' on the night.' : 'The festival provides production.') + '</p>' + (preview ? Game.ui.booking.tripHtml(preview) : '');
     return self.cardHtml(m, (arena ? 'Arena offer: ' : 'Festival offer: ') + venue.name, bodyBig,
       self.jobButtonsHtml(state, m, 'acceptBigShow', Game.rules.bigShows.jobDays(state, m.id),
         function (choice) { return Game.rules.bigShows.acceptProblem(state, m.id, choice); }, 'Accept') + ' ' + decline);
+  },
+
+  // One message, drawn on its own: if something about it can't be drawn, it shows a short note instead, so a single
+  // bad message never stops the whole Inbox from opening.
+  safeMessageHtml: function (state, m) {
+    try {
+      return Game.ui.inbox.messageHtml(state, m);
+    } catch (e) {
+      return '<div class="message paper message--note"><div class="message__head"><strong>This message couldn\'t be shown</strong>' +
+        '<span class="message__date muted">' + Game.ui.helpers.dateLabel(m.day) + '</span></div></div>';
+    }
   },
 
   messageHtml: function (state, m) {

@@ -4,6 +4,32 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14h: Late-career test save (2026-10-19)
+- **`test-saves/late-career.json`**: a save for testing new features. Import it from the title screen or Settings.
+  - **Who:** Alex Rivera (guitar) with three bandmates. It's July 18, 2029, about three and a half years in.
+  - **Money:** $4.6 million, no debt, no day job.
+  - **Standing:** reputation 100, about 1.1 million fans, "National Headliner" fame.
+  - **Business:** a manager and a label deal, with the label advance paid off.
+  - **Progress:** all 18 milestones, 4 awards won, arenas and festivals played.
+  - **Places:** all 12 cities you can travel to are open. The 3 international cities aren't built yet.
+  - **Lifestyle:** the mansion and the vacation home, the new van, a home studio, and 100 shirts and 200 CDs.
+  - **Songs:** 23 playable songs, several releases, and shows already booked ahead.
+  - **How it was made:** the balance check's "sensible player" played about 2.5 years. Debug tools then filled every
+    open city to its fan ceiling, added a few arena offers, and finished extra songs. The player then played on and
+    bought upgrades through the normal rules. All inbox messages are marked read.
+  - It's save version 16, so future versions upgrade it automatically when it loads.
+- **Bug fixed:** an arena or festival offer whose date had passed made the whole Inbox screen crash, because it tried
+  to draw a trip for a past date. Answered and expired offers no longer show a trip, and the trip preview now reports
+  "No trip can be planned" instead of breaking. **Tests:** 311 passing (1 new).
+- **Inbox safety net:** the owner found the Inbox wouldn't open with lots of messages. The cause was the crash above:
+  a long career always has an old arena or festival offer. The Inbox now draws each message on its own (`safeMessageHtml`),
+  so if one can't be drawn it shows "This message couldn't be shown" and the rest still open. Checked with 1,050
+  messages over a further 200 simulated days: nothing failed, and the screen takes about 45 milliseconds to draw.
+  The version tag in index.html is now `2026-10-19c`.
+- **Found while making it:** the balance check's sim player stops writing at 14 songs, but arenas need an 18-song set.
+  So in the simulations, every arena offer expired. Real players who write more songs aren't affected. The sim could
+  keep writing to 18 once arenas are possible.
+
 ### Session 14g: Readability sweep (2026-10-19)
 - **Why some text was hard to read:** after the redesign went live, browsers could mix old saved copies of the
   scripts with the new stylesheet, which put dark ink text on dark panels. Every file in index.html now carries a
