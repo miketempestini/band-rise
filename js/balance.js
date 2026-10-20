@@ -80,7 +80,16 @@ Game.balance = {
     openMicSignupDays: { min: 1, max: 14 },     // Out-of-town open mics: sign up for a night this many days ahead
     // National cities are reached by plane: each way takes this many blocks (airport time included) and costs
     // this much per person on stage (you plus your bandmates). No van needed for the flight itself.
-    flight: { blocks: 2, perPersonOneWay: 300 }
+    flight: { blocks: 2, perPersonOneWay: 300 },
+    // International flights (between countries, including home to abroad) and hops (two cities in the same
+    // foreign country): blocks each way and the fare per person on stage.
+    internationalFlight: { blocks: 3, perPersonOneWay: 1200 },
+    hop: { blocks: 1, perPersonOneWay: 250 },
+    // The private jet (Shop, after milestone 19): one price for the whole band per flight, and 1 block faster
+    // (never less than 1 block). A hop costs the cheaper of the airline fares and the jet's hop price.
+    jet: { price: 1500000, national: 2000, international: 6000, hop: 2000, blocksFaster: 1 },
+    // Jet lag: arriving after an international flight costs energy (less on your own jet)
+    jetLag: { energy: 15, withJet: 7 }
   },
 
   // ---------------------------------------------------------------
@@ -313,6 +322,9 @@ Game.balance = {
     skills: { base: 15, perRep: 0.7, spread: 8 },   // Their skills: 15 + 0.7 x reputation, give or take 8
     members: { min: 3, max: 5 },
     homeWeights: { hometown: 8, near: 3, mid: 3, far: 3, national: 4 }, // How likely a band is to come from each kind of city
+                                     // (at home; bands abroad are the local bands below)
+    localSizes: [{ tier: 2, count: 2 }, { tier: 3, count: 1 }], // Each foreign country's local bands, by size
+    localSeedOffset: 104729,         // Local bands abroad get their own dice too (so older saves can add them)
     touringRep: 60,                  // Bands this big play in any city (smaller ones mostly play at home)
     drift: { rep: 1, fanShare: 0.03 }, // Each Monday, other bands' reputation moves up to 1 point and fans up to 3%
     // The 3 rivals: they start near you and keep moving toward your level (behind / even / ahead)
@@ -663,12 +675,22 @@ Game.balance = {
       surfShack: 70, pierNine: 400, bayfrontTheater: 2200,
       // National (locked for now)
       clubMeridian: 500, halstonTheater: 3000, halstonArena: 25000,
+      foundryHall: 450, ironridgeCivic: 2600, steelworksArena: 22000,
+      theSandbar: 400, marlowPavilion: 2400, baysideAmphitheater: 20000,
+      ivyRoom: 500, duskfieldGrand: 3000, capitolCenter: 25000,
       crescentClub: 450, crescentTheater: 2800, crescentArena: 22000,
       theKingsway: 400, royalTheater: 2500, kingsportColiseum: 20000,
       // International (locked for now)
       lindenCellar: 500, lindenbergHall: 3000, lindenbergArena: 25000,
       clubSolana: 450, teatroAurelia: 2800, aureliaStadium: 30000,
-      blueDoor: 400, valmoraOpera: 3000, valmoraFestival: 30000
+      blueDoor: 400, valmoraOpera: 3000, valmoraFestival: 30000,
+      klubbNord: 450, askerholmKonserthus: 2800, iceCellar: 400, frostvikOpera: 2400,
+      salaLiora: 450, teatroDelSol: 2600, laOla: 400, ventamarColiseo: 2800,
+      ilCortile: 400, teatroCastellune: 2600, laCantina: 400, bellarosaHall: 2400,
+      clubHikari: 550, akarumiHall: 3400, akarumiDome: 35000, studioTsuki: 450, tsukiyamaTheater: 2800,
+      hoshiroLiveHouse: 500, hoshiroCivicHall: 3000,
+      reefClub: 450, kiaraOpera: 3000, kestaraStadium: 28000, theGorge: 400, sundaraTheater: 2600,
+      outbackHall: 400, vellmorePavilion: 2400
     },
     // Booking chance = 50% + 3% x (reputation - required) + Networking / 4 % + venue relationship / 5 %
     bookingBaseChance: 0.50,
@@ -780,8 +802,16 @@ Game.balance = {
       portEllery: 50000, ashfordSprings: 45000,                              // Mid
       redstone: 80000, lakeVarden: 70000, bellmontCity: 100000, sableBay: 90000, // Far
       newHalston: 500000, crescentCity: 400000, kingsport: 350000,           // National
-      lindenberg: 500000, portAurelia: 450000, valmora: 400000               // International
-    }
+      ironridge: 350000, marlowBay: 300000, duskfield: 450000,
+      // International (capitals 800,000)
+      lindenberg: 800000, askerholm: 450000, frostvik: 300000,               // Nordhavia
+      portAurelia: 800000, santaLiora: 500000, ventamar: 400000,             // Solvara
+      valmora: 800000, castellune: 500000, bellarosa: 350000,                // Veronesse
+      akarumi: 800000, tsukiyama: 600000, hoshiro: 550000,                   // Kaigara
+      portKiara: 800000, sundaraFalls: 400000, vellmore: 300000              // Kestara
+    },
+    // International cities open after you finish a tour that played at least this many National cities
+    internationalMinNationalCities: 2
   },
 
   tours: {
@@ -931,7 +961,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 20,                     // Save format version, bumped when the state shape changes
+    version: 21,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

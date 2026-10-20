@@ -91,6 +91,7 @@ Game.rules.manager = {
     var a = Game.balance.manager.autoBook;
     if (!rules.cities.length) return 'Pick at least one city.';
     if (rules.cities.some(function (id) { return !state.cities[id] || !state.cities[id].unlocked; })) return 'Pick cities you\'ve unlocked.';
+    if (rules.cities.some(function (id) { return Game.content.cities[id].countryId; })) return 'Auto-booking only covers cities at home (ask for a tour to go abroad).';
     if (!rules.tiers.length) return 'Pick at least one venue size.';
     if (!rules.nights.length) return 'Pick at least one night.';
     if (rules.maxPerWeek < 1 || rules.maxPerWeek > a.maxPerWeekLimit) return 'Shows a week: 1 to ' + a.maxPerWeekLimit + '.';
@@ -240,8 +241,10 @@ Game.rules.manager = {
     var tr = Game.rules.travel;
     var t = Game.balance.manager.tour;
     var order = ['near', 'mid', 'far', 'national', 'international'];
+    // Nearest first; abroad, a country's cities stay together (short hops) before the next long flight.
     var sorted = cities.slice().sort(function (a, b) {
-      return order.indexOf(Game.content.cities[a].region) - order.indexOf(Game.content.cities[b].region);
+      var ca = Game.content.cities[a], cb = Game.content.cities[b];
+      return order.indexOf(ca.region) - order.indexOf(cb.region) || (ca.countryId || '').localeCompare(cb.countryId || '');
     });
     var start = Math.max(earliestDay || 0, state.day + t.leadDays);
     var last = Game.rules.manager.horizonDay(state);
@@ -255,7 +258,7 @@ Game.rules.manager = {
       var unmet = Game.rules.booking.requirements(state, venue, 'door').filter(function (r) { return !r.met; })[0];
       if (unmet) { skipped.push({ cityId: cityId, why: venue.name + ' needs ' + unmet.text + '.' }); return; }
       // The next show waits for the drive: the next evening if the leg fits in a morning and afternoon, else a day later.
-      var from = prev ? prev.day + 1 + (tr.legBlocks(Game.content.venues[prev.venueId].cityId, cityId) > 2 ? 1 : 0) : start;
+      var from = prev ? prev.day + 1 + (tr.legBlocks(Game.content.venues[prev.venueId].cityId, cityId, state) > 2 ? 1 : 0) : start;
       for (var d = from; d <= last; d++) {
         if (Game.rules.booking.blockTaken(hyp, d, venue.showBlock, true)) continue;
         var added = tr.addShow(hyp, venue.id, d, 'door', null);

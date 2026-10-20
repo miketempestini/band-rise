@@ -148,10 +148,66 @@ var room = function (id, name, cityId, tier, capacity) {
   openMic('valmoraLounge', 'Valmora Lounge', 'valmora', 3),
   room('blueDoor', 'The Blue Door', 'valmora', 2, 250),
   room('valmoraOpera', 'Valmora Opera House', 'valmora', 3, 1400),
-  room('valmoraFestival', 'Valmora Festival Grounds', 'valmora', 4, 25000)
+  room('valmoraFestival', 'Valmora Festival Grounds', 'valmora', 4, 25000),
+  // National (added with the World map): Ironridge, Marlow Bay, Duskfield
+  openMic('rivetRoom', 'The Rivet Room', 'ironridge', 2),
+  room('foundryHall', 'Foundry Hall', 'ironridge', 2, 300),
+  room('ironridgeCivic', 'Ironridge Civic Theater', 'ironridge', 3, 1400),
+  room('steelworksArena', 'Steelworks Arena', 'ironridge', 4, 14000),
+  openMic('tidepoolCafe', 'Tidepool Cafe', 'marlowBay', 4),
+  room('theSandbar', 'The Sandbar', 'marlowBay', 2, 260),
+  room('marlowPavilion', 'Marlow Pavilion', 'marlowBay', 3, 1300),
+  room('baysideAmphitheater', 'Bayside Amphitheater', 'marlowBay', 4, 12000),
+  openMic('lamplightLounge', 'Lamplight Lounge', 'duskfield', 1),
+  room('ivyRoom', 'The Ivy Room', 'duskfield', 2, 300),
+  room('duskfieldGrand', 'Duskfield Grand', 'duskfield', 3, 1600),
+  room('capitolCenter', 'Capitol Center', 'duskfield', 4, 15000),
+  // International: Nordhavia
+  openMic('fjordsideCafe', 'Fjordside Cafe', 'askerholm', 3),
+  room('klubbNord', 'Klubb Nord', 'askerholm', 2, 300),
+  room('askerholmKonserthus', 'Askerholm Konserthus', 'askerholm', 3, 1400),
+  openMic('auroraBar', 'Aurora Bar', 'frostvik', 2),
+  room('iceCellar', 'The Ice Cellar', 'frostvik', 2, 250),
+  room('frostvikOpera', 'Frostvik Opera', 'frostvik', 3, 1200),
+  // Solvara
+  openMic('cafeLiora', 'Cafe Liora', 'santaLiora', 4),
+  room('salaLiora', 'Sala Liora', 'santaLiora', 2, 280),
+  room('teatroDelSol', 'Teatro del Sol', 'santaLiora', 3, 1300),
+  openMic('brisaBar', 'Brisa Bar', 'ventamar', 1),
+  room('laOla', 'La Ola', 'ventamar', 2, 250),
+  room('ventamarColiseo', 'Ventamar Coliseo', 'ventamar', 3, 1500),
+  // Veronesse
+  openMic('caffeLuna', 'Caffe Luna', 'castellune', 2),
+  room('ilCortile', 'Il Cortile', 'castellune', 2, 260),
+  room('teatroCastellune', 'Teatro Castellune', 'castellune', 3, 1300),
+  openMic('rosaLounge', 'Rosa Lounge', 'bellarosa', 4),
+  room('laCantina', 'La Cantina', 'bellarosa', 2, 250),
+  room('bellarosaHall', 'Bellarosa Hall', 'bellarosa', 3, 1200),
+  // Kaigara
+  openMic('neonAlleyMic', 'Neon Alley Mic', 'akarumi', 3),
+  room('clubHikari', 'Club Hikari', 'akarumi', 2, 350),
+  room('akarumiHall', 'Akarumi Hall', 'akarumi', 3, 2000),
+  room('akarumiDome', 'Akarumi Dome', 'akarumi', 4, 40000),
+  openMic('moonhillCafe', 'Moonhill Cafe', 'tsukiyama', 1),
+  room('studioTsuki', 'Studio Tsuki', 'tsukiyama', 2, 280),
+  room('tsukiyamaTheater', 'Tsukiyama Theater', 'tsukiyama', 3, 1400),
+  openMic('starlightBar', 'Starlight Bar', 'hoshiro', 5),
+  room('hoshiroLiveHouse', 'Hoshiro Live House', 'hoshiro', 2, 300),
+  room('hoshiroCivicHall', 'Hoshiro Civic Hall', 'hoshiro', 3, 1500),
+  // Kestara
+  openMic('kiaraBeachBar', 'Kiara Beach Bar', 'portKiara', 4),
+  room('reefClub', 'The Reef Club', 'portKiara', 2, 280),
+  room('kiaraOpera', 'Kiara Opera House', 'portKiara', 3, 1600),
+  room('kestaraStadium', 'Kestara Stadium', 'portKiara', 4, 25000),
+  openMic('fallsCafe', 'Falls Cafe', 'sundaraFalls', 2),
+  room('theGorge', 'The Gorge', 'sundaraFalls', 2, 260),
+  room('sundaraTheater', 'Sundara Theater', 'sundaraFalls', 3, 1300),
+  openMic('vellmoreTap', 'Vellmore Tap', 'vellmore', 0),
+  room('outbackHall', 'Outback Hall', 'vellmore', 2, 250),
+  room('vellmorePavilion', 'Vellmore Pavilion', 'vellmore', 3, 1200)
 ].forEach(function (v) { Game.content.venues[v.id] = v; });
 
-// ----- Festivals (Phase 12): one in each National city. Offers only, afternoon slots. -----
+// ----- Festivals (Phase 12): offers only, afternoon slots. -----
 // The fee and the crowd come with each offer (balance.bigOffers).
 var festival = function (id, name, cityId, capacity) {
   return { id: id, name: name, cityId: cityId, tier: 4, festival: true, capacity: capacity, showBlock: 'afternoon', deals: {} };
@@ -159,6 +215,10 @@ var festival = function (id, name, cityId, capacity) {
 [
   festival('halstonFest', 'New Halston Music Fest', 'newHalston', 40000),
   festival('crescentFest', 'Crescent Riverfront Festival', 'crescentCity', 30000),
-  festival('harborlineFest', 'Harborline Summer Fest', 'kingsport', 35000)
+  festival('harborlineFest', 'Harborline Summer Fest', 'kingsport', 35000),
+  festival('marlowBeachFest', 'Marlow Bay Beach Fest', 'marlowBay', 30000),
+  // International festivals (Solvara and Kaigara; Veronesse has the Valmora Festival Grounds)
+  festival('aureliaSunFest', 'Aurelia Sun Festival', 'portAurelia', 40000),
+  festival('akarumiLightsFest', 'Akarumi Lights Festival', 'akarumi', 45000)
 ].forEach(function (v) { Game.content.venues[v.id] = v; });
 })();

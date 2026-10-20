@@ -43,11 +43,14 @@
     }).sort(function (a, b) { return a.day - b.day; })[0] || null;
   }
 
-  Game.test('Scene: 50 bands in a pyramid of sizes, 3 of them rivals from your hometown, the same for the same seed', function (t) {
+  Game.test('Scene: 50 bands at home in a pyramid of sizes (3 of them rivals from your hometown), plus local bands abroad; the same for the same seed', function (t) {
     var b = Game.balance.scene;
     var s = Game.state.createNew(5);
-    var bands = Object.keys(s.scene.bands).map(function (id) { return s.scene.bands[id]; });
-    t.equal(bands.length, 50, '50 bands');
+    var all = Object.keys(s.scene.bands).map(function (id) { return s.scene.bands[id]; });
+    var bands = all.filter(function (band) { return !band.countryId; });
+    t.equal(bands.length, 50, '50 bands at home');
+    var perCountry = b.localSizes.reduce(function (n, z) { return n + z.count; }, 0);
+    t.equal(all.length - bands.length, perCountry * Object.keys(Game.content.scene.localBands).length, perCountry + ' local bands in each country');
     t.equal(s.scene.rivals.length, b.rivals.count, '3 rivals');
     t.ok(Game.rules.scene.rivals(s).every(function (band) { return band.rival && band.homeCity === 'hometown'; }), 'rivals are from Millbrook');
     b.sizes.forEach(function (z) {
@@ -56,7 +59,8 @@
     });
     var names = {};
     bands.forEach(function (band) { names[band.name] = true; });
-    t.equal(Object.keys(names).length, 50, 'every name is different');
+    all.forEach(function (band) { names[band.name] = true; });
+    t.equal(Object.keys(names).length, all.length, 'every name is different');
     t.sameContents(Game.state.createNew(5).scene, s.scene, 'the same seed builds the same scene');
     t.ok(JSON.stringify(Game.state.createNew(6).scene.bands) !== JSON.stringify(s.scene.bands), 'another seed builds another scene');
     var big = bands.filter(function (band) { return band.reputation >= 85; })[0];
@@ -326,7 +330,7 @@
     var loaded = Game.save.parse(JSON.stringify(old));
     t.ok(loaded.ok, 'loads');
     var st = loaded.state;
-    t.equal(Object.keys(st.scene.bands).length, 50, 'a scene of 50 bands');
+    t.equal(Object.keys(st.scene.bands).length, Object.keys(Game.state.createNew(1).scene.bands).length, 'a full scene of bands');
     t.ok(Game.rules.scene.rivals(st).every(function (band) { return Math.abs(band.reputation - 70) <= 6; }), 'rivals near your reputation');
     t.ok(st.scene.shows.length > 0 && st.scene.filled.hometown === Game.rules.manager.horizonDay(st), 'calendars filled');
     t.ok(st.charts.pool.singles[0].bandId && st.charts.pool.singles[0].artist !== 'The Old Act', 'old chart acts became scene bands');

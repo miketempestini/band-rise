@@ -29,6 +29,7 @@ Game.content.milestones = [
   { id: 'theater',       number: 15, name: 'Theater',          trigger: 'Reputation ' + m.theaterReputation + ' and a release' },
   { id: 'labelOffer',    number: 16, name: 'Label offer',      trigger: 'Reputation ' + m.labelReputation + ' and ' + n(m.labelFans) + ' fans' },
   { id: 'awards',        number: 17, name: 'Awards season',    trigger: 'Every December' },
-  { id: 'arena',         number: 18, name: 'Arena',            trigger: 'Reputation ' + m.arenaReputation + ' and ' + n(m.arenaFans) + ' fans' }
+  { id: 'arena',         number: 18, name: 'Arena',            trigger: 'Reputation ' + m.arenaReputation + ' and ' + n(m.arenaFans) + ' fans' },
+  { id: 'goingGlobal',   number: 19, name: 'Going global',     trigger: 'Play your first show abroad' }
 ];
 })();

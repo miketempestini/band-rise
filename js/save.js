@@ -92,6 +92,13 @@ Game.save = {
     // filled in above; now the rivals catch up to your level and the calendars fill.
     if (fromVersion < 20) Game.rules.scene.catchUp(data);
 
+    // Version 21 went global: new National and International cities and venues (filled in above), the private jet
+    // (gear.jet, filled in above), and local bands abroad, added to a scene that doesn't have them yet.
+    if (fromVersion < 21) {
+      var hasLocals = Object.keys(data.scene.bands).some(function (id) { return data.scene.bands[id].countryId; });
+      if (!hasLocals) Game.rules.scene.addLocalBands(data.scene, data.seed);
+    }
+
     data.version = Game.balance.save.version;
     return data;
   },

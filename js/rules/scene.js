@@ -50,10 +50,10 @@ Game.rules.scene = {
     return { musicianship: one(), performance: one(), songwriting: one() };
   },
 
-  // Picks a home city, more often the hometown and the big cities (international cities have no scene bands).
+  // Picks a home city at home, more often the hometown and the big cities (bands abroad are added by addLocalBands).
   pickHome: function (rng) {
     var weights = Game.balance.scene.homeWeights;
-    var list = Object.keys(Game.content.cities).filter(function (id) { return weights[Game.content.cities[id].region]; });
+    var list = Object.keys(Game.content.cities).filter(function (id) { return weights[Game.content.cities[id].region] && !Game.content.cities[id].countryId; });
     var total = list.reduce(function (t, id) { return t + weights[Game.content.cities[id].region]; }, 0);
     var roll = rng.next() * total;
     for (var i = 0; i < list.length; i++) {
@@ -102,7 +102,36 @@ Game.rules.scene = {
       for (var k = 0; k < z.count; k++) add(rng.int(z.minRep, z.maxRep), {});
     });
     scene.rngState = rng.getState();
+    Game.rules.scene.addLocalBands(scene, seed);
     return scene;
+  },
+
+  // Adds each foreign country's local bands (names in content/scene.js), living in that country's cities. They have
+  // their own dice (from the seed), so older saves get the same bands a new career would. Changes scene.
+  addLocalBands: function (scene, seed) {
+    var b = Game.balance.scene;
+    var sc = Game.rules.scene;
+    var rng = Game.rng.create(seed + b.localSeedOffset);
+    var n = Object.keys(scene.bands).length;
+    Object.keys(Game.content.scene.localBands).forEach(function (country) {
+      var names = Game.content.scene.localBands[country].slice();
+      var cities = Object.keys(Game.content.cities).filter(function (id) { return Game.content.cities[id].countryId === country; });
+      b.localSizes.forEach(function (ls) {
+        var z = b.sizes.filter(function (x) { return x.tier === ls.tier; })[0];
+        for (var k = 0; k < ls.count; k++) {
+          n += 1;
+          var rep = rng.int(z.minRep, z.maxRep);
+          var skills = sc.skillsFor(rep, rng);
+          var fans = sc.fansFor(rep, rng);
+          scene.bands['b' + n] = {
+            id: 'b' + n, name: names.shift(), homeCity: rng.pick(cities), reputation: rep, fans: fans,
+            musicianship: skills.musicianship, performance: skills.performance, songwriting: skills.songwriting,
+            members: rng.int(b.members.min, b.members.max), tier: sc.sizeOf(rep), rival: false, rivalIndex: null,
+            yearStartFans: fans, awardsWon: 0, nextReleaseDay: null, countryId: country
+          };
+        }
+      });
+    });
   },
 
   // If a scene band has your band's name, it takes a spare name instead (so names never clash). Changes s.
@@ -165,12 +194,10 @@ Game.rules.scene = {
 
   // ----- Venue calendars -----
 
-  // The venues that have other bands' shows: small rooms and up, not festivals or the record-store in-stores,
-  // and not international cities.
+  // The venues that have other bands' shows: small rooms and up, not festivals or the record-store in-stores.
   calendarVenues: function () {
-    var weights = Game.balance.scene.homeWeights;
     return Object.keys(Game.content.venues).map(function (id) { return Game.content.venues[id]; }).filter(function (v) {
-      return v.tier >= 1 && !v.festival && !v.deals.inStore && weights[Game.content.cities[v.cityId].region];
+      return v.tier >= 1 && !v.festival && !v.deals.inStore;
     }).sort(function (a, b) { return b.tier - a.tier || (a.id < b.id ? -1 : 1); }); // big rooms first, so big bands are placed first
   },
 
@@ -208,7 +235,10 @@ Game.rules.scene = {
       var sizeW = role === 'opener' ? (size === venue.tier - 1 ? 1 : 0)
         : (size === venue.tier ? 1 : (size === venue.tier + 1 ? w.upTier : 0));
       if (!sizeW) return;
-      var placeW = band.homeCity === venue.cityId ? w.home : (band.reputation >= b.touringRep ? w.touring : w.away);
+      // Home-city bands first; touring bands anywhere; other bands only in their own country.
+      var sameCountry = Game.rules.travel.countryOf(band.homeCity) === Game.rules.travel.countryOf(venue.cityId);
+      var placeW = band.homeCity === venue.cityId ? w.home : (band.reputation >= b.touringRep ? w.touring : (sameCountry ? w.away : 0));
+      if (!placeW) return;
       list.push({ id: id, w: sizeW * placeW });
       total += sizeW * placeW;
     });

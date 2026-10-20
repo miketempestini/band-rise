@@ -331,6 +331,16 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   - Awards: `awards.nominationsFor` returns `nominees` and your `chance` against them (`withRivals`, strength cubed);
     the ceremony picks one winner per category.
   - Tests that book specific nights clear `s.scene.shows` first (see booking.test.js); taken nights are tested in scene.test.js.
+- **Going global**: countries are content in `js/content/countries.js` (outline points and label for the World map);
+  international cities carry `countryId`, and flyable cities carry `world: { x, y }` for the World map. Kinds of leg come
+  from `travel.legKind(from, to)` ('drive' | 'national' | 'international' | 'hop'); `legBlocks(from, to, state)` and
+  `legGas(from, to, state)` need `state` for the band size and the private jet (`player.gear.jet`, `travel.hasJet`).
+  Pass state everywhere you lay out or price travel. Jet lag is applied in `travelBlock` (and counted in `preview`).
+  International cities open with `travel.bestNationalTour` (a finished tour, `tour.result`, with 2+ National cities).
+  Milestone 19 `goingGlobal` unlocks the jet (`merch.jetItem`). The Map screen has `app.mapView` ('home' | 'world').
+  Auto-booking stays at home (`manager.rulesProblem`); tours, the Book screen, and big-show offers go abroad. Region buzz
+  abroad is by country. Local bands abroad are added by `scene.addLocalBands` (their own dice), and other bands only
+  play outside their own country if they're touring bands.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

@@ -19,15 +19,25 @@ Game.ui.booking = {
     var city = Game.content.cities[cityId];
     var home = cityId === 'hometown';
 
-    // City tabs: every city you can drive to (locked ones say why on the Map).
-    var cityTabs = Object.keys(Game.content.cities).filter(function (id) {
-      return Game.content.cities[id].region !== 'international';
-    }).map(function (id) {
+    // City tabs: your home country's cities (locked ones say why on hover), then each foreign country's cities once
+    // international cities are open (until then, one line says what opens them).
+    var tab = function (id) {
       var open = state.cities[id].unlocked;
       return '<button class="btn btn--small' + (id === cityId ? ' btn--primary' : '') + '" data-action="city" data-city="' + id + '"' +
         (open ? '' : ' disabled title="' + h.escape(Game.rules.travel.cityUnlockProblem(state, id) || '') + '"') + '>' +
         h.escape(Game.content.cities[id].name) + '</button>';
-    }).join('');
+    };
+    var countryOf = Game.rules.travel.countryOf;
+    var homeIds = Object.keys(Game.content.cities).filter(function (id) { return countryOf(id) === 'home'; });
+    var abroad = Object.keys(Game.content.countries).filter(function (c) { return c !== 'home'; });
+    var anyAbroad = Object.keys(Game.content.cities).some(function (id) { return countryOf(id) !== 'home' && state.cities[id].unlocked; });
+    var cityTabs = '<div class="sort-bar">' + homeIds.map(tab).join('') + '</div>' +
+      (anyAbroad
+        ? abroad.map(function (c) {
+            var ids = Object.keys(Game.content.cities).filter(function (id) { return countryOf(id) === c; });
+            return '<div class="sort-bar sort-bar--country"><span class="sort-bar__label">' + h.escape(Game.content.countries[c].name) + '</span>' + ids.map(tab).join('') + '</div>';
+          }).join('')
+        : '<p class="hint">Abroad: ' + h.escape(Game.rules.travel.cityUnlockProblem(state, 'lindenberg') || '') + '</p>');
 
     // Venues grouped by tier.
     var groups = {};
@@ -53,7 +63,7 @@ Game.ui.booking = {
           '<button class="btn" data-action="back">← Back</button></div>' +
         '</div>' +
         h.notice(app.notice) +
-        '<div class="sort-bar">' + cityTabs + '</div>' +
+        cityTabs +
         self.waitingHtml(state) +
         (home ? Game.ui.studio.html(state, app)
           : '<p class="hint">' + h.escape(city.name) + ' · ' + Game.rules.travel.legBlocks('hometown', cityId) + ' travel block' +
@@ -135,7 +145,7 @@ Game.ui.booking = {
         ' ' + Game.content.calendar.blockNames[tr.slotBlock(t)].toLowerCase();
     };
     var legs = preview.legs.map(function (leg) {
-      return '<li>' + (tr.isFlight(leg.from, leg.to) ? 'Fly ' : 'Drive ') + h.escape(Game.content.cities[leg.from].name) + ' → ' + h.escape(Game.content.cities[leg.to].name) + ': ' +
+      return '<li>' + (tr.isFlight(leg.from, leg.to) ? (tr.legKind(leg.from, leg.to) === 'hop' ? 'Short flight ' : 'Fly ') : 'Drive ') + h.escape(Game.content.cities[leg.from].name) + ' → ' + h.escape(Game.content.cities[leg.to].name) + ': ' +
         leg.slots.map(when).join(', ') + '</li>';
     }).join('');
     return '<div class="trip"><strong>The trip' + (preview.showCount > 1 ? ' (with your other show' + (preview.showCount > 2 ? 's' : '') + ' nearby)' : '') + '</strong>' +
@@ -143,7 +153,7 @@ Game.ui.booking = {
       '<p class="hint">' + (preview.legs.some(function (leg) { return tr.isFlight(leg.from, leg.to); }) ? 'Flights ' : 'Gas ') + h.money(preview.gas) + ' · ' +
         preview.hotelNights + ' hotel night' + (preview.hotelNights === 1 ? '' : 's') +
         ' (' + h.money(preview.hotelCost) + ')' + (preview.yourCost < preview.gas + preview.hotelCost ? ' · your part ' + h.money(preview.yourCost) + ' (the band chips in)' : '') +
-        ' · ' + preview.energy + ' energy of travel' +
+        ' · ' + preview.energy + ' energy of travel' + (preview.jetLag ? ' (' + preview.jetLag + ' of it jet lag)' : '') +
         (preview.jobDays.length ? ' · needs ' + preview.jobDays.map(function (d) { return h.dateLabel(d); }).join(', ') + ' off work' : '') + '</p></div>';
   },
 

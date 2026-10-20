@@ -64,7 +64,10 @@ Game.ui.manager = {
 
   // Cities you've unlocked (for the rules and tours).
   openCities: function (state, withHome) {
-    return Object.keys(Game.content.cities).filter(function (id) { return state.cities[id].unlocked && (withHome || id !== 'hometown'); });
+    // (Auto-booking stays at home: international cities are for tours, offers, and the Book screen.)
+    return Object.keys(Game.content.cities).filter(function (id) {
+      return state.cities[id].unlocked && (withHome ? !Game.content.cities[id].countryId : id !== 'hometown');
+    });
   },
 
   // The auto-booking rules form.

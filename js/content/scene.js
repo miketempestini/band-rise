@@ -21,6 +21,15 @@ Game.content.scene = {
     'Thunder Bakery', 'The Plastic Saints', 'Harbor Ghosts', 'The Last Arcade', 'Juniper Static'
   ],
 
+  // Local bands abroad: 3 per country (2 club-size, 1 theater-size; see balance.scene.localSizes).
+  localBands: {
+    nordhavia: ['Fjord Lights', 'The Snowline Choir', 'Northbound Ferries'],
+    solvara:   ['Los Faroles', 'Sunset Brigada', 'The Salt Coast'],
+    veronesse: ['I Lupi di Carta', 'The Opera Thieves', 'Rosa Nera'],
+    kaigara:   ['Neon Koi', 'Midnight Shinkansen', 'The Paper Lantern Club'],
+    kestara:   ['The Red Dust Kings', 'Southern Stars Revue', 'Coral Static']
+  },
+
   // Spare names, used in order if your band's name matches one of the scene's bands.
   spareNames: [
     'The Quiet Engines', 'Sparrow Hill', 'The Neon Orchard', 'Copper Lanterns', 'The Paper Cranes',

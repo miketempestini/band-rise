@@ -13,7 +13,7 @@ window.Game = window.Game || {};
 
 Game.files = {
 
-  tag: 'v20-2026-10-20a',   // Must start with "v" + the save version (balance.save.version): a test checks it
+  tag: 'v21-2026-10-20b',   // Must start with "v" + the save version (balance.save.version): a test checks it
 
   css: 'styles.css',
 
@@ -21,7 +21,7 @@ Game.files = {
   game: [
     'js/balance.js',
     'js/rng.js', 'js/util.js',
-    'js/content/calendar.js', 'js/content/skills.js', 'js/content/instruments.js', 'js/content/cities.js',
+    'js/content/calendar.js', 'js/content/skills.js', 'js/content/instruments.js', 'js/content/cities.js', 'js/content/countries.js',
     'js/content/actions.js', 'js/content/names.js', 'js/content/venues.js', 'js/content/gigText.js',
     'js/content/people.js', 'js/content/events.js', 'js/content/milestones.js', 'js/content/tutorial.js',
     'js/content/studios.js', 'js/content/business.js', 'js/content/finance.js', 'js/content/art.js', 'js/content/scene.js',

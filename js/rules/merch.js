@@ -29,7 +29,21 @@ Game.rules.merch = {
         unlocked: state.milestones.firstRecording !== undefined, why: 'Unlocks after your first recording.',
         owned: state.player.gear.homeStudio
       }
-    ].concat(Game.rules.merch.tourShirtItems(state), Game.rules.merch.vanItems(state));
+    ].concat(Game.rules.merch.tourShirtItems(state), Game.rules.merch.vanItems(state), [Game.rules.merch.jetItem(state)]);
+  },
+
+  // The private jet: unlocked by milestone 19 (Going global, your first international show).
+  jetItem: function (state) {
+    var j = Game.balance.travel.jet;
+    var t = Game.balance.travel;
+    return {
+      id: 'jet', name: 'Private jet', price: j.price,
+      detail: 'Fly the whole band for one price: ' + '$' + j.national.toLocaleString() + ' a flight at home and $' + j.international.toLocaleString() +
+        ' abroad (airlines charge $' + t.flight.perPersonOneWay.toLocaleString() + ' and $' + t.internationalFlight.perPersonOneWay.toLocaleString() +
+        ' a person), ' + j.blocksFaster + ' block faster, and less jet lag (-' + t.jetLag.withJet + ' energy instead of -' + t.jetLag.energy + ').',
+      unlocked: state.milestones.goingGlobal !== undefined, why: 'Unlocks with milestone 19, Going global (your first international show).',
+      owned: !!state.player.gear.jet
+    };
   },
 
   // Tour shirts, while a tour is coming up (or happening now): [] or one item.
@@ -73,7 +87,13 @@ Game.rules.merch = {
     if (state.player.cash < item.price) return { state: state, log: ['That costs $' + item.price + ' (you have $' + Math.floor(state.player.cash) + ').'] };
     if (itemId === 'tourShirts') return Game.rules.tours.buyShirts(state);
     var m = Game.balance.merch;
-    var s = Game.rules.money.spend(state, item.price, itemId === 'homeStudio' || item.kind ? 'gear' : 'merchStock').state;
+    var s = Game.rules.money.spend(state, item.price, itemId === 'homeStudio' || itemId === 'jet' || item.kind ? 'gear' : 'merchStock').state;
+    if (itemId === 'jet') {
+      s.player.gear.jet = true;
+      // Trips that haven't started are laid out again: the jet is faster and has its own prices.
+      s = Game.rules.travel.rebuild(s).state;
+      return { state: s, log: ['Bought a private jet for $' + item.price.toLocaleString() + '. Flights are now one price for the whole band, and faster.'] };
+    }
     if (item.kind) {
       s.player.gear.van = { kind: item.kind, shows: 0, worn: false };
       s.stats.vansBought += 1;

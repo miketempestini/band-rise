@@ -28,6 +28,7 @@ Game.app = Object.assign(Game.app || {}, {
   calendarDay: null,    // the day selected on the Calendar screen
   bookingDraft: null,   // the booking being set up: { venueId, gigDay, deal }
   bookingCity: 'hometown', // which city the Book screen shows
+  mapView: 'home',         // the Map screen's view: 'home' (the road map) or 'world' (the World map)
   openMicDraft: null,   // an out-of-town open mic sign-up being set up: { venueId, day, jobChoice }
   setlistDraft: null,   // songs ticked while editing a booked show's setlist
   skipResult: null,     // what "Skip to next commitment" did, for the skip summary screen

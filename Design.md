@@ -482,8 +482,8 @@ Hollow Records is the odd one out: it pays nothing, but merch sells at double th
 | Near cities (2) | 1 block | Reputation 25 | Day trips |
 | Mid cities (2) | 2 blocks | First Near show and reputation 40 | Usually an overnight |
 | Far cities (4+) | A full day | Reputation 50 and a van | Needs vacation days or no day job |
-| National cities | Flights | Manager and a label | Arenas and festivals |
-| International cities | Flights | After first major nationwide tour | Mix of clubs, arenas, theaters, and festivals |
+| National cities (6) | Flights (2 blocks) | Manager and a label | Arenas and festivals |
+| International cities (15, in 5 countries) | Flights abroad (3 blocks) | A finished tour that played 2+ National cities | Clubs and theaters everywhere; arenas in each capital; 3 festivals |
 
 Each city keeps its own fans, buzz, an open mic , and 2 to 4 venues. Each city also has a fan ceiling: 50,000 for the hometown, 20,000 to 40,000 for nearby cities, up to 500,000 for big national cities.
 
@@ -501,11 +501,40 @@ Each city keeps its own fans, buzz, an open mic , and 2 to 4 venues. Each city a
 | New Halston | National | 500,000 | The Velvet Mic (Tue) | Club Meridian, The Halston Theater, Halston Arena |
 | Crescent City | National | 400,000 | Moonlight Coffee (Thu) | The Crescent Club, Crescent Theater, Crescent Arena |
 | Kingsport | National | 350,000 | Dockside Mic (Wed) | The Kingsway, Royal Theater, Kingsport Coliseum |
-| Lindenberg | International | 500,000 | Cafe Linde (Tue) | The Linden Cellar, Lindenberg Concert Hall, Lindenberg Arena |
-| Port Aurelia | International | 450,000 | Aurelia Beach Bar (Fri) | Club Solana, Teatro Aurelia, Aurelia Stadium |
-| Valmora | International | 400,000 | Valmora Lounge (Thu) | The Blue Door, Valmora Opera House, Valmora Festival Grounds |
+| Ironridge | National | 350,000 | The Rivet Room (Wed) | Foundry Hall, Ironridge Civic Theater, Steelworks Arena |
+| Marlow Bay | National | 300,000 | Tidepool Cafe (Fri) | The Sandbar, Marlow Pavilion, Bayside Amphitheater, Marlow Bay Beach Fest |
+| Duskfield | National | 450,000 | Lamplight Lounge (Tue) | The Ivy Room, Duskfield Grand, Capitol Center |
 
-Out of town, small rooms, clubs, and theaters book for a share of the door (cover nights and in-stores are hometown only), and theaters need a release. Opening slots, residencies, and fill-ins stay in the hometown. National and International cities are locked until the manager, label, and flights arrive.
+**International cities**, by country (all made up). Capitals hold 800,000 fans, the others 300,000 to 600,000.
+
+| Country | Cities (fan ceiling) | Arena / festival |
+| --- | --- | --- |
+| Nordhavia (cold north, concert halls) | Lindenberg (800,000), Askerholm (450,000), Frostvik (300,000) | Lindenberg Arena |
+| Solvara (sunny coast, stadiums) | Port Aurelia (800,000), Santa Liora (500,000), Ventamar (400,000) | Aurelia Stadium, Aurelia Sun Festival |
+| Veronesse (old opera cities) | Valmora (800,000), Castellune (500,000), Bellarosa (350,000) | Valmora Festival Grounds |
+| Kaigara (neon island megacities) | Akarumi (800,000), Tsukiyama (600,000), Hoshiro (550,000) | Akarumi Dome, Akarumi Lights Festival |
+| Kestara (southern beaches, big skies) | Port Kiara (800,000), Sundara Falls (400,000), Vellmore (300,000) | Kestara Stadium |
+
+Every international city has an open mic, a club, and a theater.
+
+### Flights and the private jet
+
+| Leg | Airlines (each way) | Private jet (each way) |
+| --- | --- | --- |
+| National (to or from a National city) | 2 blocks, $300 a person | 1 block, $2,000 for the whole band |
+| International (between countries) | 3 blocks, $1,200 a person | 2 blocks, $6,000 |
+| Hop (two cities in one foreign country) | 1 block, $250 a person | 1 block, the cheaper of the airline fare and $2,000 |
+
+- A person is you plus each bandmate. Road costs are split with the band as usual.
+- **Jet lag:** each flight to another country costs -15 energy on top of travel (-7 on your jet).
+- **The private jet** ($1,500,000) is in the Shop from milestone 19, Going global (your first show abroad).
+- **Country buzz:** a show abroad gives +3 buzz to the other cities in that country (like the region buzz at home).
+- **Booking abroad:** the Book screen (cities grouped by country), manager tours (a country's cities stay together,
+  with short hops), and arena and festival offers. Auto-booking stays at home.
+- **The World map:** a toggle on the Map screen shows a drawn world map with every country, city pins sized by fans,
+  and flight paths from Millbrook.
+
+Out of town, small rooms, clubs, and theaters book for a share of the door (cover nights and in-stores are hometown only), and theaters need a release. Opening slots, residencies, and fill-ins stay in the hometown. National cities open with a manager and a label; International cities after a finished tour that played 2 or more National cities.
 
 ### Tours
 
@@ -558,6 +587,8 @@ You're not the only band in town. 50 made-up bands (names in content) share the 
   - **Members:** 3 to 5.
   - **Home city:** more of them in Millbrook and the big cities.
   - Each Monday their reputation drifts up to 1 point and their fans up to 3%, but they stay about their size.
+- **Local bands abroad:** each foreign country has 3 local bands of its own (2 club-size, 1 theater-size). Bands
+  abroad and at home only play outside their own country if they're touring bands (reputation 60+).
 - **Rivals:** 3 of the bands are your rivals, from Millbrook. They start where you start (one 6 reputation behind,
   one even, one 6 ahead).
   - Each Monday they close 30% of the gap to your reputation (plus their offset) and to 0.7x / 1x / 1.4x your fans.
@@ -709,6 +740,7 @@ Milestones unlock new actions and screens, so the game keeps handing the player 
 | 16 | Label offer | Reputation 65 and 10,000 fans | A cash advance ($10,000 + $2 per fan, up to $50,000; turned down, it's offered again 8 weeks later), Top studio, national cities. The label keeps 80% of streaming until the advance is paid back |
 | 17 | Awards season | Every December (first nomination) | Nominations from your releases and fans. A win adds reputation |
 | 18 | Arena | Reputation 85 and 100,000 fans | Arena and festival offers |
+| 19 | Going global | Your first show abroad | The private jet in the Shop |
 
 ### Housing (the lifestyle ladder)
 
@@ -860,7 +892,7 @@ const state = {
     job: { status: 'full', standing: 60, vacationDaysLeft: 10 },  // 'full' | 'part' | 'none'
     loanOwed: 0,
     housing: 'starter',
-    gear: { instrumentTier: 0, homeStudio: false, van: false },
+    gear: { instrumentTier: 0, homeStudio: false, van: null, jet: false },
     merchStock: { shirts: 0, cds: 0 },
     badLuckStreak: 0
   },

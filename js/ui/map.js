@@ -1,8 +1,11 @@
 // map.js
-// The Map screen, in front of a dim picture of a van on the highway: a paper road map with push pins (Millbrook in
-// the middle, then rings of Near, Mid, and Far cities), and a card for
-// every city with its distance, travel time and gas, fans out of its fan ceiling, buzz, venues, and whether
-// it's unlocked (or exactly what it still needs). "Book here" opens the Book screen on that city.
+// The Map screen, in front of a dim picture of a van on the highway. Two views (app.mapView):
+//   Home:  a paper road map with push pins (Millbrook in the middle, then rings of Near, Mid, and Far cities), and a
+//          card for every city at home (including the National cities you fly to).
+//   World: a paper world map with made-up countries (outlines from content/countries.js), a pin for every city you
+//          fly to, and dashed flight paths from Millbrook; then the international cities' cards, by country.
+// Each card has the city's travel time and cost, fans out of its fan ceiling, buzz, venues, and whether it's
+// unlocked (or exactly what it still needs). "Book here" opens the Book screen on that city.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
@@ -16,18 +19,30 @@ Game.ui.map = {
     var h = Game.ui.helpers;
     var state = app.state;
     var self = Game.ui.map;
-    var regions = ['hometown', 'near', 'mid', 'far', 'national', 'international'];
-    var names = { hometown: 'Hometown', near: 'Near cities', mid: 'Mid cities', far: 'Far cities', national: 'National cities', international: 'International cities' };
+    var world = app.mapView === 'world';
+    var regions = ['hometown', 'near', 'mid', 'far', 'national'];
+    var names = { hometown: 'Hometown', near: 'Near cities', mid: 'Mid cities', far: 'Far cities', national: 'National cities' };
     var byRegion = {};
     Object.keys(Game.content.cities).forEach(function (id) {
       var r = Game.content.cities[id].region;
       byRegion[r] = (byRegion[r] || []).concat(id);
     });
 
-    var cards = regions.map(function (r) {
-      return '<div class="panel"><h3 class="panel__title">' + names[r] + '</h3><div class="city-grid">' +
-        byRegion[r].map(function (id) { return self.cityHtml(state, id); }).join('') + '</div></div>';
-    }).join('');
+    var cards = world
+      ? Object.keys(Game.content.countries).filter(function (c) { return c !== 'home'; }).map(function (c) {
+          var country = Game.content.countries[c];
+          var ids = Object.keys(Game.content.cities).filter(function (id) { return Game.content.cities[id].countryId === c; });
+          return '<div class="panel"><h3 class="panel__title">' + h.escape(country.name) + '</h3>' +
+            '<p class="hint">' + h.escape(country.blurb) + '</p><div class="city-grid">' +
+            ids.map(function (id) { return self.cityHtml(state, id); }).join('') + '</div></div>';
+        }).join('')
+      : regions.map(function (r) {
+          return '<div class="panel"><h3 class="panel__title">' + names[r] + '</h3><div class="city-grid">' +
+            byRegion[r].map(function (id) { return self.cityHtml(state, id); }).join('') + '</div></div>';
+        }).join('');
+    var toggle = '<div class="sort-bar">' +
+      '<button class="btn btn--small' + (world ? '' : ' btn--primary') + '" data-action="mapView" data-view="home">Home map</button>' +
+      '<button class="btn btn--small' + (world ? ' btn--primary' : '') + '" data-action="mapView" data-view="world">World map</button></div>';
 
     root.innerHTML =
       Game.ui.topbar.html(state, app.screen) +
@@ -38,17 +53,21 @@ Game.ui.map = {
           '<button class="btn" data-action="back">← Back</button>' +
         '</div>' +
         h.notice(app.notice) +
-        '<div class="map-layout">' +
-          '<div class="map-sheet paper">' + self.svg(state, byRegion) + '</div>' +
-          '<div class="panel">' + self.vanHtml(state) + '</div>' +
-        '</div>' +
+        toggle +
+        (world
+          ? '<div class="map-sheet map-sheet--world paper">' + self.worldSvg(state) + '</div>'
+          : '<div class="map-layout">' +
+              '<div class="map-sheet paper">' + self.svg(state, byRegion) + '</div>' +
+              '<div class="panel">' + self.vanHtml(state) + '</div>' +
+            '</div>') +
         cards +
       '</section>';
 
     h.bind(root, {
       back: function () { app.goBack('map'); },
       focusPayBack: function () { app.goBack('map'); },
-      bookCity: function (e, el) { app.bookingCitySelect(el.getAttribute('data-city')); }
+      bookCity: function (e, el) { app.bookingCitySelect(el.getAttribute('data-city')); },
+      mapView: function (e, el) { app.mapView = el.getAttribute('data-view'); app.render(); }
     });
   },
 
@@ -77,7 +96,52 @@ Game.ui.map = {
       }).join('');
     }).join('');
     return '<svg class="map" viewBox="0 0 ' + size + ' ' + size + '" role="img" aria-label="Map of cities around Millbrook">' + rings + dots + '</svg>' +
-      '<p class="hint">Rings: Near (1 travel block each way), Mid (2), Far (a full day). National cities are a flight away (with a manager and a label); International cities come later.</p>';
+      '<p class="hint">Rings: Near (1 travel block each way), Mid (2), Far (a full day). National cities are a flight away (with a manager and a label); the rest of the world is on the World map.</p>';
+  },
+
+  // A smooth closed outline through a list of [x, y] points (curves through the midpoints), as an SVG path.
+  smoothPath: function (points) {
+    var mid = function (a, b) { return [((a[0] + b[0]) / 2).toFixed(1), ((a[1] + b[1]) / 2).toFixed(1)]; };
+    var n = points.length;
+    var d = 'M' + mid(points[n - 1], points[0]).join(' ');
+    points.forEach(function (p, i) { d += ' Q' + p[0] + ' ' + p[1] + ' ' + mid(p, points[(i + 1) % n]).join(' '); });
+    return d + 'Z';
+  },
+
+  // The World map: countries, a pin for every city you fly to (bigger with more fans, hollow while locked), and
+  // dashed flight paths from Millbrook to each country's capital.
+  worldSvg: function (state) {
+    var h = Game.ui.helpers;
+    var self = Game.ui.map;
+    var countries = Game.content.countries;
+    var home = Game.content.cities.hometown.world;
+    var lands = Object.keys(countries).map(function (c) {
+      var country = countries[c];
+      return '<path class="world__land' + (c === 'home' ? ' world__land--home' : '') + '" d="' + self.smoothPath(country.shape) + '"/>' +
+        '<text class="world__country" x="' + country.label[0] + '" y="' + country.label[1] + '" text-anchor="middle">' + h.escape(country.name) + '</text>';
+    }).join('');
+    var routes = Object.keys(countries).filter(function (c) { return c !== 'home'; }).map(function (c) {
+      var to = Game.content.cities[countries[c].capital].world;
+      // A gentle arc: bend the line sideways from its middle by a fifth of its length (always to the same side).
+      var dx = to.x - home.x, dy = to.y - home.y;
+      var cx = (home.x + to.x) / 2 + dy * 0.2, cy = (home.y + to.y) / 2 - dx * 0.2;
+      return '<path class="world__route" d="M' + home.x + ' ' + home.y + ' Q' + cx + ' ' + cy + ' ' + to.x + ' ' + to.y + '"/>';
+    }).join('');
+    var pins = Object.keys(Game.content.cities).filter(function (id) { return Game.content.cities[id].world; }).map(function (id) {
+      var city = Game.content.cities[id];
+      var open = state.cities[id].unlocked;
+      var r = 4 + Math.min(9, Math.sqrt(state.cities[id].fans) / 80);
+      return '<g class="world__city' + (open ? '' : ' world__city--locked') + (id === 'hometown' ? ' world__city--home' : '') + '">' +
+        '<circle cx="' + city.world.x + '" cy="' + city.world.y + '" r="' + r.toFixed(1) + '"><title>' + h.escape(city.name) + ': ' +
+          state.cities[id].fans.toLocaleString() + ' fans' + (open ? '' : ' (locked)') + '</title></circle>' +
+        '<text x="' + city.world.x + '" y="' + (city.world.y - r - 5).toFixed(1) + '" text-anchor="middle">' + h.escape(city.name) + '</text></g>';
+    }).join('');
+    return '<svg class="world" viewBox="0 0 1000 560" role="img" aria-label="World map">' + lands + routes + pins + '</svg>' +
+      '<p class="hint">Flights abroad: ' + Game.balance.travel.internationalFlight.blocks + ' blocks and ' +
+        h.money(Game.balance.travel.internationalFlight.perPersonOneWay) + ' a person each way; short flights inside a country ' +
+        Game.balance.travel.hop.blocks + ' block and ' + h.money(Game.balance.travel.hop.perPersonOneWay) + ' a person.' +
+        (Game.rules.travel.hasJet(state) ? ' Your jet: ' + h.money(Game.balance.travel.jet.international) + ' a flight abroad, ' +
+          h.money(Game.balance.travel.jet.national) + ' at home, a block faster.' : '') + '</p>';
   },
 
   // Your van, if you have one.
@@ -101,8 +165,9 @@ Game.ui.map = {
     var tr = Game.rules.travel;
     var city = Game.content.cities[cityId];
     var cs = state.cities[cityId];
-    var drive = cityId !== 'hometown' && city.region !== 'international'; // places you can travel to now (driving, or flights)
+    var drive = cityId !== 'hometown'; // places you travel to (driving, or flights)
     var fly = drive && tr.isFlight('hometown', cityId);
+    var kind = drive ? tr.legKind('hometown', cityId) : null;
     var problem = cs.unlocked ? null : tr.cityUnlockProblem(state, cityId);
     var venues = Object.keys(Game.content.venues).map(function (id) { return Game.content.venues[id]; })
       .filter(function (v) { return v.cityId === cityId; });
@@ -117,8 +182,9 @@ Game.ui.map = {
       '<p class="hint">' + h.escape(city.blurb) + '</p>' +
       '<dl class="rows">' +
         (drive ? '<dt>Travel</dt><dd>' + tr.legBlocks('hometown', cityId) + ' block' + (tr.legBlocks('hometown', cityId) === 1 ? '' : 's') + ' each way · ' +
-          (fly ? h.money(tr.legGas('hometown', cityId, state) * 2) + ' in flights round trip (' + h.money(Game.balance.travel.flight.perPersonOneWay) + ' a person each way)'
-            : h.money(Game.balance.travel.gasRoundTrip[city.region]) + ' gas round trip') + '</dd>' : (cityId === 'hometown' ? '' : '<dt>Travel</dt><dd>Flights (later)</dd>')) +
+          (fly ? h.money(tr.legGas('hometown', cityId, state) * 2) + ' in flights round trip (' +
+              (tr.hasJet(state) ? 'your jet, ' + h.money(Game.balance.travel.jet[kind]) + ' a flight' : h.money(tr.fare(kind).perPersonOneWay) + ' a person each way') + ')'
+            : h.money(Game.balance.travel.gasRoundTrip[city.region]) + ' gas round trip') + '</dd>' : '') +
         '<dt>Fans</dt><dd>' + cs.fans.toLocaleString() + ' / ' + city.fanCeiling.toLocaleString() + '</dd>' +
         '<dt>Buzz</dt><dd>' + Math.round(cs.buzz) + '</dd>' +
         (cityId === 'hometown' ? '' : '<dt>Shows played</dt><dd>' + played + '</dd>') +

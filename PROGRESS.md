@@ -4,6 +4,49 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14m: Going global: more cities, a World map, and a private jet (2026-10-20)
+- **More cities:**
+  - 3 more National cities: Ironridge, Marlow Bay (with a beach festival), and Duskfield. Each has an open mic, a club,
+    a theater, and an arena.
+  - 12 more International cities, making 15 in 5 made-up countries:
+    - Nordhavia: Lindenberg, Askerholm, Frostvik
+    - Solvara: Port Aurelia, Santa Liora, Ventamar
+    - Veronesse: Valmora, Castellune, Bellarosa
+    - Kaigara: Akarumi, Tsukiyama, Hoshiro
+    - Kestara: Port Kiara, Sundara Falls, Vellmore
+  - Every international city has an open mic, a club, and a theater. Capitals have arenas (Akarumi Dome holds 40,000),
+    and Solvara and Kaigara have festivals.
+  - Capitals hold 800,000 fans and the others 300,000 to 600,000, so Legend (10M fans) is now reachable.
+- **Unlocking:** international cities open after a finished tour that played 2 or more National cities, with a banner
+  and an Inbox note. The locked cards say how close you are.
+- **Flights:**
+  - National: 2 blocks and $300 a person (as before).
+  - International: 3 blocks and $1,200 a person.
+  - Short hops inside a country: 1 block and $250 a person.
+  - Jet lag: -15 energy per flight to another country, shown in the trip preview.
+- **The private jet:** $1,500,000 in the Shop after the new milestone 19, Going global (your first show abroad).
+  - Flights cost $2,000 at home and $6,000 abroad for the whole band, 1 block faster.
+  - Jet lag is halved (-7).
+  - Trips not yet started are re-planned when you buy it.
+- **The World map:** a "World map" toggle on the Map screen draws a paper world map with every country's coastline,
+  city pins (sized by fans, hollow while locked), and dashed flight paths from Millbrook. City cards are grouped by
+  country.
+- **Booking abroad:**
+  - **Book screen:** city tabs are grouped (home, then each country) once the world is open.
+  - **Manager tours:** they can go abroad and keep each country's cities together.
+  - **Offers:** arena and festival offers can come from abroad.
+  - **Auto-booking:** stays at home.
+- **Scene abroad:** each country has 3 local bands (15 in all), so venues abroad have calendars and tickets. Smaller
+  bands only play in their own country; touring bands and rivals play anywhere.
+- **Country buzz:** a show abroad gives +3 buzz to the other cities in that country.
+- **Saves:** version 21 adds the new cities, venues, local bands, and the jet field to older saves.
+  - **Late-career test save:** regenerated. The world opened naturally from its National tours, it played an arena
+    show abroad (milestone 19 on day 1108) and "The Around the World Tour" (5 cities in Nordhavia and Veronesse), and
+    it owns the jet.
+- **Bug fixed while building:** the save generator renamed every tour, which wiped tour names set on purpose.
+- **Tests:** 363 passing. A new `global.test.js` has 10 tests, and the screens test now opens the World map and Book
+  abroad. The version tag is `v21-2026-10-20b`.
+
 ### Session 14l: The music scene, rivals, and seeing shows (2026-10-20)
 - **50 other bands** (made-up names in `js/content/scene.js`) with reputation, fans, and skills like yours.
   - **Sizes:** a pyramid of 24 small-room bands, 14 club bands, 7 theater bands, and 2 arena bands, spread over
@@ -766,8 +809,9 @@ No gameplay numbers changed: the balance checks give the same results as before.
      out-of-town fans grow slowly. Options: bigger fan gains on tours and from releases out of town, or a lower bar
      for the Arena milestone (for example 60,000).
   5. Bandmates could cost a weekly retainer once you're big (or ask for bigger shares), so a larger band costs more.
-- Phase 13 candidates from Design.md: Shop gear (instrument upgrades, housing), International cities (after a "major
-  nationwide tour"), milestone 13's reward (bigger opening slots).
+- Phase 13 candidates from Design.md: Shop gear (instrument upgrades, housing), milestone 13's reward (bigger opening
+  slots). (International cities are done: Session 14m.)
+- Ideas for abroad: higher ticket prices or hotel costs in some countries, and auto-booking abroad if it's wanted.
 - Promotion (flyers, social ads) still only reaches the hometown; the Big campaign and press push reach other cities.
 
 ## Known issues / open decisions

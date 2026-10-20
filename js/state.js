@@ -58,7 +58,8 @@ Game.state = {
         housing: 'starter',              // your main home (a key of balance.housing.ladder)
         vacationHome: false,             // true if you own the vacation home (a second home)
         livedInHouse: false,             // true once you've lived in the House (it unlocks the vacation home)
-        gear: { instrumentTier: 0, homeStudio: false, van: null }, // van: null, or { kind, shows, worn } (see Game.rules.travel)
+        gear: { instrumentTier: 0, homeStudio: false, van: null, jet: false }, // van: null, or { kind, shows, worn } (see Game.rules.travel);
+                                         // jet: true once you own the private jet
         roadDays: 0,                     // Days in a row you've spent away from home (road fatigue from day 5)
         merchStock: { shirts: 0, cds: 0 },
         badLuckStreak: 0

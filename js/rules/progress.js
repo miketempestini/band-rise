@@ -9,7 +9,7 @@ Game.rules.progress = {
 
   // ----- Milestones and unlocks -----
 
-  // The checks for every milestone (1 to 18).
+  // The checks for every milestone (1 to 19).
   milestoneChecks: {
     firstOpenMic: function (s) { return s.stats.openMicsPlayed >= 1; },
     firstOriginal: function (s) {
@@ -40,7 +40,8 @@ Game.rules.progress = {
       var m = Game.balance.milestones;
       return s.player.reputation >= m.arenaReputation && Game.rules.progress.totalFans(s) >= m.arenaFans;
     },
-    fullBand: function (s) { return 1 + s.band.memberIds.length >= Game.balance.milestones.fullBandOnStage; }
+    fullBand: function (s) { return 1 + s.band.memberIds.length >= Game.balance.milestones.fullBandOnStage; },
+    goingGlobal: function (s) { return Game.rules.travel.playedRegion(s, 'international'); }
   },
 
   // Other unlocks that get a banner but aren't milestones.
@@ -78,6 +79,7 @@ Game.rules.progress = {
     labelOffer: ' A label wants to sign you: check your Inbox.',
     awards: ' Your first award nomination. See your Inbox.',
     arena: ' Arena and festival offers can come now (with a label deal).',
+    goingGlobal: ' Your first show abroad! The private jet is now in the Shop.',
     fullBand: ' Clubs open up once your reputation reaches ' + Game.balance.venues.tiers[2].minReputation + '.'
   },
 

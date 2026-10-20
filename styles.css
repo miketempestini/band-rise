@@ -783,6 +783,8 @@ button.recap:hover { transform: none; }
 /* A row of buttons where one is picked (a city, a period, a page, a sort): the picked one is lit. */
 .sort-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 14px 0 12px; font-size: var(--size-s); }
 .sort-bar .btn { border-radius: 3px; }
+.sort-bar--country { margin: -6px 0 10px; }
+.sort-bar__label { min-width: 92px; font: 700 var(--size-s)/1.2 var(--font-head); color: var(--text-muted); }
 .list-controls { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0 16px; }
 .actions--split { justify-content: space-between; align-items: center; }
 
@@ -1345,6 +1347,21 @@ button.recap:hover { transform: none; }
 .map__city text { fill: var(--ink); font: 700 12px var(--font-head); }
 .map__city--locked circle { fill: #a9a395; }
 .map__city--locked text { fill: var(--ink-soft); }
+/* The World map: a pale blue sea with dotted lines of latitude, land in parchment with an ink coastline, the countries'
+   names lettered in, dashed red flight paths, and the same push pins (hollow while a city is locked). */
+.map-sheet--world { margin-bottom: var(--space-3); }
+.map-sheet--world .world { display: block; width: 100%; height: auto; border-radius: 4px;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 69px, rgba(22, 103, 125, 0.18) 69px 70px),
+    #cfe2e3; }
+.world__land { fill: #efe6cc; stroke: #3b4a63; stroke-width: 1.5; }
+.world__land--home { fill: #f4e3b5; }
+.world__country { fill: #3b4a63; font: 700 15px var(--font-head); letter-spacing: 0.08em; }
+.world__route { fill: none; stroke: var(--red-pen); stroke-width: 1.5; stroke-dasharray: 5 5; opacity: 0.75; }
+.world__city circle { fill: var(--red-pen); stroke: #fff; stroke-width: 2; filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.4)); }
+.world__city text { fill: var(--ink); font: 700 11px var(--font-head); paint-order: stroke; stroke: #f3eedb; stroke-width: 3px; }
+.world__city--locked circle { fill: #f3eedb; stroke: #6d6a60; stroke-width: 2; stroke-dasharray: 2 2; }
+.world__city--home circle { fill: var(--amber); }
 .city-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-2); }
 .city { padding: var(--space-2); background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); }
 .city--locked { border-style: dashed; }

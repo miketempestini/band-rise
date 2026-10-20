@@ -49,25 +49,55 @@ Game.rules.travel = {
 
   // True if a leg is a flight (to or from a National or International city).
   isFlight: function (fromCityId, toCityId) {
-    var flying = ['national', 'international'];
-    return flying.indexOf(Game.content.cities[fromCityId].region) !== -1 || flying.indexOf(Game.content.cities[toCityId].region) !== -1;
+    return Game.rules.travel.legKind(fromCityId, toCityId) !== 'drive';
   },
 
-  // Blocks of travel for one leg (0 if it's the same city): driving by distance, or a flight.
-  legBlocks: function (fromCityId, toCityId) {
+  // The country a city is in: its countryId abroad, or 'home'.
+  countryOf: function (cityId) { return Game.content.cities[cityId].countryId || 'home'; },
+
+  // What kind of leg this is: 'drive' (home country, no National city), 'national' (a flight at home),
+  // 'international' (a flight between countries), or 'hop' (a short flight inside one foreign country).
+  legKind: function (fromCityId, toCityId) {
+    var tr = Game.rules.travel;
+    var a = tr.countryOf(fromCityId), b = tr.countryOf(toCityId);
+    if (a !== b) return 'international';
+    if (a !== 'home') return 'hop';
+    var flying = Game.content.cities[fromCityId].region === 'national' || Game.content.cities[toCityId].region === 'national';
+    return flying ? 'national' : 'drive';
+  },
+
+  // True if you own the private jet.
+  hasJet: function (state) { return !!(state && state.player.gear.jet); },
+
+  // The airline numbers for a kind of flight: { blocks, perPersonOneWay }.
+  fare: function (kind) {
+    var t = Game.balance.travel;
+    return kind === 'international' ? t.internationalFlight : (kind === 'hop' ? t.hop : t.flight);
+  },
+
+  // Blocks of travel for one leg (0 if it's the same city): driving by distance, or a flight (the private jet is
+  // a block faster, never under 1). state: to check for the jet; left out, it's the airlines.
+  legBlocks: function (fromCityId, toCityId, state) {
+    var tr = Game.rules.travel;
     if (fromCityId === toCityId) return 0;
-    if (Game.rules.travel.isFlight(fromCityId, toCityId)) return Game.balance.travel.flight.blocks;
-    return Game.balance.travel.blocksEachWay[Game.rules.travel.legRegion(fromCityId, toCityId)];
+    var kind = tr.legKind(fromCityId, toCityId);
+    if (kind === 'drive') return Game.balance.travel.blocksEachWay[tr.legRegion(fromCityId, toCityId)];
+    var blocks = tr.fare(kind).blocks;
+    return tr.hasJet(state) ? Math.max(1, blocks - Game.balance.travel.jet.blocksFaster) : blocks;
   },
 
-  // What one leg costs: gas (half the round trip of the farther city), or plane tickets for everyone on
-  // stage (you plus your bandmates). state: needed for flights (to count the band); left out, it's just you.
+  // What one leg costs: gas (half the round trip of the farther city), plane tickets for everyone on stage (you plus
+  // your bandmates), or on your own jet one price for the flight (a hop costs the cheaper of the two).
+  // state: needed for flights (to count the band and check for the jet); left out, it's just you on the airlines.
   legGas: function (fromCityId, toCityId, state) {
+    var tr = Game.rules.travel;
     if (fromCityId === toCityId) return 0;
-    if (Game.rules.travel.isFlight(fromCityId, toCityId)) {
-      return Game.balance.travel.flight.perPersonOneWay * (1 + (state ? state.band.memberIds.length : 0));
-    }
-    return Game.balance.travel.gasRoundTrip[Game.rules.travel.legRegion(fromCityId, toCityId)] / 2;
+    var kind = tr.legKind(fromCityId, toCityId);
+    if (kind === 'drive') return Game.balance.travel.gasRoundTrip[tr.legRegion(fromCityId, toCityId)] / 2;
+    var airline = tr.fare(kind).perPersonOneWay * (1 + (state ? state.band.memberIds.length : 0));
+    if (!tr.hasJet(state)) return airline;
+    var jet = Game.balance.travel.jet[kind];
+    return kind === 'hop' ? Math.min(airline, jet) : jet;
   },
 
   // Your part of a road cost (gas, flights, hotels): bandmates chip in by their pay shares (a Diva's 1.5 too).
@@ -105,8 +135,22 @@ Game.rules.travel = {
       if (!state.manager.hired) need.push('a manager');
       if (!state.label.signed) need.push('a label deal');
     }
-    if (region === 'international') return 'Needs a major nationwide tour first (coming in a later phase).';
+    if (region === 'international') {
+      var n = Game.balance.geography.internationalMinNationalCities;
+      if (Game.rules.travel.bestNationalTour(state) < n) {
+        return 'Needs a finished tour that played ' + n + ' or more National cities (your best so far: ' + Game.rules.travel.bestNationalTour(state) + ').';
+      }
+      return null;
+    }
     return need.length ? 'Needs ' + need.join(' and ') + '.' : null;
+  },
+
+  // The most National cities any finished tour of yours played (a finished tour has its wrap-up in result).
+  bestNationalTour: function (state) {
+    return state.tours.filter(function (t) { return t.result; }).reduce(function (best, t) {
+      var national = t.cities.filter(function (c, i, all) { return all.indexOf(c) === i && Game.content.cities[c].region === 'national'; }).length;
+      return Math.max(best, national);
+    }, 0);
   },
 
   // True if you've played a show in any city of a region.
@@ -135,6 +179,15 @@ Game.rules.travel = {
       s.toasts.push({ id: 'cities-' + region, text: text });
       log.push(text);
     });
+    if (opened.international) {
+      var abroad = Object.keys(Game.content.countries).filter(function (c) { return c !== 'home'; });
+      var world = 'The world is open! ' + opened.international.length + ' international cities in ' + abroad.length +
+        ' countries can book you now (' + abroad.map(function (c) { return Game.content.countries[c].name; }).join(', ') + '). See the World map.';
+      s.toasts.push({ id: 'cities-international', text: world, milestone: true });
+      s = Game.rules.booking.addInbox(s, 'note', { title: 'International cities are open', text: world + ' Flights abroad cost ' +
+        '$' + Game.balance.travel.internationalFlight.perPersonOneWay.toLocaleString() + ' a person each way.' }, null);
+      log.push(world);
+    }
     return { state: s, log: log };
   },
 
@@ -235,7 +288,7 @@ Game.rules.travel = {
         var gap = tr.slot(e.day, e.block) - tr.slot(prev.day, prev.block) - 1;
         var prevCity = tr.cityOfVenue(prev.venueId);
         var city = tr.cityOfVenue(e.venueId);
-        var homeAndBack = tr.legBlocks(prevCity, 'hometown') + tr.legBlocks('hometown', city);
+        var homeAndBack = tr.legBlocks(prevCity, 'hometown', state) + tr.legBlocks('hometown', city, state);
         if (e.day - prev.day <= b.chainWithinDays || gap < homeAndBack) {
           groups[groups.length - 1].push(e);
           return;
@@ -249,7 +302,7 @@ Game.rules.travel = {
       var cities = group.map(function (e) { return tr.cityOfVenue(e.venueId); });
       group.forEach(function (e, i) {
         var from = i === 0 ? 'hometown' : cities[i - 1];
-        var n = tr.legBlocks(from, cities[i]);
+        var n = tr.legBlocks(from, cities[i], state);
         var t = tr.slot(e.day, e.block);
         if (i > 0 && n > t - tr.slot(group[i - 1].day, group[i - 1].block) - 1) {
           problems.push('There isn\'t time to get from ' + Game.content.cities[from].name + ' to ' + Game.content.cities[cities[i]].name + ' for ' +
@@ -262,7 +315,7 @@ Game.rules.travel = {
       var last = group[group.length - 1];
       var lastCity = cities[cities.length - 1];
       var back = [];
-      for (var k = 1; k <= tr.legBlocks(lastCity, 'hometown'); k++) back.push(tr.slot(last.day, last.block) + k);
+      for (var k = 1; k <= tr.legBlocks(lastCity, 'hometown', state); k++) back.push(tr.slot(last.day, last.block) + k);
       legs.push({ from: lastCity, to: 'hometown', slots: back });
       return {
         showIds: group.map(function (e) { return e.id; }), cities: cities, legs: legs,
@@ -432,9 +485,12 @@ Game.rules.travel = {
     var gas = legs.reduce(function (sum, leg) { return sum + tr.legGas(leg.from, leg.to, state); }, 0);
     var blocks = legs.reduce(function (sum, leg) { return sum + leg.slots.length; }, 0);
     var nights = tr.tripNights(trip);
+    // Jet lag for each flight to another country.
+    var lag = legs.filter(function (leg) { return tr.legKind(leg.from, leg.to) === 'international'; }).length *
+      (tr.hasJet(state) ? b.jetLag.withJet : b.jetLag.energy);
     return { problem: null, legs: legs, gas: gas, hotelNights: nights, hotelCost: nights * b.hotelPerNight,
       yourCost: tr.yourShareOf(state, gas) + nights * tr.yourShareOf(state, b.hotelPerNight),
-      energy: blocks * b.energyPerBlock, jobDays: c.jobDays, showCount: trip.showIds.length };
+      energy: blocks * b.energyPerBlock + lag, jetLag: lag, jobDays: c.jobDays, showCount: trip.showIds.length };
   },
 
   // A trip's legs, read back from its travel entries: [{ from, to, slots }].
@@ -480,11 +536,20 @@ Game.rules.travel = {
       s = spent.state;
       log = log.concat(spent.log);
       tr.logBandShare(s, gas);
+      var jet = flight && tr.hasJet(s);
       log.push((entry.to === 'hometown' ? (flight ? 'Flying' : 'Driving') + ' home from ' + Game.content.cities[entry.from].name
-        : (flight ? 'Flying to ' : 'On the road to ') + Game.content.cities[entry.to].name) + ': $' + gas.toLocaleString() + (flight ? ' in plane tickets' : ' gas') +
+        : (flight ? 'Flying to ' : 'On the road to ') + Game.content.cities[entry.to].name) + ': $' + gas.toLocaleString() +
+        (jet ? ' for your jet' : (flight ? ' in plane tickets' : ' gas')) +
         (mine < gas ? ' (your part $' + mine.toLocaleString() + ', the band covers the rest).' : '.'));
+      // Jet lag: crossing to another country wears you out (less on your own jet).
+      if (tr.legKind(entry.from, entry.to) === 'international') {
+        var lag = jet ? Game.balance.travel.jetLag.withJet : Game.balance.travel.jetLag.energy;
+        s.player.energy = Game.rules.energy.clamp(s.player.energy - lag);
+        log.push('Jet lag: -' + lag + ' energy.');
+      }
     } else {
-      log.push(entry.to === 'hometown' ? 'Still driving home.' : 'Still on the road to ' + Game.content.cities[entry.to].name + '.');
+      log.push(entry.to === 'hometown' ? (tr.isFlight(entry.from, entry.to) ? 'Still flying home.' : 'Still driving home.')
+        : (tr.isFlight(entry.from, entry.to) ? 'Still flying to ' : 'Still on the road to ') + Game.content.cities[entry.to].name + '.');
     }
     if (trip && t === trip.endT) {
       log.push('Home again.');
@@ -544,9 +609,12 @@ Game.rules.travel = {
 
     // Word of mouth: the other cities in this region hear about the show; on a tour, the next city on the route
     // gets a bigger boost.
+    // (Abroad, the "region" is the country: a show in one city gives buzz to the others in that country.)
     var region = Game.content.cities[cityId].region;
+    var country = Game.content.cities[cityId].countryId;
     Object.keys(Game.content.cities).forEach(function (id) {
-      if (id !== cityId && Game.content.cities[id].region === region) s = Game.rules.audience.addBuzz(s, id, b.tours.regionBuzz).state;
+      var same = country ? Game.content.cities[id].countryId === country : Game.content.cities[id].region === region;
+      if (id !== cityId && same) s = Game.rules.audience.addBuzz(s, id, b.tours.regionBuzz).state;
     });
     if (tour) {
       var next = tr.outOfTownShows(s).filter(function (e) { return e.id !== entry.id && e.day >= entry.day && tr.cityOfVenue(e.venueId) !== cityId; })[0];

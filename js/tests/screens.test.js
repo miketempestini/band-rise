@@ -41,6 +41,13 @@
         });
       });
     }
+    check('map: world', function (a) { a.mapView = 'world'; a.show('map'); a.mapView = 'home'; });
+    check('book abroad', function (a) {
+      a.state.cities.lindenberg.unlocked = true;
+      a.bookingCity = 'lindenberg';
+      a.show('booking');
+      a.bookingCity = 'hometown';
+    });
     check('action picker', function (a) { a.show('today'); a.pickerBlock = 'evening'; a.render(); });
     check('day readout', function (a) { a.show('today'); a.dayReportOpen = true; a.render(); });
     if (state.lastGig) check('gig result', function (a) { a.gigPhase = 'result'; a.show('gigResult'); });
