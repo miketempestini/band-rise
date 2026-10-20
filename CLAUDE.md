@@ -81,7 +81,7 @@ fetch `files.js` fresh, then write classic `<script>` tags for the list, each wi
 
 1. `Game.files.game`: `js/balance.js`; `js/rng.js`, `js/util.js`; `js/content/*.js`; `js/state.js`, `js/save.js`;
    `js/rules/*.js` (money, finances, housing, energy, morale, skills, audience, songs, people, gigs, job, booking,
-   progress, events, recording, merch, offers, sessionWork, travel, manager, tours, label, bigShows, awards, actions,
+   progress, events, recording, streaming, merch, offers, sessionWork, travel, manager, tours, label, bigShows, awards, actions,
    planWeek, career, day, debug)
 2. `Game.files.screens`: `js/ui/*.js`, then `js/app/core.js` and the other `js/app/*.js` files
 3. `Game.files.start`: `js/main.js` (game page only, always last: it starts the game)
@@ -305,6 +305,17 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   `Game.ui.tourPoster`. Auto-booking skips an open tour proposal's dates (`manager.tourHoldDays`).
 - **Screens test**: `js/tests/screens.test.js` opens every screen with a new career and with the late-career save.
   Add new screens to it. If the save format changes, regenerate `test-saves/late-career.json` and `.js`.
+- **Streams and charts**: `Game.rules.streaming` (in `js/rules/streaming.js`). `songStreams` / `weekStreams` give stream counts
+  (fans x streamsPerFan x quality x freshness x `boosts`: buzz, chart, live, promo, viral); `payFor(streams)` turns them into
+  money. `weekly(state)` is the whole Sunday step (history, viral rolls, pay through the label split, `updateCharts`,
+  `checkRecords`), called from `recording.payStreaming`. Songs keep `song.streams` and `song.chart`; releases keep `name`,
+  `promo`, `records`, and `chart`; the charts and other acts live in `state.charts`. Use `releaseStats(state, rel)` for a
+  release's numbers. Rules that add Inbox notes in a loop must collect them and add them after the loop
+  (`booking.addInbox` copies the whole state, so objects picked up before it go stale).
+- **Music tab**: the tab says "Music" but the screen id is still `'songs'` (`Game.ui.songs`, sections in `app.musicSection`:
+  writing / releases / charts). A release's page is the `release` screen (`Game.ui.release`, `app.releaseId`); its actions are
+  in `js/app/music.js` (`openRelease`, `closeRelease`, `releaseMusic` with `app.releaseDraft` { type, songIds, name, promo }).
+  Release covers and promo names are content in `js/content/studios.js` (`Game.content.covers`, `Game.content.promos`).
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

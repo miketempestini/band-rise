@@ -54,7 +54,7 @@ Game.ui.topbar = {
       ['inbox', 'Inbox' + (unread ? ' <span class="badge badge--count" title="' + unread + ' new">' + unread + '</span>' : '')],
       ['booking', 'Book'],
       ['map', 'Map'],
-      ['songs', 'Songs'],
+      ['songs', 'Music'],
       ['people', 'People' + (Game.rules.people.needTalk(state).length ? ' <span class="badge badge--count" title="A bandmate wants to talk">!</span>' : '')],
       ['shop', 'Shop'],
       ['finances', 'Finances'],

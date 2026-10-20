@@ -70,8 +70,11 @@ Game.state = {
                        //       writtenDay, qualityParts, recording, releaseId }  (covers are added by startCareer)
       nextSongId: 1,   // used to give each new song its own id
       nextPersonId: 1, // used to give each new person their own id
-      releases: [],    // { id, type: 'single' | 'ep' | 'album', songIds, day, avgQuality }
+      releases: [],    // { id, type: 'single' | 'ep' | 'album', name, songIds, day, avgQuality, promo, records, chart }
       nextReleaseId: 1,
+      // The charts (see Game.rules.streaming): this week's Top 40 singles and Top 20 albums, the other acts waiting just
+      // below, and your first-time chart moments.
+      charts: { day: null, singles: [], albums: [], pool: { singles: [], albums: [] }, nextId: 1, moments: [], week: null },
       cities: Game.state.startingCities(), // id: { id, fans, buzz, unlocked, lastActivityDay }
       venues: Game.state.startingVenues(), // id: { id, relationship, bannedUntilDay, pendingRequestId }
       requests: {},    // booking emails: id: { id, venueId, gigDay, deal, chance, sentDay, replyDay, status }

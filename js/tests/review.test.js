@@ -330,7 +330,8 @@
     rec.cities.hometown.fans = 1000;
     var cash = rec.player.cash;
     var paid = Game.rules.debug.streamingNow(rec).state;
-    t.equal(paid.player.cash, cash + 10, '1,000 fans x $0.02 x 50% = $10');
+    var st = Game.balance.streaming;
+    t.equal(paid.player.cash, cash + Math.round(Math.round(1000 * st.streamsPerFan * 0.5) * st.payPerStream), '1,000 fans x streams per fan x 50% x $0.004 (about $7)');
     t.equal(paid.day, rec.day, 'the day doesn\'t change');
   });
 
@@ -382,7 +383,7 @@
     s.day = 1;
     var est = Game.rules.recording.streamingEstimate(s);
     t.equal(est.day, 6, 'this Sunday');
-    t.equal(est.pay, 10, '$10');
+    t.equal(est.pay, Math.round(Math.round(1000 * Game.balance.streaming.streamsPerFan * 0.5) * Game.balance.streaming.payPerStream), '1,000 fans x streams per fan x 50% x $0.004');
     s.day = 6;
     t.equal(Game.rules.recording.streamingEstimate(s).day, 13, 'on a Sunday: next week\'s');
   });

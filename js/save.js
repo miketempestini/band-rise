@@ -73,6 +73,21 @@ Game.save = {
       });
     }
 
+    // Version 19 counted streams and added the charts: releases get a name (their first track's) and records, and each
+    // released song gets an estimate of its past streams. The charts fill in on the next Sunday.
+    if (fromVersion < 19) {
+      data.releases.forEach(function (rel) {
+        if (!rel.name) rel.name = data.songs[rel.songIds[0]] ? data.songs[rel.songIds[0]].title : Game.content.releaseTypes[rel.type].name;
+        if (rel.promo === undefined) rel.promo = null;
+        if (!rel.records) rel.records = [];
+        if (rel.chart === undefined) rel.chart = null;
+        rel.songIds.forEach(function (id) {
+          var song = data.songs[id];
+          if (song && song.recording && !song.streams) song.streams = Game.rules.streaming.estimatePast(data, song, rel);
+        });
+      });
+    }
+
     data.version = Game.balance.save.version;
     return data;
   },

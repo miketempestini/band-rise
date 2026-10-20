@@ -26,6 +26,9 @@
     };
     screens.forEach(function (name) { check(name, function (a) { a.show(name); }); });
     check('planWeek', function (a) { a.openPlanWeek(); });
+    check('music: releases', function (a) { a.musicSection = 'releases'; a.show('songs'); });
+    check('music: charts', function (a) { a.musicSection = 'charts'; a.show('songs'); });
+    state.releases.forEach(function (rel) { check('release page (' + rel.id + ')', function (a) { a.openRelease(rel.id); }); });
     check('action picker', function (a) { a.show('today'); a.pickerBlock = 'evening'; a.render(); });
     check('day readout', function (a) { a.show('today'); a.dayReportOpen = true; a.render(); });
     if (state.lastGig) check('gig result', function (a) { a.gigPhase = 'result'; a.show('gigResult'); });

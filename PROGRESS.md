@@ -4,6 +4,42 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14k: Real streams, charts, and the Music tab (2026-10-20)
+- **Streams are real numbers now.** Every released song gets a weekly stream count each Sunday, and money is streams x
+  $0.004.
+  - **Boosts:** buzz (up to +25%), a chart spot (+2% at #40 up to +30% at #1), live shows (+5% each time the song is
+    played that week, up to +30%), the release-week push, and going viral.
+  - **Viral:** 1% a week for songs of quality 50+, then x4, x3, x2, x1.5, with a banner and an Inbox note.
+  - **History:** each song keeps 26 weeks of history and its all-time total.
+- **Records:** Gold and Platinum, for a single at 1M and 5M streams and an EP or album at 5M and 25M. Each comes with a
+  banner and an Inbox note.
+- **Charts every Sunday:** a Top 40 singles chart and a Top 20 albums chart against made-up acts whose songs rise,
+  fall, arrive, and fade.
+  - Each entry shows last week's spot, peak, weeks on the chart, and streams.
+  - Chart moments (first entry, first Top 10, first #1, and the same for albums) give a banner and are listed on Career.
+  - A Top 10 that year helps award nominations a little (+0.1).
+- **Releases have names and a push.**
+  - An EP or album can be named (blank means it's named after its first track).
+  - Each gets a record-sleeve cover.
+  - Release week can include a playlist pitch ($500), a radio push ($1,500), or a music video ($4,000).
+- **The Songs tab is now Music**, with three sections:
+  - **Writing:** the notebook, plus the catalog with a Streams column (this week, a trend line, and the total).
+  - **Releases:** a discography of sleeves with Gold and Platinum stickers, and the release form with a name box and push
+    choice. Clicking a sleeve opens its **release page**: totals, last week, best week, chart spot and peak, records
+    and progress to the next one, a week-by-week bar chart, and the tracklist with each song's streams.
+  - **Charts:** both charts on paper sheets, with your entries highlighted and clickable.
+- **Elsewhere:** the weekly summary has a "Music this week" panel, and Career has "Charts and records".
+- **Money stays about the same:** checked against the old formula in a two-year run.
+  - Weekly streaming money came out at 0.96 to 1.02 times the old amount (streams per fan tuned from 4.5 to 3.6).
+  - The first chart entry came around day 440 (#32, about 40,000 fans), and all 3 releases went Gold.
+- **Saves:** version 19. Older saves get release names, and past streams are estimated for songs already out. The charts
+  fill in on the next Sunday. The late-career test save is regenerated with named EPs, records, and #1s.
+- **Bug found in testing and fixed:** two records won in the same week (for example Gold and Platinum together) were
+  announced but only one was kept, so the other was announced again a week later. A new test covers it. Also fixed: a
+  brand-new release's week-by-week chart drew one giant bar, and the fan count in the release message now has commas.
+- **Tests:** 337 passing (11 new streaming tests, and the screens test opens every Music section and release page).
+  The version tag is `v19-2026-10-20c`.
+
 ### Session 14j: Code health, tour extras, matching faces (2026-10-20)
 - **Code health:**
   - `js/main.js` (992 lines) is split into `js/app/`. `core.js` holds the state, screens, saving, and the End Day
@@ -681,6 +717,10 @@ No gameplay numbers changed: the balance checks give the same results as before.
 - Promotion (flyers, social ads) still only reaches the hometown; the Big campaign and press push reach other cities.
 
 ## Known issues / open decisions
+- **A huge act fills the singles chart.** Late in a big career, your own songs can take the top 15 spots, because the
+  other acts' #1 sits around 1.2M streams a week. That's realistic, but if it feels too easy, the other acts' levels
+  could grow with your fame. The simulated player never buys a release-week push, so promo's effect on money isn't in
+  the balance check yet.
 - **Touring profit after the manager and touring upgrades hasn't been measured yet.** The re-run of the touring
   simulation was stopped before it finished (owner's call). Re-run it to check that tours now pay and the manager is
   still worth 15%.

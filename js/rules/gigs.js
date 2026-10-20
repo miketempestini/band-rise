@@ -350,6 +350,8 @@ Game.rules.gigs = {
 
     // Stats.
     s.stats.gigsPlayed += 1;
+    // Released songs played live get a streaming bump this week (counted here, used on Sunday).
+    songIds.forEach(function (id) { if (s.songs[id] && s.songs[id].streams) s.songs[id].streams.live += 1; });
     if (venue.tier === 0) s.stats.openMicsPlayed += 1;
     if (venue.tier > 0 && pay > 0) s.stats.paidShows += 1;
     if (!s.stats.bestResult || g.resultOrder.indexOf(result) > g.resultOrder.indexOf(s.stats.bestResult)) {

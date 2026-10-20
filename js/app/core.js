@@ -32,7 +32,9 @@ Game.app = Object.assign(Game.app || {}, {
   setlistDraft: null,   // songs ticked while editing a booked show's setlist
   skipResult: null,     // what "Skip to next commitment" did, for the skip summary screen
   studioDraft: null,    // a studio booking being set up: { studio, day, sessions: { block: songId }, jobChoice }
-  releaseDraft: { type: 'single', songIds: [] }, // a release being put together on the Songs screen
+  releaseDraft: { type: 'single', songIds: [], name: '', promo: null }, // a release being put together in Music → Releases
+  musicSection: 'writing', // which section of the Music tab is showing: 'writing', 'releases', or 'charts'
+  releaseId: null,      // the release whose page is open
   contractId: null,     // the residency offer being reviewed
   contractTerms: null,  // the terms you're editing on the contract screen: { weekday, rate, weeks }
   planWeekStart: null,  // the Monday of the week shown on the Plan week screen

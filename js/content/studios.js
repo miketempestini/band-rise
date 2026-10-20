@@ -34,3 +34,17 @@ Game.content.releaseTypes = {
   ep:     { id: 'ep',     name: 'EP' },
   album:  { id: 'album',  name: 'Album' }
 };
+
+// Release-week promo pushes (costs and boosts are in balance.streaming.promos).
+Game.content.promos = {
+  playlist: { id: 'playlist', name: 'Playlist pitch', blurb: 'Get it onto curated playlists.' },
+  radio:    { id: 'radio',    name: 'Radio push',     blurb: 'A plugger works it to radio stations.' },
+  video:    { id: 'video',    name: 'Music video',    blurb: 'Shoot a video. The biggest push, and it lasts longest.' }
+};
+
+// Record sleeves: each release gets a color and a pattern, picked from its number (see Game.ui.songs.sleeveHtml).
+Game.content.covers = {
+  colors: ['#e2483d', '#2f6fde', '#f2b134', '#1f9e78', '#9b4dca', '#ef6aa6', '#3b3b4f', '#e9e3d0'],
+  patterns: ['stripes', 'rings', 'grid', 'burst', 'split'],
+  patternStep: 3   // Steps through the patterns so neighbours don't match
+};

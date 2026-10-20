@@ -978,6 +978,67 @@ button.recap:hover { transform: none; }
 .song__fading { color: var(--bad); }
 .release-list { margin-top: var(--space-2); }
 
+/* ---------- Music: streams, the discography, release pages, and the charts ---------- */
+
+/* A song's streams in the catalog: this week, a trend line, and the total. */
+.streams { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.streams__week { font-weight: 600; min-width: 44px; text-align: right; }
+.spark { width: 90px; height: 24px; flex-shrink: 0; }
+.spark polyline { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+
+/* Record sleeves: a square cover in the release's color, with a pattern, the name at the bottom, and any Gold or
+   Platinum stickers. */
+.sleeve { position: relative; display: flex; flex-direction: column; justify-content: flex-end; width: 100%; aspect-ratio: 1; padding: 12px; overflow: hidden;
+  color: #fff; background-color: var(--sleeve); border-radius: 3px; box-shadow: var(--shadow-paper); text-align: left; }
+.sleeve::before { content: ""; position: absolute; inset: 0; }
+.sleeve::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.6)); }
+.sleeve > * { position: relative; z-index: 1; }
+.sleeve--stripes::before { background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0 10px, transparent 10px 24px); }
+.sleeve--rings::before { background: repeating-radial-gradient(circle at 72% 30%, rgba(0, 0, 0, 0.22) 0 5px, transparent 5px 13px); }
+.sleeve--grid::before { background: linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px) 0 0 / 18px 18px,
+  linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px) 0 0 / 18px 18px; }
+.sleeve--burst::before { background: repeating-conic-gradient(from 0deg at 50% 115%, rgba(255, 255, 255, 0.2) 0 7deg, transparent 7deg 15deg); }
+.sleeve--split::before { background: linear-gradient(155deg, rgba(255, 255, 255, 0.16) 0 45%, rgba(0, 0, 0, 0.3) 45%); }
+.sleeve__type { position: absolute; top: 10px; left: 12px; font: 700 var(--size-xs) var(--font-head); letter-spacing: 1px; opacity: 0.9; }
+.sleeve__title { font: 800 var(--size-xl)/1 var(--font-head); text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); overflow-wrap: break-word; }
+.sleeve__band { font-size: var(--size-xs); opacity: 0.9; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7); }
+.sleeve__stickers { position: absolute !important; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.sleeve__sticker { padding: 2px 8px; border-radius: 999px; font: 800 11px/1.5 var(--font-head); letter-spacing: 0.5px; color: #3a2a00;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+.sleeve__sticker--gold { background: radial-gradient(circle at 30% 30%, #fff3c4, #e6b422 60%, #b8860b); }
+.sleeve__sticker--platinum { background: radial-gradient(circle at 30% 30%, #ffffff, #d7dde4 60%, #9aa4b0); }
+.sleeve--big { width: 300px; flex-shrink: 0; }
+.sleeve--big .sleeve__title { font-size: var(--size-3xl); }
+
+/* The discography: a grid of sleeves, each with its name and numbers under it. */
+.discography { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 20px; }
+.disc-card { display: flex; flex-direction: column; gap: 4px; padding: 0; font: inherit; text-align: left; color: var(--text); background: none; border: none; cursor: pointer; }
+.disc-card:hover .sleeve { transform: translateY(-3px); }
+.disc-card__name { margin-top: 6px; font: 700 var(--size-m)/1.2 var(--font-head); }
+.disc-card__meta { font-size: var(--size-xs); color: var(--text-muted); }
+
+/* A release's page: the big sleeve beside its numbers. */
+.release-top { display: flex; gap: var(--space-4); align-items: flex-start; margin-bottom: var(--space-3); }
+.release-facts { flex: 1; margin-bottom: 0; }
+@media (max-width: 900px) { .release-top { flex-direction: column; } }
+
+/* The charts: printed chart sheets side by side. Your entries are highlighted (click one for its release). */
+.charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); align-items: start; }
+@media (max-width: 1100px) { .charts-grid { grid-template-columns: minmax(0, 1fr); } }
+.chart-sheet { padding: 20px 22px 16px; }
+.chart-table { width: 100%; border-collapse: collapse; font-size: var(--size-s); font-variant-numeric: tabular-nums; }
+.chart-table th { padding: 6px; text-align: left; font: 700 var(--size-s) var(--font-head); color: var(--text-muted); border-bottom: 2px solid var(--text); }
+.chart-table td { padding: 5px 6px; border-bottom: 1px solid var(--line); }
+.chart-table .num { text-align: right; }
+.chart-pos { font: 800 var(--size-l) var(--font-head); }
+.chart-title { font-weight: 600; }
+.chart-move { font-size: var(--size-xs); font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+.chart-move--up { color: var(--good); }
+.chart-move--down { color: var(--bad); }
+.chart-move--new { color: var(--accent); }
+.chart-row--mine td { background: var(--highlighter); cursor: pointer; }
+.chart-row--mine .chart-title { text-decoration: underline 2px var(--red-pen); text-underline-offset: 3px; }
+
 /* ---------- Song reveal, naming the band, three weeks in, game over ---------- */
 
 .reveal__kicker { margin: 0; font: 700 var(--size-l) var(--font-head); letter-spacing: 0.5px; color: var(--text-muted); }

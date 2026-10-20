@@ -1,5 +1,5 @@
 // app/shop.js
-// The Shop and releases, and housing (moving and the vacation home).
+// The Shop, and housing (moving and the vacation home).
 // These are Game.app actions: a screen calls one, it runs a rule, and the app saves and redraws.
 
 window.Game = window.Game || {};
@@ -14,22 +14,6 @@ Object.assign(Game.app, {
     app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
     app.applyRule(result);
   },
-
-  releaseMusic: function (type, songIds) {
-    var app = Game.app;
-    var result = Game.rules.recording.release(app.state, type, songIds);
-    var ok = result.state !== app.state;
-    app.notice = { kind: ok ? 'info' : 'error', text: result.log.join(' ') };
-    if (ok) {
-      app.releaseDraft = { type: 'single', songIds: [] };
-      app.state = Game.rules.progress.checkUnlocks(result.state).state; // First release milestone
-      app.autoSave();
-      app.render();
-    } else {
-      app.render();
-    }
-  },
-
 
   moveHome: function (homeId) {
     var app = Game.app;

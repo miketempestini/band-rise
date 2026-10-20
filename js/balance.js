@@ -172,7 +172,8 @@ Game.balance = {
     qualityFloor: 50,                // Song/record win chance = (quality - 50) / 50
     minChance: 0.10,
     maxChance: 0.80,
-    winReputation: 5                 // Each win: +5 reputation
+    winReputation: 5,                // Each win: +5 reputation
+    topTenBonus: 0.10                // A song or record that reached the Top 10 this year: +10% win chance
   },
 
   // ---------------------------------------------------------------
@@ -236,10 +237,56 @@ Game.balance = {
   // weekly pay per song = total fans x payPerFan x (recording quality / 100) x freshness
   // ---------------------------------------------------------------
   streaming: {
-    payPerFan: 0.02,                 // Dollars per fan per song per week, before quality and freshness
+    payPerFan: 0.02,                 // Session credits: dollars per fan of the other band, per week (see sessionWork)
+    // Each released song's streams a week = total fans x streamsPerFan x (recording quality / 100) x freshness x boosts.
+    streamsPerFan: 3.6,              // (tuned so streaming money stays about where it was before streams were counted)
+    payPerStream: 0.004,             // Dollars per stream (before the label's cut)
     freshnessStart: 1,               // A new release starts at full freshness
     freshnessDropPerWeek: 0.03,      // Freshness drops 3% a week after release (x 0.97 each week)
-    freshnessMin: 0.3                // Freshness never drops below this
+    freshnessMin: 0.3,               // Freshness never drops below this
+    historyWeeks: 26,                // Weeks of stream history each song keeps (for its trend line and release page)
+    // Boosts (they multiply together, up to maxBoost):
+    buzzBoostMax: 0.25,              // Buzz: up to +25% at full buzz (your average buzz where you have fans)
+    chartBoostMin: 0.02,             // Chart: last week's spot adds +2% at the bottom of the chart...
+    chartBoostMax: 0.30,             // ...up to +30% at #1
+    livePerShow: 0.05,               // Live: +5% for each show that week where the song was in the set...
+    liveMax: 0.30,                   // ...up to +30%
+    viralChance: 0.01,               // Viral: each Sunday, each released song of quality 50+ has a 1% chance...
+    viralMinQuality: 50,
+    viralCurve: [4, 3, 2, 1.5],      // ...of streams x4 that week, then x3, x2, x1.5
+    maxBoost: 8,                     // All boosts together never multiply streams by more than this
+    // Release-week promo pushes (one per release, picked on the release form): cost, boost in the first week, and how
+    // many weeks it takes to fade to nothing.
+    promos: {
+      playlist: { cost: 500,  boost: 0.5, weeks: 4 },
+      radio:    { cost: 1500, boost: 1.0, weeks: 6 },
+      video:    { cost: 4000, boost: 1.5, weeks: 8 }
+    },
+    // Records: a release's total streams for Gold and Platinum (a single goes by its song; EPs and albums add up tracks).
+    records: {
+      song:  { gold: 1000000, platinum: 5000000 },
+      album: { gold: 5000000, platinum: 25000000 }
+    }
+  },
+
+  // The charts: a Top 40 singles chart and a Top 20 albums chart, updated every Sunday. Other acts' songs and albums
+  // are made up; yours join when their week's streams are high enough.
+  charts: {
+    singlesSize: 40,
+    albumsSize: 20,
+    topTen: 10,                      // "Top 10" moments
+    singleTop: 1200000,              // About how many streams the #1 single gets in a week
+    albumTop: 10000000,              // About how many streams the #1 album gets in a week
+    bottomShare: 0.06,               // The last chart spot gets about 6% of #1's streams
+    poolExtra: 15,                   // Other acts kept just below the chart, ready to climb
+    seedWobble: 0.15,                // Starting streams vary up to 15% either way
+    drift: { min: 0.80, max: 1.06 }, // Each week, other acts' streams change by this much (mostly falling)
+    newSingles: 4,                   // New songs by other acts arriving each week...
+    newAlbums: 2,                    // ...and new albums
+    newMin: 0.03,                    // A new arrival starts between 3% and 60% of #1's streams (usually low)
+    newMax: 0.60,
+    topWobble: 0.10,                 // #1's streams vary up to 10% either way from week to week
+    bandNameShare: 0.6               // 60% of other acts are bands ("The ..."), the rest solo names
   },
 
   // ---------------------------------------------------------------
@@ -519,7 +566,8 @@ Game.balance = {
     newFansQualityDivisor: 50,
     spamWindowWeeks: 4,              // A release within 4 weeks of the last one...
     spamBuzzMultiplier: 0.5,         // ...gets half the buzz
-    reputationQualityDivisor: 20     // A release adds avg recording quality / 20 reputation
+    reputationQualityDivisor: 20,    // A release adds avg recording quality / 20 reputation
+    nameMaxLength: 40                // Longest EP or album name you can type (optional: blank uses the first track's name)
   },
 
   // ---------------------------------------------------------------
@@ -821,7 +869,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 18,                     // Save format version, bumped when the state shape changes
+    version: 19,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 
@@ -900,7 +948,8 @@ Game.balance = {
     skillBigStep: 5,                 // The skills page has -5/-1/+1/+5 buttons: this is the big step
     upcomingMilestones: 4,           // The Career screen lists this many milestones under "Coming up"
     upcomingShows: 3,                // Today's "Coming up" panel lists this many booked shows
-    ledSegments: 10                  // How many little lights the top bar's Energy and Morale meters have
+    ledSegments: 10,                 // How many little lights the top bar's Energy and Morale meters have
+    streamChartWeeks: 12             // A release page's week-by-week chart always has room for at least this many bars
   },
 
   // ---------------------------------------------------------------

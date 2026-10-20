@@ -103,7 +103,7 @@
     t.ok(!Game.rules.recording.releasePreview(r, 'single', [o.ids[3]]).halved, '30 days later: full buzz');
   });
 
-  Game.test('Streaming: 500 fans and 3 new songs at quality 50 pay about $15 a week', function (t) {
+  Game.test('Streaming: 500 fans and 3 new songs at quality 50 pay about $11 a week before boosts', function (t) {
     var o = withOriginals(3, 50, 50);
     var s = recorded(o.state, o.ids, 50);
     s.cities.hometown.fans = 500;
@@ -111,7 +111,12 @@
     s.cities.hometown.fans = 500; // ignore the release's own new fans for the example
     t.equal(Game.rules.recording.streamingPay(s), 0, 'nothing on release day');
     s.day += 6; // the next Sunday
-    t.equal(Game.rules.recording.streamingPay(s), 15, '500 x 0.02 x 0.5 x 3 songs');
+    var st = Game.balance.streaming;
+    var boost = 1 + Game.rules.streaming.buzzBoost(s); // the release's own buzz gives a small boost
+    var streams = Math.round(500 * st.streamsPerFan * 0.5 * boost) * 3;
+    t.equal(Game.rules.recording.streamingPay(s), Math.round(streams * st.payPerStream), 'fans x streams per fan x quality x boost x 3 songs x pay per stream');
+    // The base is a bit under the old $15: boosts (buzz, chart, live shows, promo, viral) make up the rest on average.
+    t.ok(Math.abs(Game.rules.recording.streamingPay(s) - 11) <= 3, 'about $11 before boosts');
   });
 
   Game.test('Streaming: freshness x 0.97 a week, never below 0.3; paid on Sunday as its own line', function (t) {

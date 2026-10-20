@@ -60,6 +60,7 @@ Game.ui.career = {
           ahead.map(function (m) { return milestoneRow(m, false); }).join('') +
         '</div>' +
         Game.ui.career.toursHtml(state) +
+        Game.ui.career.chartsHtml(state) +
         '<div class="panel">' +
           '<h3 class="panel__title">Lifetime</h3>' +
           '<dl class="rows">' +
@@ -92,6 +93,25 @@ Game.ui.career = {
         Game.ui.careerCard.draw(root.querySelector('#career-card'), Game.rules.progress.careerCard(state));
       });
     }
+  },
+
+  // Chart highlights (first entries, Top 10s, and #1s) and every Gold and Platinum record.
+  chartsHtml: function (state) {
+    var h = Game.ui.helpers;
+    var labels = { entry: 'First chart entry', top10: 'First Top 10 single', number1: 'First #1 single',
+      albumEntry: 'First album on the chart', albumTop10: 'First Top 10 album', albumNumber1: 'First #1 album' };
+    var moments = state.charts.moments.map(function (m) {
+      return '<div class="milestone"><span class="milestone__num"><span class="disc disc--gold"></span></span>' +
+        '<span class="milestone__name">' + labels[m.kind] + ': "' + h.escape(m.title) + '"</span>' +
+        '<span class="milestone__when muted">' + h.dateLabel(m.day) + '</span></div>';
+    }).join('');
+    var records = state.releases.filter(function (r) { return r.records && r.records.length; }).map(function (r) {
+      return '<li>"' + h.escape(r.name) + '" (' + Game.content.releaseTypes[r.type].name + '): ' +
+        r.records.map(function (k) { return k === 'gold' ? 'Gold' : 'Platinum'; }).join(' and ') + '</li>';
+    }).join('');
+    if (!moments && !records) return '';
+    return '<div class="panel"><h3 class="panel__title">Charts and records</h3>' + moments +
+      (records ? '<h4 class="show__sub">Records</h4><ul class="log">' + records + '</ul>' : '') + '</div>';
   },
 
   // Your tours, newest first: the name (or the cities), the dates, how many shows, and how it's going. Finished tours

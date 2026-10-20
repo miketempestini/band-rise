@@ -44,6 +44,13 @@ Game.rules.awards = {
   },
 
   // The nominations you'd get this year (without giving them). Returns [{ category, title, chance }].
+  // A better chance for a song or record that reached the Top 10 this year (its chart record, or null).
+  chartBonus: function (state, chart) {
+    var aw = Game.rules.awards;
+    if (!chart || !chart.peak || chart.peak > Game.balance.charts.topTen || chart.peakDay === null) return 0;
+    return aw.year(chart.peakDay) === aw.year(state.day) ? Game.balance.awards.topTenBonus : 0;
+  },
+
   nominationsFor: function (state) {
     var a = Game.balance.awards;
     var aw = Game.rules.awards;
@@ -60,7 +67,7 @@ Game.rules.awards = {
       });
     });
     if (best && best.recording.quality >= a.songMinQuality) {
-      list.push({ category: 'song', title: '"' + best.title + '"', chance: aw.qualityChance(best.recording.quality) });
+      list.push({ category: 'song', title: '"' + best.title + '"', chance: Math.min(a.maxChance, aw.qualityChance(best.recording.quality) + aw.chartBonus(state, best.chart)) });
     }
 
     // Record of the Year: the best EP or album this year.
@@ -68,8 +75,8 @@ Game.rules.awards = {
       .sort(function (x, y) { return y.avgQuality - x.avgQuality; });
     if (records.length) {
       var rec = records[0];
-      list.push({ category: 'record', title: 'your ' + Game.content.releaseTypes[rec.type].name + ' (' + Game.rules.day.dateLabel(rec.day) + ')',
-        chance: aw.qualityChance(rec.avgQuality) });
+      list.push({ category: 'record', title: '"' + (rec.name || Game.content.releaseTypes[rec.type].name) + '" (' + Game.content.releaseTypes[rec.type].name + ')',
+        chance: Math.min(a.maxChance, aw.qualityChance(rec.avgQuality) + aw.chartBonus(state, rec.chart)) });
     }
 
     // Breakout Act: new fans this year.

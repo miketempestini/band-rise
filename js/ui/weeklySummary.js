@@ -52,6 +52,7 @@ Game.ui.weeklySummary = {
           '<div class="settlement__sign"><span class="settlement__signature">' + h.escape(state.player.name) + '</span>' +
             '<span class="settlement__line">Signed</span></div>' +
         '</article>' +
+        self.musicPanel(state, week) +
         self.skillsPanel(week) +
         (week.bandNotes && week.bandNotes.length
           ? '<div class="panel"><h3 class="panel__title">Band this week</h3><ul class="log">' +
@@ -66,6 +67,23 @@ Game.ui.weeklySummary = {
       continue: function () { app.leaveWeeklySummary(); },
       focusPayBack: function () { app.show('today'); }
     });
+  },
+
+  // "Music this week": streams and their money, and your best chart spots (only once you've released something,
+  // and only when the latest streaming Sunday belongs to the week this summary is about).
+  musicPanel: function (state, week) {
+    var h = Game.ui.helpers;
+    var d = Game.rules.day;
+    var w = state.charts.week;
+    if (!w || w.day < d.firstDayOfWeek(week.week) || w.day > d.firstDayOfWeek(week.week + 1)) return '';
+    var best = Game.rules.streaming.best(state);
+    return '<div class="panel"><h3 class="panel__title">Music this week</h3><dl class="rows">' +
+      '<dt>Streams</dt><dd>' + w.streams.toLocaleString() + '</dd>' +
+      '<dt>Streaming money</dt><dd>' + h.money(w.pay) + '</dd>' +
+      '<dt>Best single</dt><dd>' + (best.single ? '"' + h.escape(best.single.title) + '" #' + best.singlePos + (best.single.last ? ' (was #' + best.single.last + ')' : ' (new)') : 'Not on the chart') + '</dd>' +
+      (state.releases.some(function (r) { return r.type !== 'single'; })
+        ? '<dt>Best album</dt><dd>' + (best.album ? '"' + h.escape(best.album.title) + '" #' + best.albumPos : 'Not on the chart') + '</dd>' : '') +
+      '</dl></div>';
   },
 
   // "Skills this week": each skill's value now, and how much it went up or down this week.

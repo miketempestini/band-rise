@@ -157,11 +157,46 @@ Each person in the crowd has a small chance to buy each item you have in stock: 
 
 ### Streaming
 
+Every released song gets a stream count each Sunday night (before the bills):
+
 ```latex
-\text{weekly pay per song} = \text{total fans} \times 0.02 \times \frac{\text{recording quality}}{100} \times \text{freshness}
+\text{weekly streams per song} = \text{total fans} \times 3.6 \times \frac{\text{recording quality}}{100} \times \text{freshness} \times \text{boosts}
 ```
 
-Freshness starts at 1 and drops 3% a week after release (x 0.97 each week), never below 0.3. Streaming is paid on Sunday night before the bills. Example: 500 fans and 3 new songs at quality 50 pay about $15 a week. Later, 10,000 fans and 20 older songs at quality 70 pay about $1,400 a week.
+```latex
+\text{streaming pay} = \text{streams} \times \$0.004
+```
+
+- **Freshness** starts at 1 and drops 3% a week after release (x 0.97 each week), never below 0.3.
+- **Boosts** multiply together, capped at x8:
+  - **Buzz:** +0 to +25% from your average buzz in cities with fans.
+  - **Chart:** a song on the singles chart gets more exposure the next week, from +2% at #40 up to +30% at #1.
+  - **Live:** +5% for each show where the song was in the set that week, up to +30%.
+  - **Promo:** the release-week push (see Releasing), fading over its weeks.
+  - **Viral:** each Sunday, each released song of quality 50+ has a 1% chance of going viral: x4, then x3, x2, x1.5
+    over the next weeks. It comes with a banner and an Inbox note.
+- **Example:** 500 fans and 3 new songs at quality 50 make about 2,700 streams and $11 a week before boosts. Boosts
+  bring a typical career's streaming money back to about what the old flat formula paid; hits earn more, flops less.
+- **History:** each song keeps its total and its last 26 weekly counts. A release's numbers are its tracks added up.
+- **Records:** Gold and Platinum, each awarded once, with a banner and an Inbox note.
+
+| Release | Gold | Platinum |
+| --- | --- | --- |
+| Single (the song) | 1,000,000 streams | 5,000,000 streams |
+| EP or Album (all tracks) | 5,000,000 streams | 25,000,000 streams |
+
+### Charts
+
+Chart day is Sunday, right after streams.
+
+- **Top 40 singles:** your released songs against made-up songs by other acts, by that week's streams.
+- **Top 20 albums:** your EPs' and albums' combined streams against made-up albums.
+- **Other acts** come from the band-name and song-title word lists (never your band's name). Each week their streams
+  drift up or down, a few new ones arrive, and old ones fade off. #1 sits around 1.2M streams a week for singles
+  (10M for albums) and the bottom of the chart around 6% of that.
+- **Each entry shows** its spot, last week's spot (or New), peak, weeks on the chart, and streams.
+- **Chart moments** (banner, and listed on Career): first chart entry, first Top 10, first #1, and the same for albums.
+- **Awards:** a song or record that reached the Top 10 that year gets +0.1 on its nomination chance.
 
 ### Going broke
 
@@ -383,7 +418,17 @@ You need enough songs to fill the set before you can book it. The game suggests 
 
 ### Releasing
 
-- Release a Single (1 recorded song), an EP (3 to 5), or an Album (8 to 12), instantly from the Songs screen.
+- Release a Single (1 recorded song), an EP (3 to 5), or an Album (8 to 12), instantly from Music → Releases.
+- **Name:** an EP or Album can have a name (up to 40 characters); left blank, it's named after its first track. A
+  Single is named after its song. Each release gets a record-sleeve cover (a color and pattern picked from its id).
+- **Release-week push (optional, one per release):**
+
+| Push | Cost | Streams boost | Fades over |
+| --- | --- | --- | --- |
+| Playlist pitch | $500 | +50% | 4 weeks |
+| Radio push | $1,500 | +100% | 6 weeks |
+| Music video | $4,000 | +150% | 8 weeks |
+
 - Buzz on release, in every city where you have fans: (average recording quality / 10) x size bonus. Size bonus is 1 for a Single, 1.5 for an EP, 2 for an Album.
 - New fans on release, per city: that city's fans x 5% x (average recording quality / 50).
 - Streaming money starts the next Sunday. CDs unlock with your first EP.
@@ -773,9 +818,17 @@ const state = {
   },
   songs: {
     // id: { id, title, isCover, progress, quality, tightness, lastPlayedDay,
-    //       recording: { quality, day } or null, releaseId }
+    //       recording: { quality, day } or null, releaseId,
+    //       streams: { total, weeks: [last 26 weekly counts], live, viral } (once released),
+    //       chart: { pos, last, peak, weeks, peakDay } or null }
   },
-  releases: [],              // { id, type: 'single' | 'ep' | 'album', songIds, day }
+  releases: [],              // { id, type: 'single' | 'ep' | 'album', name, songIds, day, avgQuality,
+                             //   promo: { id, week } or null, records: ['gold', 'platinum'], chart (albums chart, as songs) }
+  charts: {                  // Sunday's Top 40 singles and Top 20 albums
+    // day, singles: [entries], albums: [entries], pool: { singles, albums } (other acts), nextId,
+    // moments: [{ day, kind, title }], week: { day, streams, pay }
+    // entry: { key, title, artist, streams, last, peak, weeks, mine, songId, releaseId }
+  },
   cities: {
     // id: { id, fans, buzz, unlocked, lastActivityDay }
   },
@@ -827,7 +880,7 @@ Sixteen screens, most of them panels around one main Today view. The vertical sl
 | 9 | Calendar | A 4-week grid with everything booked | Book, cancel, open an item | Yes |
 | 10 | Booking | Venues by city and tier, requirements, odds, expected crowd, deal choice | Send a request | Yes |
 | 11 | People | Contacts and band, stats, relationship, satisfaction with reasons | Jam, hang out, invite, talk, remove | Yes |
-| 12 | Songs | Catalog, quality, tightness, recordings, setlist editor | Write, set the list, record, release | Yes, basic |
+| 12 | Music | Writing (notebook and catalog with each song's streams), Releases (a discography of record sleeves, each opening a release page with streams, week-by-week chart, records, and tracklist; plus the release form with name and push), Charts (Top 40 singles, Top 20 albums) | Write, release, open a release | Yes |
 | 13 | Shop | Gear, merch stock, van, housing | Buy | No |
 | 14 | Map | Cities, fans and buzz in each | Plan travel | No |
 | 15 | Career | Milestones, fame level, lifetime stats, career card | Share | No |
@@ -849,7 +902,7 @@ around it stays quiet (a dark room with the house lights down, and plain matte r
 | People | Laminated backstage passes with portraits (Band or Guest), in front of a backstage hallway |
 | Book | Venue flyers under a painting of each size of venue |
 | Gig result | The venue's painting behind a lit crowd counter, then the result rubber-stamped on it |
-| Songs | A spiral notebook page and a cassette tracklist, in front of a bedroom studio |
+| Music | A spiral notebook page and a cassette tracklist, record sleeves with Gold and Platinum stickers, and chart sheets on paper, in front of a bedroom studio |
 | Inbox | Paper slips, each with a strip of colored tape for its kind |
 | Weekly summary | A settlement sheet signed with your name |
 | Finances | Readouts, and the show-by-show list on 80s green-bar printer paper |

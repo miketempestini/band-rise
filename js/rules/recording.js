@@ -168,10 +168,14 @@ Game.rules.recording = {
     return Game.rules.recording.recordable(state).filter(function (s) { return s.recording && !s.releaseId; });
   },
 
-  // Why a release doesn't work, or null.
-  releaseProblem: function (state, type, songIds) {
+  // Why a release doesn't work, or null. promoId: optional release-week push (balance.streaming.promos).
+  releaseProblem: function (state, type, songIds, name, promoId) {
     var size = Game.balance.releases.sizes[type];
     if (!size) return 'Pick Single, EP, or Album.';
+    var promo = promoId ? Game.balance.streaming.promos[promoId] : null;
+    if (promoId && !promo) return 'Pick a promo push (or none).';
+    if (promo && state.player.cash < promo.cost) return 'That push costs $' + promo.cost.toLocaleString() + ' (you have $' + Math.floor(state.player.cash).toLocaleString() + ').';
+    if (name && String(name).trim().length > Game.balance.releases.nameMaxLength) return 'Keep the name to ' + Game.balance.releases.nameMaxLength + ' characters or fewer.';
     if (!Array.isArray(songIds) || songIds.length < size.min || songIds.length > size.max) {
       return 'A ' + Game.content.releaseTypes[type].name + ' needs ' + (size.min === size.max ? size.min : size.min + ' to ' + size.max) + ' recorded songs.';
     }
@@ -200,9 +204,10 @@ Game.rules.recording = {
 
   // Releases a Single, EP, or Album: buzz and new fans in every city where you have fans (half the buzz if
   // your last release was under 4 weeks ago), and a reputation boost. Streaming starts next Sunday.
-  // Returns { state, log }.
-  release: function (state, type, songIds) {
-    var problem = Game.rules.recording.releaseProblem(state, type, songIds);
+  // name: optional (an EP or album left blank is named after its first track; a single is always its song's name).
+  // promoId: optional release-week push ('playlist', 'radio', 'video'), paid now. Returns { state, log }.
+  release: function (state, type, songIds, name, promoId) {
+    var problem = Game.rules.recording.releaseProblem(state, type, songIds, name, promoId);
     if (problem) return { state: state, log: [problem] };
     var preview = Game.rules.recording.releasePreview(state, type, songIds);
     var s = Game.util.clone(state);
@@ -220,16 +225,24 @@ Game.rules.recording = {
     s.player.reputation = Game.util.clamp(s.player.reputation + preview.reputation, 0, Game.balance.reputation.max);
     var id = 'rel' + s.nextReleaseId;
     s.nextReleaseId += 1;
-    s.releases.push({ id: id, type: type, songIds: songIds.slice(), day: s.day, avgQuality: preview.avgQuality });
-    songIds.forEach(function (songId) { s.songs[songId].releaseId = id; });
-    var name = Game.content.releaseTypes[type].name;
+    var title = type === 'single' || !String(name || '').trim() ? s.songs[songIds[0]].title : String(name).trim();
+    s.releases.push({ id: id, type: type, name: title, songIds: songIds.slice(), day: s.day, avgQuality: preview.avgQuality,
+      promo: promoId ? { id: promoId, week: 0 } : null, records: [], chart: null });
+    songIds.forEach(function (songId) { s.songs[songId].releaseId = id; s.songs[songId].streams = Game.rules.streaming.newStats(); });
+    var promoLog = '';
+    if (promoId) {
+      var promo = Game.balance.streaming.promos[promoId];
+      s = Game.rules.money.spend(s, promo.cost, 'promotion').state;
+      promoLog = ' ' + Game.content.promos[promoId].name + ': -$' + promo.cost.toLocaleString() + '.';
+    }
+    var typeName = Game.content.releaseTypes[type].name;
     var u = Game.util;
     var cities = Object.keys(preview.fansPerCity).length;
     return {
       state: s,
-      log: ['Released your ' + name + '! ' +
+      log: ['Released "' + title + '" (' + typeName + ')!' + promoLog + ' ' +
         (cities ? u.signed(preview.buzz) + ' buzz' + (preview.halved ? ' (halved: your last release was under ' + Game.balance.releases.spamWindowWeeks + ' weeks ago)' : '') +
-          ', +' + gained + ' fan' + (gained === 1 ? '' : 's') + ', ' : 'No fans yet to hear it, so no buzz or new fans. ') +
+          ', +' + gained.toLocaleString() + ' fan' + (gained === 1 ? '' : 's') + ', ' : 'No fans yet to hear it, so no buzz or new fans. ') +
         u.signed(preview.reputation) + ' reputation. Streaming money starts next Sunday.']
     };
   },
@@ -243,24 +256,13 @@ Game.rules.recording = {
     return Math.max(b.freshnessMin, b.freshnessStart * Math.pow(1 - b.freshnessDropPerWeek, weeks));
   },
 
-  // This Sunday's streaming money: for each released song,
-  //   total fans x 0.02 x (recording quality / 100) x freshness.
-  // Only releases from before that day count (a release on Sunday starts paying next Sunday).
-  // day: optional, the Sunday to work it out for (leave out for today).
+  // This Sunday's streaming money (before the label's cut): every released song's streams that week (see
+  // Game.rules.streaming) x the pay per stream. Only releases from before that day count (a release on Sunday starts
+  // paying next Sunday). day: optional, the Sunday to work it out for (leave out for today).
   streamingPay: function (state, day) {
-    var b = Game.balance.streaming;
     if (day === undefined) day = state.day;
-    var fans = Game.rules.progress.totalFans(state);
-    var total = 0;
-    state.releases.forEach(function (rel) {
-      if (rel.day >= day) return;
-      var fresh = Game.rules.recording.freshness(rel, day);
-      rel.songIds.forEach(function (id) {
-        var song = state.songs[id];
-        if (song && song.recording) total += fans * b.payPerFan * (song.recording.quality / 100) * fresh;
-      });
-    });
-    return Math.round(total);
+    var weekly = Game.rules.streaming.weekStreams(state, day);
+    return Game.rules.streaming.payFor(Object.keys(weekly).reduce(function (t, id) { return t + weekly[id]; }, 0));
   },
 
   // The next Sunday's streaming (on a Sunday, the one a week later) and about how much it will pay,
@@ -270,18 +272,9 @@ Game.rules.recording = {
     return { day: day, pay: Game.rules.recording.streamingPay(state, day) };
   },
 
-  // Sunday night: pays streaming money. Returns { state, log }.
-  // With a label deal, the label keeps 80% until the advance is paid back.
+  // Sunday night: streams, streaming money, the charts, and records (all in Game.rules.streaming.weekly).
+  // With a label deal, the label keeps 80% until the advance is paid back. Returns { state, log }.
   payStreaming: function (state) {
-    var pay = Game.rules.recording.streamingPay(state);
-    if (!state.releases.length) return { state: state, log: [] };
-    var split = Game.rules.label.splitStreaming(state, pay);
-    var s = split.yours > 0 ? Game.rules.money.earn(state, split.yours, 'streaming').state : Game.util.clone(state);
-    if (!split.label) return { state: s, log: ['Streaming: +$' + pay + ' this week.'] };
-    s.label.owed -= split.label;
-    Game.rules.finances.add(s, { flow: 'band', cat: 'labelKept', amount: split.label });
-    return { state: s, log: ['Streaming: $' + pay + ' this week. ' + Game.content.business.label.name + ' kept $' + split.label +
-      (s.label.owed > 0 ? ' ($' + s.label.owed.toLocaleString() + ' of the advance still to pay back), you got $' + split.yours + '.'
-        : '. The advance is paid back: from now on streaming is all yours (you got $' + split.yours + ').')] };
+    return Game.rules.streaming.weekly(state);
   }
 };
