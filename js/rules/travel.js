@@ -281,9 +281,12 @@ Game.rules.travel = {
         var block = tr.slotBlock(t);
         var plan = state.schedule[day];
         var entry = plan && plan[block] && state.entries[plan[block]];
-        if (entry && trip.showIds.indexOf(entry.id) === -1 && entry.type !== 'action' && entry.type !== 'travel') {
+        // (A ticket to a show in a city on this trip is fine: you're there.)
+        var ticketHere = entry && entry.type === 'ticket' && trip.cities.indexOf(Game.content.venues[entry.venueId].cityId) !== -1;
+        if (entry && !ticketHere && trip.showIds.indexOf(entry.id) === -1 && entry.type !== 'action' && entry.type !== 'travel') {
           problems.push('You\'d be on the road on ' + Game.rules.day.dateLabel(day) + ', but ' +
-            (entry.type === 'gig' ? 'a show at ' + Game.content.venues[entry.venueId].name : (entry.type === 'studio' ? 'studio time' : 'session work')) +
+            (entry.type === 'gig' ? 'a show at ' + Game.content.venues[entry.venueId].name : (entry.type === 'studio' ? 'studio time'
+              : (entry.type === 'ticket' ? 'your ticket to a show in Millbrook' : 'session work'))) +
             ' is booked then.');
           return;
         }
@@ -387,6 +390,7 @@ Game.rules.travel = {
     };
     s.schedule[day] = s.schedule[day] || {};
     s.schedule[day][venue.showBlock] = id;
+    Game.rules.scene.clearNight(s, venueId, day); // the venue moves any other band's show to make room
     var built = Game.rules.travel.rebuild(s);
     if (built.problems.length) return { state: state, log: built.problems, problems: built.problems, entryId: null, jobDays: [] };
     s = built.state;

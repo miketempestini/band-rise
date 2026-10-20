@@ -7,6 +7,22 @@ window.Game = window.Game || {};
 
 Game.balanceSim = {
 
+  // Emails the first venue (in order) that has a free Friday or Saturday between minDays and maxDays ahead (nights another
+  // band has are taken). Returns the new state (the same one if nothing was free).
+  emailWeekend: function (s, venueIds, minDays, maxDays) {
+    for (var v = 0; v < venueIds.length; v++) {
+      for (var d = minDays; d <= maxDays; d++) {
+        var dow = Game.rules.day.dayOfWeek(s.day + d);
+        if ((dow === 4 || dow === 5) && !s.venues[venueIds[v]].pendingRequestId &&
+            !Game.rules.booking.requestProblem(s, venueIds[v], s.day + d, 'door')) {
+          var sent = Game.rules.booking.emailVenue(s, venueIds[v], s.day + d, 'door'); // no block needed
+          return sent.state;
+        }
+      }
+    }
+    return s;
+  },
+
   // The simple strategy, run each morning before End Day. Returns the state with today planned.
   planDay: function (s) {
     var A = Game.rules.actions;
@@ -46,18 +62,12 @@ Game.balanceSim = {
     var originals = Game.rules.songs.playable(s).filter(function (x) { return !x.isCover; }).length;
     var writing = Game.rules.songs.inProgress(s);
 
-    // 4. Once small rooms open: email The Back Room for a Saturday, if nothing paid is coming up.
+    // 4. Once small rooms open: email The Back Room (or Corner Tap) for a Friday or Saturday, if nothing paid is coming
+    // up. Nights another band has are taken, so it tries the next weekend night or the other room.
     var hasShow = Game.rules.booking.upcomingShows(s).length > 0;
-    var waiting = s.venues.backRoom.pendingRequestId;
+    var waiting = s.venues.backRoom.pendingRequestId || s.venues.cornerTap.pendingRequestId;
     if (s.player.reputation >= Game.balance.milestones.smallRoomsReputation && !hasShow && !waiting) {
-      for (var d = 7; d <= 14; d++) {
-        if (Game.rules.day.dayOfWeek(s.day + d) === 5 &&
-            !Game.rules.booking.requestProblem(s, 'backRoom', s.day + d, 'door')) {
-          var sent = Game.rules.booking.emailVenue(s, 'backRoom', s.day + d, 'door'); // no block needed
-          if (sent.state !== s) s = sent.state;
-          break;
-        }
-      }
+      s = Game.balanceSim.emailWeekend(s, ['backRoom', 'cornerTap'], 7, 14);
     }
 
     // 5. The rest of the day.
@@ -208,15 +218,7 @@ Game.balanceSim = {
       Game.rules.booking.requirements(s, Game.content.venues.basement, 'guarantee').every(function (r) { return r.met; });
     if (clubOk && !s.venues.basement.pendingRequestId) {
       var upcomingClub = Game.rules.booking.upcomingShows(s).some(function (e) { return Game.content.venues[e.venueId].tier === 2; });
-      if (!upcomingClub) {
-        for (var d = 14; d <= 28; d++) {
-          if (Game.rules.day.dayOfWeek(s.day + d) === 5 && !Game.rules.booking.requestProblem(s, 'basement', s.day + d, 'door')) {
-            var r = Game.rules.booking.emailVenue(s, 'basement', s.day + d, 'door'); // no block needed
-            if (r.state !== s) s = r.state;
-            break;
-          }
-        }
-      }
+      if (!upcomingClub && !s.venues.velvetLounge.pendingRequestId) s = sim.emailWeekend(s, ['basement', 'velvetLounge'], 14, 28);
     }
 
     s = sim.planDay(s);

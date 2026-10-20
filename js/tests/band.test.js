@@ -32,6 +32,7 @@
       var st = Game.rules.songs.startSong(s);
       s = Game.rules.songs.finishSong(st.state, st.songId).state;
     }
+    s.scene.shows = []; // no other bands' shows in the way (taken nights are tested in scene.test.js)
     return s;
   }
 

@@ -81,7 +81,7 @@ fetch `files.js` fresh, then write classic `<script>` tags for the list, each wi
 
 1. `Game.files.game`: `js/balance.js`; `js/rng.js`, `js/util.js`; `js/content/*.js`; `js/state.js`, `js/save.js`;
    `js/rules/*.js` (money, finances, housing, energy, morale, skills, audience, songs, people, gigs, job, booking,
-   progress, events, recording, streaming, merch, offers, sessionWork, travel, manager, tours, label, bigShows, awards, actions,
+   progress, events, recording, streaming, scene, merch, offers, sessionWork, travel, manager, tours, label, bigShows, awards, actions,
    planWeek, career, day, debug)
 2. `Game.files.screens`: `js/ui/*.js`, then `js/app/core.js` and the other `js/app/*.js` files
 3. `Game.files.start`: `js/main.js` (game page only, always last: it starts the game)
@@ -316,6 +316,21 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   writing / releases / charts). A release's page is the `release` screen (`Game.ui.release`, `app.releaseId`); its actions are
   in `js/app/music.js` (`openRelease`, `closeRelease`, `releaseMusic` with `app.releaseDraft` { type, songIds, name, promo }).
   Release covers and promo names are content in `js/content/studios.js` (`Game.content.covers`, `Game.content.promos`).
+- **The music scene (`Game.rules.scene`)**: 50 other bands in `state.scene.bands` (3 are rivals, `state.scene.rivals`),
+  their shows on venue calendars (`state.scene.shows`), and rivals' records (`state.scene.releases`). The scene has its
+  **own dice** (`state.scene.rngState`), so it never changes the game's other rolls. `scene.nightly` (in End Day, before
+  booking replies) removes past shows, drifts the scene and moves rivals on Mondays, releases rivals' records, lets
+  rivals grab unanswered opening slots, and `fill`s calendars (unlocked cities only, out to `manager.horizonDay`).
+  - A night another band has is taken: `booking.dateProblem` asks `scene.takenProblem`. Anything that puts a show on the
+    calendar because a venue offered it must call `scene.clearNight(s, venueId, day)` (bookFillIn, offers.bookShow,
+    travel.addShow do); opening slots keep the headliner and set `show.playerOpens`.
+  - Tickets are calendar entries `type: 'ticket'` (paid at purchase with `money.spend(..., 'tickets')`; `scene.buyTicket`,
+    `cancelTicket`, and `attend` at End Day). Entry types are now `'action' | 'gig' | 'studio' | 'sessionWork' | 'travel' | 'ticket'`.
+  - Charts: other acts' entries carry `bandId` (`scene.chartArtist`); rivals' records chart from `scene.weeklyStreams`
+    (their 2 newest only), with spots saved by `scene.recordCharts`.
+  - Awards: `awards.nominationsFor` returns `nominees` and your `chance` against them (`withRivals`, strength cubed);
+    the ceremony picks one winner per category.
+  - Tests that book specific nights clear `s.scene.shows` first (see booking.test.js); taken nights are tested in scene.test.js.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

@@ -74,6 +74,7 @@ Game.ui.calendar = {
       cancelShow: function (e, el) { app.cancelShow(el.getAttribute('data-entry')); },
       cancelStudio: function (e, el) { app.cancelStudio(el.getAttribute('data-entry')); },
       cancelSessionWork: function (e, el) { app.cancelSessionWork(el.getAttribute('data-work')); },
+      cancelTicket: function (e, el) { app.cancelTicket(el.getAttribute('data-entry')); },
       planWeek: function () { app.openPlanWeek(); },
       calPage: function (e, el) { app.calendarPage = Number(el.getAttribute('data-page')); app.render(); },
       openJob: function () { app.openJob(); },
@@ -90,6 +91,7 @@ Game.ui.calendar = {
       show: function () { return Game.content.venues[c.entry.venueId].name; },
       studio: function () { return Game.content.studios[c.entry.studio].name; },
       sessionWork: function () { return state.sessionWork[c.entry.workId].bandName; },
+      ticket: function () { return 'See ' + ((Game.rules.scene.band(state, c.entry.bandId) || {}).name || 'a show'); },
       travel: function () { return (c.entry.to === 'hometown' ? 'Home' : Game.content.cities[c.entry.to].name); },
       away: function () { return 'On the road'; },
       plan: function () { return Game.content.actions[c.entry.actionId].name; },
@@ -178,6 +180,12 @@ Game.ui.calendar = {
         var work = state.sessionWork[entry.workId];
         right = '<span class="plan__task">Session work: ' + h.escape(work.bandName) + ', "' + h.escape(work.songTitle) + '" (+' + h.money(work.fee) + ')</span>' +
           '<button class="btn btn--small btn--ghost" data-action="cancelSessionWork" data-work="' + work.id + '">Cancel</button>';
+      }
+      else if (info.kind === 'ticket') {
+        var band = Game.rules.scene.band(state, entry.bandId);
+        right = '<span class="plan__task">Seeing ' + h.escape(band ? band.name : 'a show') + ' at ' + h.escape(Game.content.venues[entry.venueId].name) +
+          ' (ticket ' + h.money(entry.price) + ' paid, -' + Game.balance.scene.show.energy + ' energy)</span>' +
+          '<button class="btn btn--small btn--ghost" data-action="cancelTicket" data-entry="' + entry.id + '">Give away</button>';
       }
       else if (info.kind === 'studio') {
         right = '<span class="plan__task">Recording at ' + h.escape(Game.content.studios[entry.studio].name) + ': "' + h.escape(state.songs[entry.songId].title) + '"</span>' +

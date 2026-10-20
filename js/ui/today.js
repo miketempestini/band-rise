@@ -158,6 +158,17 @@ Game.ui.today = {
           energyLine +
           '</button>';
       }
+      if (row.kind === 'ticket') {
+        var te2 = state.entries[row.entryId];
+        var seeing = Game.rules.scene.band(state, te2.bandId);
+        return '<button class="block block--ticket" data-action="openCalendar">' +
+          '<span class="block__time">' + name + '</span>' +
+          '<span class="block__title">See ' + h.escape(seeing ? seeing.name : 'a show') + '</span>' +
+          '<span class="block__detail">At ' + h.escape(Game.content.venues[te2.venueId].name) + ' · ticket paid · +Networking, a chance to meet someone · -' +
+            b.scene.show.energy + ' energy</span>' +
+          energyLine +
+          '</button>';
+      }
       if (row.kind === 'sessionWork') {
         var work = state.sessionWork[state.entries[row.entryId].workId];
         return '<button class="block block--sessionWork" data-action="openCalendar">' +

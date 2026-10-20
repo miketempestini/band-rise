@@ -7,7 +7,10 @@
 //   song      Song of the Year: your best recording released this year (quality 60+)
 //   record    Record of the Year: your best EP or album released this year (average quality 55+)
 //   breakout  Breakout Act: 2,000+ new fans this year
-// Each nomination is kept in state.awards: { year, category, title, chance, won (null until the ceremony) }.
+// Awards are head to head: each category you're nominated in also has your rivals and the scene's big bands as
+// nominees, and one of you wins (see withRivals and ceremony).
+// Each nomination is kept in state.awards: { year, category, title, chance, won (null until the ceremony),
+//   nominees: [{ name, title, strength, you, bandId }], winner (a name, after the ceremony) }.
 
 window.Game = window.Game || {};
 Game.rules = Game.rules || {};
@@ -51,6 +54,9 @@ Game.rules.awards = {
     return aw.year(chart.peakDay) === aw.year(state.day) ? Game.balance.awards.topTenBonus : 0;
   },
 
+  // The nominations you'd get this year (without giving them). Returns [{ category, title, chance, nominees }]:
+  // for each category you qualify for, the other nominees are your rivals (with a record or new fans this year) and the
+  // scene's biggest bands. chance is your chance of winning against them (see strengths).
   nominationsFor: function (state) {
     var a = Game.balance.awards;
     var aw = Game.rules.awards;
@@ -67,7 +73,8 @@ Game.rules.awards = {
       });
     });
     if (best && best.recording.quality >= a.songMinQuality) {
-      list.push({ category: 'song', title: '"' + best.title + '"', chance: Math.min(a.maxChance, aw.qualityChance(best.recording.quality) + aw.chartBonus(state, best.chart)) });
+      list.push(aw.withRivals(state, { category: 'song', title: '"' + best.title + '"',
+        strength: Math.min(a.maxChance, aw.qualityChance(best.recording.quality) + aw.chartBonus(state, best.chart)) }));
     }
 
     // Record of the Year: the best EP or album this year.
@@ -75,17 +82,79 @@ Game.rules.awards = {
       .sort(function (x, y) { return y.avgQuality - x.avgQuality; });
     if (records.length) {
       var rec = records[0];
-      list.push({ category: 'record', title: '"' + (rec.name || Game.content.releaseTypes[rec.type].name) + '" (' + Game.content.releaseTypes[rec.type].name + ')',
-        chance: Math.min(a.maxChance, aw.qualityChance(rec.avgQuality) + aw.chartBonus(state, rec.chart)) });
+      list.push(aw.withRivals(state, { category: 'record', title: '"' + (rec.name || Game.content.releaseTypes[rec.type].name) + '" (' + Game.content.releaseTypes[rec.type].name + ')',
+        strength: Math.min(a.maxChance, aw.qualityChance(rec.avgQuality) + aw.chartBonus(state, rec.chart)) }));
     }
 
     // Breakout Act: new fans this year.
     var gained = Game.rules.progress.totalFans(state) - state.stats.yearStartFans;
     if (gained >= a.breakoutMinFans) {
-      list.push({ category: 'breakout', title: gained.toLocaleString() + ' new fans this year',
-        chance: Game.util.clamp(gained / a.breakoutFansForMax, a.minChance, a.maxChance) });
+      list.push(aw.withRivals(state, { category: 'breakout', title: gained.toLocaleString() + ' new fans this year',
+        strength: aw.breakoutChance(gained) }));
     }
     return list;
+  },
+
+  // Breakout Act strength from new fans: new fans / 20,000, kept between 10% and 80%.
+  breakoutChance: function (gained) {
+    var a = Game.balance.awards;
+    return Game.util.clamp(gained / a.breakoutFansForMax, a.minChance, a.maxChance);
+  },
+
+  // The other nominees in a category (up to 4: rivals first if they qualify, then the scene's biggest bands), each
+  // { name, title, strength, bandId }. No dice: other bands' records are judged by their skills.
+  otherNominees: function (state, category) {
+    var a = Game.balance.awards;
+    var aw = Game.rules.awards;
+    var sc = Game.rules.scene;
+    var names = Game.content.names;
+    var year = aw.year(state.day);
+    var out = [];
+    // Rivals: their best record this year (song and record), or their new fans this year (breakout).
+    sc.rivals(state).forEach(function (band) {
+      if (category === 'breakout') {
+        var gained = band.fans - band.yearStartFans;
+        if (gained >= a.breakoutMinFans) out.push({ name: band.name, title: gained.toLocaleString() + ' new fans', strength: aw.breakoutChance(gained), bandId: band.id });
+        return;
+      }
+      var rels = state.scene.releases.filter(function (r) { return r.bandId === band.id && aw.year(r.day) === year; })
+        .sort(function (x, y) { return y.quality - x.quality; });
+      var r = rels[0];
+      if (!r) return;
+      var minQ = category === 'song' ? a.songMinQuality : a.recordMinQuality;
+      if (r.quality < minQ) return;
+      var chart = category === 'song' ? r.leadChart : r.chart;
+      out.push({ name: band.name, title: '"' + (category === 'song' ? r.lead : r.name) + '"',
+        strength: Math.min(a.maxChance, aw.qualityChance(r.quality) + aw.chartBonus(state, chart)), bandId: band.id });
+    });
+    // The rest: the scene's biggest bands (Breakout Act: the biggest small and club bands, who are still breaking out).
+    var bands = Object.keys(state.scene.bands).map(function (id) { return state.scene.bands[id]; })
+      .filter(function (band) { return !band.rival && (category !== 'breakout' || sc.sizeOf(band.reputation) <= 2); })
+      .sort(function (x, y) { return y.fans - x.fans || (x.id < y.id ? -1 : 1); });
+    for (var i = 0; i < bands.length && out.length < a.nominees - 1; i++) {
+      var band = bands[i];
+      var n = Number(band.id.slice(1)) + year; // picks a title for their record from the word lists (the same all year)
+      if (category === 'breakout') {
+        var grew = Math.round(band.fans * a.sceneBreakoutShare);
+        out.push({ name: band.name, title: grew.toLocaleString() + ' new fans', strength: aw.breakoutChance(grew), bandId: band.id });
+      } else {
+        out.push({ name: band.name, title: '"' + names.songTitleFirst[n % names.songTitleFirst.length] + ' ' +
+          names.songTitleSecond[(n * 3) % names.songTitleSecond.length] + '"',
+          strength: aw.qualityChance((band.songwriting + band.musicianship) / 2), bandId: band.id });
+      }
+    }
+    return out.slice(0, a.nominees - 1);
+  },
+
+  // Your nomination with the other nominees and your chance against them: each nominee's weight is its strength
+  // cubed, and your chance is your share of all the weights.
+  withRivals: function (state, mine) {
+    var aw = Game.rules.awards;
+    var power = Game.balance.awards.strengthPower;
+    var others = aw.otherNominees(state, mine.category);
+    var nominees = [{ name: state.band.name || state.player.name, title: mine.title, strength: mine.strength, you: true }].concat(others);
+    var total = nominees.reduce(function (t, x) { return t + Math.pow(x.strength, power); }, 0);
+    return { category: mine.category, title: mine.title, chance: Math.pow(mine.strength, power) / total, nominees: nominees };
   },
 
   // Each morning: on the first Monday of December, nominations arrive; on the last Saturday of December, the
@@ -124,10 +193,14 @@ Game.rules.awards = {
     if (noms.length) {
       s = Game.util.clone(s);
       noms.forEach(function (n) {
-        s.awards.push({ year: aw.year(s.day), category: n.category, title: n.title, chance: n.chance, won: null });
+        s.awards.push({ year: aw.year(s.day), category: n.category, title: n.title, chance: n.chance, won: null,
+          nominees: n.nominees.map(function (x) { return { name: x.name, title: x.title, strength: x.strength, you: !!x.you, bandId: x.bandId || null }; }),
+          winner: null });
       });
       var text = 'You\'re nominated: ' + noms.map(function (n) {
-        return Game.content.business.awards[n.category].name + ' for ' + n.title + ' (' + Math.round(n.chance * 100) + '% chance)';
+        var rivals = n.nominees.filter(function (x) { return !x.you; }).map(function (x) { return x.name; });
+        return Game.content.business.awards[n.category].name + ' for ' + n.title + ' (' + Math.round(n.chance * 100) + '% chance' +
+          (rivals.length ? ', up against ' + aw.listText(rivals) : '') + ')';
       }).join('; ') + '. The ceremony is ' + Game.rules.day.dateLabel(aw.ceremonyDayAfter(s.day)) + '.';
       s = Game.rules.booking.addInbox(s, 'note', { title: '🏅 Awards season: nominations', text: text }, null);
       log.push(text);
@@ -135,8 +208,14 @@ Game.rules.awards = {
     return { state: s, log: log };
   },
 
-  // Awards night: each open nomination this year wins or not (by its chance). A win adds reputation.
-  // Returns { state, log }.
+  // "A, B, and C".
+  listText: function (items) {
+    if (items.length < 2) return items.join('');
+    return items.slice(0, -1).join(', ') + (items.length > 2 ? ',' : '') + ' and ' + items[items.length - 1];
+  },
+
+  // Awards night: one winner in each category you're nominated in, picked by strength (cubed), so the strongest
+  // nominee usually wins. A win adds reputation; a scene band that wins keeps count. Returns { state, log }.
   ceremony: function (state) {
     var a = Game.balance.awards;
     var aw = Game.rules.awards;
@@ -149,9 +228,25 @@ Game.rules.awards = {
       var lines = [];
       s.awards.forEach(function (n) {
         if (n.won !== null || n.year !== aw.year(s.day)) return;
-        n.won = rng.chance(n.chance);
+        var nominees = n.nominees && n.nominees.length ? n.nominees : [{ name: 'you', strength: n.chance, you: true }];
+        var winner;
+        if (nominees.length === 1) {
+          winner = rng.chance(n.chance) ? nominees[0] : null; // nominations from before rivals: your old chance
+        } else {
+          var total = nominees.reduce(function (t, x) { return t + Math.pow(x.strength, a.strengthPower); }, 0);
+          var roll = rng.next() * total;
+          for (var i = 0; i < nominees.length && !winner; i++) {
+            roll -= Math.pow(nominees[i].strength, a.strengthPower);
+            if (roll < 0) winner = nominees[i];
+          }
+          winner = winner || nominees[nominees.length - 1];
+        }
+        n.won = !!(winner && winner.you);
+        n.winner = winner ? winner.name : null;
+        if (winner && winner.bandId && s.scene.bands[winner.bandId]) s.scene.bands[winner.bandId].awardsWon += 1;
         if (n.won) s.player.reputation = Game.util.clamp(s.player.reputation + a.winReputation, 0, Game.balance.reputation.max);
-        lines.push(Game.content.business.awards[n.category].name + ': ' + (n.won ? 'you won! +' + a.winReputation + ' reputation.' : 'not this year.'));
+        lines.push(Game.content.business.awards[n.category].name + ': ' + (n.won ? 'you won! +' + a.winReputation + ' reputation.'
+          : (winner ? 'it went to ' + winner.name + ' for ' + winner.title + '.' : 'not this year.')));
       });
       s.rngState = rng.getState();
       var result = 'Awards night. ' + lines.join(' ');

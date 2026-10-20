@@ -4,6 +4,60 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14l: The music scene, rivals, and seeing shows (2026-10-20)
+- **50 other bands** (made-up names in `js/content/scene.js`) with reputation, fans, and skills like yours.
+  - **Sizes:** a pyramid of 24 small-room bands, 14 club bands, 7 theater bands, and 2 arena bands, spread over
+    every city (more in Millbrook and the big cities).
+  - **Touring:** bands of reputation 60+ play anywhere.
+  - **Weekly change:** every Monday the scene drifts a little.
+  - **Names never clash:** a scene band with your band's name takes a spare name.
+- **3 rivals from Millbrook** climb with you. One stays a step behind, one even, one a step ahead (reputation and
+  fans, closing 30% of the gap each Monday).
+  - **Records:** they release an EP or album every 3 to 6 months, and 35% of the time one drops a record the same
+    week as yours (an Inbox note). Their records chart from real streams, but only their 2 newest.
+  - **Opening slots:** a 20% chance each night that a rival grabs one you haven't answered. Declined or expired ones go
+    to a rival too.
+  - **Awards:** they're nominated against you.
+  - **Career:** a new Rivals panel puts you side by side: fame, fans, reputation, latest record, best chart spot this
+    year, awards, and next show.
+- **Venue calendars:** every small room, club, theater, and arena has other bands' shows booked (busiest on Fridays
+  and Saturdays). They're filled for the cities you've unlocked, as far ahead as you can book.
+  - A night another band has is **taken** for you.
+  - Offers from a venue (opening slots, residencies, arenas, festivals, fill-ins, tours) move other bands out of the
+    way.
+  - Opening slots are now on real club shows and name the headliner ("Open for The Paper Wolves").
+- **Seeing a show:** each venue flyer on Book lists its next 3 shows with a **Ticket** button.
+  - **Price:** $8 for a small room, $12 a club, $25 a theater, $45 an arena. Paid when you buy, no refunds.
+  - **Calendar:** it books the evening (pink tape on Today and the Calendar), and you can give it away from the
+    Calendar.
+  - **The night:** -10 energy, Networking +3, a little Musicianship and Performance, +2 morale, and a chance to meet
+    someone (better in bigger rooms).
+  - **Where:** Millbrook when you're home, or another city while you're there on a trip.
+- **Charts:** the "other acts" are now scene bands (bigger hits go to bigger bands), and rivals are marked on the
+  charts.
+- **Awards are head to head:** up to 5 nominees per category (you, rivals with a record or new fans that year, and
+  the biggest bands). One winner, picked by strength cubed, so the best usually wins. The nominations show who you're
+  up against and your chance.
+- **Balance:**
+  - **Speed:** at first, taken nights made the simulated player's bookings much worse, and the 21-day check took 4
+    times as long. Calendars now fill only for unlocked cities and only as far as you can book, which keeps saves
+    small.
+  - **Simulated player:** like a sensible player, it now tries Fridays and Saturdays at both small rooms (and both
+    clubs).
+  - **Results:** paid shows booked by day 21 in 73% of runs (74% before), and the first club show by day 90 in every
+    run (day 67, the same as before). The 21-day check now takes about 12 seconds (7 before).
+  - **Two-year check (before → after):**
+    - Milestones barely moved: manager day 164 → 167, first theater day 200 → 208, label day 240 → 255.
+    - Late-game gig pay is down about a quarter ($6,785 → $4,969 a week), because auto-booking finds fewer free nights.
+      Streaming is unchanged.
+    - Cash at the end of year two: $376k → $281k. Money still stops mattering by year two, so this helps a little.
+- **Edge case fixed:** a ticket for a show in a city you're visiting on a trip no longer blocks changes to that trip.
+- **Saves:** version 20. Older saves get a scene, with rivals placed at their level, calendars filled, and the chart's
+  other acts turned into scene bands. The late-career test save is regenerated: each rival has 10 records, all three
+  reached #1, and they've won 3 awards between them.
+- **Tests:** 353 passing. A new `scene.test.js` has 15 tests, and the screens test now opens Today, the Calendar, and
+  Book with a ticket. The version tag is `v20-2026-10-20a`.
+
 ### Session 14k: Real streams, charts, and the Music tab (2026-10-20)
 - **Streams are real numbers now.** Every released song gets a weekly stream count each Sunday, and money is streams x
   $0.004.
@@ -717,6 +771,11 @@ No gameplay numbers changed: the balance checks give the same results as before.
 - Promotion (flyers, social ads) still only reaches the hometown; the Big campaign and press push reach other cities.
 
 ## Known issues / open decisions
+- **Rivals copy your level closely** (they aim for your reputation and fans, plus or minus a little), so they never
+  pull far ahead or fall far behind. If that feels too tidy, give them a little random luck each year.
+- **Late in a career, your songs and your rivals' records fill most of the charts.** Other bands mostly sit lower down.
+- **The scene adds a little time to every End Day** (the saved game is bigger). Fine in play; the balance checks take
+  longer.
 - **A huge act fills the singles chart.** Late in a big career, your own songs can take the top 15 spots, because the
   other acts' #1 sits around 1.2M streams a week. That's realistic, but if it feels too easy, the other acts' levels
   could grow with your fame. The simulated player never buys a release-week push, so promo's effect on money isn't in

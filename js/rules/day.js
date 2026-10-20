@@ -248,6 +248,16 @@ Game.rules.day = {
           }
         }
         lines = lines.concat(session.log);
+      } else if (entry && entry.type === 'ticket') {
+        // A ticket to another band's show: a night out (energy, Networking, a chance to meet someone).
+        title = 'Show: ' + (Game.rules.scene.band(s, entry.bandId) || { name: 'a band' }).name;
+        var night = Game.rules.scene.attend(s, entry);
+        s = night.state;
+        lines = lines.concat(night.log);
+        if (s.player.energy === 0 && !exhausted) {
+          exhausted = true;
+          lines.push('The night out drained you to 0 energy. You\'re Exhausted.');
+        }
       } else if (day.isJobBlock(s, block)) {
         title = 'Day job';
         jobBlocks += 1;
@@ -417,6 +427,11 @@ Game.rules.day = {
     var fading = Game.rules.songs.applyFading(s);
     s = fading.state;
     fading.log.forEach(function (line) { endLines.push(line); });
+
+    // The music scene: other bands' calendars, rivals' moves and records (see Game.rules.scene).
+    var scene = Game.rules.scene.nightly(s);
+    s = scene.state;
+    scene.log.forEach(function (line) { endLines.push(line); });
 
     // Venues answer booking emails, and offers you didn't answer in time go away.
     var replies = Game.rules.booking.processReplies(s);

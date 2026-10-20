@@ -114,6 +114,7 @@ Game.rules.booking = {
     }
     var away = venue.cityId !== 'hometown';
     var taken = Game.rules.booking.blockTaken(state, day, venue.showBlock, away);
+    if (!taken) taken = Game.rules.scene.takenProblem(state, venue, day); // another band has that night
     if (!taken && away) taken = Game.rules.travel.check(state, venue.id, day).problem;
     return taken || null;
   },
@@ -128,6 +129,7 @@ Game.rules.booking = {
     if (entry && entry.type === 'studio') return 'Studio time booked';
     if (entry && entry.type === 'sessionWork') return 'Session work booked';
     if (entry && entry.type === 'travel') return 'Travelling';
+    if (entry && entry.type === 'ticket') return 'You have a ticket to a show';
     if (!ignoreAway && Game.rules.travel.tripAt(state, day, block)) return 'On the road';
     var pending = Object.keys(state.requests).map(function (id) { return state.requests[id]; }).filter(function (r) {
       return r.status === 'pending' && r.gigDay === day && Game.content.venues[r.venueId].showBlock === block;
@@ -149,7 +151,7 @@ Game.rules.booking = {
   blockContents: function (state, day, block) {
     var plan = state.schedule[day];
     var entry = plan && plan[block] && state.entries[plan[block]];
-    if (entry) return { kind: { gig: 'show', studio: 'studio', sessionWork: 'sessionWork', travel: 'travel', action: 'plan' }[entry.type], entry: entry };
+    if (entry) return { kind: { gig: 'show', studio: 'studio', sessionWork: 'sessionWork', travel: 'travel', ticket: 'ticket', action: 'plan' }[entry.type], entry: entry };
     var trip = Game.rules.travel.tripAt(state, day, block);
     if (trip) return { kind: 'away', trip: trip };
     var waiting = Game.rules.booking.blockTaken(state, day, block);
@@ -434,6 +436,7 @@ Game.rules.booking = {
     }
     var id = 'e' + s.nextEntryId;
     s.nextEntryId += 1;
+    Game.rules.scene.clearNight(s, venueId, day); // the venue moves any other band's show to make room
     s.entries[id] = {
       id: id, day: day, block: venue.showBlock, type: 'gig', venueId: venueId, deal: 'guarantee',
       songIds: Game.rules.booking.suggestSetlist(s, venue, 'guarantee'), sessionPlayers: 0, status: 'booked', fillIn: true

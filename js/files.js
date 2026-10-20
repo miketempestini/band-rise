@@ -13,7 +13,7 @@ window.Game = window.Game || {};
 
 Game.files = {
 
-  tag: 'v19-2026-10-20c',   // Must start with "v" + the save version (balance.save.version): a test checks it
+  tag: 'v20-2026-10-20a',   // Must start with "v" + the save version (balance.save.version): a test checks it
 
   css: 'styles.css',
 
@@ -24,12 +24,12 @@ Game.files = {
     'js/content/calendar.js', 'js/content/skills.js', 'js/content/instruments.js', 'js/content/cities.js',
     'js/content/actions.js', 'js/content/names.js', 'js/content/venues.js', 'js/content/gigText.js',
     'js/content/people.js', 'js/content/events.js', 'js/content/milestones.js', 'js/content/tutorial.js',
-    'js/content/studios.js', 'js/content/business.js', 'js/content/finance.js', 'js/content/art.js',
+    'js/content/studios.js', 'js/content/business.js', 'js/content/finance.js', 'js/content/art.js', 'js/content/scene.js',
     'js/state.js', 'js/save.js',
     'js/rules/money.js', 'js/rules/finances.js', 'js/rules/housing.js', 'js/rules/energy.js', 'js/rules/morale.js',
     'js/rules/skills.js', 'js/rules/audience.js', 'js/rules/songs.js', 'js/rules/people.js', 'js/rules/gigs.js',
     'js/rules/job.js', 'js/rules/booking.js', 'js/rules/progress.js', 'js/rules/events.js', 'js/rules/recording.js',
-    'js/rules/streaming.js', 'js/rules/merch.js', 'js/rules/offers.js', 'js/rules/sessionWork.js', 'js/rules/travel.js', 'js/rules/manager.js',
+    'js/rules/streaming.js', 'js/rules/scene.js', 'js/rules/merch.js', 'js/rules/offers.js', 'js/rules/sessionWork.js', 'js/rules/travel.js', 'js/rules/manager.js',
     'js/rules/tours.js', 'js/rules/label.js', 'js/rules/bigShows.js', 'js/rules/awards.js', 'js/rules/actions.js',
     'js/rules/planWeek.js', 'js/rules/career.js', 'js/rules/day.js', 'js/rules/debug.js'
   ],

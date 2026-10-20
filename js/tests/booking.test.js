@@ -12,6 +12,7 @@
     s.player.morale = 50;
     var started = Game.rules.songs.startSong(s);
     s = Game.rules.songs.finishSong(started.state, started.songId).state;
+    s.scene.shows = []; // no other bands' shows in the way (taken nights are tested in scene.test.js)
     return s;
   }
 

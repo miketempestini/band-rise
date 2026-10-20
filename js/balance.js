@@ -173,7 +173,11 @@ Game.balance = {
     minChance: 0.10,
     maxChance: 0.80,
     winReputation: 5,                // Each win: +5 reputation
-    topTenBonus: 0.10                // A song or record that reached the Top 10 this year: +10% win chance
+    topTenBonus: 0.10,               // A song or record that reached the Top 10 this year: +10% win chance
+    nominees: 5,                     // Each category has up to 5 nominees (you, rivals, and other big bands)
+    strengthPower: 3,                // The winner is picked by strength (the win chance above) cubed, so the best
+                                     // nominee usually wins but not always
+    sceneBreakoutShare: 0.5          // Other bands' "new fans this year" for Breakout Act: half their fans
   },
 
   // ---------------------------------------------------------------
@@ -286,7 +290,65 @@ Game.balance = {
     newMin: 0.03,                    // A new arrival starts between 3% and 60% of #1's streams (usually low)
     newMax: 0.60,
     topWobble: 0.10,                 // #1's streams vary up to 10% either way from week to week
-    bandNameShare: 0.6               // 60% of other acts are bands ("The ..."), the rest solo names
+    artistWobble: 3                  // Other acts' songs go to bands by size (the biggest bands get the biggest hits),
+                                     // give or take this many places down the list of bands
+  },
+
+  // ---------------------------------------------------------------
+  // The music scene: 50 other bands (names in js/content/scene.js), 3 of them your rivals. They fill venue
+  // calendars, chart, release music, and compete for awards. See Game.rules.scene.
+  // ---------------------------------------------------------------
+  scene: {
+    seedOffset: 7919,                // The scene gets its own dice, started from the career's seed plus this
+    // The pyramid of other bands by size (the sizes match venue tiers). Rivals come on top of these 47.
+    sizes: [
+      { tier: 1, count: 24, minRep: 10, maxRep: 29 },   // Small-room bands
+      { tier: 2, count: 14, minRep: 30, maxRep: 59 },   // Club bands
+      { tier: 3, count: 7,  minRep: 60, maxRep: 84 },   // Theater bands
+      { tier: 4, count: 2,  minRep: 85, maxRep: 100 }   // Arena bands
+    ],
+    // Fans follow reputation: about 10 ^ (1.6 + 0.047 x reputation), so ~120 fans at 10, ~1,000 at 30, ~25,000 at 60,
+    // ~400,000 at 85, give or take (logSpread)
+    fans: { logBase: 1.6, logPerRep: 0.047, logSpread: 0.25 },
+    skills: { base: 15, perRep: 0.7, spread: 8 },   // Their skills: 15 + 0.7 x reputation, give or take 8
+    members: { min: 3, max: 5 },
+    homeWeights: { hometown: 8, near: 3, mid: 3, far: 3, national: 4 }, // How likely a band is to come from each kind of city
+    touringRep: 60,                  // Bands this big play in any city (smaller ones mostly play at home)
+    drift: { rep: 1, fanShare: 0.03 }, // Each Monday, other bands' reputation moves up to 1 point and fans up to 3%
+    // The 3 rivals: they start near you and keep moving toward your level (behind / even / ahead)
+    rivals: {
+      count: 3,
+      repOffsets: [-6, 0, 6],        // Reputation they aim for, compared with yours
+      fanShares: [0.7, 1.0, 1.4],    // Fans they aim for, compared with yours
+      pull: 0.3,                     // Each Monday they close 30% of the gap to where they're aiming
+      wobble: 2                      // ...give or take 2 reputation
+    },
+    // Venue calendars: the chance a venue has another band's show on each night (Monday first), by tier
+    showChance: {
+      1: [0.15, 0.20, 0.25, 0.30, 0.50, 0.55, 0.20],
+      2: [0.10, 0.15, 0.20, 0.30, 0.50, 0.55, 0.15],
+      3: [0.05, 0.05, 0.10, 0.20, 0.45, 0.50, 0.10],
+      4: [0.00, 0.00, 0.05, 0.10, 0.30, 0.35, 0.05]
+    },
+    gapDays: 2,                      // A band plays at most once every 2 days
+    playWeights: { home: 4, touring: 2, away: 0.3, upTier: 0.3 }, // Who headlines: home bands first, touring bands
+                                     // anywhere, others rarely; a band one size up sometimes plays a smaller room
+    openerChance: { 2: 0.5, 3: 0.8, 4: 1 }, // Clubs and bigger: the chance of an opener (a band one size down)
+    flyerShows: 3,                   // Each venue flyer on the Book screen lists this many coming shows
+    // Seeing a show (a ticket costs the venue tier's ticket price)
+    show: { energy: 10, networking: 3, musicianship: 0.5, performance: 0.5, morale: 2, meetBonusPerTier: 0.05 },
+    stealChance: 0.2,                // Each night, a rival may grab an opening slot you haven't answered
+    // Rivals' releases
+    releases: {
+      everyDays: { min: 90, max: 180 }, // Each rival puts out an EP or album every 3 to 6 months
+      sameWeekChance: 0.35,          // When you release an EP or album, the chance a rival drops one that week too
+      minRep: 10,                    // Rivals start releasing once they reach small rooms
+      albumShare: 0.5,               // Half their releases are albums, half EPs
+      tracks: { ep: 4, album: 10 },
+      charting: 2,                   // Only each rival's 2 newest records still stream enough to chart (older ones drop off)
+      qualitySpread: 8,              // Quality: their skills' average, give or take 8...
+      minQuality: 30, maxQuality: 95 // ...kept between 30 and 95
+    }
   },
 
   // ---------------------------------------------------------------
@@ -869,7 +931,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 19,                     // Save format version, bumped when the state shape changes
+    version: 20,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

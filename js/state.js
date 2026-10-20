@@ -122,6 +122,8 @@ Game.state = {
       tourMerch: { tourId: null, count: 0 }, // tour shirts in stock, and which tour they're for
       // The label (Phase 12): owed is the part of the advance not yet paid back from streaming.
       label: { signed: false, signedDay: null, advance: 0, owed: 0, nextOfferDay: 0 },
+      // The music scene (other bands, your rivals, venue calendars, rivals' records): see Game.rules.scene.
+      scene: Game.rules.scene.create(seed),
       awards: [],         // every nomination: { year, category, title, chance, won (null until the ceremony) }
       trips: {},          // trips out of town: id: { id, showIds, cities, startT, endT, needsVan } (see Game.rules.travel)
       nextTripId: 1,

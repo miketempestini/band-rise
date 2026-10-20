@@ -88,6 +88,10 @@ Game.save = {
       });
     }
 
+    // Version 20 added the music scene (other bands, rivals, venue calendars): a fresh scene from the save's seed was
+    // filled in above; now the rivals catch up to your level and the calendars fill.
+    if (fromVersion < 20) Game.rules.scene.catchUp(data);
+
     data.version = Game.balance.save.version;
     return data;
   },

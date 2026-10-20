@@ -592,6 +592,7 @@ button.block:hover { background: linear-gradient(transparent 14%, var(--highligh
 .block--show::before, .block--travel::before { background: var(--tape-show); }
 .block--studio::before { background: var(--tape-studio); }
 .block--sessionWork::before { background: var(--tape-money); }
+.block--ticket::before { background: var(--tape-event); }   /* a night out at another band's show */
 .block--locked::before { background: var(--tape-job); }
 /* Free time: nothing written yet, so it's pencil grey. */
 .block--free .block__title { color: rgba(31, 34, 64, 0.36); }
@@ -747,6 +748,8 @@ button.block:hover { background: linear-gradient(transparent 14%, var(--highligh
   letter-spacing: 0.2px; color: var(--text-muted); vertical-align: middle; }
 .badge--warn { color: var(--accent); }
 .badge--bad { color: var(--bad); }
+.badge--good { color: var(--good); }
+.badge--rival { color: var(--pink); }   /* your rivals, wherever their names show up */
 
 /* ---------- The "Previous day" box on Today (an older day sheet), and its full readout ---------- */
 
@@ -1038,6 +1041,9 @@ button.recap:hover { transform: none; }
 .chart-move--new { color: var(--accent); }
 .chart-row--mine td { background: var(--highlighter); cursor: pointer; }
 .chart-row--mine .chart-title { text-decoration: underline 2px var(--red-pen); text-underline-offset: 3px; }
+.chart-row--you td { background: var(--highlighter); }
+.rivals-sheet { margin-bottom: var(--gap, 16px); }
+.table-scroll { overflow-x: auto; }
 
 /* ---------- Song reveal, naming the band, three weeks in, game over ---------- */
 
@@ -1190,6 +1196,14 @@ button.recap:hover { transform: none; }
 .deal__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; font-size: var(--size-s); }
 .reqs { list-style: none; margin: 6px 0 0; padding: 0; font-size: var(--size-xs); }
 .booking-form { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+/* Other bands' coming shows on a venue flyer, like a club's printed listings */
+.venue__shows { padding-top: 10px; border-top: 1px dashed var(--line); }
+.venue__shows-title { font: 700 var(--size-s)/1.2 var(--font-head); color: var(--text); }
+.gig-rows { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.gig-row { display: grid; grid-template-columns: 82px 1fr auto; align-items: center; gap: 8px; font-size: var(--size-s); }
+.gig-row__date { font: 700 var(--size-s)/1.2 var(--font-head); color: var(--text); }
+.gig-row__bill { min-width: 0; }
+.gig-row__busy { font-size: var(--size-xs); color: var(--text-muted); font-style: italic; cursor: help; }
 
 /* ---------- Inbox: slips of paper ---------- */
 
@@ -1236,10 +1250,11 @@ button.recap:hover { transform: none; }
 .cal__block--off::before, .cal__block--sessionWork::before { background: var(--tape-money); }
 .cal__block--show::before, .cal__block--travel::before { background: var(--tape-show); }
 .cal__block--studio::before { background: var(--tape-studio); }
+.cal__block--ticket::before { background: var(--tape-event); }
 .cal__block--plan::before { background: var(--ink-soft); }
 .cal__block--pending::before { background: repeating-linear-gradient(180deg, var(--tape-show) 0 3px, transparent 3px 5px); }
 .cal__block--away::before { background: var(--tape-show); opacity: 0.4; }
-.cal__block--show, .cal__block--studio, .cal__block--sessionWork, .cal__block--travel { font-weight: 700; }
+.cal__block--show, .cal__block--studio, .cal__block--sessionWork, .cal__block--travel, .cal__block--ticket { font-weight: 700; }
 .cal__block--pending, .cal__block--away { color: var(--ink-soft); font-style: italic; }
 
 /* The selected day, on an index card: a red line under the heading and faint blue lines below. */

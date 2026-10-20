@@ -29,6 +29,18 @@
     check('music: releases', function (a) { a.musicSection = 'releases'; a.show('songs'); });
     check('music: charts', function (a) { a.musicSection = 'charts'; a.show('songs'); });
     state.releases.forEach(function (rel) { check('release page (' + rel.id + ')', function (a) { a.openRelease(rel.id); }); });
+    // A ticket to another band's show tonight (if a show in town is free): Today, the Calendar, and Book draw it.
+    var show = state.scene.shows.filter(function (x) { return !Game.rules.scene.ticketProblem(state, x.id); })[0];
+    if (show) {
+      ['today', 'calendar', 'booking'].forEach(function (name) {
+        check(name + ' with a ticket', function (a) {
+          a.state = Game.rules.scene.buyTicket(a.state, show.id).state;
+          a.show(name);
+          a.calendarDay = show.day; // the Calendar opens on the ticket's day
+          a.render();
+        });
+      });
+    }
     check('action picker', function (a) { a.show('today'); a.pickerBlock = 'evening'; a.render(); });
     check('day readout', function (a) { a.show('today'); a.dayReportOpen = true; a.render(); });
     if (state.lastGig) check('gig result', function (a) { a.gigPhase = 'result'; a.show('gigResult'); });

@@ -97,5 +97,14 @@ Object.assign(Game.app, {
     var result = Game.rules.sessionWork.cancel(app.state, workId);
     app.notice = { kind: 'info', text: result.log.join(' ') };
     app.applyRule(result);
+  },
+
+  // Gives away a ticket to another band's show (no refund).
+  cancelTicket: function (entryId) {
+    var app = Game.app;
+    if (!window.confirm('Give this ticket away? Tickets can\'t be refunded.')) return;
+    var result = Game.rules.scene.cancelTicket(app.state, entryId);
+    app.notice = { kind: 'info', text: result.log.join(' ') };
+    app.applyRule(result);
   }
 });

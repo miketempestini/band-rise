@@ -15,7 +15,7 @@ Game.content.finance = {
   // Money out of your cash (the categories money.spend uses).
   costs: {
     housing: 'Moving and homes', paidBack: 'Paid back to Mom and Dad', bills: 'Rent and living costs',
-    networking: 'Going out to network', promotion: 'Promotion and ads', rehearsal: 'Rehearsal room', hangOut: 'Hanging out',
+    networking: 'Going out to network', tickets: 'Tickets to shows', promotion: 'Promotion and ads', rehearsal: 'Rehearsal room', hangOut: 'Hanging out',
     sessionPlayers: 'Session players', travel: 'Travel and hotels (your part)', production: 'Production', studio: 'Studio time',
     merchStock: 'Merch cost', gear: 'Gear and vans', events: 'Surprise costs', debug: 'Debug'
   },

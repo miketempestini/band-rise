@@ -168,5 +168,13 @@ Object.assign(Game.app, {
     var result = Game.rules.sessionWork.accept(app.state, messageId);
     app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
     app.applyRule(result);
+  },
+
+  // Buys a ticket to another band's show (from a venue flyer on the Book screen).
+  buyTicket: function (showId) {
+    var app = Game.app;
+    var result = Game.rules.scene.buyTicket(app.state, showId);
+    app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
+    app.applyRule(result);
   }
 });

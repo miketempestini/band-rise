@@ -18,6 +18,7 @@
     s = Game.rules.songs.finishSong(started.state, started.songId).state;
     s = Game.rules.progress.checkUnlocks(s).state;
     s.toasts = [];
+    s.scene.shows = []; // no other bands' shows in the way (taken nights are tested in scene.test.js)
     return s;
   }
 

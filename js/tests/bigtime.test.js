@@ -364,18 +364,23 @@
     s.cities.hometown.fans = 5000;
     var noms = Game.rules.awards.nominationsFor(s);
     t.sameContents(noms.map(function (n) { return n.category; }), ['song', 'record', 'breakout'], 'all three categories');
-    t.near(noms[0].chance, 0.5, 'song: (75 - 50) / 50 = 50%');
-    t.near(noms[1].chance, 0.16, 'record: (58 - 50) / 50 = 16%');
-    t.near(noms[2].chance, 0.25, 'breakout: 5,000 / 20,000 = 25%');
+    t.near(noms[0].nominees[0].strength, 0.5, 'song strength: (75 - 50) / 50 = 50%');
+    t.near(noms[1].nominees[0].strength, 0.16, 'record strength: (58 - 50) / 50 = 16%');
+    t.near(noms[2].nominees[0].strength, 0.25, 'breakout strength: 5,000 / 20,000 = 25%');
+    noms.forEach(function (n) {
+      var total = n.nominees.reduce(function (sum, x) { return sum + Math.pow(x.strength, a.strengthPower); }, 0);
+      t.near(n.chance, Math.pow(n.nominees[0].strength, a.strengthPower) / total, n.category + ': your chance is your share against the other nominees');
+      t.equal(n.nominees.length, a.nominees, n.category + ': ' + a.nominees + ' nominees');
+    });
     s = Game.rules.awards.check(s).state;
     t.equal(s.awards.length, 3, 'nominated on the first Monday of December');
     t.ok(s.milestones.awards === undefined && Game.rules.progress.checkUnlocks(s).state.milestones.awards !== undefined, 'milestone 17 with the first nomination');
-    s.awards.forEach(function (n) { n.chance = 1; });
+    s.awards.forEach(function (n) { n.nominees.forEach(function (x) { if (!x.you) x.strength = 0; }); }); // nobody else can win
     s.day = Game.rules.awards.ceremonyDayAfter(s.day);
     t.equal(Game.rules.day.dateLabel(s.day), 'Saturday, December 26', 'the last Saturday of December');
     var rep = s.player.reputation;
     var r = Game.rules.awards.check(s);
-    t.ok(r.state.awards.every(function (n) { return n.won === true; }), 'all won (chance forced to 100%)');
+    t.ok(r.state.awards.every(function (n) { return n.won === true; }), 'all won (the other nominees made strength 0)');
     t.equal(r.state.player.reputation, Math.min(100, rep + 3 * a.winReputation), '+5 reputation each');
     t.ok(lastMessage(r.state, 'note').data.title.indexOf('Awards night') !== -1, 'results in the Inbox');
   });

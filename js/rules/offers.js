@@ -119,10 +119,22 @@ Game.rules.offers = {
       var day = s.day + rng.int(o.openingSlot.daysAhead.min, o.openingSlot.daysAhead.max);
       var round = o.openingSlot.feeRoundTo;
       var fee = rng.int(o.openingSlotFee.min / round, o.openingSlotFee.max / round) * round; // a round number
-      if (club && !Game.rules.booking.blockTaken(s, day, club.showBlock) && !Game.rules.recording.blockProblem(s, day, club.showBlock)) {
-        s = Game.rules.booking.addInbox(s, 'opening', { venueId: club.id, day: day, fee: fee },
-          Math.min(s.day + o.openingSlot.expiryDays, day - 1));
-        log.push(club.name + ' wants you to open for a touring band on ' + Game.rules.day.dateLabel(day) + '. Check your Inbox.');
+      var free = function (venue, d) {
+        return !Game.rules.booking.blockTaken(s, d, venue.showBlock) && !Game.rules.recording.blockProblem(s, d, venue.showBlock);
+      };
+      // The slot is on a real show from a club's calendar (another band headlining, no opener yet), if there is one.
+      var shows = s.scene.shows.filter(function (x) {
+        var v = Game.content.venues[x.venueId];
+        return v.cityId === 'hometown' && v.tier === o.openingSlot.venueTier && !x.openerId && !x.playerOpens &&
+          x.day >= s.day + o.openingSlot.daysAhead.min && x.day <= s.day + o.openingSlot.daysAhead.max && free(v, x.day);
+      });
+      var show = shows.length ? rng.pick(shows) : null;
+      if (show) { club = Game.content.venues[show.venueId]; day = show.day; }
+      if (club && (show || (!s.scene.shows.length && free(club, day)))) {
+        var headliner = show ? Game.rules.scene.band(s, show.bandId).name : null;
+        s = Game.rules.booking.addInbox(s, 'opening', { venueId: club.id, day: day, fee: fee, showId: show ? show.id : null,
+          bandId: show ? show.bandId : null }, Math.min(s.day + o.openingSlot.expiryDays, day - 1));
+        log.push(club.name + ' wants you to open for ' + (headliner || 'a touring band') + ' on ' + Game.rules.day.dateLabel(day) + '. Check your Inbox.');
       }
     }
 
@@ -185,6 +197,8 @@ Game.rules.offers = {
     }
     var s = Game.rules.offers.bookShow(state, m.data.venueId, m.data.day, 'opening', m.data.fee).state;
     s.inbox.forEach(function (x) { if (x.id === messageId) { x.resolved = 'accepted'; x.read = true; } });
+    var show = m.data.showId && Game.rules.scene.showById(s, m.data.showId);
+    if (show) { show.playerOpens = true; show.openerId = null; } // you're on the bill, under the headliner
     return { state: s, log: ['Booked: opening at ' + venue.name + ', ' + Game.rules.day.dateLabel(m.data.day) + ' ($' + m.data.fee + ').'] };
   },
 
@@ -202,6 +216,9 @@ Game.rules.offers = {
     };
     s.schedule[day] = s.schedule[day] || {};
     s.schedule[day][venue.showBlock] = id;
+    // An opening slot is on another band's night (they stay on as headliner); any other offer from a venue moves
+    // other bands' shows to make room.
+    if (deal !== 'opening') Game.rules.scene.clearNight(s, venueId, day);
     return { state: s, entryId: id };
   },
 

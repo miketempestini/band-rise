@@ -85,6 +85,11 @@ Game.rules.actions = {
         row.kind = 'studio';
         row.entryId = booked.id;
         energy = clampEnergy(energy - b.energy.cost.studio);
+      } else if (booked && booked.type === 'ticket') {
+        // A ticket to another band's show (already paid for): costs a little energy.
+        row.kind = 'ticket';
+        row.entryId = booked.id;
+        energy = clampEnergy(energy - b.scene.show.energy);
       } else if (booked && booked.type === 'sessionWork') {
         // Session work on another band's recording (a commitment): costs session energy, pays its fee.
         row.kind = 'sessionWork';
@@ -398,6 +403,7 @@ Game.rules.actions = {
     if (existing && existing.type === 'studio') return { state: state, log: ['Studio time is booked in this block.'] };
     if (existing && existing.type === 'sessionWork') return { state: state, log: ['Session work is booked in this block.'] };
     if (existing && existing.type === 'travel') return { state: state, log: ['You\'re travelling then.'] };
+    if (existing && existing.type === 'ticket') return { state: state, log: ['You have a ticket to a show then. Give it away from the Calendar first.'] };
     var awayProblem = Game.rules.actions.awayProblem(state, block, actionId);
     if (awayProblem) return { state: state, log: [awayProblem] };
     if (action.needsBooking && state.planningAhead) {

@@ -121,6 +121,9 @@ Game.rules.career = {
     // Five random covers you can already play.
     state = Game.rules.songs.addStartingCovers(state).state;
 
+    // Other bands' shows on every venue's calendar, 12 weeks ahead.
+    Game.rules.scene.fill(state);
+
     return {
       state: state,
       log: ['Your career begins. +' + bonus.amount + ' ' + Game.content.skills[bonus.skill] + ' from your ' +

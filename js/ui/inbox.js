@@ -59,11 +59,15 @@ Game.ui.inbox = {
     var venue = Game.content.venues[d.venueId];
     var head, body, buttons = '';
     if (m.kind === 'opening') {
-      head = venue.name + ' wants you to open!';
-      body = 'A touring band is headlining on ' + h.dateLabel(d.day) + '. You\'d play a ' + Game.balance.offers.openingSlot.setSize +
+      var headliner = d.bandId && Game.rules.scene.band(state, d.bandId);
+      var taker = d.takenBy && Game.rules.scene.band(state, d.takenBy);
+      head = venue.name + ' wants you to open' + (headliner ? ' for ' + h.escape(headliner.name) : '') + '!';
+      body = (headliner ? h.escape(headliner.name) : 'A touring band') + (headliner && headliner.rival ? ' (your rival)' : '') +
+        ' is headlining on ' + h.dateLabel(d.day) + '. You\'d play a ' + Game.balance.offers.openingSlot.setSize +
         '-song opening set to their crowd (' + Math.round(Game.balance.offers.openingSlot.crowdShare.min * 100) + '-' +
         Math.round(Game.balance.offers.openingSlot.crowdShare.max * 100) + '% of ' + venue.capacity + ' people) for $' + d.fee +
-        '. Fans come from their crowd at half the usual rate.';
+        '. Fans come from their crowd at half the usual rate.' +
+        (m.resolved === 'taken' && taker ? ' Your rival ' + h.escape(taker.name) + ' grabbed it first.' : '');
       if (!m.resolved) {
         buttons = '<button class="btn btn--small btn--primary" data-action="acceptOpening" data-id="' + m.id + '">Accept</button> ' +
           '<button class="btn btn--small" data-action="decline" data-id="' + m.id + '">Decline</button>';
@@ -80,7 +84,7 @@ Game.ui.inbox = {
       }
     }
     var status = m.resolved
-      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired' }[m.resolved] || m.resolved) + '</span>'
+      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired', taken: 'Taken by a rival' }[m.resolved] || m.resolved) + '</span>'
       : '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>';
     return '<div class="message paper message--' + m.kind + (m.read ? '' : ' message--new') + '">' +
       '<div class="message__head"><strong class="pos">' + h.escape(head) + '</strong>' + (m.read ? '' : ' <span class="badge badge--warn">New</span>') +
@@ -105,7 +109,7 @@ Game.ui.inbox = {
         (problem ? ' <span class="pick__reason">' + h.escape(problem) + '</span>' : '');
     }
     var status = m.resolved
-      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired' }[m.resolved] || m.resolved) + '</span>'
+      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired', taken: 'Taken by a rival' }[m.resolved] || m.resolved) + '</span>'
       : '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>';
     return '<div class="message paper message--' + m.kind + (m.read ? '' : ' message--new') + '">' +
       '<div class="message__head"><strong class="pos">' + h.escape(d.bandName) + ' want you on their recording</strong>' +
@@ -120,7 +124,7 @@ Game.ui.inbox = {
   cardHtml: function (m, head, body, buttons) {
     var h = Game.ui.helpers;
     var status = m.resolved
-      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired' }[m.resolved] || m.resolved) + '</span>'
+      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired', taken: 'Taken by a rival' }[m.resolved] || m.resolved) + '</span>'
       : (m.expiresDay !== null ? '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>' : '');
     return '<div class="message paper message--' + m.kind + (m.read ? '' : ' message--new') + '">' +
       '<div class="message__head"><strong class="pos">' + h.escape(head) + '</strong>' + (m.read ? '' : ' <span class="badge badge--warn">New</span>') +

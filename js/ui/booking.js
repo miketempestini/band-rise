@@ -79,7 +79,8 @@ Game.ui.booking = {
       studioPick: function (e, el) { app.studioPick(el.getAttribute('data-studio')); },
       studioDate: function (e, el) { app.studioDate(Number(el.getAttribute('data-day'))); },
       studioSend: function (e, el) { app.sendStudioBooking(el.getAttribute('data-block')); },
-      studioCancel: function () { app.studioPick(null); }
+      studioCancel: function () { app.studioPick(null); },
+      buyTicket: function (e, el) { app.buyTicket(el.getAttribute('data-show')); }
     });
     root.querySelectorAll('.studio-song').forEach(function (sel) {
       sel.addEventListener('change', function () { app.studioSong(sel.getAttribute('data-block'), sel.value); });
@@ -219,7 +220,45 @@ Game.ui.booking = {
       status +
       deals +
       (draft ? Game.ui.booking.formHtml(state, app, venue, draft) : '') +
+      Game.ui.booking.showsHtml(state, venue) +
       '</div>';
+  },
+
+  // A short reason for a ticket you can't buy (the full reason shows on hover).
+  busyText: function (problem) {
+    if (/while you're there/.test(problem)) return 'Only on a trip here';
+    if (/on the road/.test(problem)) return 'You\'re away';
+    if (/over/.test(problem)) return 'Over';
+    return 'Busy that night';
+  },
+
+  // Other bands' coming shows at a venue (from its calendar), each with a ticket button.
+  showsHtml: function (state, venue) {
+    var h = Game.ui.helpers;
+    var sc = Game.rules.scene;
+    if (venue.deals.inStore) return ''; // record-store in-stores don't book other bands
+    var shows = sc.showsAt(state, venue.id, state.day, Game.balance.scene.flyerShows);
+    if (!shows.length) return '<div class="venue__shows"><p class="hint">Nothing on their calendar yet.</p></div>';
+    var price = sc.ticketPrice(venue);
+    var rows = shows.map(function (show) {
+      var head = sc.band(state, show.bandId);
+      var opener = show.openerId && sc.band(state, show.openerId);
+      var plan = state.schedule[show.day];
+      var mine = plan && plan.evening && state.entries[plan.evening];
+      var have = mine && mine.type === 'ticket' && mine.showId === show.id;
+      var problem = have ? null : sc.ticketProblem(state, show.id);
+      var tag = function (band) { return band && band.rival ? ' <span class="badge badge--rival">Rival</span>' : ''; };
+      return '<li class="gig-row">' +
+        '<span class="gig-row__date">' + Game.rules.day.shortDate(show.day) + '</span>' +
+        '<span class="gig-row__bill"><strong>' + h.escape(head ? head.name : 'A touring band') + '</strong>' + tag(head) +
+          (show.playerOpens ? '<span class="muted">, with you opening</span>' : (opener ? '<span class="muted">, with ' + h.escape(opener.name) + '</span>' + tag(opener) : '')) + '</span>' +
+        (have ? '<span class="badge badge--good">Ticket bought</span>'
+          : (show.playerOpens ? '' : (problem ? '<span class="gig-row__busy" title="' + h.escape(problem) + '">' + h.escape(Game.ui.booking.busyText(problem)) + '</span>'
+            : '<button class="btn btn--small" data-action="buyTicket" data-show="' + show.id + '" title="Paid now, no refunds. -' +
+              Game.balance.scene.show.energy + ' energy on the night.">Ticket ' + h.money(price) + '</button>'))) +
+        '</li>';
+    }).join('');
+    return '<div class="venue__shows"><span class="venue__shows-title">Coming up here</span><ul class="gig-rows">' + rows + '</ul></div>';
   },
 
   // Step 2 and 3 of a request: pick a date (out of town, see the trip it would take), then send the email.

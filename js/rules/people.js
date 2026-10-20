@@ -328,6 +328,7 @@ Game.rules.people = {
     if (clean.length > max) return { state: state, log: ['Band names can be up to ' + max + ' characters.'] };
     var s = Game.util.clone(state);
     s.band.name = clean;
+    Game.rules.scene.renameClash(s); // a scene band with the same name takes a spare name
     return { state: s, log: [] };
   },
 

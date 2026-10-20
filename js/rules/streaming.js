@@ -220,16 +220,15 @@ Game.rules.streaming = {
 
   // ----- The charts -----
 
-  // A made-up act and title for a chart entry. kind: 'single' or 'album'.
+  // A chart entry by another act: a band from the scene (bigger hits go to bigger bands) and a made-up title.
+  // kind: 'single' or 'album'.
   makeEntry: function (s, rng, kind, streams) {
     var names = Game.content.names;
-    var artist = rng.chance(Game.balance.charts.bandNameShare) ? 'The ' + rng.pick(names.bandNameFirst) + ' ' + rng.pick(names.bandNameSecond)
-      : rng.pick(names.firstNames) + ' ' + rng.pick(names.lastNames);
-    if (artist === s.band.name) artist = rng.pick(names.firstNames) + ' ' + rng.pick(names.lastNames);
+    var band = Game.rules.scene.chartArtist(s, rng, kind, streams);
     var title = rng.pick(names.songTitleFirst) + ' ' + rng.pick(names.songTitleSecond);
     var id = 'o' + s.charts.nextId;
     s.charts.nextId += 1;
-    return { id: id, kind: kind, title: title, artist: artist, streams: Math.round(streams) };
+    return { id: id, kind: kind, title: title, artist: band.name, bandId: band.id, streams: Math.round(streams) };
   },
 
   // Fills an empty pool of other acts' songs or albums: streams fall from the top level down the list.
@@ -289,9 +288,15 @@ Game.rules.streaming = {
       if (streams > 0) mine.albums.push({ key: 'rel:' + rel.id, title: rel.name, artist: me, streams: streams, mine: true, releaseId: rel.id });
     });
 
+    // Your rivals' records compete with real streams (each album, and its lead single).
+    var rivals = Game.rules.scene.weeklyStreams(s);
+
     var build = function (key, size) {
-      var others = s.charts.pool[key].map(function (e) { return { key: e.id, title: e.title, artist: e.artist, streams: e.streams, mine: false }; });
-      var list = others.concat(mine[key]).sort(function (a, b) { return b.streams - a.streams; }).slice(0, size);
+      var others = s.charts.pool[key].map(function (e) {
+        var band = e.bandId && s.scene.bands[e.bandId];
+        return { key: e.id, title: e.title, artist: band ? band.name : e.artist, bandId: e.bandId || null, streams: e.streams, mine: false };
+      });
+      var list = others.concat(rivals[key]).concat(mine[key]).sort(function (a, b) { return b.streams - a.streams; }).slice(0, size);
       return list.map(function (e, i) {
         var p = prev[key][e.key];
         e.last = p ? p.pos : null;
@@ -303,6 +308,7 @@ Game.rules.streaming = {
     s.charts.singles = build('singles', c.singlesSize);
     s.charts.albums = build('albums', c.albumsSize);
     s.charts.day = s.day;
+    Game.rules.scene.recordCharts(s);
 
     // Your songs' and releases' chart records, and the first-time moments.
     var log = [];

@@ -189,11 +189,14 @@ Every released song gets a stream count each Sunday night (before the bills):
 
 Chart day is Sunday, right after streams.
 
-- **Top 40 singles:** your released songs against made-up songs by other acts, by that week's streams.
-- **Top 20 albums:** your EPs' and albums' combined streams against made-up albums.
-- **Other acts** come from the band-name and song-title word lists (never your band's name). Each week their streams
-  drift up or down, a few new ones arrive, and old ones fade off. #1 sits around 1.2M streams a week for singles
-  (10M for albums) and the bottom of the chart around 6% of that.
+- **Top 40 singles:** your released songs against other bands' songs, by that week's streams.
+- **Top 20 albums:** your EPs' and albums' combined streams against other bands' albums.
+- **Other acts** are the scene's bands (see The music scene): bigger hits go to bigger bands, give or take a few places.
+  Their titles come from the song-title word lists. Each week their streams drift up or down, a few new ones arrive,
+  and old ones fade off. #1 sits around 1.2M streams a week for singles (10M for albums), and the bottom of the chart
+  around 6% of that.
+- **Your rivals' records** chart from their real streams: fans x 3.6 x quality x freshness, for every track on an
+  album, and each album's lead single on the singles chart. Only each rival's 2 newest records still chart.
 - **Each entry shows** its spot, last week's spot (or New), peak, weeks on the chart, and streams.
 - **Chart moments** (banner, and listed on Career): first chart entry, first Top 10, first #1, and the same for albums.
 - **Awards:** a song or record that reached the Top 10 that year gets +0.1 on its nomination chance.
@@ -528,7 +531,58 @@ Out of town, small rooms, clubs, and theaters book for a share of the door (cove
 - **Flights**: National cities (open with a manager and a label) are 2 blocks each way by plane, $300 a person each way (you plus your bandmates).
 - **Label** (reputation 65 and 10,000 fans): an advance of $10,000 + $2 per fan (up to $50,000), the Top studio, and National cities (with a manager). The label keeps 80% of streaming until the advance is paid back.
 - **Arenas and festivals** (reputation 85, 100,000 fans, and a label): offers only. Each Monday a 10% chance of each (one open at a time), 6 to 10 weeks out, answer within 5 days. An arena pays its flat fee ($20,000 to $30,000), an 18-song set, $5,000 production. A festival pays $5,000 to $15,000 for an 8-song afternoon slot to 30% to 60% of the grounds, production provided. Festivals: New Halston Music Fest, Crescent Riverfront Festival, Harborline Summer Fest.
-- **Awards season**: every December, in real calendar years. Nominations arrive on the first Monday of December; the ceremony is the last Saturday of December. "This year" and "new fans this year" start on January 1. Song of the Year (a release this year with recording quality 60+), Record of the Year (an EP or album this year averaging 55+), Breakout Act (2,000+ new fans this year). Win chance: (quality - 50) / 50, or new fans / 20,000, kept between 10% and 80%. Each win: +5 reputation.
+- **Awards season**: every December, in real calendar years. Nominations arrive on the first Monday of December; the ceremony is the last Saturday of December. "This year" and "new fans this year" start on January 1. Song of the Year (a release this year with recording quality 60+), Record of the Year (an EP or album this year averaging 55+), Breakout Act (2,000+ new fans this year). Strength: (quality - 50) / 50 (+0.1 for a Top 10 that year), or new fans / 20,000, kept between 10% and 80%.
+  - **Head to head:** each category you're nominated in has up to 5 nominees: you, your rivals with a qualifying record
+    (or 2,000+ new fans) that year, and the scene's biggest bands. Other bands' records are judged by their skills
+    ((Songwriting + Musicianship) / 2 as the quality).
+  - **One winner per category:** picked by strength cubed, so the strongest nominee usually wins but not always. Your
+    chance is your share (shown on the nominations). A rival that wins keeps count (shown on Career).
+  - Each win: +5 reputation.
+
+## The music scene
+
+You're not the only band in town. 50 made-up bands (names in content) share the venues, the charts, and the awards.
+
+- **Their sizes form a pyramid**, matched to venue tiers:
+
+| Size | Reputation | Bands |
+| --- | --- | --- |
+| Small room | 10 to 29 | 24 |
+| Club | 30 to 59 | 14 |
+| Theater | 60 to 84 | 7 |
+| Arena | 85+ | 2 |
+
+- **Their stats:**
+  - **Fans:** about 10 ^ (1.6 + 0.047 x reputation), give or take.
+  - **Skills:** 15 + 0.7 x reputation, give or take 8.
+  - **Members:** 3 to 5.
+  - **Home city:** more of them in Millbrook and the big cities.
+  - Each Monday their reputation drifts up to 1 point and their fans up to 3%, but they stay about their size.
+- **Rivals:** 3 of the bands are your rivals, from Millbrook. They start where you start (one 6 reputation behind,
+  one even, one 6 ahead).
+  - Each Monday they close 30% of the gap to your reputation (plus their offset) and to 0.7x / 1x / 1.4x your fans.
+  - **Records:** they put out an EP or album every 3 to 6 months once they reach reputation 10. When you release an
+    EP or album, there's a 35% chance one of them drops a record the same week (an Inbox note).
+  - **Opening slots:** each night there's a 20% chance a rival grabs an opening slot you haven't answered. Slots you
+    decline or let expire go to a rival too.
+  - **The Career screen** has a Rivals panel: you and the 3 rivals side by side (fame level, fans, reputation, latest
+    record, best chart spot this year, awards, next show).
+- **Venue calendars:** every venue from small rooms up (not in-stores or festivals) has other bands' shows booked. They
+  fill as far ahead as you can book (4 weeks, or 12 with a manager), for every city you've unlocked.
+  - **How often:** a chance per night of the week and tier. Small rooms and clubs: about 50 to 55% on Fridays and
+    Saturdays, 10 to 30% on other nights. Theaters and arenas have fewer shows.
+  - **Who plays:** a band the venue's size headlines (sometimes one a size up), usually a home-city band, with touring
+    bands (reputation 60+) anywhere. Clubs and bigger often have an opener one size down. A band plays at most once
+    every 2 days.
+  - **A night another band has is taken:** you can't book that venue that night.
+  - **Offers win:** opening slots, residencies, arena and festival offers, fill-ins, and tours come from the venue, so
+    other bands' shows move out of the way. An opening slot is on a real club show: the headliner stays and you open.
+- **Seeing a show:** each venue flyer on the Book screen lists its next 3 shows, with a ticket button.
+  - **The ticket:** costs the tier's ticket price ($8 small room, $12 club, $25 theater, $45 arena), paid when you buy
+    it, with no refunds (you can give it away from the Calendar). It books that evening.
+  - **Where:** in Millbrook when you're home, or in another city while you're there on a trip.
+  - **The night:** -10 energy, Networking +3, Musicianship +0.5, Performance +0.5, +2 morale, and a chance to meet
+    someone (your usual networking chance + 5% per venue tier).
 
 ## Audience, buzz and reputation
 
@@ -824,6 +878,13 @@ const state = {
   },
   releases: [],              // { id, type: 'single' | 'ep' | 'album', name, songIds, day, avgQuality,
                              //   promo: { id, week } or null, records: ['gold', 'platinum'], chart (albums chart, as songs) }
+  scene: {                   // the music scene (see The music scene)
+    // bands: { id: { id, name, homeCity, reputation, fans, musicianship, performance, songwriting, members, tier,
+    //                rival, rivalIndex, yearStartFans, awardsWon, nextReleaseDay } },
+    // rivals: [band ids], shows: [{ id, venueId, day, bandId, openerId, playerOpens }],
+    // releases: [{ id, bandId, type, name, lead, day, quality, tracks, streams, lastWeek, leadWeek, chart, leadChart }],
+    // nextShowId, nextReleaseId, filled: { cityId: last day filled }, rngState (the scene's own dice)
+  },
   charts: {                  // Sunday's Top 40 singles and Top 20 albums
     // day, singles: [entries], albums: [entries], pool: { singles, albums } (other acts), nextId,
     // moments: [{ day, kind, title }], week: { day, streams, pay }
@@ -878,12 +939,12 @@ Sixteen screens, most of them panels around one main Today view. The vertical sl
 | 7 | Weekly summary | Money in and out, fans, reputation change, warnings | Continue | Yes |
 | 8 | Inbox | Offers, replies, and events, with choices and expiry dates | Accept or decline | Yes |
 | 9 | Calendar | A 4-week grid with everything booked | Book, cancel, open an item | Yes |
-| 10 | Booking | Venues by city and tier, requirements, odds, expected crowd, deal choice | Send a request | Yes |
+| 10 | Booking | Venues by city and tier, requirements, odds, expected crowd, deal choice, each venue's coming shows by other bands | Send a request, buy a ticket | Yes |
 | 11 | People | Contacts and band, stats, relationship, satisfaction with reasons | Jam, hang out, invite, talk, remove | Yes |
 | 12 | Music | Writing (notebook and catalog with each song's streams), Releases (a discography of record sleeves, each opening a release page with streams, week-by-week chart, records, and tracklist; plus the release form with name and push), Charts (Top 40 singles, Top 20 albums) | Write, release, open a release | Yes |
 | 13 | Shop | Gear, merch stock, van, housing | Buy | No |
 | 14 | Map | Cities, fans and buzz in each | Plan travel | No |
-| 15 | Career | Milestones, fame level, lifetime stats, career card | Share | No |
+| 15 | Career | Milestones, fame level, your rivals side by side, lifetime stats, career card | Share | No |
 | 15b | Finances | Every dollar in and out for the last week, month, or 3 months: the band's show money (ticket sales, manager, each bandmate, you), your money in and out by category, what others covered, top earners and costs, a 13-week chart, and show-by-show profit with trips and tours grouped | Filter | No |
 | 16 | Settings and saves | Export, import, reset | Manage saves | Partly (export and import) |
 

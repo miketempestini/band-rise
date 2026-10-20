@@ -277,7 +277,8 @@ Game.ui.songs = {
               : (e.last < pos ? '<span class="chart-move chart-move--down">▼ ' + (pos - e.last) + '</span>' : '<span class="chart-move">=</span>'));
           var attrs = e.mine && e.releaseId ? ' class="chart-row--mine" data-action="openRelease" data-release="' + e.releaseId + '" title="Open this release"' : '';
           return '<tr' + attrs + '><td class="num chart-pos">' + pos + '</td><td>' + move + '</td><td class="chart-title">' + h.escape(e.title) + '</td>' +
-            '<td>' + h.escape(e.artist) + '</td><td class="num">' + e.peak + '</td><td class="num">' + e.weeks + '</td><td class="num">' + self.short(e.streams) + '</td></tr>';
+            '<td>' + h.escape(e.artist) + (e.bandId && state.scene.bands[e.bandId] && state.scene.bands[e.bandId].rival ? ' <span class="badge badge--rival">Rival</span>' : '') +
+            '</td><td class="num">' + e.peak + '</td><td class="num">' + e.weeks + '</td><td class="num">' + self.short(e.streams) + '</td></tr>';
         }).join('') + '</tbody></table></div>';
     };
     return '<p class="hint">Charts for the week ending ' + h.dateLabel(c.day) + '. ' + (bestLine ? bestLine + '.' : 'None of your music is on the charts this week.') + '</p>' +
