@@ -4,6 +4,22 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14n: Fix: unlocking the new cities (2026-10-20)
+- **The problem (reported by the owner):** there seemed to be no way to unlock the new National and International
+  cities.
+  - International cities only counted tours planned by the manager. Tours you booked yourself, show by show, never
+    counted, and neither did any tour from before tours were recorded.
+  - New cities in an update stayed locked until the next End Day, even when you qualified. Their Map card showed a
+    "Book here" button that led to a greyed-out tab.
+- **The fix:**
+  - **Any tour counts:** international cities open after tour shows in 2 different National cities, whether you booked
+    the tour or the manager did. A tour is 3+ out-of-town shows in 10 days. The locked card names the National cities
+    you've already played on tour.
+  - **Credit for older saves:** they get credit for the National cities they've already played.
+  - **Unlocks on load:** a save opens any city you qualify for as soon as it loads. A card you qualify for that's still
+    waiting says it opens at the end of today.
+- **Saves:** version 22. **Tests:** 364 passing. **Version tag:** `v22-2026-10-20c`.
+
 ### Session 14m: Going global: more cities, a World map, and a private jet (2026-10-20)
 - **More cities:**
   - 3 more National cities: Ironridge, Marlow Bay (with a beach festival), and Duskfield. Each has an open mic, a club,

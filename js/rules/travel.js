@@ -138,19 +138,18 @@ Game.rules.travel = {
     if (region === 'international') {
       var n = Game.balance.geography.internationalMinNationalCities;
       if (Game.rules.travel.bestNationalTour(state) < n) {
-        return 'Needs a finished tour that played ' + n + ' or more National cities (your best so far: ' + Game.rules.travel.bestNationalTour(state) + ').';
+        var played = Object.keys(state.stats.nationalTourCities).map(function (c) { return Game.content.cities[c].name; });
+        return 'Needs tour shows in ' + n + ' different National cities (a tour is ' + Game.balance.tours.minShows + '+ out-of-town shows in ' +
+          Game.balance.tours.withinDays + ' days). So far: ' + (played.length ? played.join(', ') : 'none') + '.';
       }
       return null;
     }
     return need.length ? 'Needs ' + need.join(' and ') + '.' : null;
   },
 
-  // The most National cities any finished tour of yours played (a finished tour has its wrap-up in result).
+  // How many different National cities you've played on a tour (any tour: one you booked yourself, or the manager's).
   bestNationalTour: function (state) {
-    return state.tours.filter(function (t) { return t.result; }).reduce(function (best, t) {
-      var national = t.cities.filter(function (c, i, all) { return all.indexOf(c) === i && Game.content.cities[c].region === 'national'; }).length;
-      return Math.max(best, national);
-    }, 0);
+    return Object.keys(state.stats.nationalTourCities).length;
   },
 
   // True if you've played a show in any city of a region.
@@ -606,6 +605,8 @@ Game.rules.travel = {
     var log = [];
     var cityId = tr.cityOfVenue(entry.venueId);
     var tour = tr.isTourShow(s, entry);
+    // A National city played on a tour counts toward opening the world (2 of them).
+    if (tour && Game.content.cities[cityId].region === 'national') s.stats.nationalTourCities[cityId] = s.day;
 
     // Word of mouth: the other cities in this region hear about the show; on a tour, the next city on the route
     // gets a bigger boost.

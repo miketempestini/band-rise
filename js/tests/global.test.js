@@ -85,22 +85,44 @@
     t.equal(tr.legGas('hometown', 'harlowFalls', s), Game.balance.travel.gasRoundTrip.near / 2, 'the jet doesn\'t change driving');
   });
 
-  Game.test('Unlocking the world: a finished tour that played 2 or more National cities', function (t) {
+  Game.test('Unlocking the world: tour shows in 2 different National cities (any tour, yours or the manager\'s)', function (t) {
     var tr = Game.rules.travel;
     var s = worldState();
     s.manager.hired = true;
     s.label.signed = true;
-    t.ok(/2 or more National cities/.test(tr.cityUnlockProblem(s, 'lindenberg')), tr.cityUnlockProblem(s, 'lindenberg'));
-    s.tours.push({ id: 't1', name: null, cities: ['newHalston', 'harlowFalls', 'redstone'], firstDay: 1, lastDay: 5, shows: 3, result: { shows: 3 } });
-    t.ok(tr.cityUnlockProblem(s, 'lindenberg'), 'one National city isn\'t enough');
-    s.tours.push({ id: 't2', name: null, cities: ['newHalston', 'kingsport', 'redstone'], firstDay: 10, lastDay: 15, shows: 3, result: null });
-    t.ok(tr.cityUnlockProblem(s, 'lindenberg'), 'a tour that isn\'t finished doesn\'t count');
-    s.tours[1].result = { shows: 3 };
-    t.equal(tr.cityUnlockProblem(s, 'lindenberg'), null, 'two National cities on a finished tour: open');
-    var r = tr.updateCityUnlocks(s);
-    t.ok(Object.keys(Game.content.cities).every(function (id) { return Game.content.cities[id].region !== 'international' || r.state.cities[id].unlocked; }), 'every international city opens');
-    t.ok(r.state.toasts.some(function (x) { return x.id === 'cities-international'; }), 'a banner');
-    t.ok(r.state.inbox.some(function (m) { return m.kind === 'note' && /International cities are open/.test(m.data.title); }), 'an Inbox note');
+    Object.keys(s.cities).forEach(function (id) { if (Game.content.cities[id].region === 'national') s.cities[id].unlocked = true; });
+    t.ok(/2 different National cities/.test(tr.cityUnlockProblem(s, 'lindenberg')), tr.cityUnlockProblem(s, 'lindenberg'));
+    // A self-booked tour: 3 out-of-town shows in a few days, two of them in National cities.
+    var venueIn = function (city) { return Object.keys(Game.content.venues).filter(function (v) { return Game.content.venues[v].cityId === city && Game.content.venues[v].tier === 2; })[0]; };
+    s.stats.outOfTownShowDays = [s.day + 1, s.day + 2];
+    var r = tr.afterShow(s, { id: 'e1', day: s.day + 3, block: 'evening', type: 'gig', venueId: venueIn('newHalston') });
+    t.ok(r.state.stats.nationalTourCities.newHalston !== undefined, 'a tour show in New Halston counts');
+    t.ok(tr.cityUnlockProblem(r.state, 'lindenberg'), 'one National city isn\'t enough');
+    var one = Game.util.clone(s);
+    one.stats.outOfTownShowDays = [];
+    t.equal(tr.afterShow(one, { id: 'e2', day: s.day + 3, block: 'evening', type: 'gig', venueId: venueIn('kingsport') }).state.stats.nationalTourCities.kingsport, undefined,
+      'a single show (not a tour) doesn\'t count');
+    var r2 = tr.afterShow(r.state, { id: 'e3', day: s.day + 4, block: 'evening', type: 'gig', venueId: venueIn('kingsport') });
+    t.equal(tr.cityUnlockProblem(r2.state, 'lindenberg'), null, 'two National cities on tour: open');
+    var opened = tr.updateCityUnlocks(r2.state);
+    t.ok(Object.keys(Game.content.cities).every(function (id) { return Game.content.cities[id].region !== 'international' || opened.state.cities[id].unlocked; }), 'every international city opens');
+    t.ok(opened.state.toasts.some(function (x) { return x.id === 'cities-international'; }), 'a banner');
+    t.ok(opened.state.inbox.some(function (m) { return m.kind === 'note' && /International cities are open/.test(m.data.title); }), 'an Inbox note');
+  });
+
+  Game.test('Saves: a version 21 save gets credit for National cities it played, and cities it qualifies for open on load', function (t) {
+    var s = worldState(5);
+    s.manager.hired = true;
+    s.label.signed = true;
+    s.stats.citiesPlayed = { newHalston: 2, crescentCity: 1 };
+    var old = JSON.parse(JSON.stringify(s));
+    old.version = 21;
+    delete old.stats.nationalTourCities;
+    var loaded = Game.save.parse(JSON.stringify(old));
+    t.ok(loaded.ok, 'loads');
+    t.sameContents(Object.keys(loaded.state.stats.nationalTourCities).sort(), ['crescentCity', 'newHalston'], 'credit for the National cities played');
+    t.ok(loaded.state.cities.ironridge.unlocked, 'a new National city opens right away (manager and label)');
+    t.ok(loaded.state.cities.lindenberg.unlocked, 'and the world opens');
   });
 
   Game.test('Milestone 19 and the jet: your first show abroad unlocks the private jet in the Shop', function (t) {

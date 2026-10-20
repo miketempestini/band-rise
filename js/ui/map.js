@@ -192,6 +192,7 @@ Game.ui.map = {
       (cs.fans > 0 && fadeDays >= Game.balance.fans.fadeAfterDays ? '<p class="panel__warn">No show or release here in ' + fadeDays + ' days: fans are fading.</p>' : '') +
       '<p class="hint">' + venueList + '</p>' +
       (problem ? '<p class="pick__reason">' + h.escape(problem) + '</p>'
+        : !cs.unlocked ? '<p class="hint">You qualify: it opens at the end of today.</p>'
         : (cityId === 'hometown' || drive ? '<button class="btn btn--small btn--primary" data-action="bookCity" data-city="' + cityId + '">Book here</button>' : '')) +
       '</div>';
   }

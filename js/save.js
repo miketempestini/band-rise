@@ -99,6 +99,22 @@ Game.save = {
       if (!hasLocals) Game.rules.scene.addLocalBands(data.scene, data.seed);
     }
 
+    // Version 22 counts National cities played on any tour (not only the manager's) toward opening the world. Older
+    // saves get credit for the National cities on their finished tours, and any National city they've played (tours
+    // you booked yourself weren't recorded before).
+    if (fromVersion < 22) {
+      var credit = data.stats.nationalTourCities;
+      data.tours.forEach(function (t) {
+        if (t.result) t.cities.forEach(function (c) { if (Game.content.cities[c].region === 'national') credit[c] = t.lastDay; });
+      });
+      Object.keys(data.stats.citiesPlayed).forEach(function (c) {
+        if (data.stats.citiesPlayed[c] > 0 && Game.content.cities[c] && Game.content.cities[c].region === 'national' && credit[c] === undefined) credit[c] = data.day;
+      });
+    }
+
+    // Cities you already qualify for open right away (new cities in an update shouldn't wait for the next End Day).
+    data = Game.rules.travel.updateCityUnlocks(data).state;
+
     data.version = Game.balance.save.version;
     return data;
   },

@@ -96,6 +96,7 @@ Game.state = {
       stats: { gigsPlayed: 0, bestResult: null, biggestCrowd: 0, totalEarned: 0, openMicsPlayed: 0, paidShows: 0,
                outOfTownShowDays: [], // the day of every out-of-town show you've played (for tours)
                citiesPlayed: {},      // cityId: shows played there
+               nationalTourCities: {}, // National cities you've played on a tour (any tour, yours or the manager's): cityId: day
                vansBought: 0,
                yearStartFans: 0,
                biggestShow: null },  // your biggest crowd's show: { venueId, crowd, day }   // total fans when this game year began (for the Breakout Act award)

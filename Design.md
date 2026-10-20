@@ -483,7 +483,7 @@ Hollow Records is the odd one out: it pays nothing, but merch sells at double th
 | Mid cities (2) | 2 blocks | First Near show and reputation 40 | Usually an overnight |
 | Far cities (4+) | A full day | Reputation 50 and a van | Needs vacation days or no day job |
 | National cities (6) | Flights (2 blocks) | Manager and a label | Arenas and festivals |
-| International cities (15, in 5 countries) | Flights abroad (3 blocks) | A finished tour that played 2+ National cities | Clubs and theaters everywhere; arenas in each capital; 3 festivals |
+| International cities (15, in 5 countries) | Flights abroad (3 blocks) | Tour shows in 2 different National cities (any tour) | Clubs and theaters everywhere; arenas in each capital; 3 festivals |
 
 Each city keeps its own fans, buzz, an open mic , and 2 to 4 venues. Each city also has a fan ceiling: 50,000 for the hometown, 20,000 to 40,000 for nearby cities, up to 500,000 for big national cities.
 
@@ -534,7 +534,7 @@ Every international city has an open mic, a club, and a theater.
 - **The World map:** a toggle on the Map screen shows a drawn world map with every country, city pins sized by fans,
   and flight paths from Millbrook.
 
-Out of town, small rooms, clubs, and theaters book for a share of the door (cover nights and in-stores are hometown only), and theaters need a release. Opening slots, residencies, and fill-ins stay in the hometown. National cities open with a manager and a label; International cities after a finished tour that played 2 or more National cities.
+Out of town, small rooms, clubs, and theaters book for a share of the door (cover nights and in-stores are hometown only), and theaters need a release. Opening slots, residencies, and fill-ins stay in the hometown. National cities open with a manager and a label; International cities after you've played tour shows in 2 different National cities (a tour you booked yourself or the manager's: 3+ out-of-town shows in 10 days).
 
 ### Tours
 

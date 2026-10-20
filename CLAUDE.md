@@ -336,7 +336,7 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   from `travel.legKind(from, to)` ('drive' | 'national' | 'international' | 'hop'); `legBlocks(from, to, state)` and
   `legGas(from, to, state)` need `state` for the band size and the private jet (`player.gear.jet`, `travel.hasJet`).
   Pass state everywhere you lay out or price travel. Jet lag is applied in `travelBlock` (and counted in `preview`).
-  International cities open with `travel.bestNationalTour` (a finished tour, `tour.result`, with 2+ National cities).
+  International cities open with `travel.bestNationalTour`: 2+ National cities in `stats.nationalTourCities` (set in `travel.afterShow` for any tour show). Saves run `travel.updateCityUnlocks` on load, so new cities open right away.
   Milestone 19 `goingGlobal` unlocks the jet (`merch.jetItem`). The Map screen has `app.mapView` ('home' | 'world').
   Auto-booking stays at home (`manager.rulesProblem`); tours, the Book screen, and big-show offers go abroad. Region buzz
   abroad is by country. Local bands abroad are added by `scene.addLocalBands` (their own dice), and other bands only
