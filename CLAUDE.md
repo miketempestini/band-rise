@@ -350,6 +350,8 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   `js/app/tourBuilder.js`). `manager.requestBuiltTour` stores a tour request with `stops: [{ cityId, venueId }]`;
   `processTourRequests` plans it with `manager.planBuiltTour` (venue odds with fallbacks, then `planTour(..., venueFor)`).
   The proposal has `built: true` and `changes` (what the venues said). Map pins carry `data-city`.
+- **Calendar tour lines**: `tours.calendarSpans(state)` (manager tours from `state.tours`, plus self-booked trips with 3+
+  shows) feeds `.cal__tour` strips in `Game.ui.calendar.cellHtml`.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

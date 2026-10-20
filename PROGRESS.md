@@ -4,6 +4,16 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14p: Tour lines on the Calendar (2026-10-20)
+- **The line:** a booked tour shows on the Calendar as a solid yellow line from its first show to its last, so you can
+  see at a glance how long the band is on the road.
+  - The tour's name runs along the line where it starts (and at the start of each week's row), and hovering shows its
+    dates.
+  - Rounded ends mark the start and the finish.
+- **Which tours:** the manager's tours and the Tour Builder's, plus tours you booked yourself (a trip with 3+ shows).
+  The rule is `Game.rules.tours.calendarSpans`.
+- **Tests:** 374 passing (1 new). **Version tag:** `v23-2026-10-20e`.
+
 ### Session 14o: Setlist strategy and the Tour Builder (2026-10-20)
 - **Running order matters:**
   - **Opener and closer:** opening and closing with one of the set's strongest songs is +3 each. In sets of 4 or more,

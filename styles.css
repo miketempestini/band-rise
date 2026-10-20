@@ -1251,6 +1251,18 @@ button.recap:hover { transform: none; }
 .cal__day { display: flex; flex-direction: column; gap: 2px; min-width: 0; min-height: 96px; padding: 5px; font: inherit; text-align: left; color: var(--ink);
   background: none; border: none; border-right: 1px solid var(--paper-rule); border-bottom: 1px solid var(--paper-rule); cursor: pointer; }
 .cal__day:nth-child(7n) { border-right: none; }
+/* A tour's line: solid show-yellow tape running across every day from the first show to the last (it runs over the
+   cell edges so the days join up, and is rounded where the tour starts and ends). */
+.cal__tour { position: relative; display: block; margin: 0 -6px 2px -5px; padding: 1px 6px; overflow: hidden;
+  font: 700 10px/1.4 var(--font-head); letter-spacing: 0.02em; white-space: nowrap; text-overflow: ellipsis;
+  color: var(--ink); background: var(--tape-show); }
+.cal__tour { overflow: visible; }
+.cal__tour-name { position: absolute; z-index: 2; left: 6px; top: 1px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cal__tour--start { margin-left: 0; border-radius: 8px 0 0 8px; }
+.cal__tour--end { margin-right: 0; border-radius: 0 8px 8px 0; }
+.cal__tour--start.cal__tour--end { border-radius: 8px; }
+.cal__day:nth-child(7n) .cal__tour { margin-right: -5px; }
+.cal__day:nth-child(7n) .cal__tour--end { margin-right: 0; }
 .cal__day:hover { background: color-mix(in srgb, var(--highlighter) 60%, transparent); }
 .cal__day--selected { background: color-mix(in srgb, var(--highlighter) 70%, transparent); box-shadow: inset 0 0 0 2px var(--ink); }
 .cal__day--past { background: repeating-linear-gradient(135deg, rgba(31, 34, 64, 0.06) 0 6px, transparent 6px 12px); }

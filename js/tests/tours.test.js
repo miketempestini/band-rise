@@ -175,4 +175,21 @@
       'tag ' + (Game.files && Game.files.tag) + ' should start with v' + Game.balance.save.version + '-');
   });
 
+
+  Game.test('Calendar tour lines: manager tours and self-booked tours span their first show to their last', function (t) {
+    var s = Game.rules.career.startCareer('Test', 'guitar', 1).state;
+    s.tours.push({ id: 'tourA', name: 'The Line Tour', cities: ['harlowFalls', 'redstone', 'sableBay'], firstDay: 20, lastDay: 26, shows: 3, result: null });
+    // A trip you booked yourself: 3 shows, no tourId.
+    ['e1', 'e2', 'e3'].forEach(function (id, i) {
+      s.entries[id] = { id: id, day: 40 + i * 2, block: 'evening', type: 'gig', venueId: ['theDepot', 'signalHouse', 'theAvalon'][i], deal: 'door', songIds: [], status: 'booked' };
+    });
+    s.trips.t9 = { id: 't9', showIds: ['e1', 'e2', 'e3'], cities: ['harlowFalls', 'cedarJunction', 'ashfordSprings'], startT: 0, endT: 0 };
+    s.trips.t10 = { id: 't10', showIds: ['e1'], cities: ['harlowFalls'], startT: 0, endT: 0 }; // a one-show trip isn't a tour
+    var spans = Game.rules.tours.calendarSpans(s);
+    t.equal(spans.length, 2, 'two tours');
+    t.equal(spans[0].label, 'The Line Tour', 'the manager\'s tour by name');
+    t.equal(spans[0].firstDay + '-' + spans[0].lastDay, '20-26', 'first show to last');
+    t.equal(spans[1].firstDay + '-' + spans[1].lastDay, '40-44', 'the self-booked tour too');
+    t.ok(/^Tour of Harlow Falls, Cedar Junction, and Ashford Springs$/.test(spans[1].label), spans[1].label);
+  });
 })();

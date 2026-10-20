@@ -24,8 +24,9 @@ Game.ui.calendar = {
 
     var head = Game.content.calendar.dayNames.map(function (n) { return '<div class="cal__dow">' + n.slice(0, 3) + '</div>'; }).join('');
     var cells = '';
+    var spans = Game.rules.tours.calendarSpans(state);
     for (var d = start; d < start + pageWeeks * b.time.daysPerWeek; d++) {
-      cells += self.cellHtml(state, d, d === selected, d === start);
+      cells += self.cellHtml(state, d, d === selected, d === start, spans);
     }
 
     var jobLine = job.status === 'none'
@@ -105,16 +106,27 @@ Game.ui.calendar = {
   },
 
   // first: true for the first cell on the page (it always shows its month).
-  cellHtml: function (state, day, isSelected, first) {
+  cellHtml: function (state, day, isSelected, first, spans) {
     var self = Game.ui.calendar;
     var past = day < state.day;
+    // A tour's line: a solid strip from its first show to its last, named where it starts (and at the start of each week).
+    var tours = (spans || []).filter(function (t) { return day >= t.firstDay && day <= t.lastDay; }).map(function (t) {
+      var start = day === t.firstDay, end = day === t.lastDay;
+      var named = start || first || Game.rules.day.dayOfWeek(day) === 0;
+      // The name runs along the line over the next days of the tour (up to the end of the week's row).
+      var days = Math.min(t.lastDay - day + 1, Game.balance.time.daysPerWeek - Game.rules.day.dayOfWeek(day));
+      return '<span class="cal__tour' + (start ? ' cal__tour--start' : '') + (end ? ' cal__tour--end' : '') + '" title="' +
+        Game.ui.helpers.escape(t.label + ': ' + Game.rules.day.shortDate(t.firstDay) + ' to ' + Game.rules.day.shortDate(t.lastDay)) + '">' +
+        (named ? '<span class="cal__tour-name" style="max-width: calc(' + days * 100 + '% - 12px)">' + Game.ui.helpers.escape(t.label) + '</span>' : '') +
+        '&nbsp;</span>';
+    }).join('');
     var rows = Game.balance.time.blocks.map(function (block) {
       var info = self.blockInfo(state, day, block);
       return '<span class="cal__block cal__block--' + info.kind + '">' + (info.text ? Game.ui.helpers.escape(info.text) : '&nbsp;') + '</span>';
     }).join('');
     return '<button class="cal__day' + (day === state.day ? ' cal__day--today' : '') + (past ? ' cal__day--past' : '') +
       (isSelected ? ' cal__day--selected' : '') + '" data-action="selectDay" data-day="' + day + '">' +
-      '<span class="cal__date">' + Game.ui.calendar.cellDate(day, first) + (day === state.day ? ' · Today' : '') + '</span>' + rows + '</button>';
+      '<span class="cal__date">' + Game.ui.calendar.cellDate(day, first) + (day === state.day ? ' · Today' : '') + '</span>' + tours + rows + '</button>';
   },
 
   // A calendar cell's date: just the day of the month, with the month's short name on the 1st (and on the page's first cell).

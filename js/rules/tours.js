@@ -25,6 +25,25 @@ Game.rules.tours = {
     return Game.rules.manager.tourLabel(tour.name, tour.cities);
   },
 
+  // Tours to draw as a line across the Calendar: [{ id, label, firstDay, lastDay }] from the first show to the last.
+  // Tours the manager booked (state.tours), plus tours you booked yourself: a trip with 3+ shows that aren't part of a
+  // manager's tour.
+  calendarSpans: function (state) {
+    var spans = state.tours.map(function (t) {
+      return { id: t.id, label: Game.rules.tours.label(t), firstDay: t.firstDay, lastDay: t.lastDay };
+    });
+    Object.keys(state.trips).forEach(function (id) {
+      var shows = state.trips[id].showIds.map(function (sid) { return state.entries[sid]; })
+        .filter(function (e) { return e && e.type === 'gig' && !e.tourId; });
+      if (shows.length < Game.balance.tours.minShows) return;
+      var days = shows.map(function (e) { return e.day; });
+      var cities = shows.map(function (e) { return Game.content.venues[e.venueId].cityId; })
+        .filter(function (c, i, all) { return all.indexOf(c) === i; });
+      spans.push({ id: id, label: Game.rules.manager.tourLabel(null, cities), firstDay: Math.min.apply(null, days), lastDay: Math.max.apply(null, days) });
+    });
+    return spans;
+  },
+
   // Where a tour stands today: 'ahead', 'now' (between its first and last show), or 'done'.
   status: function (state, tour) {
     if (tour.result) return 'done';
