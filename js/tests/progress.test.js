@@ -30,7 +30,7 @@
     s = met.state;
     s.people[met.personId].relationship = 60;
     s.people[met.personId].skill = 20;
-    s = Game.rules.people.invite(s, met.personId).state;
+    s = Game.rules.people.invite(Game.testOpenRole(s, met.personId), met.personId).state;
     s.day = 1;
     s = Game.rules.gigs.playGig(s, 'rustyNail', Game.rules.gigs.suggestSet(s, 2), 100).state;
     s = Game.rules.gigs.playGig(s, 'backRoom', Game.rules.gigs.suggestSet(s, 6), 100, { deal: 'guarantee' }).state;

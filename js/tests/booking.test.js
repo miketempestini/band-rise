@@ -104,7 +104,7 @@
     s.people[met.personId].relationship = 60;
     s.people[met.personId].skill = 20;
     s.people[met.personId].trait = 'easygoing';
-    s = Game.rules.people.invite(s, met.personId).state;
+    s = Game.rules.people.invite(Game.testOpenRole(s, met.personId), met.personId).state;
     var show = booked(s, 'backRoom', s.day + 10, 'door');
     var e = show.state.entries[show.entryId];
     var before = show.state.player.cash;
@@ -177,7 +177,7 @@
     s = met.state;
     s.people[met.personId].relationship = 60;
     s.people[met.personId].skill = 20;
-    s = Game.rules.people.invite(s, met.personId).state;
+    s = Game.rules.people.invite(Game.testOpenRole(s, met.personId), met.personId).state;
     var show = booked(s, 'backRoom', s.day + 10, 'door');
     var r = Game.rules.booking.playShow(show.state, show.state.entries[show.entryId], 0);
     t.ok(r.noShow, 'no-show');

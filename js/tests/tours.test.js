@@ -115,7 +115,7 @@
       var met = Game.rules.people.meet(s);
       s = met.state;
       s.people[met.personId].relationship = 60; s.people[met.personId].skill = 40; s.people[met.personId].trait = trait;
-      s = Game.rules.people.invite(s, met.personId).state;
+      s = Game.rules.people.invite(Game.testOpenRole(s, met.personId), met.personId).state;
       s.people[met.personId].satisfaction = 50;
       ids.push(met.personId);
     });

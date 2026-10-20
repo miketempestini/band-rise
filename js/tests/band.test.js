@@ -20,7 +20,7 @@
       s = met.state;
       var p = s.people[met.personId];
       p.relationship = 60; p.skill = 40; p.trait = trait; p.reliability = 100; p.ambition = 50;
-      s = Game.rules.people.invite(s, met.personId).state;
+      s = Game.rules.people.invite(Game.testOpenRole(s, met.personId), met.personId).state;
       ids.push(met.personId);
     });
     return { state: s, ids: ids };
@@ -219,4 +219,36 @@
     t.equal(loaded.state.version, Game.balance.save.version);
   });
 
+
+  Game.test('One of each instrument: you can\'t invite a second player of your instrument or of a member\'s', function (t) {
+    var people = Game.rules.people;
+    var s = Game.rules.career.startCareer('Test', 'guitar', 3).state;
+    s.player.reputation = 100;
+    var contact = function (role) {
+      var met = people.meet(s);
+      s = met.state;
+      s.people[met.personId].relationship = 90;
+      s.people[met.personId].role = role;
+      return met.personId;
+    };
+    var guitarist = contact('guitar');
+    t.ok(/You already play guitar/.test(people.inviteProblem(s, guitarist)), people.inviteProblem(s, guitarist));
+    var drummer = contact('drums');
+    s = people.invite(s, drummer).state;
+    var drummer2 = contact('drums');
+    t.ok(/already has a drummer/.test(people.inviteProblem(s, drummer2)), people.inviteProblem(s, drummer2));
+    var singer = contact('vocals');
+    t.equal(people.inviteProblem(s, singer), null, 'a singer is welcome (you play guitar)');
+    t.sameContents(people.openRoles(s), ['bass', 'keys', 'vocals'], 'still needed: bass, keys, vocals');
+    s = people.remove(s, drummer).state;
+    t.equal(people.inviteProblem(s, drummer2), null, 'after the drummer leaves, a new drummer can join');
+  });
+
+  Game.test('People you meet lean toward the instruments your band still needs', function (t) {
+    var s = Game.rules.career.startCareer('Test', 'bass', 4).state;
+    var rng = Game.rng.create(9);
+    var counts = {};
+    for (var i = 0; i < 600; i++) { var r = Game.rules.people.pickRole(s, rng); counts[r] = (counts[r] || 0) + 1; }
+    t.ok(counts.drums > counts.bass * 2, 'drummers (' + counts.drums + ') far more often than bassists (' + counts.bass + ') when you play bass');
+  });
 })();

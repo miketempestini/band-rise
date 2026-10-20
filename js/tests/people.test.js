@@ -23,7 +23,7 @@
     var s = freshState(seed);
     s.player.reputation = 20; // enough to invite players up to skill 50
     var added = addPerson(s, Object.assign({ relationship: 60, skill: 30, trait: 'diva', reliability: 100, ambition: 30 }, stats || {}));
-    s = Game.rules.people.invite(added.state, added.id).state;
+    s = Game.rules.people.invite(Game.testOpenRole(added.state, added.id), added.id).state;
     return { state: s, id: added.id };
   }
 
@@ -151,7 +151,7 @@
     s = added.state;
     var cover = Game.rules.songs.playable(s)[0].id;
     s.songs[cover].tightness = 10;
-    var r = Game.rules.people.invite(s, added.id);
+    var r = Game.rules.people.invite(Game.testOpenRole(s, added.id), added.id);
     t.ok(r.firstMember, 'first member');
     t.equal(r.state.people[added.id].status, 'member');
     t.equal(r.state.band.memberIds.length, 1);
@@ -210,7 +210,7 @@
     var s = band.state;
     s.day = 20; // in the band 20 days, never gigged
     var flaky = addPerson(s, { relationship: 60, skill: 20, trait: 'flaky' });
-    s = Game.rules.people.invite(flaky.state, flaky.id).state;
+    s = Game.rules.people.invite(Game.testOpenRole(flaky.state, flaky.id), flaky.id).state;
     s = weeklyCheck(s);
     // Workhorse: -5 no gig, -3 clash with Flaky, -3 fewer than 2 rehearsals = -11
     t.equal(s.people[band.id].satisfaction, 59, '70 - 11');
@@ -295,7 +295,7 @@
     var band = withMember({ trait: 'easygoing' });
     var s = band.state;
     var second = addPerson(s, { relationship: 60, skill: 20, trait: 'diva' });
-    s = Game.rules.people.invite(second.state, second.id).state;
+    s = Game.rules.people.invite(Game.testOpenRole(second.state, second.id), second.id).state;
     s = Game.rules.people.remove(s, band.id).state;
     t.equal(s.people[band.id].status, 'former');
     t.equal(s.people[second.id].satisfaction, 65, 'other member -5');

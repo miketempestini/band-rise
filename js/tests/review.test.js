@@ -36,7 +36,7 @@
       s = met.state;
       var p = s.people[met.personId];
       p.relationship = 60; p.skill = 40; p.trait = 'easygoing'; p.reliability = 100; p.ambition = 50;
-      s = Game.rules.people.invite(s, met.personId).state;
+      s = Game.rules.people.invite(Game.testOpenRole(s, met.personId), met.personId).state;
       ids.push(met.personId);
     }
     return { state: s, ids: ids };

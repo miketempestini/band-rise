@@ -93,11 +93,27 @@ Game.rules.people = {
   },
 
   // Why you can't invite someone, or null if you can.
+  // Who already plays a role in the band: 'you' (your own instrument), a member's id, or null if the spot is open.
+  // A band has one of each: guitar, bass, drums, keys, and vocals.
+  roleTakenBy: function (state, role) {
+    if (state.player.instrument === role) return 'you';
+    var member = state.band.memberIds.filter(function (id) { return state.people[id] && state.people[id].role === role; })[0];
+    return member || null;
+  },
+
   inviteProblem: function (state, personId) {
     var b = Game.balance.people;
     var p = state.people[personId];
     if (!p || p.status !== 'contact') return 'They\'re not one of your contacts.';
     if (state.band.memberIds.length >= b.maxBandMembers) return 'Your band is full (' + b.maxBandMembers + ' members besides you).';
+    // One of each instrument: a second guitarist (or whatever you play) can't join until that spot is free.
+    var taken = Game.rules.people.roleTakenBy(state, p.role);
+    if (taken) {
+      var role = Game.content.roles[p.role];
+      return taken === 'you'
+        ? 'You already play ' + role.name.toLowerCase() + ': the band only has room for one ' + role.person + '.'
+        : 'The band already has a ' + role.person + ' (' + state.people[taken].name + '). Remove them from the band first.';
+    }
     if (p.relationship < b.inviteMinRelationship) {
       return 'Needs relationship ' + b.inviteMinRelationship + ' (you have ' + Math.floor(p.relationship) + ').';
     }
@@ -155,6 +171,25 @@ Game.rules.people = {
 
   // ----- Changing things (each returns a new state) -----
 
+  // The roles nobody in the band plays yet (you count as your instrument).
+  openRoles: function (state) {
+    return Game.balance.people.roles.filter(function (role) { return !Game.rules.people.roleTakenBy(state, role); });
+  },
+
+  // A new person's role: any role, but the ones your band still needs are more likely (musicians looking for a band
+  // hear you're looking). Uses one roll of the dice.
+  pickRole: function (state, rng) {
+    var b = Game.balance.people;
+    var open = Game.rules.people.openRoles(state);
+    var weights = b.roles.map(function (role) { return open.indexOf(role) !== -1 ? b.openRoleWeight : 1; });
+    var roll = rng.next() * weights.reduce(function (sum, w) { return sum + w; }, 0);
+    for (var i = 0; i < b.roles.length; i++) {
+      roll -= weights[i];
+      if (roll < 0) return b.roles[i];
+    }
+    return b.roles[b.roles.length - 1];
+  },
+
   // Makes a brand-new person (not added to the game yet). rng: a random generator.
   generate: function (state, rng) {
     var b = Game.balance.people;
@@ -167,7 +202,7 @@ Game.rules.people = {
     if (trait === 'partyAnimal') reliability += t.partyAnimal.reliabilityPenalty;
     return {
       name: rng.pick(names.firstNames) + ' ' + rng.pick(names.lastNames),
-      role: rng.pick(b.roles),
+      role: Game.rules.people.pickRole(state, rng),
       skill: Math.min(b.statMax, skill),
       reliability: Game.util.clamp(reliability, 0, b.statMax),
       ambition: rng.int(b.ambitionRange.min, b.ambitionRange.max),

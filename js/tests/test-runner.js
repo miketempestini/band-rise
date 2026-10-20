@@ -15,6 +15,14 @@ window.Game = window.Game || {};
 Game._tests = []; // Every test registered with Game.test, in order
 
 // Registers a test to be run later.
+// Test helper: gives a person a role the band doesn't have yet (a band has one of each instrument), so tests that build
+// a band from random contacts can invite them. Changes s and returns it.
+Game.testOpenRole = function (s, personId) {
+  var p = s.people[personId];
+  if (p && Game.rules.people.roleTakenBy(s, p.role)) p.role = Game.rules.people.openRoles(s)[0] || p.role;
+  return s;
+};
+
 Game.test = function (name, fn) {
   Game._tests.push({ name: name, fn: fn });
 };

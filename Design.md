@@ -335,6 +335,10 @@ You meet people by going out. Each has a few stats and one personality trait, an
 ### Band rules
 
 - Up to 4 members besides you.
+- **One of each instrument:** a band has one guitar, one bass, one drums, one keys, and one vocals, and you count as
+  your own instrument. A guitar player can't invite another guitarist, and a band with a drummer can't invite a
+  second one until the first is removed. People you meet are 3 times as likely to play an instrument your band still
+  needs. The People screen shows which spots are open.
 - Solo you can play open mics and small rooms. Clubs and bigger need 3+ people on stage: a real 3-piece band to book (session players don't count), and 3 on stage on the night (session players can cover a missing member, or it's a no-show).
 - Band musicianship = the average skill of everyone, with your Musicianship counted twice.
 - When someone joins, every song's tightness drops 20 while they learn it.

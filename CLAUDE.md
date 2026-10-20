@@ -350,6 +350,9 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   `js/app/tourBuilder.js`). `manager.requestBuiltTour` stores a tour request with `stops: [{ cityId, venueId }]`;
   `processTourRequests` plans it with `manager.planBuiltTour` (venue odds with fallbacks, then `planTour(..., venueFor)`).
   The proposal has `built: true` and `changes` (what the venues said). Map pins carry `data-city`.
+- **One of each instrument**: `people.roleTakenBy(state, role)` ('you', a member id, or null) and `people.openRoles`;
+  `inviteProblem` refuses a taken role. New people lean toward open roles (`people.pickRole`, `balance.people.openRoleWeight`).
+  Tests that invite random contacts wrap the state in `Game.testOpenRole(s, personId)` (test-runner.js).
 - **Calendar tour lines**: `tours.calendarSpans(state)` (manager tours from `state.tours`, plus self-booked trips with 3+
   shows) feeds `.cal__tour` strips in `Game.ui.calendar.cellHtml`.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at

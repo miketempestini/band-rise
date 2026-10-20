@@ -477,7 +477,8 @@ Game.balance = {
   // People and bandmates
   // ---------------------------------------------------------------
   people: {
-    roles: ['guitar', 'bass', 'drums', 'keys', 'vocals'], // Slots a person can fill in a band
+    roles: ['guitar', 'bass', 'drums', 'keys', 'vocals'], // Slots a person can fill in a band (one of each, you included)
+    openRoleWeight: 3,               // People you meet are 3 times as likely to play a role your band still needs
     meetBaseChance: 0.30,            // Base chance to meet someone when networking
     meetNetworkingDivisor: 2,        // ...plus Networking / 2 percent
     openMicMeetChance: 0.20,         // Chance to meet someone at an open mic

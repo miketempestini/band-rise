@@ -42,6 +42,10 @@ Game.ui.people = {
           '<h3 class="panel__title">' + (state.band.name ? h.escape(state.band.name) : 'Your band') +
             ' · ' + members.length + ' of ' + b.people.maxBandMembers + ' members besides you' +
             (members.length ? ' · band musicianship ' + Game.util.round1(Game.rules.people.bandMusicianship(state)) : '') + '</h3>' +
+          '<p class="hint">One of each instrument: ' + Game.balance.people.roles.map(function (role) {
+            var who = Game.rules.people.roleTakenBy(state, role);
+            return Game.content.roles[role].name + ' ' + (who === 'you' ? '(you)' : (who ? '(' + h.escape(state.people[who].name) + ')' : '<strong>(open)</strong>'));
+          }).join(' · ') + '.</p>' +
           '<div class="people-grid">' + bandSection + '</div>' +
         '</div>' +
         '<div class="panel">' +

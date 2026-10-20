@@ -71,7 +71,10 @@ Game.balanceSim = {
     }
 
     // 5. The rest of the day.
-    var warmest = Game.rules.people.contacts(s).sort(function (a, b) { return b.relationship - a.relationship; })[0];
+    // Jam with the warmest contact who plays something the band still needs (a band has one of each instrument).
+    var open = Game.rules.people.openRoles(s);
+    var useful = Game.rules.people.contacts(s).filter(function (p) { return open.indexOf(p.role) !== -1; });
+    var warmest = (useful.length ? useful : Game.rules.people.contacts(s)).sort(function (a, b) { return b.relationship - a.relationship; })[0];
     if (!weekend) {
       if (Game.rules.gigs.openMicTonight(s)) s = tryPlan(s, 'evening', 'openMic');
       else if (s.band.memberIds.length && dow === 2) s = tryPlan(s, 'evening', 'rehearse');

@@ -4,6 +4,20 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14q: One of each instrument in the band (2026-10-20)
+- **The rule:** a band has one guitar, one bass, one drums, one keys, and one vocals, and you count as your own
+  instrument.
+  - You can't invite a second player of your instrument, or of a member's.
+  - To swap, remove the member first.
+  - The People screen lists each spot (yours, a member's, or open), and the invite button says why when it's refused.
+- **Meeting people:** people you meet are now 3 times as likely to play something your band still needs, so building a
+  band doesn't stall on duplicate guitarists.
+- **Simulated player:** it jams with contacts who play a missing instrument. Balance is unchanged: a 3-piece band by
+  day 41 and the first club show by day 66 in every run.
+- **Existing saves:** a band that already has two of the same instrument keeps them. The rule only stops new invites.
+- **Tests:** 376 passing (2 new). Older tests that build bands from random contacts now give each invite an open
+  instrument (`Game.testOpenRole`). **Version tag:** `v23-2026-10-20f`.
+
 ### Session 14p: Tour lines on the Calendar (2026-10-20)
 - **The line:** a booked tour shows on the Calendar as a solid yellow line from its first show to its last, so you can
   see at a glance how long the band is on the road.
