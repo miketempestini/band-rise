@@ -144,7 +144,8 @@ Game.rules.day = {
   //   4. Overnight: energy recovers, buzz fades, then tomorrow begins; rust and song fading are checked.
   // Returns { state, log, weekEnded }. The full report is saved in state.lastDayReport
   // for the Day results screen: { day, blocks: [{ block, title, lines }], overnight: [lines],
-  // finishedSongs: [songIds], gig: true if a gig was played } (these drive the reveal and gig result screens).
+  // finishedSongs: [songIds], gig: true if a gig was played, tourEnded: a tour id when a tour's last show was today }
+  // (these drive the gig result, tour wrap-up, and reveal screens).
   endDay: function (state) {
     if (state.gameOver) {
       return { state: state, log: [], weekEnded: false };
@@ -279,6 +280,12 @@ Game.rules.day = {
 
       report.blocks.push({ block: block, title: title, lines: lines });
     });
+
+    // A tour whose last show was today (or whose shows are all done) gets its wrap-up saved; the wrap-up screen
+    // follows the gig result.
+    var ended = Game.rules.tours.checkEnded(s);
+    s = ended.state;
+    if (ended.endedId) report.tourEnded = ended.endedId;
 
     // 2. End of the day.
     var endLines = report.overnight;

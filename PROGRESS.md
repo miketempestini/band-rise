@@ -4,6 +4,40 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14j: Code health, tour extras, matching faces (2026-10-20)
+- **Code health:**
+  - `js/main.js` (992 lines) is split into `js/app/`. `core.js` holds the state, screens, saving, and the End Day
+    flow, and 9 files add each area's actions.
+  - The Book screen's studio section moved to `js/ui/studio.js`.
+  - **One file list (`js/files.js`)** for both pages, with **one version tag** (change it before publishing). A new
+    file only needs adding there, and the tests load exactly what the game loads.
+  - A new **screens test** opens every screen with a new career and with the late-career save. A version-tag test
+    checks that the tag matches the save version.
+- **Action picker:** actions you can do now come first; unavailable ones (with their reasons) are at the bottom.
+- **Faces match names:** first names are grouped (usually given to women, to men, or to anyone), and faces come from
+  the matching group plus the androgynous faces. There are 8 new portraits (20 in all). Save version 18 re-matches
+  everyone in older saves.
+- **Auto-booking no longer clashes with tour proposals:** it skips an open proposal's dates, plus 2 days either side.
+- **Tours got four extras:**
+  - **Poster:** a shareable day-glo gig poster on a canvas, opened from Career's Tours list and the wrap-up.
+  - **Tour shirts:** 25 for $250 in the Shop while a tour is coming up. They sell for $30 on that tour at 1.5 times
+    the rate, and leftovers go for $10 after.
+  - **Wrap-up:** a settlement sheet after the last show (shows, crowd, money after costs, best night, fans per city),
+    with a gold record if the tour made money. It can be reopened from Career, where finished tours show a gold or
+    black record and tours still ahead show an outline.
+  - **Road mood by trait:**
+    - Party Animal: +2 every night
+    - Easygoing: −2 from the 4th night
+    - everyone else: −1 from the 8th night
+    These show on the People screen as one added-up line.
+- **Late-career test save regenerated** (save version 18) with 15 named tours and wrap-ups (11 made money), and faces
+  that match names. Checked end to end:
+  - bought tour shirts and played through a tour
+  - the shirts sold out
+  - the wrap-up appeared with a gold record
+- **Tests:** 326 passing (tours, portraits, auto-booking, picker order, version tag, and every screen). The version
+  tag is `v18-2026-10-20a`.
+
 ### Session 14i: Tour names and tours of any size (2026-10-19)
 - **Name your tours:** "Ask for a tour" on the Manager screen has an optional name box (up to 40 characters).
   - A blank name means no name; an unnamed tour goes by its cities ("Tour of Harlow Falls, Cedar Junction, and Port Ellery").
@@ -647,11 +681,6 @@ No gameplay numbers changed: the balance checks give the same results as before.
 - Promotion (flyers, social ads) still only reaches the hometown; the Big campaign and press push reach other cities.
 
 ## Known issues / open decisions
-- Auto-booking can clash with a tour proposal: if the manager's Monday auto-booking emails a venue for a date the
-  proposal uses, accepting the tour says that show "doesn't fit anymore" and you have to ask for a new plan. A fix
-  could be to skip auto-booking dates that an open tour proposal is using.
-- Portraits are given out without looking at names (names and faces are both random), so a name and a face may not
-  match what a player expects. If it bothers players, people could get a portrait pool that matches their name list.
 - **Touring profit after the manager and touring upgrades hasn't been measured yet.** The re-run of the touring
   simulation was stopped before it finished (owner's call). Re-run it to check that tours now pay and the manager is
   still worth 15%.

@@ -108,6 +108,8 @@ Game.balance = {
       planDays: 5,                   // The manager takes this many days to plan a tour
       leadDays: 35,                  // The first show is at least 5 weeks after the proposal arrives
       proposalExpiryDays: 3,         // Answer a tour proposal within this many days
+      autoBookGapDays: 2,            // Auto-booking leaves an open tour proposal's dates alone, from this many days
+                                     // before its first show to this many after its last (room for the drives)
       minCities: 3,                  // A tour request needs at least this many cities (there's no most: any city that
                                      // doesn't fit in your calendar is left out of the plan, with the reason)
       nameMaxLength: 40,             // Longest tour name you can type (the name is optional)
@@ -214,7 +216,10 @@ Game.balance = {
     cd:    { costEach: 3, price: 10, packSize: 50, packCost: 150 }, // Bought 50 at a time for $150
     // Chance each person in the crowd buys each item, by gig result
     buyChance: { rough: 0.01, solid: 0.03, great: 0.06, legendary: 0.09 },
-    recordStoreMultiplier: 2         // Hollow Records in-store: merch sells at double the rate
+    recordStoreMultiplier: 2,        // Hollow Records in-store: merch sells at double the rate
+    // Tour shirts (in the Shop while a tour is coming up): sold on that tour's shows at a higher price, and fans are
+    // more likely to buy one. Leftovers after the tour sell for less at any gig. One tour's shirts at a time.
+    tourShirt: { packSize: 25, packCost: 250, tourPrice: 30, buyBoost: 1.5, leftoverPrice: 10 }
   },
 
   // ---------------------------------------------------------------
@@ -395,6 +400,9 @@ Game.balance = {
     partyAnimal:  { gigScoreBonus: 5, reliabilityPenalty: -20 },
     diva:         { gigScoreBonus: 5 },                                       // Pay share is in bandPay.divaShares
     flaky:        { skillBonusWhenCreated: 15, missRehearsalChance: 0.25 },
+    // Road mood: each night on the road, bandmates' satisfaction changes by trait. Party Animals love it (every night);
+    // Easygoing ones miss home from their 4th night away; everyone else gets road-weary from the 8th.
+    roadMood: { partyAnimal: 2, easygoing: -2, easygoingFromNight: 4, others: -1, othersFromNight: 8 },
     clashes: [                       // Pairs of traits that don't get along
       ['workhorse', 'flaky'],
       ['perfectionist', 'partyAnimal'],
@@ -813,7 +821,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 17,                     // Save format version, bumped when the state shape changes
+    version: 18,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

@@ -49,13 +49,16 @@ Game.ui.actionPicker = {
     '</div>';
   },
 
-  // Step 1: every action, with costs, expected effect, and why it's greyed out (if it is).
+  // Step 1: every action, with costs, expected effect, and why it's greyed out (if it is). Available ones are listed first.
   actionListHtml: function (state, block) {
     var h = Game.ui.helpers;
     var picker = Game.ui.actionPicker;
     var planned = Game.rules.actions.plannedActionId(state, block);
 
-    var rows = Game.rules.actions.options(state, block).map(function (opt) {
+    // Actions you can do now come first (in their usual order), then the ones you can't (each says why).
+    var all = Game.rules.actions.options(state, block);
+    var sorted = all.filter(function (opt) { return opt.ok; }).concat(all.filter(function (opt) { return !opt.ok; }));
+    var rows = sorted.map(function (opt) {
       var a = opt.action;
       var isPlanned = planned === a.id;
       return '<button class="pick' + (isPlanned ? ' pick--current' : '') + '" data-action="pickAction" data-id="' + a.id + '"' +

@@ -55,23 +55,51 @@
     t.ok(true);
   });
 
-  Game.test('Portraits: everyone you meet gets a face, and nobody you know shares one while faces are left', function (t) {
+  // True when a person's face suits their first name.
+  function faceFits(p) {
+    return Game.rules.people.portraitPool(p.name.split(' ')[0]).indexOf(p.portrait) !== -1;
+  }
+
+  Game.test('Portraits: everyone gets a face that suits their name, and nobody you know shares one while faces are left', function (t) {
     var s = freshState();
-    var count = Game.content.art.portraits.length;
-    for (var i = 0; i < count; i++) s = Game.rules.people.meet(s).state;
-    var faces = Object.keys(s.people).map(function (id) { return s.people[id].portrait; });
-    t.ok(faces.every(function (f) { return Game.content.art.portraits.indexOf(f) !== -1; }), 'every face is a real portrait');
+    for (var i = 0; i < 8; i++) s = Game.rules.people.meet(s).state;
+    var people = Object.keys(s.people).map(function (id) { return s.people[id]; });
+    t.ok(people.every(faceFits), 'every face suits its name: ' + people.map(function (p) { return p.name.split(' ')[0] + '=' + p.portrait; }).join(', '));
+    var faces = people.map(function (p) { return p.portrait; });
     t.equal(faces.filter(function (f, i) { return faces.indexOf(f) === i; }).length, faces.length, 'no repeats');
-    t.equal(faces[0] === faces[1], false, 'faces don\'t come in list order');
+  });
+
+  Game.test('Portraits: names given to women get women\'s or androgynous faces, names given to men get men\'s or androgynous ones', function (t) {
+    var g = Game.content.art.portraitGroups;
+    var women = Game.rules.people.portraitPool('Maya');
+    var men = Game.rules.people.portraitPool('Theo');
+    t.ok(women.every(function (f) { return g.women.indexOf(f) !== -1 || g.androgynous.indexOf(f) !== -1; }), 'Maya: women or androgynous');
+    t.ok(men.every(function (f) { return g.men.indexOf(f) !== -1 || g.androgynous.indexOf(f) !== -1; }), 'Theo: men or androgynous');
+    t.equal(Game.rules.people.portraitPool('Sam').length, Game.content.art.portraits.length, 'Sam: any face');
+    t.ok(Game.content.names.firstNames.every(function (n) { return !!Game.content.names.nameGroups[n]; }), 'every first name has a group');
   });
 
   Game.test('Portraits: a former bandmate\'s face can go to someone new', function (t) {
     var s = freshState();
     s = Game.rules.people.meet(s).state;
     var first = Object.keys(s.people)[0];
-    var face = s.people[first].portrait;
+    var p = s.people[first];
     s.people[first].status = 'former';
-    t.equal(Game.rules.people.portraitFor(s, Number(first.slice(1))), face, 'the same face is free again');
+    t.equal(Game.rules.people.portraitFor(s, Number(first.slice(1)), p.name.split(' ')[0]), p.portrait, 'the same face is free again');
+  });
+
+  Game.test('Save: a version 17 save upgrades, and every face is matched to its name', function (t) {
+    var s = freshState();
+    for (var i = 0; i < 6; i++) s = Game.rules.people.meet(s).state;
+    var old = Game.util.clone(s);
+    old.version = 17;
+    Object.keys(old.people).forEach(function (id) { old.people[id].portrait = 'p09'; }); // everyone the same face
+    var loaded = Game.save.parse(JSON.stringify(old));
+    t.ok(loaded.ok, 'loaded: ' + loaded.message);
+    var people = Object.keys(loaded.state.people).map(function (id) { return loaded.state.people[id]; });
+    t.ok(people.every(faceFits), 'every face suits its name');
+    var faces = people.map(function (p) { return p.portrait; });
+    t.equal(faces.filter(function (f, i) { return faces.indexOf(f) === i; }).length, faces.length, 'all different');
   });
 
   Game.test('Save: a version 15 save upgrades, and its people get portraits', function (t) {

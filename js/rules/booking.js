@@ -578,7 +578,8 @@ Game.rules.booking = {
         : (entry.deal === 'festival' ? Game.balance.bigOffers.festivalCrowdShare : null), // a festival crowd
       fanRate: (entry.deal === 'opening' ? o.openingSlotFanRate : 1) *              // their fans, at half the rate
         (Game.rules.travel.isTourShow(state, entry) ? 1 + Game.balance.tours.fanBonus : 1), // word of mouth on tour: more new fans
-      crowdFloor: entry.deal === 'residency' ? o.residency.crowdFloor : null      // regulars come back
+      crowdFloor: entry.deal === 'residency' ? o.residency.crowdFloor : null,     // regulars come back
+      tourId: entry.tourId || null                                                 // tour shirts sell best on their tour
     });
     var after = Game.rules.travel.afterShow(played.state, entry); // out of town: tours, unlocks, your van
     var s = after.state;
@@ -592,6 +593,7 @@ Game.rules.booking = {
       record.tripId = trip;
       record.tour = Game.rules.travel.isTourShow(state, entry);
       record.tourName = entry.tourName || null;
+      record.tourId = entry.tourId || null;
       record.production = production;
     }
     if (production > 0) {

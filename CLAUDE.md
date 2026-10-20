@@ -50,20 +50,24 @@ The owner is not a developer. Explain plans and results in plain language.
 ## Folder layout
 
 ```
-index.html        The game page. Loads scripts in order (see below).
+index.html        The game page. Loads every file from the list in js/files.js (see below).
 styles.css        All the look and layout.
 tests.html        The test page. Open it to see passing/failing tests.
 assets/           Pictures (title, backdrops, venues, portraits) and fonts (with their licenses).
-test-saves/       Save files for testing (late-career.json: a rich, famous, everything-unlocked career). Import them.
+test-saves/       Save files for testing (late-career.json: a rich, famous, everything-unlocked career; import it).
+                  late-career.js is the same save as a script, for the screens test. Regenerate both together.
 Design.md         The game design (source of truth).
 PROGRESS.md       Running log: built, next, known issues.
 js/
+  files.js        The list of every file to load, in order, and the version tag (both pages use it).
   balance.js      Every tunable number, grouped by system.
   rng.js          Seeded random number generator (repeatable randomness).
   util.js         Small helpers: clone (copy the state) and clamp (keep a number in range).
   state.js        Builds a brand-new game state (the save data shape).
   save.js         Saving/loading: browser auto-save, export/import files, checking a save is valid.
-  main.js         Game.app: holds the current state, switches screens, runs rules, auto-saves.
+  app/            Game.app: core.js holds the current state, switches screens, saves, and runs the End Day flow;
+                  the other files add each area's actions (booking, calendar, shop, bigTime, people...).
+  main.js         Starts the game. Loads last.
   content/        Fixed game data that never gets saved: actions, venues, cities, events, names...
   rules/          One file per game system (energy.js, gigs.js, booking.js...). Plain functions.
   ui/             One file per screen (title.js, today.js, calendar.js...). Draw only.
@@ -72,20 +76,22 @@ js/
 
 ## Script load order
 
-Files must load in this order, because later files use things earlier files define:
+Every file is listed once, in order, in **`js/files.js`**. Both pages load that list (index.html and tests.html each
+fetch `files.js` fresh, then write classic `<script>` tags for the list, each with `?v=<tag>`). Order:
 
-1. `js/balance.js`
-2. `js/rng.js`, `js/util.js`
-3. `js/content/*.js`
-4. `js/state.js`, `js/save.js`
-5. `js/rules/*.js`: money, finances, housing, energy, morale, skills, audience, songs, people, gigs, job, booking, progress, events, recording, merch, offers, sessionWork, travel, manager, label, bigShows, awards, actions, planWeek, career, day, debug
-   (a file only needs to load before another at page start if it's used while loading; keep this order anyway)
-6. `js/ui/*.js` (game page only; `helpers.js`, `topbar.js`, `statsPanel.js`, `actionPicker.js` before `today.js`)
-7. `js/main.js` (game page only, always last: it starts the game)
+1. `Game.files.game`: `js/balance.js`; `js/rng.js`, `js/util.js`; `js/content/*.js`; `js/state.js`, `js/save.js`;
+   `js/rules/*.js` (money, finances, housing, energy, morale, skills, audience, songs, people, gigs, job, booking,
+   progress, events, recording, merch, offers, sessionWork, travel, manager, tours, label, bigShows, awards, actions,
+   planWeek, career, day, debug)
+2. `Game.files.screens`: `js/ui/*.js`, then `js/app/core.js` and the other `js/app/*.js` files
+3. `Game.files.start`: `js/main.js` (game page only, always last: it starts the game)
 
-`tests.html` loads 1 to 5, then `js/tests/test-runner.js`, then each `*.test.js` file.
-When you add a new file, add its `<script>` tag to **both** `index.html` and `tests.html`
-(UI files only go in `index.html`).
+`tests.html` loads 1 and 2 (not main.js, so nothing starts), the late-career test save, then
+`js/tests/test-runner.js` and each `*.test.js` file (those are listed in tests.html).
+**When you add a game, screen, or app file, add it to `js/files.js` only.** Test files go in tests.html.
+
+**Publishing:** change `Game.files.tag` in js/files.js before every publish. It starts with "v" + the save version
+(a test checks that), then the date and a letter, like `v18-2026-10-20a`.
 
 ## Writing tests
 
@@ -288,12 +294,22 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   `state.tours` (every accepted tour: { id, name, cities, firstDay, lastDay, shows }, listed on Career).
   `manager.tourLabel(name, cities)` gives an unnamed tour a name from its cities. Tours need 3+ cities, with no most.
 - **Portraits**: every person has `portrait` (an id from `Game.content.art.portraits`), picked by
-  `Game.rules.people.portraitFor` when you meet them (no dice roll; it avoids faces a current contact or bandmate has).
+  `Game.rules.people.portraitFor(state, n, firstName)` from the faces that suit the name (no dice roll; it avoids faces
+  a current contact or bandmate has). Name groups are in `content/names.js` (`nameGroups`: women, men, anyone) and face
+  groups in `content/art.js` (`portraitGroups`); a new first name needs a group, and a new portrait needs a group.
+- **Tours after booking (`Game.rules.tours`)**: booked tour shows carry `entry.tourId`; a tour record is
+  { id, name, cities, dates, firstDay, lastDay, shows, result }. `checkEnded` (in End Day) saves `tours.wrapUp` on the
+  tour when its shows are done, and `lastDayReport.tourEnded` makes the `tourWrapUp` screen follow the gig result.
+  Tour shirts: `state.tourMerch`, `tours.shirtSale`, sold in `merch.sellAtGig(..., tourId)`. Road mood:
+  `tours.roadMood` from `travel.nightly` (numbers in `balance.traits.roadMood`). Posters: `tours.posterData` and
+  `Game.ui.tourPoster`. Auto-booking skips an open tour proposal's dates (`manager.tourHoldDays`).
+- **Screens test**: `js/tests/screens.test.js` opens every screen with a new career and with the late-career save.
+  Add new screens to it. If the save format changes, regenerate `test-saves/late-career.json` and `.js`.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.
-  **Before every publish, change the `?v=...` version tag on every file in index.html** (all at once, e.g. to the date
-  plus a letter). Otherwise browsers can mix old saved copies of the scripts with the new stylesheet.
+  **Before every publish, change the version tag in js/files.js** (see Script load order). Otherwise browsers can mix
+  old saved copies of the scripts with the new stylesheet.
 - **Readability**: text must reach a contrast of 4.5 to 1 against what's behind it (3 to 1 for big headings). Don't fade
   things with `opacity` to show they're locked, past, or unavailable: use a dashed edge, hatching, or a greyer
   background, and keep the words full strength.

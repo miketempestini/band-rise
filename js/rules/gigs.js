@@ -304,7 +304,7 @@ Game.rules.gigs = {
     notes = notes.concat(bandGig.log);
 
     // Merch: some of the crowd buys a shirt or a CD (if you have stock). Merch money is all yours.
-    var merch = Game.rules.merch.sellAtGig(s, crowd, result, venueId);
+    var merch = Game.rules.merch.sellAtGig(s, crowd, result, venueId, opts.tourId);
     s = merch.state;
     s.stats.totalEarned += merch.revenue;
 
@@ -320,7 +320,8 @@ Game.rules.gigs = {
     Game.rules.finances.add(s, { flow: 'band', cat: 'managerPay', amount: managerCut });
     Game.rules.finances.add(s, { flow: 'band', cat: 'bandTips', amount: tips - yourTips });
     Game.rules.finances.addShow(s, { venueId: venueId, deal: opts.deal || 'openMic', gross: grossPay, managerCut: managerCut, memberPay: memberPay,
-      yourPay: yourPay, tips: tips, yourTips: yourTips, merch: merch.revenue, production: 0, tripId: null, tour: false, tourName: null });
+      yourPay: yourPay, tips: tips, yourTips: yourTips, merch: merch.revenue, production: 0, tripId: null, tour: false, tourName: null,
+      tourId: null, crowd: crowd, result: result, fans: fans });
 
     // Venue relationship (booked rooms): +5 after a Solid or better show, -10 after a Rough one.
     var venueChange = 0;

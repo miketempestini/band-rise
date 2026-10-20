@@ -127,11 +127,19 @@ Game.rules.people = {
     });
   },
 
-  // The portrait for the Nth person you meet (an id from Game.content.art.portraits). It steps along the list so faces
-  // don't come in order, and skips any face a current contact or bandmate already has (if every face is taken, it
-  // reuses one). No dice roll, so it never changes any other random result.
-  portraitFor: function (state, personNumber) {
-    var list = Game.content.art.portraits;
+  // The faces that suit a first name: the name's group of faces plus the androgynous ones (or every face, for names
+  // given to anyone). See Game.content.names.nameGroups and Game.content.art.portraitGroups.
+  portraitPool: function (firstName) {
+    var art = Game.content.art;
+    var group = Game.content.names.nameGroups[firstName] || 'anyone';
+    return group === 'anyone' ? art.portraits : art.portraitGroups[group].concat(art.portraitGroups.androgynous);
+  },
+
+  // The portrait for the Nth person you meet, from the faces that suit their first name. It steps along that list so
+  // faces don't come in order, and skips any face a current contact or bandmate already has (if every face is taken,
+  // it reuses one). No dice roll, so it never changes any other random result.
+  portraitFor: function (state, personNumber, firstName) {
+    var list = Game.rules.people.portraitPool(firstName);
     var used = {};
     Object.keys(state.people).forEach(function (id) {
       var p = state.people[id];
@@ -177,7 +185,7 @@ Game.rules.people = {
     s.rngState = rng.getState();
 
     var id = 'p' + s.nextPersonId;
-    person.portrait = Game.rules.people.portraitFor(s, s.nextPersonId);
+    person.portrait = Game.rules.people.portraitFor(s, s.nextPersonId, person.name.split(' ')[0]);
     s.nextPersonId += 1;
     person.id = id;
     person.relationship = b.startRelationship;
@@ -245,11 +253,14 @@ Game.rules.people = {
   },
 
   // Changes a member's satisfaction (0 to 100) and remembers why, for the People screen.
-  changeSatisfaction: function (state, personId, amount, reason) {
+  // merge: true adds to this week's reason with the same words instead of listing it again (for nightly changes).
+  changeSatisfaction: function (state, personId, amount, reason, merge) {
     var s = Game.util.clone(state);
     var p = s.people[personId];
     p.satisfaction = Game.util.clamp(p.satisfaction + amount, 0, Game.balance.satisfaction.max);
-    p.satisfactionReasons.push({ text: reason, amount: amount });
+    var same = merge && p.satisfactionReasons.filter(function (r) { return r.text === reason; })[0];
+    if (same) same.amount += amount;
+    else p.satisfactionReasons.push({ text: reason, amount: amount });
     return { state: s, log: [] };
   },
 

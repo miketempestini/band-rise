@@ -1,0 +1,68 @@
+// screens.test.js
+// Opens every screen with real data and checks none of them breaks: once with a brand-new career and once with the
+// late-career test save (test-saves/late-career.js), which has hundreds of messages, finished tours, and every
+// feature unlocked. Both Inbox and Manager bugs this year only showed up with lots of data.
+// It draws into a hidden box, so nothing shows on the test page, and puts everything back afterwards.
+
+// Wrapped in a function so the helpers below stay private to this file (no extra globals).
+(function () {
+
+  var screens = ['today', 'calendar', 'inbox', 'booking', 'map', 'songs', 'people', 'shop', 'finances', 'career', 'settings',
+    'manager', 'job'];
+
+  // Draws one screen (or a setup function's screen) and returns null, or the error's message.
+  function tryScreen(app, setup) {
+    try { setup(app); return null; } catch (e) { return e.message; }
+  }
+
+  function openEverything(t, label, state) {
+    var app = Game.app;
+    var problems = [];
+    var check = function (name, setup) {
+      app.state = Game.util.clone(state);
+      app.pickerBlock = null; app.dayReportOpen = false; app.posterTourId = null; app.screen = 'title';
+      var err = tryScreen(app, setup);
+      if (err) problems.push(name + ': ' + err);
+    };
+    screens.forEach(function (name) { check(name, function (a) { a.show(name); }); });
+    check('planWeek', function (a) { a.openPlanWeek(); });
+    check('action picker', function (a) { a.show('today'); a.pickerBlock = 'evening'; a.render(); });
+    check('day readout', function (a) { a.show('today'); a.dayReportOpen = true; a.render(); });
+    if (state.lastGig) check('gig result', function (a) { a.gigPhase = 'result'; a.show('gigResult'); });
+    if (state.ledger.length) check('weekly summary', function (a) { a.show('weeklySummary'); });
+    if (Object.keys(state.songs).length) check('song reveal', function (a) { a.revealQueue = [Object.keys(a.state.songs)[0]]; a.show('songReveal'); });
+    if (state.band.memberIds.length) check('name the band', function (a) { a.show('nameBand'); });
+    state.tours.forEach(function (tour) {
+      check('tour poster (' + tour.id + ')', function (a) { a.show('career'); a.openTourPoster(tour.id); });
+      if (tour.result) check('tour wrap-up (' + tour.id + ')', function (a) { a.openTourWrapUp(tour.id, 'career'); });
+    });
+    t.equal(problems.length, 0, label + (problems.length ? ': ' + problems.join(' | ') : ': every screen opened'));
+  }
+
+  Game.test('Screens: every screen opens with a new career and with the late-career save', function (t) {
+    if (!Game.app || !Game.ui) { t.ok(true, 'screens not loaded'); return; }
+    var app = Game.app;
+    var saved = { state: app.state, screen: app.screen, autoSave: app.autoSave };
+    var root = document.createElement('div');
+    root.id = 'app';
+    root.hidden = true;
+    var debug = document.createElement('div');
+    debug.id = 'debug';
+    debug.hidden = true;
+    document.body.appendChild(root);
+    document.body.appendChild(debug);
+    app.autoSave = function () {}; // never touch the real saved game
+    try {
+      openEverything(t, 'new career', Game.rules.career.startCareer('Test', 'guitar', 1).state);
+      var late = Game.save.parse(JSON.stringify(Game.testSaves.lateCareer));
+      t.ok(late.ok, 'the late-career save loads: ' + (late.message || 'ok'));
+      if (late.ok) openEverything(t, 'late career', late.state);
+    } finally {
+      app.state = saved.state; app.screen = saved.screen; app.autoSave = saved.autoSave;
+      app.pickerBlock = null; app.dayReportOpen = false; app.posterTourId = null;
+      document.body.removeChild(root);
+      document.body.removeChild(debug);
+    }
+  });
+
+})();

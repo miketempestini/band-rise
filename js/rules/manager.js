@@ -122,6 +122,19 @@ Game.rules.manager = {
     return shows + asks + offers;
   },
 
+  // The days auto-booking leaves alone because an open tour proposal needs them: from a couple of days before its
+  // first show to a couple after its last. Returns { day: true }.
+  tourHoldDays: function (state) {
+    var gap = Game.balance.manager.tour.autoBookGapDays;
+    var hold = {};
+    state.inbox.forEach(function (m) {
+      if (m.kind !== 'tourProposal' || m.resolved || !m.data.shows.length) return;
+      var days = m.data.shows.map(function (x) { return x.day; });
+      for (var d = Math.min.apply(null, days) - gap; d <= Math.max.apply(null, days) + gap; d++) hold[d] = true;
+    });
+    return hold;
+  },
+
   // Every Monday: the manager emails venues that fit your rules (no energy from you, normal odds), for dates
   // that need no time off work and whose travel fits, never past your shows-a-week limit. Returns { state, log }.
   autoBook: function (state) {
@@ -131,8 +144,9 @@ Game.rules.manager = {
     var s = state;
     var sent = [];
     var last = Game.rules.manager.horizonDay(s);
+    var hold = Game.rules.manager.tourHoldDays(s); // dates an open tour proposal needs
     for (var d = s.day + 1; d <= last; d++) { // each venue's own booking window decides which of these dates work
-      if (rules.nights.indexOf(Game.rules.day.dayOfWeek(d)) === -1) continue;
+      if (rules.nights.indexOf(Game.rules.day.dayOfWeek(d)) === -1 || hold[d]) continue;
       rules.cities.forEach(function (cityId) {
         if (Game.rules.manager.weekLoad(s, d) >= rules.maxPerWeek) return;
         Game.rules.booking.venues(cityId).forEach(function (v) {
@@ -445,11 +459,12 @@ Game.rules.manager = {
     s = Game.util.clone(s);
     s.inbox.forEach(function (x) { if (x.id === messageId) { x.resolved = 'accepted'; x.read = true; } });
     // Each show remembers the tour's name, and the tour goes in the list on the Career screen.
-    entryIds.forEach(function (id) { if (s.entries[id]) s.entries[id].tourName = name; });
+    var tourId = 'tour' + (s.tours.length + 1);
+    entryIds.forEach(function (id) { if (s.entries[id]) { s.entries[id].tourName = name; s.entries[id].tourId = tourId; } });
     var days = m.data.shows.map(function (x) { return x.day; });
     var cities = m.data.shows.map(function (x) { return Game.content.venues[x.venueId].cityId; });
-    s.tours.push({ id: 'tour' + (s.tours.length + 1), name: name, cities: cities,
-      firstDay: Math.min.apply(null, days), lastDay: Math.max.apply(null, days), shows: m.data.shows.length });
+    s.tours.push({ id: tourId, name: name, cities: cities, dates: m.data.shows.map(function (x) { return { venueId: x.venueId, day: x.day }; }),
+      firstDay: Math.min.apply(null, days), lastDay: Math.max.apply(null, days), shows: m.data.shows.length, result: null });
     var log = [(name ? '"' + name + '" booked: ' : 'Tour booked: ') + m.data.shows.length + ' shows and all the travel are on your Calendar.'];
     // Ads: pay now; each lands a week before its city's show.
     var packages = Game.balance.manager.tour.ads;

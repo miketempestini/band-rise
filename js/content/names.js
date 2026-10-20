@@ -41,6 +41,14 @@ Game.content.names = {
     'Ivy', 'Owen', 'Lena', 'Dez', 'Hana', 'Carlos', 'Wren', 'Tasha', 'Felix', 'June',
     'Ari', 'Bo', 'Kenji', 'Lou'
   ],
+  // Which first names are usually given to women, to men, or to anyone. A new person's portrait comes from the
+  // matching group of faces (see Game.content.art.portraitGroups), so names and faces fit together.
+  nameGroups: {
+    Maya: 'women', Rosa: 'women', Priya: 'women', Nina: 'women', Ivy: 'women', Lena: 'women', Hana: 'women',
+    Wren: 'women', Tasha: 'women', June: 'women',
+    Theo: 'men', Eli: 'men', Marcus: 'men', Owen: 'men', Carlos: 'men', Felix: 'men', Kenji: 'men',
+    Dana: 'anyone', Jules: 'anyone', Sam: 'anyone', Dez: 'anyone', Ari: 'anyone', Bo: 'anyone', Lou: 'anyone'
+  },
   lastNames: [
     'Reyes', 'Park', 'Okafor', 'Lindqvist', 'Moreau', 'Bishop', 'Kowalski', 'Nguyen', 'Hale',
     'Castillo', 'Abernathy', 'Fox', 'Delgado', 'Sato', 'Whitfield', 'Mercer', 'Quinn', 'Varga'

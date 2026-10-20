@@ -92,9 +92,10 @@ Game.ui.gigResult = {
       rewardRows.push(['Venue relationship', u.signed(r.venueRelationship) + ' <span class="muted">(now ' + Math.round(r.venueRelationshipNow) + ')</span>']);
       if (gig.sessionPlayers) rewardRows.push(['Session players', gig.sessionPlayers + ' (paid when hired)']);
     }
-    if (r.merch && (r.merch.sold.shirts || r.merch.sold.cds)) {
+    if (r.merch && (r.merch.sold.shirts || r.merch.sold.cds || r.merch.sold.tourShirts)) {
       rewardRows.push(['Merch', h.money(r.merch.revenue) + ' <span class="muted">(' +
         [r.merch.sold.shirts ? r.merch.sold.shirts + ' shirt' + (r.merch.sold.shirts === 1 ? '' : 's') : '',
+         r.merch.sold.tourShirts ? r.merch.sold.tourShirts + ' tour shirt' + (r.merch.sold.tourShirts === 1 ? '' : 's') : '',
          r.merch.sold.cds ? r.merch.sold.cds + ' CD' + (r.merch.sold.cds === 1 ? '' : 's') : ''].filter(Boolean).join(', ') +
         (r.merch.soldOut.length ? ' · ' + r.merch.soldOut.join(' and ') + ' sold out!' : '') + ')</span>']);
     }

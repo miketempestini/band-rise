@@ -1207,6 +1207,23 @@ button.recap:hover { transform: none; }
 .milestone__name { font-weight: 600; }
 .milestone__when { font-size: var(--size-xs); }
 .tour-row__meta { display: block; font-size: var(--size-xs); color: var(--text-muted); }
+.tour-row { grid-template-columns: 44px 1fr auto; }
+.tour-row__btns { display: flex; gap: 6px; }
+/* A tour still ahead (or happening now): just the outline of a record. */
+.disc--ahead { background: transparent; border: 2px dashed var(--text-muted); box-shadow: none; }
+.disc--big { width: 52px; height: 52px; }
+
+/* ---------- Tour wrap-up and poster ---------- */
+
+/* The wrap-up is a settlement sheet; a tour that made money gets a gold record pinned to the corner. */
+.wrapup { position: relative; }
+.wrapup__record { position: absolute; top: 26px; right: 30px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font: 800 var(--size-s) var(--font-head); color: #8a6408; transform: rotate(8deg); }
+.wrapup .settlement__head { padding-right: 90px; }
+.wrapup__fans-title { margin-top: 18px; }
+/* The poster pop-up: a tall clipboard, and the poster scaled to fit. */
+.modal--poster { width: 560px; }
+.tour-poster { display: block; width: 100%; height: auto; margin: 6px 0 4px; box-shadow: var(--shadow-paper); }
 /* A record: black vinyl with grooves and a label holding the milestone's number. Gold once you've reached it. */
 .disc { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%;
   font: 700 11px var(--font-body); color: var(--text);

@@ -74,13 +74,17 @@ Game.ui.career = {
             '<dt>Reputation</dt><dd>' + Game.util.round1(state.player.reputation) + '</dd>' +
           '</dl>' +
         '</div>' +
-      '</section>';
+      '</section>' +
+      (app.posterTourId ? Game.ui.tourPoster.modalHtml() : '');
 
     h.bind(root, {
       back: function () { app.goBack('career'); },
       focusPayBack: function () { app.goBack('career'); },
-      saveCard: function () { Game.ui.careerCard.save(root.querySelector('#career-card'), state); }
+      saveCard: function () { Game.ui.careerCard.save(root.querySelector('#career-card'), state); },
+      tourPoster: function (e, el) { app.openTourPoster(el.getAttribute('data-tour')); },
+      tourWrapUp: function (e, el) { app.openTourWrapUp(el.getAttribute('data-tour'), 'career'); }
     });
+    if (app.posterTourId) Game.ui.tourPoster.bindModal(root, app, state, app.posterTourId);
     Game.ui.careerCard.draw(root.querySelector('#career-card'), Game.rules.progress.careerCard(state));
     // The card uses the game's fonts: draw it again once they've finished loading (the first time, they may not be).
     if (document.fonts) {
@@ -90,17 +94,24 @@ Game.ui.career = {
     }
   },
 
-  // Your tours, newest first: the name (or the cities), the dates, how many shows, and whether it's still ahead.
-  // Finished tours get a gold record; ones still ahead (or happening now) a black one.
+  // Your tours, newest first: the name (or the cities), the dates, how many shows, and how it's going. Finished tours
+  // that made money get a gold record, other finished ones a black record, and tours still ahead an outline.
+  // Each has a Poster button, and finished ones a Wrap-up button.
   toursHtml: function (state) {
     var h = Game.ui.helpers;
     var rows = state.tours.slice().reverse().map(function (t) {
-      var when = t.firstDay > state.day ? 'Coming up' : (t.lastDay >= state.day ? 'On tour now' : '');
-      return '<div class="milestone">' +
-        '<span class="milestone__num"><span class="disc' + (when ? '' : ' disc--gold') + '"></span></span>' +
-        '<span><span class="milestone__name">' + h.escape(Game.rules.manager.tourLabel(t.name, t.cities)) + '</span>' +
-          '<span class="tour-row__meta">' + Game.rules.day.spanLabel(t.firstDay, t.lastDay) + ', ' + t.shows + ' show' + (t.shows === 1 ? '' : 's') + '</span></span>' +
-        '<span class="milestone__when muted">' + when + '</span>' +
+      var status = Game.rules.tours.status(state, t);
+      var disc = status !== 'done' ? 'disc disc--ahead' : (t.result && t.result.profit ? 'disc disc--gold' : 'disc');
+      var when = status === 'ahead' ? 'Coming up' : (status === 'now' ? 'On tour now' : (t.result ? (t.result.net >= 0 ? '+' : '-') + h.money(Math.abs(t.result.net)) : ''));
+      return '<div class="milestone tour-row">' +
+        '<span class="milestone__num"><span class="' + disc + '"></span></span>' +
+        '<span><span class="milestone__name">' + h.escape(Game.rules.tours.label(t)) + '</span>' +
+          '<span class="tour-row__meta">' + Game.rules.day.spanLabel(t.firstDay, t.lastDay) + ', ' + t.shows + ' show' + (t.shows === 1 ? '' : 's') +
+            (when ? ' · ' + when : '') + '</span></span>' +
+        '<span class="tour-row__btns">' +
+          (t.result ? '<button class="btn btn--small" data-action="tourWrapUp" data-tour="' + t.id + '">Wrap-up</button>' : '') +
+          '<button class="btn btn--small" data-action="tourPoster" data-tour="' + t.id + '">Poster</button>' +
+        '</span>' +
         '</div>';
     }).join('');
     return '<div class="panel">' +
@@ -108,5 +119,4 @@ Game.ui.career = {
       (rows || '<p class="hint">No tours yet. Once you have a manager, ask for one on the Manager screen (and give it a name if you like).</p>') +
       '</div>';
   }
-
 };

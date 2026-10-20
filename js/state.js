@@ -116,6 +116,7 @@ Game.state = {
       nextTourRequestId: 1,
       // Every tour you booked, for the Career screen: { id, name (or null), cities, firstDay, lastDay, shows }.
       tours: [],
+      tourMerch: { tourId: null, count: 0 }, // tour shirts in stock, and which tour they're for
       // The label (Phase 12): owed is the part of the advance not yet paid back from streaming.
       label: { signed: false, signedDay: null, advance: 0, owed: 0, nextOfferDay: 0 },
       awards: [],         // every nomination: { year, category, title, chance, won (null until the ceremony) }

@@ -29,7 +29,22 @@ Game.rules.merch = {
         unlocked: state.milestones.firstRecording !== undefined, why: 'Unlocks after your first recording.',
         owned: state.player.gear.homeStudio
       }
-    ].concat(Game.rules.merch.vanItems(state));
+    ].concat(Game.rules.merch.tourShirtItems(state), Game.rules.merch.vanItems(state));
+  },
+
+  // Tour shirts, while a tour is coming up (or happening now): [] or one item.
+  tourShirtItems: function (state) {
+    var t = Game.rules.tours.shirtTour(state);
+    if (!t) return [];
+    var ts = Game.balance.merch.tourShirt;
+    var problem = Game.rules.tours.shirtProblem(state);
+    var have = state.tourMerch.tourId === t.id ? state.tourMerch.count : 0;
+    return [{
+      id: 'tourShirts', name: 'Tour shirts: ' + Game.rules.tours.label(t) + ' (' + ts.packSize + ')', price: ts.packCost,
+      detail: 'Sell for $' + ts.tourPrice + ' each on this tour, and fans are ' + ts.buyBoost + ' times as likely to buy one. ' +
+        'Leftovers sell for $' + ts.leftoverPrice + ' after the tour. You have ' + have + '.',
+      unlocked: !problem, why: problem
+    }];
   },
 
   // The three vans: { id: 'van-beater', ..., kind }. Unlocked by milestone 10 (On the road).
@@ -56,6 +71,7 @@ Game.rules.merch = {
     if (!item.unlocked) return { state: state, log: [item.why] };
     if (item.owned) return { state: state, log: ['You already have one.'] };
     if (state.player.cash < item.price) return { state: state, log: ['That costs $' + item.price + ' (you have $' + Math.floor(state.player.cash) + ').'] };
+    if (itemId === 'tourShirts') return Game.rules.tours.buyShirts(state);
     var m = Game.balance.merch;
     var s = Game.rules.money.spend(state, item.price, itemId === 'homeStudio' || item.kind ? 'gear' : 'merchStock').state;
     if (item.kind) {
@@ -72,14 +88,16 @@ Game.rules.merch = {
 
   // Selling at a gig: each person in the crowd has a chance to buy each item you have in stock
   // (1% Rough, 3% Solid, 6% Great, 9% Legendary; double at Hollow Records). Sales stop when stock runs out.
-  // Merch money is yours (not split with the band). Returns { state, sold: { shirts, cds }, revenue, soldOut: [names] }.
-  sellAtGig: function (state, crowd, result, venueId) {
+  // Tour shirts sell too: on their tour at a higher price and rate, after it at the leftover price (tourId: this
+  // show's tour, if any). Merch money is yours (not split with the band).
+  // Returns { state, sold: { shirts, cds, tourShirts }, revenue, soldOut: [names] }.
+  sellAtGig: function (state, crowd, result, venueId, tourId) {
     var m = Game.balance.merch;
     var s = Game.util.clone(state);
     var rng = Game.rng.create(s.rngState);
     var chance = m.buyChance[result] * (venueId === 'hollowRecords' ? m.recordStoreMultiplier : 1);
     var items = [['shirts', m.shirt.price], ['cds', m.cd.price]];
-    var sold = { shirts: 0, cds: 0 };
+    var sold = { shirts: 0, cds: 0, tourShirts: 0 };
     var revenue = 0;
     var soldOut = [];
     items.forEach(function (item) {
@@ -94,6 +112,17 @@ Game.rules.merch = {
       }
       if (s.player.merchStock[key] === 0 && sold[key] > 0) soldOut.push(Game.content.merch[key].name);
     });
+    var shirts = Game.rules.tours.shirtSale(s, tourId);
+    if (shirts) {
+      for (var fan = 0; fan < crowd && s.tourMerch.count > 0; fan++) {
+        if (rng.chance(Math.min(1, chance * shirts.boost))) {
+          s.tourMerch.count -= 1;
+          sold.tourShirts += 1;
+          revenue += shirts.price;
+        }
+      }
+      if (s.tourMerch.count === 0 && sold.tourShirts > 0) soldOut.push('tour shirts');
+    }
     s.rngState = rng.getState();
     if (revenue > 0) s = Game.rules.money.earn(s, revenue, 'merch').state;
     return { state: s, sold: sold, revenue: revenue, soldOut: soldOut };

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Band Rise Tests</title>
-  <link rel="stylesheet" href="styles.css">
+  <script>document.write('<script src="js/files.js?' + Date.now() + '"><\/script>');</script>
+  <script>Game.files.writeCss();</script>
   <style>
     /* Styles only for the test page. */
     body { padding: 32px 48px; font-family: Menlo, Consolas, monospace; }
@@ -30,56 +31,9 @@
   <ul id="results"></ul>
   <section id="balance" class="balance"><p class="summary">Running the balance check...</p></section>
 
-  <!-- Game code, same order as index.html (no ui files, no main.js) -->
-  <script src="js/balance.js"></script>
-  <script src="js/rng.js"></script>
-  <script src="js/util.js"></script>
-  <script src="js/content/calendar.js"></script>
-  <script src="js/content/skills.js"></script>
-  <script src="js/content/instruments.js"></script>
-  <script src="js/content/cities.js"></script>
-  <script src="js/content/actions.js"></script>
-  <script src="js/content/names.js"></script>
-  <script src="js/content/venues.js"></script>
-  <script src="js/content/gigText.js"></script>
-  <script src="js/content/people.js"></script>
-  <script src="js/content/events.js"></script>
-  <script src="js/content/milestones.js"></script>
-  <script src="js/content/tutorial.js"></script>
-  <script src="js/content/studios.js"></script>
-  <script src="js/content/business.js"></script>
-  <script src="js/content/finance.js"></script>
-  <script src="js/content/art.js"></script>
-  <script src="js/state.js"></script>
-  <script src="js/save.js"></script>
-  <script src="js/rules/money.js"></script>
-  <script src="js/rules/finances.js"></script>
-  <script src="js/rules/housing.js"></script>
-  <script src="js/rules/energy.js"></script>
-  <script src="js/rules/morale.js"></script>
-  <script src="js/rules/skills.js"></script>
-  <script src="js/rules/audience.js"></script>
-  <script src="js/rules/songs.js"></script>
-  <script src="js/rules/people.js"></script>
-  <script src="js/rules/gigs.js"></script>
-  <script src="js/rules/job.js"></script>
-  <script src="js/rules/booking.js"></script>
-  <script src="js/rules/progress.js"></script>
-  <script src="js/rules/events.js"></script>
-  <script src="js/rules/recording.js"></script>
-  <script src="js/rules/merch.js"></script>
-  <script src="js/rules/offers.js"></script>
-  <script src="js/rules/sessionWork.js"></script>
-  <script src="js/rules/travel.js"></script>
-  <script src="js/rules/manager.js"></script>
-  <script src="js/rules/label.js"></script>
-  <script src="js/rules/bigShows.js"></script>
-  <script src="js/rules/awards.js"></script>
-  <script src="js/rules/actions.js"></script>
-  <script src="js/rules/planWeek.js"></script>
-  <script src="js/rules/career.js"></script>
-  <script src="js/rules/day.js"></script>
-  <script src="js/rules/debug.js"></script>
+  <!-- The game and its screens, from the same list as index.html (js/files.js), but not main.js, so nothing starts on
+       its own. Then the late-career test save, for the test that opens every screen. -->
+  <script>Game.files.write(Game.files.game.concat(Game.files.screens, ['test-saves/late-career.js']));</script>
 
   <!-- The test runner, then one test file per system -->
   <script src="js/tests/test-runner.js"></script>
@@ -110,6 +64,8 @@
   <script src="js/tests/calendar.test.js"></script>
   <script src="js/tests/housing.test.js"></script>
   <script src="js/tests/finances.test.js"></script>
+  <script src="js/tests/tours.test.js"></script>
+  <script src="js/tests/screens.test.js"></script>
 
   <script src="js/tests/balance.sim.js"></script>
 

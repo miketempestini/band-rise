@@ -585,6 +585,12 @@ Game.rules.travel = {
     });
     if (tr.awayOnDay(s, s.day) || awayTonight) s.player.roadDays += 1;
     else s.player.roadDays = 0;
+    // Road mood: away tonight, each bandmate's satisfaction changes by trait.
+    if (awayTonight) {
+      var mood = Game.rules.tours.roadMood(s, s.player.roadDays);
+      s = mood.state;
+      log = log.concat(mood.log);
+    }
     if (awayTonight) {
       var hotel = tr.yourShareOf(s, b.travel.hotelPerNight); // the band chips in for their shares
       var tonight = Object.keys(s.trips).filter(function (id) { return s.trips[id].startT <= lastToday && s.trips[id].endT > lastToday; })[0];
