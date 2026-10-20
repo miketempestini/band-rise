@@ -202,6 +202,11 @@ Game.ui.inbox = {
           (e.adCost ? ', ads ' + h.money(e.adCost) : '') + '. About <strong>' + h.money(e.net) + '</strong> left over. ' +
           'Ads land a week before the show and hold that city\'s buzz until then. Your manager\'s daily posts and word of mouth on tour add a little more.</p>'
         : '<p>Your manager couldn\'t fit any shows.</p>') + skipped;
+      // A tour you built: what the venues said (any "no" and what the manager did about it).
+      if (d.built) {
+        body = '<p class="hint">' + (d.changes && d.changes.length ? '<strong>What the venues said:</strong> ' + d.changes.map(h.escape).join(' ')
+          : 'Every venue you picked said yes.') + '</p>' + body;
+      }
       var buttons = d.shows.length ? self.jobButtonsHtml(state, m, 'acceptTour', e.jobDays.filter(function (x) { return Game.rules.job.worksOn(state, x); }),
         function (choice) { return Game.rules.manager.tourAcceptProblem(state, m.id, choice) || Game.rules.manager.adsProblem(state, m.id, ads); },
         'Book the tour' + (e.adCost ? ' + ads' : '')) + ' ' + decline : decline;

@@ -77,7 +77,7 @@ Game.ui.gigResult = {
     var scale = self.crowdScale(gig);
 
     var rewardRows = [
-      ['Fans', u.signed(r.fans) + ' <span class="muted">(' + Game.content.cities.hometown.name + ' now ' + r.cityFans.toLocaleString() + ')</span>'],
+      ['Fans', u.signed(r.fans) + ' <span class="muted">(' + Game.content.cities[Game.content.venues[gig.venueId].cityId].name + ' now ' + r.cityFans.toLocaleString() + ')</span>'],
       ['Buzz', u.signed(r.buzz) + ' <span class="muted">(now ' + Math.round(r.buzzNow) + ')</span>'],
       ['Reputation', u.signed(r.reputation) + ' <span class="muted">(now ' + u.round1(r.reputationNow) + ')</span>'],
       ['Morale', r.morale ? u.signed(r.morale) : '±0'],
@@ -88,6 +88,10 @@ Game.ui.gigResult = {
         return u.signed(r.skills[skill]) + ' ' + Game.content.skills[skill];
       }).join(', ')]
     ];
+    if (gig.encore) {
+      rewardRows.unshift(['Encore', '"' + h.escape(gig.encore.title) + '"' + (gig.encore.favorite ? ' (a crowd favorite)' : '') +
+        ' <span class="muted">(+' + Math.round(gig.encore.fanBonus * 100) + '% new fans, +' + gig.encore.buzz + ' buzz)</span>']);
+    }
     if (gig.kind === 'show') {
       rewardRows.push(['Venue relationship', u.signed(r.venueRelationship) + ' <span class="muted">(now ' + Math.round(r.venueRelationshipNow) + ')</span>']);
       if (gig.sessionPlayers) rewardRows.push(['Session players', gig.sessionPlayers + ' (paid when hired)']);

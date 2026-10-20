@@ -341,6 +341,15 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   Auto-booking stays at home (`manager.rulesProblem`); tours, the Book screen, and big-show offers go abroad. Region buzz
   abroad is by country. Local bands abroad are added by `scene.addLocalBands` (their own dice), and other bands only
   play outside their own country if they're touring bands.
+- **Setlists (`Game.rules.setlist`)**: running order matters. `setlist.parts(state, songIds, cityId)` gives the 'opener',
+  'closer', and 'favorites' score parts (added in `gigs.scoreParts`); `bestOrder` arranges a set (suggested sets use it).
+  The encore is `encoreSongId` on a show entry (or a planned open mic: the picker's set choice is `{ songIds,
+  encoreSongId }`), passed to `playGig` as `options.encoreSongId`; `gig.encore` records it. The editor is shared:
+  `Game.ui.setlistEditor` (html + bind with move/best/encore handlers). Keep set order wherever songIds are copied.
+- **Tour Builder**: the `tourBuilder` screen (`js/ui/tourBuilder.js`, draft in `app.tourBuild`, actions in
+  `js/app/tourBuilder.js`). `manager.requestBuiltTour` stores a tour request with `stops: [{ cityId, venueId }]`;
+  `processTourRequests` plans it with `manager.planBuiltTour` (venue odds with fallbacks, then `planTour(..., venueFor)`).
+  The proposal has `built: true` and `changes` (what the venues said). Map pins carry `data-city`.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

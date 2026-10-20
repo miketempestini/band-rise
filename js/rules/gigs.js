@@ -59,11 +59,12 @@ Game.rules.gigs = {
 
   // The best set of a given size: the songs with the highest quality + tightness.
   suggestSet: function (state, size) {
-    return Game.rules.songs.playable(state)
+    var ids = Game.rules.songs.playable(state)
       .slice()
       .sort(function (a, b) { return (b.quality + b.tightness) - (a.quality + a.tightness); })
       .slice(0, size)
       .map(function (song) { return song.id; });
+    return Game.rules.setlist.bestOrder(state, ids); // in the best running order (strong opener and closer)
   },
 
   // Why a set isn't allowed (wrong number of songs, repeats, unknown songs), or null if it's fine.
@@ -132,7 +133,7 @@ Game.rules.gigs = {
       { id: 'venueTier', value: Game.balance.venues.tiers[venue.tier].gigScorePenalty },
       { id: 'room', value: room },
       { id: 'setbacks', value: Game.rules.events.gigScoreChange(state) } // event effects like a crackling amp
-    ];
+    ].concat(Game.rules.setlist.parts(state, songs.map(function (x) { return x.id; }), venue.cityId)); // the set's order
   },
 
   // Which result a score gets: 'rough', 'solid', 'great' or 'legendary'.
@@ -197,7 +198,9 @@ Game.rules.gigs = {
       { id: 'tired', cost: -value('tired') },
       { id: 'lowMorale', cost: -value('morale') },
       { id: 'badLuck', cost: value('luck') <= g.badLuckTipAt ? -value('luck') : 0 },
-      { id: 'looseSongs', cost: averageTightness < g.looseSongsTipAt ? (g.looseSongsTipAt - averageTightness) * g.weights.tightness : 0 }
+      { id: 'looseSongs', cost: averageTightness < g.looseSongsTipAt ? (g.looseSongsTipAt - averageTightness) * g.weights.tightness : 0 },
+      { id: 'weakOpener', cost: -value('opener') },
+      { id: 'weakCloser', cost: -value('closer') }
     ];
     var worst = hurts.reduce(function (a, b) { return b.cost > a.cost ? b : a; });
     return worst.cost > 0 ? worst.id : null;
@@ -253,9 +256,13 @@ Game.rules.gigs = {
     var outcome = g.results[result];
     s.player.badLuckStreak = result === 'rough' ? s.player.badLuckStreak + 1 : 0;
 
-    // Fans: crowd x conversion x originals factor x room left under the city's fan ceiling.
+    // The encore (picked ahead of time): after a Great or Legendary night, more new fans and a little buzz.
+    var encore = Game.rules.setlist.encoreFor(s, songIds, opts.encoreSongId, result);
+
+    // Fans: crowd x conversion x originals factor x room left under the city's fan ceiling (x the encore's bonus).
     var ceiling = Game.content.cities[venue.cityId].fanCeiling;
-    var rawFans = crowd * outcome.fanConversion * (opts.fanRate === undefined ? 1 : opts.fanRate) * gigs.originalsFactor(songs) * Math.max(0, 1 - city.fans / ceiling);
+    var rawFans = crowd * outcome.fanConversion * (opts.fanRate === undefined ? 1 : opts.fanRate) * gigs.originalsFactor(songs) * Math.max(0, 1 - city.fans / ceiling) *
+      (encore ? 1 + encore.fanBonus : 1);
     var fans = Math.min(gigs.roundFans(rng, rawFans), Math.max(0, ceiling - city.fans)); // never past the fan ceiling
 
     // Tip jar.
@@ -268,7 +275,7 @@ Game.rules.gigs = {
 
     // Buzz.
     var buzzBefore = city.buzz;
-    s = Game.rules.audience.addBuzz(s, venue.cityId, outcome.buzz).state;
+    s = Game.rules.audience.addBuzz(s, venue.cityId, outcome.buzz + (encore ? encore.buzz : 0)).state;
     var buzzAfter = s.cities[venue.cityId].buzz;
 
     // Reputation (never below 0 or above the max).
@@ -338,6 +345,8 @@ Game.rules.gigs = {
       var song = s.songs[id];
       return { id: id, title: song.title, isCover: song.isCover, quality: song.quality, tightnessBefore: before, tightnessAfter: song.tightness };
     });
+    // The encore song gets played too.
+    if (encore) s = Game.rules.songs.practiceSong(s, encore.songId, b.songs.tightness.playLiveGain).state;
 
     // Skill gains for playing live (Tired halves them, like any other action).
     var skillGains = {};
@@ -373,6 +382,7 @@ Game.rules.gigs = {
       crowd: crowd,
       capacity: venue.capacity,
       parts: parts,
+      encore: encore,
       score: score,
       result: result,
       forced: !!forced,

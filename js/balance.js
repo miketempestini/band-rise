@@ -880,6 +880,18 @@ Game.balance = {
   // ---------------------------------------------------------------
   gigs: {
     weights: { bandMusicianship: 0.35, performance: 0.25, songQuality: 0.20, tightness: 0.20 },
+    // Setlist strategy (Game.rules.setlist): a song's strength is (quality + tightness) / 2.
+    setlist: {
+      strongCount: 2,                // "Strong" = the set's 2 strongest songs, "weak" = its 2 weakest (1 each in short sets)
+      weakFromSetSize: 4,            // Weak openers and closers only count against you in sets of 4 or more songs
+      opener: { strong: 3, weak: -2 }, // Opening with a strong song / a weak one
+      closer: { strong: 3, weak: -2 }, // Closing with a strong song / a weak one
+      favorite: 1,                   // Each crowd favorite (a song that charted, or is going viral)...
+      favoritesMax: 2,               // ...up to +2
+      knowTheWords: { share: 0.25, bonus: 1 }, // +1 more for favorites where you have 25%+ of the city's fan ceiling
+      // The encore (picked ahead of time): after a Great or Legendary night, more new fans and a little buzz
+      encore: { fans: 0.15, favoriteFans: 0.30, buzz: 3 }
+    },
     tiredPenalty: -10,
     lowMoralePenalty: -5,            // Morale below the low threshold
     highMoraleBonus: 5,              // Morale above the high threshold
@@ -961,7 +973,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 22,                     // Save format version, bumped when the state shape changes
+    version: 23,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

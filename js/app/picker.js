@@ -54,6 +54,7 @@ Object.assign(Game.app, {
       app.pickerSet = entry && entry.actionId === actionId && entry.songIds
         ? entry.songIds.slice()
         : (action.setSize ? Game.rules.gigs.suggestSet(app.state, action.setSize) : Game.rules.actions.loosestSongs(app.state, action.songsMax));
+      app.pickerEncore = entry && entry.actionId === actionId ? entry.encoreSongId || null : null;
       app.pickerSongStep = actionId;
       app.render();
     } else if (action.needsSong || action.needsPerson ||
@@ -90,8 +91,23 @@ Object.assign(Game.app, {
       if (app.pickerSet.length >= size) app.pickerSet.shift();
       app.pickerSet.push(songId);
     }
+    if (app.pickerSet.indexOf(app.pickerEncore) !== -1) app.pickerEncore = null; // a song can't be in the set and the encore
     app.render();
   },
+
+  // ----- Running order (the open mic set step and the Calendar's setlist) -----
+
+  // Moves one song in a list from one spot to another (changes the list).
+  moveInList: function (list, from, to) {
+    if (to < 0 || to >= list.length) return;
+    var song = list.splice(from, 1)[0];
+    list.splice(to, 0, song);
+  },
+
+  // The open mic set step: move a song, use the best order, or pick the encore.
+  pickerSetMove: function (from, to) { Game.app.moveInList(Game.app.pickerSet, from, to); Game.app.render(); },
+  pickerSetBest: function () { Game.app.pickerSet = Game.rules.setlist.bestOrder(Game.app.state, Game.app.pickerSet); Game.app.render(); },
+  pickerSetEncore: function (songId) { Game.app.pickerEncore = songId; Game.app.render(); },
 
   // From the song step back to the list of actions.
   pickerShowActions: function () {

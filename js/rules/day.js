@@ -268,7 +268,7 @@ Game.rules.day = {
           lines.push('The job drained you to 0 energy. You\'re Exhausted.');
         }
       } else if (actionId) {
-        var done = Game.rules.actions.perform(s, actionId, entry.songId, entry.songIds, entry.personId, entry.request, entry.cityIds);
+        var done = Game.rules.actions.perform(s, actionId, entry.songId, entry.songIds, entry.personId, entry.request, entry.cityIds, entry.encoreSongId);
         s = done.state;
         if (done.finishedSongId) report.finishedSongs.push(done.finishedSongId);
         if (done.gig) report.gig = true;

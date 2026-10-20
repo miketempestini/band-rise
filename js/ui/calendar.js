@@ -81,6 +81,7 @@ Game.ui.calendar = {
       planBlock: function (e, el) { app.openPicker(el.getAttribute('data-block'), Number(el.getAttribute('data-day'))); },
       clearBlock: function (e, el) { app.calendarClear(Number(el.getAttribute('data-day')), el.getAttribute('data-block')); }
     });
+    Game.ui.setlistEditor.bind(root, { move: app.setlistMove, best: app.setlistBest, encore: app.setlistEncore });
     if (app.pickerBlock) Game.ui.actionPicker.bind(root, app);
   },
 
@@ -232,7 +233,10 @@ Game.ui.calendar = {
     var setlist;
     if (editing) {
       var picked = app.setlistDraft.songIds;
-      setlist = '<p class="hint">Pick exactly ' + set.size + (set.coversOnly ? ' covers' : ' songs') + ' (' + picked.length + ' picked).</p>' +
+      setlist = '<h4 class="show__sub">Running order</h4>' +
+        Game.ui.setlistEditor.html(state, picked, app.setlistDraft.encoreSongId, venue.cityId, set.coversOnly) +
+        '<h4 class="show__sub">Songs</h4>' +
+        '<p class="hint">Pick exactly ' + set.size + (set.coversOnly ? ' covers' : ' songs') + ' (' + picked.length + ' picked).</p>' +
         '<div class="setlist-edit">' + Game.rules.songs.sortSongs(state, Game.rules.songs.playable(state), 'tightHigh')
           .filter(function (s) { return !set.coversOnly || s.isCover; })
           .map(function (s) {
@@ -246,10 +250,12 @@ Game.ui.calendar = {
           '<button class="btn btn--small btn--ghost" data-action="cancelSetlist">Cancel</button></div>' +
         (app.setlistError ? '<p class="pick__reason">' + h.escape(app.setlistError) + '</p>' : '');
     } else {
+      var encoreSong = e.encoreSongId && state.songs[e.encoreSongId];
       setlist = '<ol class="setlist">' + e.songIds.map(function (id) {
         var s = state.songs[id];
         return s ? '<li>' + h.escape(s.title) + ' <span class="muted">(tightness ' + Math.round(s.tightness) + ')</span></li>' : '';
       }).join('') + '</ol>' +
+        '<p class="hint">Encore: ' + (encoreSong ? h.escape(encoreSong.title) : 'none') + ' · ' + Game.ui.setlistEditor.valueText(state, e.songIds, venue.cityId) + '</p>' +
         '<button class="btn btn--small" data-action="editSetlist" data-entry="' + e.id + '">Edit setlist</button>';
     }
 

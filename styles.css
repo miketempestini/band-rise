@@ -858,6 +858,20 @@ button.recap:hover { transform: none; }
 /* A setlist and the list of songs to pick from. */
 .setlist { margin: 0 0 8px; padding-left: 20px; font-size: var(--size-s); }
 .setlist-edit { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+/* The running-order editor: a numbered list you can drag (or nudge with the arrows), like a setlist taped to the stage. */
+.set-editor { margin-bottom: 10px; }
+.set-rows { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.set-row { display: grid; grid-template-columns: 18px 22px 1fr auto auto; align-items: center; gap: 8px; padding: 5px 8px;
+  font-size: var(--size-s); color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); cursor: grab; }
+.set-row--dragging { opacity: 0.5; }
+.set-row--over { border-color: var(--accent); box-shadow: 0 -2px 0 var(--accent) inset; }
+.set-row__grip { color: var(--text-muted); letter-spacing: -2px; }
+.set-row__num { font: 700 var(--size-s) var(--font-head); color: var(--text-muted); }
+.set-row__title { min-width: 0; }
+.set-row__strength { font-size: var(--size-xs); }
+.set-row__moves { display: flex; gap: 2px; }
+.set-editor__foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: var(--size-s); }
+.set-editor__encore { align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .setlist-song { padding: 6px 8px; font: inherit; font-size: var(--size-s); text-align: left; color: var(--text); background: transparent;
   border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
 .setlist-song:hover { border-color: var(--text); }
@@ -1347,6 +1361,29 @@ button.recap:hover { transform: none; }
 .map__city text { fill: var(--ink); font: 700 12px var(--font-head); }
 .map__city--locked circle { fill: #a9a395; }
 .map__city--locked text { fill: var(--ink-soft); }
+/* The Tour Builder: the map and city chips on the left, the tour stops (drop targets) on the right. */
+.builder { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, 1fr); gap: var(--space-3); align-items: start; }
+.builder__map { margin-bottom: 8px; }
+.builder__map [data-city] { cursor: pointer; }
+.builder__map .world { display: block; width: 100%; height: auto; }
+.tb-chips { margin-top: var(--space-2); }
+.tb-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+.tb-group__label { min-width: 84px; font: 700 var(--size-s)/1.2 var(--font-head); color: var(--text-muted); }
+.tb-chip { padding: 4px 10px; font: 600 var(--size-s) var(--font-body); color: var(--ink); background: var(--paper);
+  border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; cursor: grab; }
+.tb-chip:disabled { cursor: not-allowed; color: var(--ink-soft); background: repeating-linear-gradient(135deg, #e7e1d0 0 6px, #ddd6c3 6px 12px); }
+.tb-chip--on { background: var(--highlighter); }
+.tb-stops { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.tb-stop { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 10px; padding: 10px 12px;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); }
+.tb-stop--empty { border-style: dashed; }
+.tb-stop--over { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.tb-stop__num { font: 700 var(--size-l) var(--font-head); color: var(--text-muted); }
+.tb-stop__body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tb-stop__body .input { max-width: 100%; }
+.tb-send { margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 8px; }
+@media (max-width: 1100px) { .builder { grid-template-columns: 1fr; } }
+
 /* The World map: a pale blue sea with dotted lines of latitude, land in parchment with an ink coastline, the countries'
    names lettered in, dashed red flight paths, and the same push pins (hollow while a city is locked). */
 .map-sheet--world { margin-bottom: var(--space-3); }

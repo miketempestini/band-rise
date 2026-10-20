@@ -183,11 +183,12 @@ Game.rules.booking = {
   // A suggested setlist for a show: the best songs by quality + tightness (covers only for a cover night).
   suggestSetlist: function (state, venue, deal) {
     var set = Game.rules.booking.setFor(venue, deal);
-    return Game.rules.songs.playable(state)
+    var ids = Game.rules.songs.playable(state)
       .filter(function (s) { return !set.coversOnly || s.isCover; })
       .sort(function (a, b) { return (b.quality + b.tightness) - (a.quality + a.tightness); })
       .slice(0, set.size)
       .map(function (s) { return s.id; });
+    return Game.rules.setlist.bestOrder(state, ids); // in the best running order (strong opener and closer)
   },
 
   // Why a setlist doesn't work for a show, or null if it's fine.
@@ -474,13 +475,16 @@ Game.rules.booking = {
   },
 
   // Changes a booked show's setlist. Returns { state, log }.
-  setSetlist: function (state, entryId, songIds) {
+  // Saves a show's setlist in the order given, and its encore (a song id, or null for none).
+  setSetlist: function (state, entryId, songIds, encoreSongId) {
     var e = state.entries[entryId];
     var venue = Game.content.venues[e.venueId];
-    var problem = Game.rules.booking.setlistProblem(state, venue, e.deal, songIds);
+    var problem = Game.rules.booking.setlistProblem(state, venue, e.deal, songIds) ||
+      Game.rules.setlist.encoreProblem(state, songIds, encoreSongId, Game.rules.booking.setFor(venue, e.deal).coversOnly);
     if (problem) return { state: state, log: [problem] };
     var s = Game.util.clone(state);
     s.entries[entryId].songIds = songIds.slice();
+    s.entries[entryId].encoreSongId = encoreSongId || null;
     return { state: s, log: [] };
   },
 
@@ -582,7 +586,8 @@ Game.rules.booking = {
       fanRate: (entry.deal === 'opening' ? o.openingSlotFanRate : 1) *              // their fans, at half the rate
         (Game.rules.travel.isTourShow(state, entry) ? 1 + Game.balance.tours.fanBonus : 1), // word of mouth on tour: more new fans
       crowdFloor: entry.deal === 'residency' ? o.residency.crowdFloor : null,     // regulars come back
-      tourId: entry.tourId || null                                                 // tour shirts sell best on their tour
+      tourId: entry.tourId || null,                                                // tour shirts sell best on their tour
+      encoreSongId: entry.encoreSongId || null                                     // the encore, after a Great or Legendary night
     });
     var after = Game.rules.travel.afterShow(played.state, entry); // out of town: tours, unlocks, your van
     var s = after.state;

@@ -227,6 +227,87 @@ Game.rules.manager = {
       Game.balance.manager.tour.planDays + ' days.'] };
   },
 
+  // ----- Tours you build yourself (the Tour Builder) -----
+
+  // The venues a built tour can use in a city: small rooms and up that take a door deal, with their requirements
+  // met. Biggest first.
+  builderVenues: function (state, cityId) {
+    return Game.rules.booking.venues(cityId).filter(function (v) {
+      return v.tier >= 1 && Game.rules.booking.dealsFor(v).indexOf('door') !== -1 &&
+        Game.rules.booking.requirements(state, v, 'door').every(function (r) { return r.met; });
+    }).sort(function (a, b) { return b.tier - a.tier || b.capacity - a.capacity; });
+  },
+
+  // Why a built tour can't go to the manager, or null. request: { name, stops: [{ cityId, venueId }], earliestDay }.
+  builtTourProblem: function (state, request) {
+    var t = Game.balance.manager.tour;
+    var stops = (request.stops || []).filter(function (x) { return x && x.cityId; });
+    var base = Game.rules.manager.tourRequestProblem(state, { name: request.name, cities: stops.map(function (x) { return x.cityId; }), tier: 1 });
+    if (base) return base === 'Pick at least ' + t.minCities + ' cities.' ? 'Add at least ' + t.minCities + ' stops.' : base;
+    var seen = {};
+    for (var i = 0; i < stops.length; i++) {
+      var stop = stops[i];
+      var name = Game.content.cities[stop.cityId].name;
+      if (seen[stop.cityId]) return name + ' is in the tour twice.';
+      seen[stop.cityId] = true;
+      var venue = Game.content.venues[stop.venueId];
+      if (!venue || venue.cityId !== stop.cityId) return 'Pick a venue in ' + name + '.';
+      if (!Game.rules.manager.builderVenues(state, stop.cityId).some(function (v) { return v.id === venue.id; })) {
+        var unmet = Game.rules.booking.requirements(state, venue, 'door').filter(function (r) { return !r.met; })[0];
+        return venue.name + (unmet ? ' needs ' + unmet.text + '.' : ' can\'t take a tour show.');
+      }
+    }
+    return null;
+  },
+
+  // Sends a tour you built to the manager, who contacts every venue (the proposal arrives in 5 days).
+  // Returns { state, log }.
+  requestBuiltTour: function (state, request) {
+    var problem = Game.rules.manager.builtTourProblem(state, request);
+    if (problem) return { state: state, log: [problem] };
+    var stops = request.stops.filter(function (x) { return x && x.cityId; }).map(function (x) { return { cityId: x.cityId, venueId: x.venueId }; });
+    var s = Game.util.clone(state);
+    var name = Game.rules.manager.tourName(request.name);
+    s.tourRequests.push({ id: 'tr' + s.nextTourRequestId, name: name, cities: stops.map(function (x) { return x.cityId; }), tier: null, stops: stops,
+      earliestDay: request.earliestDay || s.day, readyDay: s.day + Game.balance.manager.tour.planDays });
+    s.nextTourRequestId += 1;
+    return { state: s, log: [Game.content.business.manager.name + ' is contacting ' + stops.length + ' venues for ' + (name ? '"' + name + '"' : 'your tour') +
+      '. The proposal will be in your Inbox in ' + Game.balance.manager.tour.planDays + ' days.'] };
+  },
+
+  // The manager contacts each venue of a built tour: each answers with its normal booking odds. A "no" means trying
+  // the city's other venues (the closest size first); if nobody says yes, that stop is dropped. Then the dates are
+  // fitted like any tour (stops in travel order). rng: the dice (the caller saves its state). chanceOf: optional
+  // (venue) => chance, for tests. Returns planTour's plan plus changes: [text].
+  planBuiltTour: function (state, request, rng, chanceOf) {
+    var m = Game.rules.manager;
+    var odds = chanceOf || function (venue) { return Game.rules.booking.acceptanceChance(state, venue, 'door'); };
+    var venueFor = {};
+    var cities = [];
+    var changes = [];
+    request.stops.forEach(function (stop) {
+      var wanted = Game.content.venues[stop.venueId];
+      var others = m.builderVenues(state, stop.cityId).filter(function (v) { return v.id !== wanted.id; })
+        .sort(function (a, b) { return Math.abs(a.tier - wanted.tier) - Math.abs(b.tier - wanted.tier) || b.capacity - a.capacity; });
+      var got = null;
+      [wanted].concat(others).some(function (v) {
+        if (rng.chance(odds(v))) { got = v; return true; }
+        return false;
+      });
+      if (got) {
+        venueFor[stop.cityId] = got.id;
+        cities.push(stop.cityId);
+        if (got.id !== wanted.id) changes.push(wanted.name + ' said no, so ' + got.name + ' (' + got.capacity.toLocaleString() + ') instead.');
+      } else {
+        changes.push('No venue in ' + Game.content.cities[stop.cityId].name + ' could take you (' + wanted.name + ' said no).');
+      }
+    });
+    var plan = m.planTour(state, cities, null, request.earliestDay, venueFor);
+    plan.changes = changes;
+    plan.built = true;
+    return plan;
+  },
+
   // The venue the manager picks in a city: the requested size, or the biggest smaller one there.
   tourVenue: function (state, cityId, tier) {
     var venues = Game.rules.booking.venues(cityId).filter(function (v) { return v.tier <= tier && Game.rules.booking.dealsFor(v).indexOf('door') !== -1; })
@@ -235,9 +316,10 @@ Game.rules.manager = {
   },
 
   // Plans a tour: one show per city, nearest cities first, each show on the first free evening the travel
-  // allows, starting at least 5 weeks out and inside your 12-week calendar. Returns
+  // allows, starting at least 5 weeks out and inside your 12-week calendar. venueFor: optional { cityId: venueId }
+  // (a tour you built: those venues instead of picking by size). Returns
   // { shows: [{ venueId, day }], skipped: [{ cityId, why }], estimate }.
-  planTour: function (state, cities, tier, earliestDay) {
+  planTour: function (state, cities, tier, earliestDay, venueFor) {
     var tr = Game.rules.travel;
     var t = Game.balance.manager.tour;
     var order = ['near', 'mid', 'far', 'national', 'international'];
@@ -253,7 +335,7 @@ Game.rules.manager = {
     var skipped = [];
     var prev = null;
     sorted.forEach(function (cityId) {
-      var venue = Game.rules.manager.tourVenue(state, cityId, tier);
+      var venue = venueFor ? Game.content.venues[venueFor[cityId]] : Game.rules.manager.tourVenue(state, cityId, tier);
       if (!venue) { skipped.push({ cityId: cityId, why: 'No venue that size there.' }); return; }
       var unmet = Game.rules.booking.requirements(state, venue, 'door').filter(function (r) { return !r.met; })[0];
       if (unmet) { skipped.push({ cityId: cityId, why: venue.name + ' needs ' + unmet.text + '.' }); return; }
@@ -409,7 +491,15 @@ Game.rules.manager = {
     var s = Game.util.clone(state);
     var log = [];
     ready.forEach(function (r) {
-      var plan = Game.rules.manager.planTour(s, r.cities, r.tier, r.earliestDay);
+      var plan;
+      if (r.stops) {
+        // A tour you built: the manager contacts each venue (their answers use the game's dice).
+        var rng = Game.rng.create(s.rngState);
+        plan = Game.rules.manager.planBuiltTour(s, r, rng);
+        s.rngState = rng.getState();
+      } else {
+        plan = Game.rules.manager.planTour(s, r.cities, r.tier, r.earliestDay);
+      }
       plan.name = r.name || null;
       s.tourRequests = s.tourRequests.filter(function (x) { return x.id !== r.id; });
       s = Game.rules.booking.addInbox(s, 'tourProposal', plan, s.day + Game.balance.manager.tour.proposalExpiryDays);

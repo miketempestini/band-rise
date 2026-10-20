@@ -16,7 +16,8 @@ Game.app = Object.assign(Game.app || {}, {
   pickerBlock: null,    // which block the action picker is open for ('morning' etc.), or null when closed
   pickerDay: null,      // which day the picker is planning (null = today; a later day from the Calendar)
   pickerSongStep: null, // an action id (like 'practice') while the picker asks which song, else null
-  pickerSet: [],        // songs ticked so far when picking a set (open mic)
+  pickerSet: [],        // songs ticked so far when picking a set (open mic), in running order
+  pickerEncore: null,   // the open mic's encore song (or null)
   practiceSort: 'tightLow', // how the Practice song list is sorted (remembered while the page is open)
   practiceFilter: 'all',    // which songs the Practice list shows: 'all', 'covers', or 'originals'
   gigPhase: 'meter',    // the gig result screen: 'meter' (crowd animation) then 'result'
@@ -28,6 +29,7 @@ Game.app = Object.assign(Game.app || {}, {
   calendarDay: null,    // the day selected on the Calendar screen
   bookingDraft: null,   // the booking being set up: { venueId, gigDay, deal }
   bookingCity: 'hometown', // which city the Book screen shows
+  tourBuild: null,         // the Tour Builder's draft (see js/app/tourBuilder.js)
   mapView: 'home',         // the Map screen's view: 'home' (the road map) or 'world' (the World map)
   openMicDraft: null,   // an out-of-town open mic sign-up being set up: { venueId, day, jobChoice }
   setlistDraft: null,   // songs ticked while editing a booked show's setlist

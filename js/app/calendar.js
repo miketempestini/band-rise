@@ -36,7 +36,8 @@ Object.assign(Game.app, {
   },
 
   editSetlist: function (entryId) {
-    Game.app.setlistDraft = { entryId: entryId, songIds: Game.app.state.entries[entryId].songIds.slice() };
+    var entry = Game.app.state.entries[entryId];
+    Game.app.setlistDraft = { entryId: entryId, songIds: entry.songIds.slice(), encoreSongId: entry.encoreSongId || null };
     Game.app.setlistError = null;
     Game.app.render();
   },
@@ -46,12 +47,22 @@ Object.assign(Game.app, {
     var i = draft.songIds.indexOf(songId);
     if (i === -1) draft.songIds.push(songId);
     else draft.songIds.splice(i, 1);
+    if (draft.encoreSongId === songId) draft.encoreSongId = null; // a song can't be in the set and the encore
     Game.app.render();
   },
 
+  // The Calendar's setlist editor: move a song, use the best order, or pick the encore.
+  setlistMove: function (from, to) { Game.app.moveInList(Game.app.setlistDraft.songIds, from, to); Game.app.render(); },
+  setlistBest: function () {
+    var draft = Game.app.setlistDraft;
+    draft.songIds = Game.rules.setlist.bestOrder(Game.app.state, draft.songIds);
+    Game.app.render();
+  },
+  setlistEncore: function (songId) { Game.app.setlistDraft.encoreSongId = songId; Game.app.render(); },
+
   saveSetlist: function () {
     var app = Game.app;
-    var result = Game.rules.booking.setSetlist(app.state, app.setlistDraft.entryId, app.setlistDraft.songIds);
+    var result = Game.rules.booking.setSetlist(app.state, app.setlistDraft.entryId, app.setlistDraft.songIds, app.setlistDraft.encoreSongId);
     if (result.log.length) {
       app.setlistError = result.log.join(' ');
       app.render();

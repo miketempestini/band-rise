@@ -48,6 +48,23 @@
       a.show('booking');
       a.bookingCity = 'hometown';
     });
+    check('tour builder (empty)', function (a) { a.tourBuild = null; a.openTourBuilder(); });
+    check('tour builder (with stops)', function (a) {
+      a.tourBuild = a.newTourBuild();
+      Object.keys(a.state.cities).filter(function (id) { return id !== 'hometown' && a.state.cities[id].unlocked; }).slice(0, 4)
+        .forEach(function (id) { a.tbAdd(id); });
+      a.tourBuild.view = 'world';
+      a.show('tourBuilder');
+      a.tourBuild = null;
+    });
+    check('setlist editor', function (a) {
+      var show = Object.keys(a.state.entries).map(function (id) { return a.state.entries[id]; }).filter(function (e) { return e.type === 'gig'; })[0];
+      if (!show) return;
+      a.show('calendar');
+      a.calendarDay = show.day;
+      a.editSetlist(show.id);
+      a.setlistDraft = null;
+    });
     check('action picker', function (a) { a.show('today'); a.pickerBlock = 'evening'; a.render(); });
     check('day readout', function (a) { a.show('today'); a.dayReportOpen = true; a.render(); });
     if (state.lastGig) check('gig result', function (a) { a.gigPhase = 'result'; a.show('gigResult'); });

@@ -415,10 +415,14 @@ Game.rules.actions = {
       if (studioProblem) return { state: state, log: [studioProblem] };
       request = Game.util.clone(songChoice);
     }
+    var encoreSongId = null;
     if (action.setSize) {
-      songIds = Array.isArray(songChoice) ? songChoice.slice() : Game.rules.gigs.suggestSet(state, action.setSize);
-      var setProblem = Game.rules.gigs.setProblem(state, songIds, action.setSize);
+      // choice: the songs in order, or { songIds, encoreSongId } with an encore.
+      var setChoice = songChoice && !Array.isArray(songChoice) && Array.isArray(songChoice.songIds) ? songChoice : { songIds: songChoice, encoreSongId: null };
+      songIds = Array.isArray(setChoice.songIds) ? setChoice.songIds.slice() : Game.rules.gigs.suggestSet(state, action.setSize);
+      var setProblem = Game.rules.gigs.setProblem(state, songIds, action.setSize) || Game.rules.setlist.encoreProblem(state, songIds, setChoice.encoreSongId);
       if (setProblem) return { state: state, log: [setProblem] };
+      encoreSongId = setChoice.encoreSongId || null;
     }
     if (action.songsMax) {
       songIds = Array.isArray(songChoice) ? songChoice.slice() : Game.rules.actions.loosestSongs(state, action.songsMax);
@@ -460,7 +464,7 @@ Game.rules.actions = {
     var id = 'e' + s.nextEntryId;
     s.nextEntryId += 1;
     s.entries[id] = { id: id, day: s.day, block: block, type: 'action', actionId: actionId, songId: songId, songIds: songIds, personId: personId, request: request, cityIds: cityIds, status: 'planned',
-      plannedAhead: !!state.planningAhead };
+      plannedAhead: !!state.planningAhead, encoreSongId: encoreSongId };
     s.schedule[s.day] = s.schedule[s.day] || {};
     s.schedule[s.day][block] = id;
     return { state: s, log: [] };
@@ -539,7 +543,7 @@ Game.rules.actions = {
   // personId: who it's with (Jam, Hang out, Talk).
   // Returns { state, line, notes, skipped, finishedSongId, gig }: line is the one-line result for Day results.
   // cityIds: the cities picked for a Big campaign.
-  perform: function (state, actionId, songId, songIds, personId, request, cityIds) {
+  perform: function (state, actionId, songId, songIds, personId, request, cityIds, encoreSongId) {
     var util = Game.util;
     var b = Game.balance;
     var action = Game.content.actions[actionId];
@@ -631,7 +635,7 @@ Game.rules.actions = {
       if (Game.rules.gigs.setProblem(s, songIds, action.setSize)) {
         songIds = Game.rules.gigs.suggestSet(s, action.setSize);
       }
-      var played = Game.rules.gigs.playGig(s, venue.id, songIds, energyAtStart);
+      var played = Game.rules.gigs.playGig(s, venue.id, songIds, energyAtStart, { encoreSongId: encoreSongId || null });
       s = played.state;
       gig = played.gig;
       parts = [played.log[0].replace(/\.$/, '')].concat(parts);

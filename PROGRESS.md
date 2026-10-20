@@ -4,6 +4,46 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14o: Setlist strategy and the Tour Builder (2026-10-20)
+- **Running order matters:**
+  - **Opener and closer:** opening and closing with one of the set's strongest songs is +3 each. In sets of 4 or more,
+    a weak opener or closer is -2.
+  - **Crowd favorites:** charted or viral songs are +1 each, up to +2, and +1 more in a city where lots of fans know
+    the words.
+  - **On the gig score:** these show as "Opener", "Closer", and "Crowd favorites", with new tips for a weak opener or
+    closer.
+- **The setlist editor** (the Calendar's show card, and the open mic's set step in the picker):
+  - drag songs (or use ↑ ↓) and "Best order"
+  - a live line ("Set order: Opener +3 · Closer +3 · Crowd favorites +3 = +9 on the gig score")
+  - an **Encore** pick
+- **Suggested sets** now come out in the best order.
+- **The encore:** after a Great or Legendary night the band plays it: +15% new fans (+30% with a crowd favorite) and
+  +3 buzz, shown on the result screen. It never changes the score.
+- **The Tour Builder** (Manager → Open the Tour Builder):
+  - **Stops:** drag cities from the Home and World maps (or click a city chip or a map pin) onto tour stops. It starts
+    with 3, and you can add more.
+  - **Venues:** pick the venue in each city (with size, capacity, and chance), and optionally a name and an earliest
+    week.
+  - **The manager:** contacts every venue with its normal odds. A "no" is swapped for another room in that city, or
+    the stop is dropped.
+  - **Routing and dates:** the manager routes the tour for travel and fits the dates.
+  - **The proposal:** it says what the venues said, then works like any tour proposal (ads, estimate, accept).
+- **Also fixed:** the gig result screen always said "Millbrook now …" for new fans, even out of town. It now names the
+  show's city.
+- **Balance (90-day check):** a sensible player who uses the best order does a little better.
+  - Reputation 30 comes on day 44 (46 before).
+  - Fans at day 90 are 244 (209 before).
+  - Paid shows by day 21 are booked in 81% of runs (73% before).
+- **Checked in the preview:**
+  - **Tour Builder:** a chip dragged onto a stop, a World map pin click, sending a 4-city tour (2 abroad), and the
+    proposal arriving with every venue's answer and dates.
+  - **Setlists:** Best order took a set from +4 to +9, and an open mic was planned with an encore.
+  - **Testing note:** the automated mouse can't do the browser's built-in drag and drop, so the drop was tested with
+    real drag events.
+- **Saves:** version 23 (the encore is optional, so no upgrade needed). **Tests:** 373 passing. A new
+  `setlist.test.js` has 5 tests and a new `tourbuilder.test.js` has 4; the screens test opens the Tour Builder and the
+  setlist editor. The version tag is `v23-2026-10-20d`.
+
 ### Session 14n: Fix: unlocking the new cities (2026-10-20)
 - **The problem (reported by the owner):** there seemed to be no way to unlock the new National and International
   cities.

@@ -37,10 +37,11 @@
     t.ok(Math.abs(total / runs - 15) < 0.5, 'average about 15, got ' + (total / runs));
   });
 
-  Game.test('Score: a first open mic with starting skills and covers lands about 22 to 42', function (t) {
+  Game.test('Score: a first open mic with starting skills and covers lands about 22 to 42 (before the set order\'s bonus)', function (t) {
     var low = 999, high = -999, total = 0, runs = 300;
     for (var seed = 1; seed <= runs; seed++) {
-      var score = play(tuesday(seed)).gig.score;
+      var gig = play(tuesday(seed)).gig;
+      var score = gig.score - part(gig, 'opener') - part(gig, 'closer') - part(gig, 'favorites');
       low = Math.min(low, score);
       high = Math.max(high, score);
       total += score;

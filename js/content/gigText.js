@@ -26,6 +26,9 @@ Game.content.gigText = {
     venueTier: 'Bigger room',
     room: 'Room fullness',
     setbacks: 'Setbacks',
+    opener: 'Opener',
+    closer: 'Closer',
+    favorites: 'Crowd favorites',
     luck: 'Luck',
     debug: 'Debug'
   },
@@ -35,6 +38,8 @@ Game.content.gigText = {
     tired: 'You were tired. Rest the day before a show.',
     lowMorale: 'Your morale was low. A day off or some rest before a show helps.',
     badLuck: 'Bad luck tonight. It happens. After ' + Game.balance.gigs.badLuckStreak + ' Rough nights in a row, luck can\'t go against you.',
-    looseSongs: 'Your songs were loose. Practice them before the next show.'
+    looseSongs: 'Your songs were loose. Practice them before the next show.',
+    weakOpener: 'Open with one of your strongest songs (try Best order on the setlist).',
+    weakCloser: 'End on a song the crowd loves: put a strong one last.'
   }
 };

@@ -89,7 +89,7 @@ Game.ui.map = {
         var open = state.cities[id].unlocked;
         var fans = state.cities[id].fans;
         var radius = 6 + Math.min(10, Math.sqrt(fans) / 4);
-        return '<g class="map__city' + (open ? '' : ' map__city--locked') + '">' +
+        return '<g class="map__city' + (open ? '' : ' map__city--locked') + '" data-city="' + id + '">' +
           '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + radius.toFixed(1) + '"/>' +
           '<text x="' + x.toFixed(1) + '" y="' + (y + radius + 13).toFixed(1) + '" text-anchor="middle">' +
             Game.ui.helpers.escape(Game.content.cities[id].name) + '</text></g>';
@@ -131,7 +131,7 @@ Game.ui.map = {
       var city = Game.content.cities[id];
       var open = state.cities[id].unlocked;
       var r = 4 + Math.min(9, Math.sqrt(state.cities[id].fans) / 80);
-      return '<g class="world__city' + (open ? '' : ' world__city--locked') + (id === 'hometown' ? ' world__city--home' : '') + '">' +
+      return '<g class="world__city' + (open ? '' : ' world__city--locked') + (id === 'hometown' ? ' world__city--home' : '') + '" data-city="' + id + '">' +
         '<circle cx="' + city.world.x + '" cy="' + city.world.y + '" r="' + r.toFixed(1) + '"><title>' + h.escape(city.name) + ': ' +
           state.cities[id].fans.toLocaleString() + ' fans' + (open ? '' : ' (locked)') + '</title></circle>' +
         '<text x="' + city.world.x + '" y="' + (city.world.y - r - 5).toFixed(1) + '" text-anchor="middle">' + h.escape(city.name) + '</text></g>';

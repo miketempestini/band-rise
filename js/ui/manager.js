@@ -53,7 +53,8 @@ Game.ui.manager = {
       saveRules: function () { app.saveManagerRules(self.readRules(root)); },
       tourCity: function (e, el) { app.tourDraftSet('city', el.getAttribute('data-city')); },
       tourTier: function (e, el) { app.tourDraftSet('tier', Number(el.getAttribute('data-tier'))); },
-      requestTour: function () { app.requestTour(); }
+      requestTour: function () { app.requestTour(); },
+      openTourBuilder: function () { app.openTourBuilder(); }
     });
     var start = root.querySelector('#tour-start');
     if (start) start.addEventListener('change', function () { app.tourDraftSet('earliestDay', Number(start.value)); });
@@ -134,7 +135,11 @@ Game.ui.manager = {
       weeks += '<option value="' + day + '"' + (d.earliestDay === day ? ' selected' : '') + '>The week of ' + Game.rules.day.weekLabel(day) + '</option>';
     }
     var problem = Game.rules.manager.tourRequestProblem(state, d);
-    return '<div class="panel"><h3 class="panel__title">Ask for a tour</h3>' +
+    return '<div class="panel"><h3 class="panel__title">Build a tour yourself</h3>' +
+        '<p class="hint">Drag cities from the Home and World maps onto tour stops, pick the venue in each city, and send it to your manager. ' +
+        'They contact every venue (any that say no get swapped for another room in that city), fit the dates, and send you a proposal to approve.</p>' +
+        '<button class="btn btn--primary btn--small" data-action="openTourBuilder">Open the Tour Builder</button></div>' +
+      '<div class="panel"><h3 class="panel__title">Ask for a tour</h3>' +
       '<p class="hint">Pick ' + t.minCities + ' or more cities and a venue size. Your manager takes ' + t.planDays +
         ' days to plan it, then sends a proposal with dates, travel, and money estimates. Tours start at least ' + t.leadDays / Game.balance.time.daysPerWeek +
         ' weeks out so every venue has room, and any city that won\'t fit in your calendar is left out (with the reason). A tour needs a van.</p>' +

@@ -186,8 +186,10 @@ Game.ui.actionPicker = {
       : 'Room costs ' + h.money(action.moneyCost) + '. Each song gets +' + gain + ' tightness if a bandmate shows up ' +
         '(x' + Game.balance.songs.tightness.rehearseNoShowMultiplier + ' if nobody does; x' + (1 + Game.balance.traits.workhorse.rehearsalTightnessBonus) +
         ' with a Workhorse). The loosest songs are suggested.';
+    var order = exact ? '<h4 class="show__sub">Running order</h4>' +
+      Game.ui.setlistEditor.html(state, picked, Game.app.pickerEncore, venue ? venue.cityId : 'hometown', false) : '';
     return '<p class="hint picker-note">' + note + '</p>' +
-      '<div class="picks">' + rows + '</div>' +
+      '<div class="picks">' + rows + '</div>' + order +
       '<div class="actions actions--split">' +
         '<button class="btn btn--ghost" data-action="pickerBack">← Back to actions</button>' +
         '<span class="hint">' + picked.length + ' of ' + (exact ? '' : 'up to ') + size + ' picked' +
@@ -309,7 +311,10 @@ Game.ui.actionPicker = {
       if (action === 'pickSong') app.planAction(app.pickerSongStep, target.getAttribute('data-song'));
       if (action === 'toggleSetSong') app.toggleSetSong(target.getAttribute('data-song'));
       if (action === 'pickPerson') app.planAction(app.pickerSongStep, target.getAttribute('data-person') || null);
-      if (action === 'confirmSet') app.planAction(app.pickerSongStep, app.pickerSet.slice());
+      if (action === 'confirmSet') {
+        var setAction = Game.content.actions[app.pickerSongStep];
+        app.planAction(app.pickerSongStep, setAction.setSize ? { songIds: app.pickerSet.slice(), encoreSongId: app.pickerEncore } : app.pickerSet.slice());
+      }
       if (action === 'pickerBack') app.pickerShowActions();
       if (action === 'filterSongs') app.setPracticeFilter(target.getAttribute('data-filter'));
       if (action === 'sortSongs') app.setPracticeSort(target.getAttribute('data-sort'));
@@ -318,5 +323,6 @@ Game.ui.actionPicker = {
     document.onkeydown = function (event) {
       if (event.key === 'Escape') app.closePicker();
     };
+    Game.ui.setlistEditor.bind(root, { move: app.pickerSetMove, best: app.pickerSetBest, encore: app.pickerSetEncore });
   }
 };

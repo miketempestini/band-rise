@@ -401,7 +401,19 @@ Songs are the band's product: you write them, rehearse them until they're tight,
 | Theater | 14 | 2 |
 | Arena or festival | 18 | 2 |
 
-You need enough songs to fill the set before you can book it. The game suggests your best set and you can swap songs before the show.
+You need enough songs to fill the set before you can book it. The game suggests your best set (already in the best
+running order) and you can swap songs before the show.
+
+**Running order matters** (a song's strength is (quality + tightness) / 2):
+- **Opener and closer:** opening with one of the set's 2 strongest songs is +3, and so is closing with one. In sets of 4
+  or more, opening or closing with one of the 2 weakest is -2. (Sets of 2 or 3 count 1 strong song.)
+- **Crowd favorites:** each song that charted (or is going viral) is +1, up to +2. Add +1 more where you have 25% or
+  more of the city's fan ceiling (they know the words).
+- These show as "Opener", "Closer", and "Crowd favorites" on the score breakdown, worth up to about +9 or -4.
+- **Editing:** drag songs (or use the up and down buttons) on the Calendar's setlist or the open mic's set step.
+  "Best order" puts the strongest first and the second strongest last, and a line shows what the order is worth.
+- **The encore:** pick one extra song ahead of time (not in the set). After a Great or Legendary night the band comes
+  back out and plays it: +15% new fans (+30% with a crowd favorite) and +3 buzz. It never changes the score.
 
 ### Recording
 
@@ -551,6 +563,14 @@ Out of town, small rooms, clubs, and theaters book for a share of the door (cove
   - **Daily posts** (free, part of the cut): every night the manager posts for the band: +1 buzz in every city where you have fans, and +3 more in "focus cities" (cities with an out-of-town show in the next 2 weeks).
   - **Tour ads**: a tour proposal lets you add an ad package per city: Posters and playlists $150 (+20 buzz), Local ads $500 (+35 buzz, +50 fans), Full campaign $1,500 (+50 buzz, +200 fans). Ads are paid when you book, land a week before that city's show, and hold that city's buzz (no fading) until the show. The proposal shows the crowd and pay with the ads before you book.
   - **Tours on request**: pick 3 or more unlocked cities (no most: any city that won't fit in the calendar is left out, with the reason), a venue size, and optionally a name for the tour. A named tour carries its name on the proposal, on each show (Calendar and Today), in Finances, and in the list of tours on the Career screen; unnamed tours go by their cities.
+  - **Tour Builder** (Manager screen): build a tour by hand.
+    - **Stops:** drag cities from the Home and World maps (or click a city or pin) onto tour stops. It starts with 3
+      stops, and you can add as many as you like.
+    - **Venues:** pick the venue in each city, among rooms that take a door deal and whose requirements you meet.
+    - **The manager:** contacts every venue with its normal booking odds. A "no" is swapped for another room in that
+      city (closest size first); if nobody says yes, the stop is dropped.
+    - **Routing and dates:** the manager routes the stops for travel and fits the dates like a normal tour.
+    - **The proposal:** it says what the venues said, and it's accepted or declined like any tour proposal.
   - **Tour extras**:
     - **Poster:** every tour gets a shareable day-glo poster with the band, the tour name, and every date, city, and venue, saved as an image.
     - **Tour shirts:** while a tour is coming up, the Shop sells tour shirts at 25 for $250. On that tour they sell for $30, and fans are 1.5 times as likely to buy. Leftovers sell for $10 after the tour.
