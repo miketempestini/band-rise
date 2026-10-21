@@ -50,10 +50,11 @@ Game.ui.calendar = {
         '</div>' +
         h.notice(app.notice) +
         '<p class="hint">' + jobLine + '</p>' +
-        (pages > 1 ? '<div class="sort-bar"><button class="btn btn--small" data-action="calPage" data-page="' + (page - 1) + '"' + (page === 0 ? ' disabled' : '') + '>◀ Earlier</button>' +
+        (pages > 1 ? '<div class="sort-bar d-only"><button class="btn btn--small" data-action="calPage" data-page="' + (page - 1) + '"' + (page === 0 ? ' disabled' : '') + '>◀ Earlier</button>' +
           '<span class="muted">' + Game.rules.day.spanLabel(start, start + pageWeeks * b.time.daysPerWeek - 1) +
           ' (page ' + (page + 1) + ' of ' + pages + ')</span>' +
           '<button class="btn btn--small" data-action="calPage" data-page="' + (page + 1) + '"' + (page >= pages - 1 ? ' disabled' : '') + '>Later ▶</button></div>' : '') +
+        self.weekHtml(state, app, selected, spans) +
         '<div class="cal-layout">' +
           '<div class="cal paper">' + head + cells + '</div>' +
           '<div class="cal-detail">' + self.detailHtml(state, app, selected) + '</div>' +
@@ -78,11 +79,24 @@ Game.ui.calendar = {
       cancelTicket: function (e, el) { app.cancelTicket(el.getAttribute('data-entry')); },
       planWeek: function () { app.openPlanWeek(); },
       calPage: function (e, el) { app.calendarPage = Number(el.getAttribute('data-page')); app.render(); },
+      calWeek: function (e, el) { app.calendarWeekGo(Number(el.getAttribute('data-week'))); },
       openJob: function () { app.openJob(); },
       planBlock: function (e, el) { app.openPicker(el.getAttribute('data-block'), Number(el.getAttribute('data-day'))); },
       clearBlock: function (e, el) { app.calendarClear(Number(el.getAttribute('data-day')), el.getAttribute('data-block')); }
     });
     Game.ui.setlistEditor.bind(root, { move: app.setlistMove, best: app.setlistBest, encore: app.setlistEncore });
+    // Phone: swipe the week strip left or right to change week.
+    var strip = root.querySelector('.cal-week__days');
+    if (strip) {
+      var startX = null;
+      strip.addEventListener('touchstart', function (ev) { startX = ev.touches[0].clientX; }, { passive: true });
+      strip.addEventListener('touchend', function (ev) {
+        if (startX === null) return;
+        var dx = ev.changedTouches[0].clientX - startX;
+        startX = null;
+        if (Math.abs(dx) >= Game.balance.ui.swipeMinPx) app.calendarWeekGo(app.calendarWeek + (dx < 0 ? 1 : -1));
+      }, { passive: true });
+    }
     if (app.pickerBlock) Game.ui.actionPicker.bind(root, app);
   },
 
@@ -127,6 +141,42 @@ Game.ui.calendar = {
     return '<button class="cal__day' + (day === state.day ? ' cal__day--today' : '') + (past ? ' cal__day--past' : '') +
       (isSelected ? ' cal__day--selected' : '') + '" data-action="selectDay" data-day="' + day + '">' +
       '<span class="cal__date">' + Game.ui.calendar.cellDate(day, first) + (day === state.day ? ' · Today' : '') + '</span>' + tours + rows + '</button>';
+  },
+
+  // The phone's week strip (hidden on desktop): 7 day buttons with a colored dot for each booked or planned block,
+  // the tour line, and arrows (or a swipe) to change week. Tapping a day shows it below, like the wall planner.
+  weekHtml: function (state, app, selected, spans) {
+    var h = Game.ui.helpers;
+    var self = Game.ui.calendar;
+    var week = Game.rules.day.calendarWeek(state, app.calendarWeek);
+    var days = '';
+    for (var d = week.start; d < week.start + Game.balance.time.daysPerWeek; d++) {
+      var dots = Game.balance.time.blocks.map(function (block) {
+        var kind = self.blockInfo(state, d, block).kind;
+        return kind === 'free' ? '' : '<span class="cal-week__dot cal-week__dot--' + kind + '"></span>';
+      }).join('');
+      var tour = spans.filter(function (t) { return d >= t.firstDay && d <= t.lastDay; })[0];
+      var date = Game.rules.day.date(d);
+      days += '<button class="cal-week__day' + (d < state.day ? ' cal-week__day--past' : '') + (d === state.day ? ' cal-week__day--today' : '') +
+        (d === selected ? ' cal-week__day--on' : '') + '" data-action="selectDay" data-day="' + d + '" aria-label="' + h.escape(h.dateLabel(d)) + '">' +
+        '<span class="cal-week__dow">' + Game.content.calendar.dayNames[Game.rules.day.dayOfWeek(d)].slice(0, 3) + '</span>' +
+        '<span class="cal-week__num">' + date.date + '</span>' +
+        '<span class="cal-week__dots">' + dots + '</span>' +
+        (tour ? '<span class="cal-week__tour' + (d === tour.firstDay ? ' cal-week__tour--start' : '') + (d === tour.lastDay ? ' cal-week__tour--end' : '') + '"></span>' : '') +
+        '</button>';
+    }
+    var legend = [['show', 'Show or travel'], ['studio', 'Studio'], ['job', 'Day job'], ['ticket', 'Ticket'], ['plan', 'Plan']].map(function (x) {
+      return '<span><span class="cal-week__dot cal-week__dot--' + x[0] + '"></span>' + x[1] + '</span>';
+    }).join('');
+    return '<div class="cal-week paper m-only">' +
+      '<div class="cal-week__head">' +
+        '<button class="btn btn--small cal-week__nav" data-action="calWeek" data-week="' + (week.index - 1) + '"' + (week.index === 0 ? ' disabled' : '') + ' aria-label="Earlier week">‹</button>' +
+        '<span class="cal-week__label">' + Game.rules.day.weekLabel(week.start) + (week.index === 0 ? ' (this week)' : '') + '</span>' +
+        '<button class="btn btn--small cal-week__nav" data-action="calWeek" data-week="' + (week.index + 1) + '"' + (week.index >= week.weeks - 1 ? ' disabled' : '') + ' aria-label="Later week">›</button>' +
+      '</div>' +
+      '<div class="cal-week__days">' + days + '</div>' +
+      '<div class="cal-week__legend">' + legend + '</div>' +
+      '</div>';
   },
 
   // A calendar cell's date: just the day of the month, with the month's short name on the 1st (and on the page's first cell).

@@ -1004,6 +1004,32 @@ Sixteen screens, most of them panels around one main Today view. The vertical sl
 | 15b | Finances | Every dollar in and out for the last week, month, or 3 months: the band's show money (ticket sales, manager, each bandmate, you), your money in and out by category, what others covered, top earners and costs, a 13-week chart, and show-by-show profit with trips and tours grouped | Filter | No |
 | 16 | Settings and saves | Export, import, reset | Manage saves | Partly (export and import) |
 
+### On a phone
+
+Every screen and feature works on a phone (iPhone Safari and Chrome, held upright). Screens up to 700 pixels wide get
+the phone layout; iPads and computers keep the desktop design exactly as it is.
+- **Top:** a slim bar with cash, energy, morale, and the date. Tap it to see reputation, rent, fame, and debt (with
+  Pay back).
+- **Bottom:** tabs for Today, Calendar, Inbox (with its unread count), Book, and More. More opens a sheet with Map,
+  Music, People, Shop, Finances, Career, Manager (once you have one), and Settings.
+- **Layout:** everything is one column, buttons are thumb-sized, and pop-ups (the action picker, the day readout,
+  posters) fill the screen.
+- **Today:** the day sheet and End Day come first, then shows coming up (swipe sideways), the previous day, and the
+  stats.
+- **Calendar:** one week at a time. ‹ › or a swipe changes the week; each day shows colored dots for what's booked and
+  the tour line; tap a day to plan it below.
+- **Music:** the catalog becomes song cards; tables like the charts and Finances scroll sideways in their own box.
+- **The World map:** drawn larger so names are readable; swipe it sideways.
+- **Touch:**
+  - Tapping a greyed-out button (or a hint like "Busy that night") shows why in a small bubble.
+  - When something you tap leaves a message at the top of a long screen ("Bought a ticket…", "Released…"), a copy pops
+    up above the bottom tabs for a few seconds, so you don't have to scroll up to see it.
+  - Setlist songs can be pressed and held, then dragged (the ↑ ↓ buttons work too).
+  - The Tour Builder adds stops by tapping a city or a map pin.
+- **Saves:** your phone and computer keep separate saves. On a phone, Export opens the share sheet (AirDrop, iCloud
+  Drive, Messages), and Import save opens Files. "Save as image" for the career card and tour posters shares the
+  picture.
+
 ### Visual style: backstage
 
 Each screen is drawn as the real thing a working band uses for that job. Paper is the one bold thing; everything

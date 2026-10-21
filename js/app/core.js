@@ -30,6 +30,9 @@ Game.app = Object.assign(Game.app || {}, {
   bookingDraft: null,   // the booking being set up: { venueId, gigDay, deal }
   bookingCity: 'hometown', // which city the Book screen shows
   tourBuild: null,         // the Tour Builder's draft (see js/app/tourBuilder.js)
+  statsOpen: false,        // phone: the slim stat bar is dropped down to show every number
+  moreOpen: false,         // phone: the More sheet (the screens that aren't on the bottom bar) is open
+  calendarWeek: 0,         // phone: which week the Calendar's week strip shows (0 = this week)
   mapView: 'home',         // the Map screen's view: 'home' (the road map) or 'world' (the World map)
   openMicDraft: null,   // an out-of-town open mic sign-up being set up: { venueId, day, jobChoice }
   setlistDraft: null,   // songs ticked while editing a booked show's setlist
@@ -61,6 +64,7 @@ Game.app = Object.assign(Game.app || {}, {
 
   // Runs once when the page loads.
   start: function () {
+    Game.ui.mobile.installHints(); // phone: tap a greyed-out button to see why
     Game.app.show('title');
   },
 
@@ -76,6 +80,7 @@ Game.app = Object.assign(Game.app || {}, {
       app.revealError = null;
       app.dayReportOpen = false;
       app.posterTourId = null;
+      app.moreOpen = false;
     }
     app.screen = screen;
     app.render();
@@ -87,6 +92,7 @@ Game.app = Object.assign(Game.app || {}, {
     var root = document.getElementById('app');
     Game.ui[app.screen].render(root, app);
     Game.ui.topbar.bind(root, app);
+    Game.ui.mobile.bind(root, app); // the phone's slim bar and More sheet
     Game.ui.debugPanel.render(document.getElementById('debug'), app);
   },
 
@@ -157,7 +163,7 @@ Game.app = Object.assign(Game.app || {}, {
     if (screen === app.screen) return;
     var resting = ['songReveal', 'nameBand', 'settings', screen];
     if (resting.indexOf(app.screen) === -1) app.returnTo[screen] = app.screen;
-    if (screen === 'calendar') { app.calendarDay = app.state.day; app.calendarPage = 0; }
+    if (screen === 'calendar') { app.calendarDay = app.state.day; app.calendarPage = 0; app.calendarWeek = 0; }
     if (screen === 'booking') { app.bookingDraft = null; app.studioDraft = null; app.openMicDraft = null; }
     app.show(screen);
     if (screen === 'inbox' && Game.rules.booking.unreadCount(app.state)) {
@@ -313,8 +319,16 @@ Game.app = Object.assign(Game.app || {}, {
   },
 
   exportSave: function () {
-    Game.save.downloadFile(Game.app.state);
-    Game.app.notice = { kind: 'info', text: 'Save file downloaded: ' + Game.save.exportFileName(Game.app.state) };
+    var state = Game.app.state;
+    var name = Game.save.exportFileName(state);
+    // On a phone, the share sheet opens (AirDrop, iCloud Drive, Messages...); otherwise the file downloads.
+    var blob = new Blob([Game.save.serialize(state)], { type: 'application/json' });
+    if (Game.ui.mobile.shareFile(blob, name, 'Band Rise save')) {
+      Game.app.notice = { kind: 'info', text: 'Pick where to send your save (' + name + '). On another device, use Import save to open it.' };
+    } else {
+      Game.save.downloadFile(state);
+      Game.app.notice = { kind: 'info', text: 'Save file downloaded: ' + name };
+    }
     Game.app.render();
   },
 

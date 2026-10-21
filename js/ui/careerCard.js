@@ -122,9 +122,11 @@ Game.ui.careerCard = {
     if (!canvas || !canvas.toDataURL) return;
     var d = Game.rules.day.date(state.day);
     var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    var fileName = 'band-rise-card-' + d.year + '-' + pad(d.month + 1) + '-' + pad(d.date) + '.png';
+    if (Game.ui.mobile.isPhone() && Game.ui.mobile.shareFile(Game.ui.mobile.canvasBlob(canvas), fileName, 'Band Rise career card')) return; // phone: share sheet
     var link = document.createElement('a');
     link.href = canvas.toDataURL('image/png');
-    link.download = 'band-rise-card-' + d.year + '-' + pad(d.month + 1) + '-' + pad(d.date) + '.png';
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

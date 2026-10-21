@@ -137,6 +137,7 @@ Game.ui.map = {
         '<text x="' + city.world.x + '" y="' + (city.world.y - r - 5).toFixed(1) + '" text-anchor="middle">' + h.escape(city.name) + '</text></g>';
     }).join('');
     return '<svg class="world" viewBox="0 0 1000 560" role="img" aria-label="World map">' + lands + routes + pins + '</svg>' +
+      '<p class="hint m-only">Swipe the map sideways to see the whole world.</p>' +
       '<p class="hint">Flights abroad: ' + Game.balance.travel.internationalFlight.blocks + ' blocks and ' +
         h.money(Game.balance.travel.internationalFlight.perPersonOneWay) + ' a person each way; short flights inside a country ' +
         Game.balance.travel.hop.blocks + ' block and ' + h.money(Game.balance.travel.hop.perPersonOneWay) + ' a person.' +

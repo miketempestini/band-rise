@@ -109,9 +109,11 @@ Game.ui.tourPoster = {
   // Saves the poster as a PNG file (works from a double-clicked file too).
   save: function (canvas, data) {
     if (!canvas || !canvas.toDataURL) return;
+    var fileName = 'band-rise-' + data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-poster.png';
+    if (Game.ui.mobile.isPhone() && Game.ui.mobile.shareFile(Game.ui.mobile.canvasBlob(canvas), fileName, data.title)) return; // phone: share sheet
     var link = document.createElement('a');
     link.href = canvas.toDataURL('image/png');
-    link.download = 'band-rise-' + data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-poster.png';
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

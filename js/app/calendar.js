@@ -35,6 +35,16 @@ Object.assign(Game.app, {
     Game.app.applyRule(result);
   },
 
+  // Phone: shows another week on the Calendar's week strip, and selects its first day you can still plan (today, if
+  // it's this week).
+  calendarWeekGo: function (index) {
+    var app = Game.app;
+    var week = Game.rules.day.calendarWeek(app.state, index);
+    app.calendarWeek = week.index;
+    app.calendarDay = Math.max(week.start, app.state.day);
+    app.render();
+  },
+
   editSetlist: function (entryId) {
     var entry = Game.app.state.entries[entryId];
     Game.app.setlistDraft = { entryId: entryId, songIds: entry.songIds.slice(), encoreSongId: entry.encoreSongId || null };

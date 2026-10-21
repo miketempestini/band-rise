@@ -230,6 +230,10 @@ body {
 
 /* ---------- General layout ---------- */
 
+/* Pieces only the phone layout shows (the slim stat bar, the bottom tabs, the Calendar's week strip): hidden here, and
+   shown by mobile.css, which only phones load. */
+.m-only { display: none; }
+
 .screen { padding: 40px 48px; max-width: 1200px; margin: 0 auto; }
 .screen--narrow { max-width: 760px; }
 .screen__title { margin: 0 0 24px; font: 800 var(--size-4xl)/1 var(--font-head); letter-spacing: 0.3px; color: var(--text); }

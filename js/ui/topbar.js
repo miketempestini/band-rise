@@ -41,7 +41,9 @@ Game.ui.topbar = {
       '<div class="stat"><span class="stat__label">Date</span><span class="stat__value">' + Game.rules.day.shortDate(state.day) + ', ' + Game.rules.day.date(state.day).year + '</span></div>' +
       '<div class="stat' + (daysToRent === 0 ? ' stat--warn' : '') + '"><span class="stat__label">Rent</span><span class="stat__value">' + rentText + '</span></div>' +
       '</header>' +
-      Game.ui.topbar.navHtml(state, screen);
+      Game.ui.topbar.navHtml(state, screen) +
+      // The phone's slim stat bar and bottom tabs (hidden on desktop; see js/ui/mobile.js and mobile.css).
+      Game.ui.mobile.barHtml(state) + Game.ui.mobile.navHtml(state, screen);
   },
 
   // The row of tabs. Inbox shows how many unread messages there are (a little red light with the number);

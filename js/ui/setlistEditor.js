@@ -72,6 +72,7 @@ Game.ui.setlistEditor = {
     if (best) best.addEventListener('click', function () { handlers.best(); });
     var encore = editor.querySelector('.set-encore');
     if (encore) encore.addEventListener('change', function () { handlers.encore(encore.value || null); });
+    Game.ui.setlistEditor.bindTouch(editor, handlers);
     // Drag and drop: drag a row onto another row to move it there.
     var from = null;
     editor.querySelectorAll('.set-row').forEach(function (row) {
@@ -89,6 +90,58 @@ Game.ui.setlistEditor = {
         var to = Number(row.getAttribute('data-index'));
         if (from !== null && from !== to) handlers.move(from, to);
         from = null;
+      });
+    });
+  },
+
+  // Phones (no mouse dragging there): press and hold a song for a moment to pick it up, slide your finger up or down,
+  // and let go to drop it. A quick swipe still scrolls the page. Only on the phone layout.
+  bindTouch: function (editor, handlers) {
+    if (!Game.ui.mobile.isPhone()) return;
+    var rows = editor.querySelectorAll('.set-row');
+    var held = null; // { row, from, timer, startY, lifted }
+    var rowAt = function (y) {
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i].getBoundingClientRect();
+        if (y >= r.top && y <= r.bottom) return Number(rows[i].getAttribute('data-index'));
+      }
+      return null;
+    };
+    rows.forEach(function (row) {
+      row.addEventListener('touchstart', function (ev) {
+        if (ev.target.closest('button')) return; // the arrow buttons work as normal
+        var y = ev.touches[0].clientY;
+        held = { row: row, from: Number(row.getAttribute('data-index')), startY: y, lifted: false };
+        held.timer = setTimeout(function () {
+          if (!held) return;
+          held.lifted = true;
+          row.classList.add('set-row--lifted');
+        }, Game.balance.ui.holdToDragMs);
+      }, { passive: true });
+      row.addEventListener('touchmove', function (ev) {
+        if (!held) return;
+        var y = ev.touches[0].clientY;
+        if (!held.lifted) {
+          // Moved before the hold finished: it's a scroll, not a drag.
+          if (Math.abs(y - held.startY) > Game.balance.ui.holdSlopPx) { clearTimeout(held.timer); held = null; }
+          return;
+        }
+        ev.preventDefault(); // while dragging, the page doesn't scroll
+        held.row.style.transform = 'translateY(' + (y - held.startY) + 'px)';
+      }, { passive: false });
+      row.addEventListener('touchend', function (ev) {
+        if (!held) return;
+        clearTimeout(held.timer);
+        var h = held;
+        held = null;
+        if (!h.lifted) return;
+        h.row.classList.remove('set-row--lifted');
+        h.row.style.transform = '';
+        var to = rowAt(ev.changedTouches[0].clientY);
+        if (to !== null && to !== h.from) handlers.move(h.from, to);
+      });
+      row.addEventListener('touchcancel', function () {
+        if (held) { clearTimeout(held.timer); held.row.classList.remove('set-row--lifted'); held.row.style.transform = ''; held = null; }
       });
     });
   }

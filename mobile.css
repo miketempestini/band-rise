@@ -1,0 +1,316 @@
+/* mobile.css
+   The phone layout. This file is only used on screens up to 700 pixels wide (every iPhone held upright or sideways):
+   it's linked with media="(max-width: 700px)" from js/files.js (Game.files.phoneQuery), so a desktop browser never
+   applies a single rule from it, and the desktop look in styles.css stays exactly as it is.
+
+   What changes on a phone:
+   - The desktop top bar and tabs are hidden; a slim stat bar (top) and a bottom tab bar with More (js/ui/mobile.js)
+     take their place.
+   - Everything stacks into one column with 14-pixel side margins, buttons are big enough for a thumb (44 pixels), and
+     text boxes use 16-pixel text (smaller makes iPhones zoom in when you tap them).
+   - Pop-ups become sheets that fill the screen.
+   - Wide tables scroll sideways inside their own box instead of making the whole page wider. */
+
+:root {
+  --m-side: 14px;                /* side margins */
+  --m-nav: 64px;                 /* the bottom tab bar's height (before the iPhone's home-bar space) */
+  --m-tap: 44px;                 /* the smallest comfortable thing to tap */
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body { min-height: 100dvh; overflow-x: hidden; }
+
+/* ---------- Phone-only pieces on, desktop-only pieces off ---------- */
+
+.m-only { display: block; }
+span.m-only { display: inline; }
+.mnav.m-only { display: flex; }
+.d-only, .topbar, .tabs { display: none !important; }
+
+/* ---------- The slim stat bar ---------- */
+
+.mbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding-top: env(safe-area-inset-top);
+  background: var(--case-grain) 0 0 / 4px 4px, linear-gradient(180deg, #24212c, #1b1922);
+  border-bottom: 3px solid;
+  border-image: linear-gradient(180deg, #dfe2e6, #8b9099 50%, #555962) 1;
+  box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.8);
+}
+.mbar__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 6px var(--m-side);
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.mbar__cash { margin-right: auto; font: 700 21px/1.05 var(--font-head); color: var(--amber); white-space: nowrap;
+  text-shadow: 0 0 14px rgba(255, 181, 71, 0.35); }
+.mbar__debt { display: block; font: 700 12px/1.2 var(--font-head); color: var(--bad); text-shadow: none; }
+.mbar__meter { display: grid; grid-template-columns: auto auto; align-items: baseline; column-gap: 5px; min-width: 58px; }
+.mbar__label { font: 700 11px/1.2 var(--font-head); letter-spacing: 0.4px; color: var(--text-muted); }
+.mbar__num { font: 700 16px/1.1 var(--font-head); color: var(--text); }
+.mbar__track { grid-column: 1 / -1; display: block; height: 5px; margin-top: 3px; border-radius: 3px; background: #3a3542; overflow: hidden; }
+.mbar__fill { display: block; height: 100%; background: var(--good); }
+.mbar__meter--warn .mbar__fill { background: var(--amber); }
+.mbar__meter--bad .mbar__fill { background: var(--bad); }
+.mbar__date { font: 700 15px/1.1 var(--font-head); color: var(--text); white-space: nowrap; }
+.mbar__chev { font-size: 10px; color: var(--text-muted); }
+.mbar__more { padding: 4px var(--m-side) 14px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.mbar__who { margin: 8px 0 10px; font-size: var(--size-s); }
+.mbar__fame { color: var(--amber); font: 700 var(--size-s) var(--font-head); }
+.mbar__more .rows { font-size: var(--size-s); }
+.mbar__more .btn { margin-top: 10px; }
+
+/* ---------- The bottom tab bar ---------- */
+
+.mnav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  gap: 5px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #1a1828, #110f1f);
+  border-top: 1px solid #000;
+  box-shadow: 0 -6px 14px -8px rgba(0, 0, 0, 0.8);
+}
+/* Each tab is a strip of white console tape with its name in marker, like the desktop tabs. */
+.mnav__tab {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 46px;
+  padding: 6px 2px 4px;
+  font: 15px/1 var(--font-hand);
+  color: var(--ink);
+  background: linear-gradient(180deg, #d9d5ca, #c4bfb2);
+  border: none;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.mnav__tab--on { background: linear-gradient(180deg, #ffffff, #efece3); box-shadow: 0 -3px 0 var(--amber) inset, 0 1px 2px rgba(0, 0, 0, 0.5); }
+.mnav__badge { position: absolute; top: -6px; right: 4px; min-width: 18px; padding: 0 5px; border-radius: 9px;
+  font: 700 11px/18px var(--font-body); text-align: center; color: #fff; background: #c62828; box-shadow: 0 0 8px rgba(255, 70, 70, 0.6); }
+
+/* The More sheet: a sheet of paper that slides up from the bottom with the other screens. */
+.msheet { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; background: rgba(10, 8, 20, 0.72); }
+.msheet__paper { width: 100%; padding: 18px var(--m-side) calc(18px + env(safe-area-inset-bottom)); border-radius: 10px 10px 0 0;
+  animation: m-sheet-up 0.2s ease-out both; }
+@keyframes m-sheet-up { from { transform: translateY(40px); opacity: 0; } }
+.msheet__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--ink); }
+.msheet__title { margin: 0; font: 800 var(--size-xl) var(--font-head); color: var(--ink); }
+.msheet__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.msheet__item { position: relative; min-height: 54px; font: 19px/1 var(--font-hand); color: var(--ink); text-align: left; padding: 10px 14px;
+  background: linear-gradient(180deg, #ffffff, #efece3); border: 1px solid var(--paper-rule); border-radius: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); cursor: pointer; }
+.msheet__item--on { box-shadow: inset 4px 0 0 var(--amber), 0 1px 2px rgba(0, 0, 0, 0.25); }
+
+/* The tap-to-explain bubble (a hint for something you can't hover over on a phone). */
+.tip-bubble { position: fixed; z-index: 60; max-width: min(320px, calc(100vw - 24px)); padding: 9px 12px; font-size: var(--size-s); line-height: 1.4;
+  color: var(--ink); background: var(--sticky); border-radius: 4px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5); pointer-events: none; }
+
+/* A pop-up copy of a screen's message when you're scrolled away from it (taps pass straight through it). */
+.m-toast { position: fixed; z-index: 60; left: var(--m-side); right: var(--m-side); bottom: calc(var(--m-nav) + 12px + env(safe-area-inset-bottom));
+  padding: 12px 14px; font-size: var(--size-s); line-height: 1.4; border-left: 6px solid var(--good); border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5); pointer-events: none; }
+.m-toast--error { border-left-color: var(--bad); color: var(--bad); }
+
+/* ---------- Every screen: one column, room for the bottom bar ---------- */
+
+.screen { padding: calc(22px + env(safe-area-inset-top)) var(--m-side) calc(var(--m-nav) + 32px + env(safe-area-inset-bottom)); max-width: none; }
+.mnav ~ .screen, .msheet ~ .screen { padding-top: 16px; }   /* screens with the slim bar above them */
+.screen__head { flex-wrap: wrap; align-items: flex-start; gap: 8px 12px; }
+.screen__head .actions { flex-wrap: wrap; margin-top: 0; }
+.screen__title { margin-bottom: 12px; font-size: 36px; overflow-wrap: anywhere; }
+.screen__title--big { font-size: 44px; }
+.panel { padding: 16px; }
+.panel__title { font-size: 19px; }
+.notice { max-width: none; }
+.actions { flex-wrap: wrap; }
+.hint { font-size: 14px; }
+
+/* Thumb-sized buttons, and text boxes that don't make the iPhone zoom in. */
+.btn { min-height: var(--m-tap); padding: 10px 16px; font-size: 15px; }
+.btn--small { min-height: 40px; padding: 8px 12px; font-size: 14px; }
+.btn--big { width: 100%; }
+.input, select, textarea, input[type="text"], input[type="number"] { font-size: 16px; min-height: var(--m-tap); }
+.input--tiny { width: 76px; }
+input[type="checkbox"], input[type="radio"] { width: 22px; height: 22px; flex-shrink: 0; }
+.switch { min-height: 40px; display: inline-flex; align-items: center; gap: 8px; }
+.link-btn { min-height: 40px; }
+.setlist-song { min-height: var(--m-tap); }   /* song picks (set lists, releases) */
+.input--select { padding: 6px 8px; }
+
+/* Wide things never make the page wider: tables scroll sideways in their own box, pictures shrink to fit. */
+table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+svg, canvas, img { max-width: 100%; }
+canvas { height: auto; }
+.table-scroll { overflow-x: auto; }
+
+/* Lists of cards: one per row. */
+.people-grid, .venue-grid, .city-grid, .shop-grid, .finance-grid, .charts-grid, .map-layout, .builder, .summary-grid,
+.cal-layout, .event-card__choices, .choices, .contract-edit { grid-template-columns: minmax(0, 1fr) !important; }
+.finance-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.discography { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.skill-changes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Rows of buttons (tabs inside a screen, city tabs, filters): one row you swipe sideways. */
+.sort-bar { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.sort-bar::-webkit-scrollbar { display: none; }
+.sort-bar > * { flex-shrink: 0; }
+.sort-bar__label { min-width: 0; }
+
+/* ---------- Pop-ups: sheets that fill the screen ---------- */
+
+.overlay { z-index: 50; align-items: stretch; padding: 0; backdrop-filter: none; } /* above the phone's bars */
+.modal, .modal--wide, .modal--poster { width: 100%; max-width: none; height: 100dvh; padding: calc(10px + env(safe-area-inset-top)) 6px 6px;
+  border-radius: 0; display: flex; flex-direction: column; }
+.modal::before { display: none; }
+.modal__paper { flex: 1; max-height: none; padding: 16px var(--m-side) calc(20px + env(safe-area-inset-bottom)); }
+.modal__head { position: sticky; top: -16px; z-index: 2; margin: -16px calc(-1 * var(--m-side)) 10px; padding: 14px var(--m-side) 10px; background: var(--paper); }
+.modal__head .btn { min-width: 64px; }
+.pick { padding: 14px 6px; }
+.pick__head { flex-wrap: wrap; }
+.pick__costs { white-space: normal; }
+
+/* ---------- Title, New career, skills ---------- */
+
+.title-screen__menu { width: 100%; }
+.title-screen__content { padding-left: var(--m-side); padding-right: var(--m-side); }
+.signup { padding: 22px 16px 18px; }
+.alloc-head { flex-direction: column; }
+.alloc-head__helpers { flex-wrap: wrap; flex-shrink: 1; }
+.alloc { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }
+.alloc__info { grid-column: 1 / -1; }
+.alloc__total { align-items: flex-start; }
+
+/* ---------- Today ---------- */
+
+/* One column: the day sheet first, then shows coming up, the previous day, and the stats. */
+.dashboard { display: flex; flex-direction: column; align-items: stretch; gap: 14px; padding: 14px var(--m-side) calc(var(--m-nav) + 32px + env(safe-area-inset-bottom)); }
+.dashboard > *, .dashboard__side > * { min-width: 0; }
+.dashboard__main { order: 1; max-width: none; }
+.dashboard__side { display: contents; }
+.dashboard__side > * { order: 4; }
+.dashboard__side > .upcoming, .dashboard__side > .panel--debt { order: 2; }
+.dashboard__recap { order: 3; }
+.daysheet { padding: 22px 16px 16px; }
+.daysheet__head { flex-wrap: wrap; }
+.daysheet__title { font-size: 30px; }
+.block { grid-template-columns: 74px minmax(0, 1fr); grid-template-areas: "time title" "time detail" "time energy"; padding-left: 14px; }
+.block__energy { text-align: left; }
+.end-day { flex-direction: column; align-items: stretch; }
+.end-day .btn { width: 100%; }
+.end-day .btn--primary { min-width: 0; }
+/* The gig posters coming up: a row you swipe sideways. */
+.posters { display: flex; overflow-x: auto; gap: 12px; padding: 4px 2px 10px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.posters > * { flex: 0 0 150px; scroll-snap-align: start; }
+
+/* ---------- Calendar: one week at a time ---------- */
+
+.cal { display: none; }                 /* the 4-week wall planner is for big screens */
+.cal-week.m-only { display: block; }
+.cal-week { margin-bottom: 14px; padding: 12px 10px 14px; }
+.cal-week__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.cal-week__label { font: 700 var(--size-m) var(--font-head); color: var(--ink); text-align: center; }
+.cal-week__nav { min-width: var(--m-tap); }
+.cal-week__days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-week__day { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 76px; padding: 6px 2px 8px;
+  font: inherit; color: var(--ink); background: rgba(255, 255, 255, 0.35); border: 1px solid var(--paper-rule); border-radius: 4px; cursor: pointer; }
+.cal-week__day--past { background: repeating-linear-gradient(135deg, rgba(31, 34, 64, 0.06) 0 6px, transparent 6px 12px); color: var(--ink-soft); }
+.cal-week__day--today .cal-week__num { color: var(--red-pen); border: 2px solid var(--red-pen); border-radius: 50%; }
+.cal-week__day--on { background: var(--highlighter); box-shadow: inset 0 0 0 2px var(--ink); }
+.cal-week__dow { font: 700 11px var(--font-head); color: var(--ink-soft); }
+.cal-week__num { display: inline-grid; place-items: center; width: 28px; height: 28px; font: 800 17px var(--font-head); }
+.cal-week__dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; min-height: 8px; }
+.cal-week__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-soft); }
+.cal-week__dot--show, .cal-week__dot--travel, .cal-week__dot--away { background: var(--tape-show); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25); }
+.cal-week__dot--studio { background: var(--tape-studio); }
+.cal-week__dot--sessionWork, .cal-week__dot--off { background: var(--tape-money); }
+.cal-week__dot--job { background: var(--tape-job); }
+.cal-week__dot--ticket { background: var(--tape-event); }
+.cal-week__dot--pending { background: transparent; box-shadow: inset 0 0 0 2px var(--tape-show); }
+.cal-week__tour { position: absolute; left: -3px; right: -3px; bottom: 2px; height: 4px; background: var(--tape-show); }
+.cal-week__tour--start { left: 4px; border-radius: 3px 0 0 3px; }
+.cal-week__tour--end { right: 4px; border-radius: 0 3px 3px 0; }
+.cal-week__legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 10px; font-size: 12px; color: var(--ink-soft); }
+.cal-week__legend .cal-week__dot { display: inline-block; margin-right: 4px; vertical-align: -1px; }
+.cal-detail { width: 100%; }
+.plan__row { flex-wrap: wrap; row-gap: 6px; }
+
+/* ---------- Inbox, Book, Map ---------- */
+
+.message__head { flex-wrap: wrap; row-gap: 4px; }
+.message__foot { flex-wrap: wrap; row-gap: 8px; }
+.venue { padding: 14px; }
+.venue__head { flex-direction: column; }
+.deal__foot { flex-wrap: wrap; row-gap: 8px; }
+.dates { display: flex; flex-wrap: wrap; gap: 6px; }
+.date-btn { min-height: 40px; }
+.gig-row { grid-template-columns: 70px minmax(0, 1fr); }
+.gig-row { padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
+.gig-row > :last-child { grid-column: 2; justify-self: start; }
+.panel--art .art-banner, .art-banner { min-height: 110px; }
+.map-sheet { padding: 8px; }
+/* The World map is drawn bigger than the screen so city names are readable: swipe it sideways. */
+.map-sheet--world { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.map-sheet--world .world { width: 760px; max-width: none; }
+.world__city text { font-size: 13px; }
+
+/* ---------- Music, release pages, charts ---------- */
+
+.sleeve--big { width: 100%; max-width: 320px; margin: 0 auto; }
+.release-top { flex-direction: column; }
+.chart-sheet { padding: 14px 10px; }
+.chart-table th, .chart-table td { padding: 5px 4px; }
+.notebook { padding-left: 46px; }
+/* The song catalog: each song becomes a small card (title and type, stars and quality, then labelled lines). */
+.song-table--catalog { display: block; overflow: visible; }
+.song-table--catalog thead { display: none; }
+.song-table--catalog tbody { display: block; }
+.song-table--catalog tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--line); }
+.song-table--catalog td { display: block; padding: 0; border: none; }
+.song-table--catalog td[data-label] { display: flex; align-items: center; gap: 8px; }
+.song-table--catalog td[data-label]::before { content: attr(data-label); min-width: 78px; font: 700 12px var(--font-head); color: var(--text-muted); }
+.song-table--catalog td[data-label="Quality"]::before { min-width: 0; }
+.song-table--catalog td[data-label="Recording"], .song-table--catalog td[data-label="Streams"], .song-table--catalog .song__tight { grid-column: 1 / -1; }
+.song-table--catalog .song__title { font-size: 17px; }
+.song-table--catalog .meter--tight { flex: 1; max-width: 160px; }
+
+/* ---------- People, Shop, Finances, Career ---------- */
+
+.person { max-width: none; }
+.shop-item { max-width: none; }
+.career-card { width: 100%; height: auto; }
+.fame-step { grid-template-columns: 22px minmax(0, 1fr) auto; }
+.milestone, .tour-row { grid-template-columns: 36px minmax(0, 1fr); }
+.milestone__when, .tour-row > :last-child { grid-column: 2; }
+
+/* ---------- Gig result, weekly summary, wrap-up, reveals ---------- */
+
+.result-row { grid-template-columns: minmax(0, 1fr) auto; }
+.settlement__line { width: 100%; }
+.reveal__name, .slice__panel, .meter--crowd { width: 100%; }
+
+/* ---------- Setlist editor and Tour Builder ---------- */
+
+.set-row { grid-template-columns: 16px 20px minmax(0, 1fr) auto; touch-action: pan-y; -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none; }
+.set-row__strength { display: none; }
+.set-row--lifted { position: relative; z-index: 5; transform: scale(1.02); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35); background: var(--highlighter); }
+.set-row__moves .btn { min-width: 40px; }
+.tb-stop { grid-template-columns: 24px minmax(0, 1fr) auto; }
+.tb-chip { min-height: var(--m-tap); padding: 6px 12px; }
+.tb-group__label { min-width: 0; width: 100%; }

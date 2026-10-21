@@ -33,6 +33,7 @@ Game.ui.settings = {
             '<input type="file" id="import-file" accept=".json,application/json" hidden>' +
           '</div>' +
           '<p class="hint">Importing replaces the game you have now.</p>' +
+          '<p class="hint m-only">Your phone and computer keep separate saves. To move a career, Export here (pick AirDrop, iCloud Drive, or Messages), then Import save on the other device.</p>' +
         '</div>' +
         '<div class="actions actions--left">' +
           '<button class="btn btn--ghost" data-action="title">Title screen</button>' +

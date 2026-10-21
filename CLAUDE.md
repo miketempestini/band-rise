@@ -23,7 +23,7 @@ The owner is not a developer. Explain plans and results in plain language.
   ```
   and then adds its piece, for example `Game.rng = { ... }`. No other globals.
 - Don't use `fetch()` to load local files. It doesn't work from `file://`. Fixed data goes in `.js` files under `js/content/`.
-- Desktop-first layout.
+- Desktop-first layout, plus a phone layout that must never change the desktop (see "The phone layout" below).
 
 ## Architecture rules
 
@@ -51,7 +51,8 @@ The owner is not a developer. Explain plans and results in plain language.
 
 ```
 index.html        The game page. Loads every file from the list in js/files.js (see below).
-styles.css        All the look and layout.
+styles.css        All the look and layout (desktop).
+mobile.css        The phone layout's extra rules (only loaded on screens up to 700 pixels wide).
 tests.html        The test page. Open it to see passing/failing tests.
 assets/           Pictures (title, backdrops, venues, portraits) and fonts (with their licenses).
 test-saves/       Save files for testing (late-career.json: a rich, famous, everything-unlocked career; import it).
@@ -355,6 +356,23 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   Tests that invite random contacts wrap the state in `Game.testOpenRole(s, personId)` (test-runner.js).
 - **Calendar tour lines**: `tours.calendarSpans(state)` (manager tours from `state.tours`, plus self-booked trips with 3+
   shows) feeds `.cal__tour` strips in `Game.ui.calendar.cellHtml`.
+- **The phone layout** (iPhone Safari and Chrome; screens up to `Game.files.phoneQuery`, 700 pixels wide):
+  - `mobile.css` holds every phone rule. It's linked with that media query (`Game.files.writeCss`), so desktop never
+    applies it. **Never put phone styles in styles.css**; the only phone hook there is `.m-only { display: none }`.
+  - Phone-only markup carries `m-only` (hidden on desktop, shown on phones); desktop-only markup that phones hide
+    carries `d-only`. Use paired spans for wording (`<span class="d-only">Click</span><span class="m-only">Tap</span>`).
+  - `Game.ui.mobile` (js/ui/mobile.js): the slim stat bar (`barHtml`, `app.statsOpen`), the bottom tabs and More sheet
+    (`navHtml`, `app.moreOpen`; drawn by `topbar.html` on every screen that has the top bar), `isPhone()`, the
+    tap-to-explain bubble for `title` hints (`installHints`), `noticeToast` (a short pop-up copy of a new `app.notice`
+    when it's scrolled out of sight), and `shareFile` (the share sheet for saves and pictures).
+  - Every button on a phone is at least 40 pixels tall (44 for most: `--m-tap`). After phone changes, scan each screen for
+    smaller `button`, `a`, `select`, and `[data-action]` elements.
+  - The Calendar draws a week strip (`calendar.weekHtml`, `app.calendarWeek`, `day.calendarWeek`) that only phones show;
+    the 4-week grid is hidden there. Setlists get press-and-hold drag on phones (`setlistEditor.bindTouch`).
+  - Desktop must stay pixel-identical: take desktop screenshots of every screen before and after a phone change and
+    compare them (they're byte-identical when nothing changed). Check phones with the preview's device emulation (375,
+    390, and 430 wide): no sideways scrolling on any screen. Headless Chrome won't lay out narrower than about 500
+    pixels, so don't trust its phone screenshots.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

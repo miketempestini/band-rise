@@ -146,12 +146,12 @@ Game.ui.songs = {
         '<td class="song__title">' + h.escape(song.title) + '</td>' +
         '<td><span class="tag tag--' + (song.isCover ? 'cover' : 'original') + '">' + (song.isCover ? 'Cover' : 'Original') + '</span></td>' +
         '<td>' + h.stars(song.quality) + '</td>' +
-        '<td class="num">' + song.quality + '</td>' +
-        '<td class="song__tight"><span class="meter meter--tight"><span class="meter__fill" style="width:' + Math.round(song.tightness) + '%"></span></span>' +
+        '<td class="num" data-label="Quality">' + song.quality + '</td>' +
+        '<td class="song__tight" data-label="Tightness"><span class="meter meter--tight"><span class="meter__fill" style="width:' + Math.round(song.tightness) + '%"></span></span>' +
           '<span class="num">' + Math.round(song.tightness) + '</span></td>' +
-        '<td class="' + (fading ? 'song__fading' : 'muted') + '">' + (days <= 0 ? 'Today' : days + (days === 1 ? ' day' : ' days')) + (fading ? ' · fading' : '') + '</td>' +
-        '<td>' + self.recordingCell(state, song) + '</td>' +
-        '<td>' + streamsCell + '</td>' +
+        '<td class="' + (fading ? 'song__fading' : 'muted') + '" data-label="Last played">' + (days <= 0 ? 'Today' : days + (days === 1 ? ' day' : ' days')) + (fading ? ' · fading' : '') + '</td>' +
+        '<td data-label="Recording">' + self.recordingCell(state, song) + '</td>' +
+        '<td data-label="Streams">' + streamsCell + '</td>' +
         '</tr>';
     }).join('');
     var originals = songs.filter(function (x) { return !x.isCover; }).length;
@@ -159,7 +159,7 @@ Game.ui.songs = {
     return progressPanel +
       '<div class="tracklist paper">' +
         '<h3 class="panel__title">Catalog: ' + originals + ' original' + (originals === 1 ? '' : 's') + ', ' + (songs.length - originals) + ' covers</h3>' +
-        '<table class="song-table">' +
+        '<table class="song-table song-table--catalog">' +
           '<thead><tr><th>Title</th><th>Type</th><th>Stars</th><th class="num">Quality</th><th>Tightness</th><th>Last played</th><th>Recording</th><th>Streams (this week)</th></tr></thead>' +
           '<tbody>' + rows + '</tbody>' +
         '</table>' +

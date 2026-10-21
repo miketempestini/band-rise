@@ -56,6 +56,15 @@ Game.rules.day = {
     return sn(months[a.month]) + ' ' + a.date + ' – ' + (b.month === a.month ? '' : sn(months[b.month]) + ' ') + b.date;
   },
 
+  // The phone Calendar's week strip: which week it shows. index: weeks from this one (0 = this week), kept inside the
+  // calendar (4 weeks, or 12 with a manager). Returns { index, start (that week's Monday), weeks }.
+  calendarWeek: function (state, index) {
+    var weeks = Game.rules.manager.calendarWeeks(state);
+    var i = Math.max(0, Math.min(weeks - 1, Math.floor(index || 0)));
+    var thisMonday = state.day - Game.rules.day.dayOfWeek(state.day);
+    return { index: i, start: thisMonday + i * Game.balance.time.daysPerWeek, weeks: weeks };
+  },
+
   // A span of days, like "January 5 – February 1".
   spanLabel: function (fromDay, toDay) {
     var months = Game.content.calendar.monthNames;

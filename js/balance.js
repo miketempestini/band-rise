@@ -1054,7 +1054,12 @@ Game.balance = {
     upcomingMilestones: 4,           // The Career screen lists this many milestones under "Coming up"
     upcomingShows: 3,                // Today's "Coming up" panel lists this many booked shows
     ledSegments: 10,                 // How many little lights the top bar's Energy and Morale meters have
-    streamChartWeeks: 12             // A release page's week-by-week chart always has room for at least this many bars
+    streamChartWeeks: 12,            // A release page's week-by-week chart always has room for at least this many bars
+    tipBubbleMs: 3500,               // Phone: how long a tap-to-explain hint bubble stays up (milliseconds)
+    noticeToastMs: 4000,             // Phone: how long a pop-up copy of an out-of-sight message stays up (milliseconds)
+    swipeMinPx: 50,                  // Phone: how far a finger moves sideways to count as a swipe
+    holdToDragMs: 300,               // Phone: how long to press a setlist song before it can be dragged
+    holdSlopPx: 10                   // Phone: moving more than this before the hold finishes means you're scrolling
   },
 
   // ---------------------------------------------------------------

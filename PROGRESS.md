@@ -4,6 +4,53 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14r: A phone layout (2026-10-21)
+- **What it is:** the whole game now plays in a phone browser (iPhone Safari and Chrome, held upright). Every screen
+  and feature works. Screens up to 700 pixels wide get the phone layout; iPads and computers keep the desktop design.
+- **Desktop is unchanged:** all the phone styles live in a separate stylesheet (`mobile.css`) that only phone-sized
+  screens load. Proof: screenshots of 20 screens, with a new career and with the late-career save, at 1440 and 1024
+  pixels wide, taken before and after. All 80 match to the byte.
+- **The frame:**
+  - **Top:** a slim bar (cash, energy, morale, date). Tap it for reputation, rent, fame, and debt (with Pay back).
+  - **Bottom:** tabs for Today, Calendar, Inbox (with the unread count), and Book, plus More. More opens a sheet with
+    Map, Music, People, Shop, Finances, Career, Manager (once hired), and Settings.
+- **Screens:**
+  - one column everywhere, with thumb-sized buttons (at least 40 pixels, most 44) and text boxes that don't make the
+    iPhone zoom in
+  - pop-ups fill the screen
+  - Today puts the day sheet and End Day first
+  - the Music catalog becomes song cards
+  - wide tables scroll inside their own box
+  - the World map is drawn larger and swipes sideways
+- **Calendar:** one week at a time on phones. ‹ › or a swipe changes the week. Colored dots show each day's bookings,
+  with the tour line across them. Tap a day to plan it below.
+- **Touch:**
+  - tap a greyed-out button to see why in a small bubble
+  - press and hold a setlist song to drag it
+  - the Tour Builder adds stops by tapping
+  - when a message lands at the top of a long screen, a copy pops up above the bottom tabs for 4 seconds
+- **Saves:**
+  - Export opens the iPhone share sheet (AirDrop, Files, Messages); Import opens Files.
+  - "Save as image" shares the career card and tour posters.
+  - Settings explains that the phone and the computer keep separate saves.
+- **Checked on emulated phones** (375, 390, and 430 pixels wide):
+  - no screen scrolls sideways (31 screens and pop-ups, with both saves)
+  - no button under 40 pixels
+- **Played through by tapping:**
+  - planned a day and ended it
+  - booked a show
+  - planned from the week strip
+  - dragged a setlist song
+  - built and sent a tour
+  - bought a ticket
+  - released a single
+  - exported a save (share sheet)
+- **Files:** new `mobile.css`, `js/ui/mobile.js`, `js/tests/mobile.test.js`. Small hooks in topbar, calendar,
+  setlistEditor, songs, today, tourBuilder, map, settings, careerCard, tourPoster, and core.
+- **Saves:** no save format change.
+- **Tests:** 378 passing (2 new: the week strip rule, and the phone tabs reaching every screen).
+  **Version tag:** `v23-2026-10-21j`.
+
 ### Session 14q: One of each instrument in the band (2026-10-20)
 - **The rule:** a band has one guitar, one bass, one drums, one keys, and one vocals, and you count as your own
   instrument.
@@ -895,6 +942,12 @@ No gameplay numbers changed: the balance checks give the same results as before.
 - Promotion (flyers, social ads) still only reaches the hometown; the Big campaign and press push reach other cities.
 
 ## Known issues / open decisions
+- **The phone layout has only been tested on emulated phones.** Try it on a real iPhone in Safari and Chrome after
+  publishing. Real-device checks still to do:
+  - the share sheet for Export and "Save as image"
+  - the home-indicator spacing at the bottom
+  - press-and-hold setlist drag
+  - Safari's moving toolbar
 - **Rivals copy your level closely** (they aim for your reputation and fans, plus or minus a little), so they never
   pull far ahead or fall far behind. If that feels too tidy, give them a little random luck each year.
 - **Late in a career, your songs and your rivals' records fill most of the charts.** Other bands mostly sit lower down.

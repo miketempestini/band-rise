@@ -26,7 +26,8 @@ Game.ui.tourBuilder = {
         '<button class="btn btn--small' + (world ? '' : ' btn--primary') + '" data-action="tbView" data-view="home">Home map</button>' +
         '<button class="btn btn--small' + (world ? ' btn--primary' : '') + '" data-action="tbView" data-view="world">World map</button></div>' +
       '<div class="map-sheet paper builder__map' + (world ? ' map-sheet--world' : '') + '">' + (world ? Game.ui.map.worldSvg(state) : Game.ui.map.svg(state, byRegion)) + '</div>' +
-      '<p class="hint">Drag a city onto a stop, or click a city (or its pin) to fill the next empty stop.' +
+      '<p class="hint"><span class="d-only">Drag a city onto a stop, or click a city (or its pin) to fill the next empty stop.</span>' +
+        '<span class="m-only">Tap a city (or its pin on the map) to add it to the next empty stop.</span>' +
         (world ? '' : ' National cities are on the World map.') + '</p>';
 
     var stops = d.stops.map(function (stop, i) { return self.stopHtml(state, stop, i); }).join('');
@@ -96,7 +97,7 @@ Game.ui.tourBuilder = {
     var h = Game.ui.helpers;
     if (!stop) {
       return '<div class="tb-stop tb-stop--empty" data-slot="' + i + '"><span class="tb-stop__num">' + (i + 1) + '</span>' +
-        '<span class="muted">Drop a city here</span>' +
+        '<span class="muted"><span class="d-only">Drop a city here</span><span class="m-only">Tap a city or a map pin to add it here</span></span>' +
         '<button class="btn btn--small btn--ghost" data-action="tbRemove" data-slot="' + i + '" aria-label="Remove this stop">✕</button></div>';
     }
     var city = Game.content.cities[stop.cityId];

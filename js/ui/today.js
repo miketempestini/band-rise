@@ -233,10 +233,10 @@ Game.ui.today = {
         }
         detail = row.problem
           ? '<span class="block__problem">Won\'t happen: ' + h.escape(row.problem) + '</span>'
-          : about + (action.moneyCost ? h.money(action.moneyCost) + ' · ' : '') + 'Click to change';
+          : about + (action.moneyCost ? h.money(action.moneyCost) + ' · ' : '') + '<span class="d-only">Click</span><span class="m-only">Tap</span> to change';
       } else {
         title = row.away ? 'On the road' : 'Free time';
-        detail = '+' + b.time.emptyBlockEnergy + ' energy · ' + (row.away ? Game.rules.actions.roadActionsText() : 'Click to plan');
+        detail = '+' + b.time.emptyBlockEnergy + ' energy · ' + (row.away ? Game.rules.actions.roadActionsText() : '<span class="d-only">Click</span><span class="m-only">Tap</span> to plan');
       }
       return '<button class="block block--' + row.kind + '" data-action="openPicker" data-block="' + row.block + '">' +
         '<span class="block__time">' + name + '</span>' +
