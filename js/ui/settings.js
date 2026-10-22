@@ -1,5 +1,5 @@
 // settings.js
-// The Settings screen: export and import save files.
+// The Settings screen: the Guide (and the welcome handbook), tutorial tips, and export and import save files.
 
 window.Game = window.Game || {};
 Game.ui = Game.ui || {};
@@ -19,7 +19,13 @@ Game.ui.settings = {
         '</div>' +
         h.notice(app.notice) +
         (hasGame ? '<div class="panel">' +
-          '<h3 class="panel__title">Tutorial</h3>' +
+          '<h3 class="panel__title">Guide</h3>' +
+          '<p class="hint">' + h.escape(Game.content.handbook.mentor.name) + ' explains how everything in the game works: energy, morale, money, ' +
+            'skills, shows, the band, and everything that comes later.</p>' +
+          '<div class="actions actions--left">' +
+            '<button class="btn btn--primary" data-action="guide">Open the Guide</button>' +
+            '<button class="btn" data-action="handbook">Read the welcome handbook again</button>' +
+          '</div>' +
           '<label class="switch"><input type="checkbox" id="tips-toggle"' + (app.state.settings.tutorial ? ' checked' : '') + '>' +
             ' Show tutorial tips on the first ' + Game.balance.tutorial.days + ' days</label>' +
         '</div>' : '') +
@@ -47,6 +53,8 @@ Game.ui.settings = {
     fileInput.addEventListener('change', function () { app.importFile(fileInput.files[0]); });
 
     h.bind(root, {
+      guide: function () { app.openGuide(); },
+      handbook: function () { app.openHandbook('settings'); },
       export: function () { app.exportSave(); },
       import: function () { fileInput.click(); },
       back: function () { if (hasGame) app.goBack('settings'); else app.show('title'); },

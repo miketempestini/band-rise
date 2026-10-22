@@ -67,6 +67,12 @@
     });
     check('action picker', function (a) { a.show('today'); a.pickerBlock = 'evening'; a.render(); });
     check('day readout', function (a) { a.show('today'); a.dayReportOpen = true; a.render(); });
+    Game.content.handbook.pages(state).forEach(function (page, i) {
+      check('handbook page ' + (i + 1), function (a) { a.openHandbook('today'); a.handbookGo(i); });
+    });
+    Game.content.handbook.sections().forEach(function (section) {
+      check('guide: ' + section.id, function (a) { a.show('settings'); a.openGuide(); a.guideGo(section.id); });
+    });
     if (state.lastGig) check('gig result', function (a) { a.gigPhase = 'result'; a.show('gigResult'); });
     if (state.ledger.length) check('weekly summary', function (a) { a.show('weeklySummary'); });
     if (Object.keys(state.songs).length) check('song reveal', function (a) { a.revealQueue = [Object.keys(a.state.songs)[0]]; a.show('songReveal'); });

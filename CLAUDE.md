@@ -373,6 +373,19 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
     compare them (they're byte-identical when nothing changed). Check phones with the preview's device emulation (375,
     390, and 430 wide): no sideways scrolling on any screen. Headless Chrome won't lay out narrower than about 500
     pixels, so don't trust its phone screenshots.
+- **Walt's handbook and the Guide**:
+  - **The text:** `js/content/handbook.js` holds `mentor` (the name is set once at the top), `pages(state)` for the
+    welcome handbook, and `sections()` for the Guide. Every number in it is built from balance.js.
+  - **Pieces:** each page or section is `{ id, title, note, body }`. A body piece is a paragraph string, `{ table }`,
+    `{ list }`, or `{ tip }`.
+  - **The screens:**
+    - `handbook` (`app.handbookPage`; `openHandbook(from)`, `handbookGo`, `closeHandbook`)
+    - `guide` (`app.guideSection`; `openGuide`, `guideGo`), with its actions in `js/app/guide.js`
+    - `Game.ui.handbook.bodyHtml` draws the pieces. Tables with 3+ columns stack into cards on phones.
+  - **When it shows:** a new career opens the handbook before Today.
+  - **Tip cards:** the cards in `content/tutorial.js` are Walt's notes, with optional `phoneText`.
+  - **Keep it true:** when a mechanic or number changes, update its Guide section (and the handbook page for core
+    mechanics). The handbook test checks for broken text and a few key numbers.
 - **Publishing**: the game is served by GitHub Pages from the `main` branch at
   https://miketempestini.github.io/band-rise/ (pushing to main updates it in about a minute).
   `.nojekyll` makes Pages serve the files as they are.

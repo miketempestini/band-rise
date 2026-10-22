@@ -141,7 +141,7 @@ Game.app = Object.assign(Game.app || {}, {
     app.state = Game.rules.career.startCareer(draft.name, draft.instrument, undefined, draft.allocation).state;
     app.draftCareer = null;
     app.autoSave();
-    app.show('today');
+    app.openHandbook('today'); // Walt's welcome handbook first (skippable), then the first day
   },
 
   continueGame: function () {

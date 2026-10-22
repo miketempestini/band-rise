@@ -4,6 +4,42 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14s: Walt's welcome handbook and the Guide (2026-10-22)
+- **Why:** new players didn't know what to do, or why things happened. Morale is the clearest example: Rest gave
+  "+5 morale" with no word on what morale does.
+- **The mentor:** Walt Ferris, a retired touring musician who runs the guitar shop in Millbrook (portrait p02). His
+  name is set in one place in `js/content/handbook.js`.
+- **The welcome handbook:** 11 short pages shown after the skills page on every new career, before the first day.
+  - **Topics:**
+    1. the goal
+    2. how a day works
+    3. energy
+    4. morale (what it changes, and what raises and lowers it)
+    5. money and debt
+    6. skills
+    7. fans, buzz, and reputation (with what each reputation level unlocks)
+    8. songs and tightness
+    9. playing shows (the score and the four results)
+    10. the band
+    11. a suggested first week
+  - **Moving around:** Back / Next and "Skip the handbook". On a phone, Back and Next stay at the bottom of the
+    screen.
+- **The Guide** (Settings → Guide, or More → Settings on a phone):
+  - 25 sections covering every mechanic, from energy and morale to the label, awards, the scene, and going global
+  - a contents list (on the left on a computer, a grid at the top on a phone)
+  - previous / next buttons
+  - "Read the welcome handbook again"
+- **Cheat sheets:** the real numbers in tables, all built from balance.js, so they stay true when numbers change.
+  Tables with 3+ columns stack into cards on phones.
+- **Tip cards:** the first-days tips are rewritten as Walt's notes that say why, signed "— Walt", with phone wording
+  on phones.
+- **Checks:**
+  - **Tests:** 382 passing (4 new: readable text with no broken numbers, key numbers match balance.js, the player's
+    name is escaped, and the open, skip, and close flow). The screens test opens every handbook page and Guide
+    section with both saves.
+  - **Phone (375):** no sideways scrolling and no small buttons on any page or section.
+- **Saves and rules:** no save or rule changes. **Version tag:** `v23-2026-10-22c`.
+
 ### Session 14r: A phone layout (2026-10-21)
 - **What it is:** the whole game now plays in a phone browser (iPhone Safari and Chrome, held upright). Every screen
   and feature works. Screens up to 700 pixels wide get the phone layout; iPads and computers keep the desktop design.
@@ -925,6 +961,9 @@ No gameplay numbers changed: the balance checks give the same results as before.
   with a no-library test runner, git repo (pushed to github.com/miketempestini/band-rise, private).
 
 ## What's next
+- **Learning the game (ideas, not built):** a "How to play" button on the title screen that opens the Guide before
+  starting a career, and short Walt notes the first time each big system unlocks (first venue email, first recording,
+  the manager).
 - **Suggested fixes from the two-year check (not applied, owner to decide):**
   1. ~~Build the housing ladder~~ (done in Phase 13). Re-run the two-year check to see how much it soaks up (the simulated
      player doesn't move house yet: teach it to, then compare).

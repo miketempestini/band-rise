@@ -1057,6 +1057,7 @@ Game.balance = {
     streamChartWeeks: 12,            // A release page's week-by-week chart always has room for at least this many bars
     tipBubbleMs: 3500,               // Phone: how long a tap-to-explain hint bubble stays up (milliseconds)
     noticeToastMs: 4000,             // Phone: how long a pop-up copy of an out-of-sight message stays up (milliseconds)
+    guideScrollGap: 12,              // Phone: space left above a Guide section when the page jumps to it (pixels)
     swipeMinPx: 50,                  // Phone: how far a finger moves sideways to count as a swipe
     holdToDragMs: 300,               // Phone: how long to press a setlist song before it can be dragged
     holdSlopPx: 10                   // Phone: moving more than this before the hold finishes means you're scrolling

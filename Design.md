@@ -805,6 +805,31 @@ The first 21 in-game days should take 10 to 15 minutes and end with one bandmate
 
 **Setup (under a minute):** title screen, then New career: enter a name and pick Guitar, Keys, or Bass, then spend 50 skill points. You start on a Monday with $500, energy 100, morale 60, and a full-time job.
 
+### Learning the game: Walt's handbook and the Guide
+
+New players are taught by **Walt Ferris**, a retired touring musician who runs the guitar shop in Millbrook. He talks
+like a friendly old pro, in short notes on paper (a handwritten line on top, plain text and small cheat-sheet tables
+below). Every number he quotes comes from the game's real numbers.
+
+- **The welcome handbook** opens after the skills page on every new career, before the first day. It's 11 short pages:
+  1. welcome and the goal
+  2. how a day works
+  3. energy
+  4. morale (what it does, and what raises and lowers it)
+  5. money
+  6. skills
+  7. fans, buzz, and reputation (with what reputation unlocks)
+  8. songs
+  9. playing shows (how a show is scored)
+  10. the band
+  11. a suggested first week
+
+  Back / Next move between pages, and "Skip the handbook" goes straight to the first day.
+- **The Guide** (Settings → Guide) explains every mechanic, from the day job to going global, in about 25 sections with
+  a contents list. It's all readable from the start. It can also reopen the welcome handbook.
+- **Tip cards** on the first three days are Walt's notes pointing at the real buttons (worded for a phone on phones).
+  They can be turned off in Settings.
+
 ### Week 1: Get on stage
 
 | Day | What happens | Player's choice | Feeling |

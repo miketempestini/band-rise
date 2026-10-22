@@ -108,8 +108,12 @@ Game.ui.today = {
     var h = Game.ui.helpers;
     var tip = Game.rules.progress.tutorialCard(state);
     if (!tip) return '';
+    var text = tip.phoneText
+      ? '<span class="d-only">' + h.escape(tip.text) + '</span><span class="m-only">' + h.escape(tip.phoneText) + '</span>'
+      : h.escape(tip.text);
     return '<div class="tip-card paper"><div class="tip-card__title">' + h.escape(tip.title) + '</div>' +
-      '<p>' + h.escape(tip.text) + '</p>' +
+      '<p>' + text + '</p>' +
+      '<p class="tip-card__from">— ' + h.escape(Game.content.handbook.mentor.name.split(' ')[0]) + '</p>' +
       '<div class="tip-card__actions"><button class="btn btn--small btn--primary" data-action="dismissTip" data-tip="' + tip.id + '">Got it</button>' +
       '<button class="btn btn--small btn--ghost" data-action="tipsOff">Turn off tips</button></div></div>';
   },

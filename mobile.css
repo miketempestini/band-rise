@@ -314,3 +314,36 @@ canvas { height: auto; }
 .tb-stop { grid-template-columns: 24px minmax(0, 1fr) auto; }
 .tb-chip { min-height: var(--m-tap); padding: 6px 12px; }
 .tb-group__label { min-width: 0; width: 100%; }
+
+/* ---------- Walt's welcome handbook and the Guide ---------- */
+
+.hb-top { flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 18px; }
+.hb-top > .btn { align-self: flex-end; }
+.hb-mentor__face { width: 52px; height: 52px; }
+.hb-page { padding: 24px 18px 20px; }
+.hb-page__title { font-size: 30px; }
+.hb-note { font-size: 19px; }
+/* Two-column tables stay side by side; wider ones become stacked cards, each cell on its own line with its column name. */
+.hb-table { display: table; }
+.hb-table--stack, .hb-table--stack tbody, .hb-table--stack tr, .hb-table--stack td { display: block; width: 100%; }
+.hb-table--stack thead { display: none; }
+.hb-table--stack tr { padding: 8px 0; border-bottom: 1px solid var(--paper-rule); }
+.hb-table--stack td { padding: 2px 0; border: none; }
+.hb-table--stack td:first-child { font-weight: 700; }
+.hb-table--stack td:not(:first-child)::before { content: attr(data-label) ": "; color: var(--ink-soft); }
+/* Back and Next stay within thumb reach at the bottom of the screen. */
+.hb-nav { position: sticky; bottom: 0; z-index: 5; margin: 18px calc(-1 * var(--m-side)) 0; padding: 10px var(--m-side) calc(10px + env(safe-area-inset-bottom));
+  background: var(--house-deep); border-top: 1px solid var(--case-edge); }
+.hb-nav .btn { flex: 1; }
+.hb-dots { display: none; }
+.handbook { padding-bottom: 0; }
+
+.guide__layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.guide-toc { position: static; }
+.guide-toc__list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.guide-toc__item { min-height: var(--m-tap); background: var(--case-raised); }
+.guide-toc__replay { width: 100%; }
+.guide-section { padding: 22px 16px; }
+.guide-section__nav { flex-direction: column; }
+.guide-section__nav .btn, .guide-section__top { width: 100%; }
+.guide-section__top { margin-top: 10px; }
