@@ -11,11 +11,12 @@ Game.rules = Game.rules || {};
 
 Game.rules.bigShows = {
 
-  // True if arena and festival offers can come: the Arena milestone's bar, plus a label.
+  // True if arena and festival offers can come: the Arena milestone's bar, plus a major label (or a smaller label with a
+  // Top 10 record, or enough fame without one: see Game.rules.label.opens).
   eligible: function (state) {
     var m = Game.balance.milestones;
     return state.player.reputation >= m.arenaReputation && Game.rules.progress.totalFans(state) >= m.arenaFans &&
-      Game.rules.label.signed(state);
+      Game.rules.label.opens(state, 'bigShows');
   },
 
   // The arenas (or festivals) in cities you've unlocked.
@@ -38,7 +39,7 @@ Game.rules.bigShows = {
       var name = kind[0];
       if (force && force !== name) return;
       var open = s.inbox.some(function (m) { return m.kind === name + 'Offer' && !m.resolved; });
-      if (open || !(force || rng.chance(kind[1]))) return;
+      if (open || !(force || rng.chance(Math.min(1, kind[1] * Game.rules.label.bigShowMult(s))))) return; // a big label gets more offers
       var venue = rng.pick(Game.rules.bigShows.venues(s, name === 'festival'));
       if (!venue) return;
       var start = s.day + rng.int(o.daysAhead.min, o.daysAhead.max);

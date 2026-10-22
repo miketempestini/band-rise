@@ -38,7 +38,7 @@ Game.rules.recording = {
     if (studio.minReputation && state.player.reputation < studio.minReputation) {
       return 'Needs reputation ' + studio.minReputation + ' (you have ' + Math.floor(state.player.reputation) + ').';
     }
-    if (studio.needsLabel && !Game.rules.label.signed(state)) return 'Needs a label deal.';
+    if (studio.needsLabel && !Game.rules.label.opens(state, 'topStudio')) return 'Needs a label deal.';
     return null;
   },
 
@@ -142,7 +142,9 @@ Game.rules.recording = {
     var s = Game.util.clone(state);
     var song = s.songs[songId];
     if (!song || song.isCover || song.quality === null) return { state: state, log: ['That song can\'t be recorded.'], quality: null };
-    if (studio.cost > 0) s = Game.rules.money.spend(s, studio.cost, 'studio').state;
+    // Signed to a label, the label pays for studio time (and may charge it back to you).
+    var labelPaid = Game.rules.label.payStudio(s, studio.cost);
+    if (studio.cost > 0 && !labelPaid) s = Game.rules.money.spend(s, studio.cost, 'studio').state;
     var q = Game.rules.recording.quality(s, s.songs[songId], studioId);
     var before = s.songs[songId].recording;
     var kept = !before || q >= before.quality;
@@ -150,7 +152,7 @@ Game.rules.recording = {
     s.songs[songId].lastPlayedDay = s.day;
     var name = Game.content.studios[studioId].name;
     var line = 'Recorded "' + song.title + '" at the ' + name + ': recording quality ' + q +
-      (studio.cost ? ' (-$' + studio.cost + ')' : '') +
+      (studio.cost ? (labelPaid ? ' ($' + studio.cost + ', ' + labelPaid + ')' : ' (-$' + studio.cost + ')') : '') +
       (kept ? '' : ' (your earlier recording at ' + before.quality + ' was better, so you kept that one)') + '.';
     return { state: s, log: [line], quality: q };
   },
@@ -185,19 +187,23 @@ Game.rules.recording = {
       if (ok.indexOf(songIds[i]) === -1) return 'Only recorded songs that haven\'t been released yet.';
       if (songIds.indexOf(songIds[i]) !== i) return 'Each song only once.';
     }
-    return null;
+    var avg = songIds.reduce(function (sum, id) { return sum + state.songs[id].recording.quality; }, 0) / songIds.length;
+    return Game.rules.label.releaseProblem(state, avg); // a label with approval rejects records under its quality bar
   },
 
   // What a release would do, without doing it: { avgQuality, buzz, halved, reputation, fansPerCity: { cityId: about } }.
-  releasePreview: function (state, type, songIds) {
+  // releaseId: the release itself, if it's already in the list (so it isn't counted as "your last release").
+  releasePreview: function (state, type, songIds, releaseId) {
     var b = Game.balance.releases;
     var avg = songIds.reduce(function (sum, id) { return sum + state.songs[id].recording.quality; }, 0) / songIds.length;
-    var last = state.releases[state.releases.length - 1];
+    var others = state.releases.filter(function (r) { return r.id !== releaseId; });
+    var last = others[others.length - 1];
     var halved = !!last && state.day - last.day < b.spamWindowWeeks * Game.balance.time.daysPerWeek;
     var buzz = avg / b.buzzQualityDivisor * b.sizeBonus[type] * (halved ? b.spamBuzzMultiplier : 1);
     var fans = {};
+    var reach = state.label.deal ? state.label.deal.reach : 0; // a label's reach brings more new fans
     Object.keys(state.cities).forEach(function (id) {
-      if (state.cities[id].fans > 0) fans[id] = state.cities[id].fans * b.newFansRate * (avg / b.newFansQualityDivisor);
+      if (state.cities[id].fans > 0) fans[id] = state.cities[id].fans * b.newFansRate * (avg / b.newFansQualityDivisor) * (1 + reach);
     });
     var rep = avg / b.reputationQualityDivisor * (1 - state.player.reputation / Game.balance.reputation.diminishingDivisor);
     return { avgQuality: avg, buzz: buzz, halved: halved, reputation: rep, fansPerCity: fans };
@@ -206,29 +212,23 @@ Game.rules.recording = {
   // Releases a Single, EP, or Album: buzz and new fans in every city where you have fans (half the buzz if
   // your last release was under 4 weeks ago), and a reputation boost. Streaming starts next Sunday.
   // name: optional (an EP or album left blank is named after its first track; a single is always its song's name).
-  // promoId: optional release-week push ('playlist', 'radio', 'video'), paid now. Returns { state, log }.
+  // promoId: optional release-week push ('playlist', 'radio', 'video'), paid now.
+  // Signed to a label: it counts toward what you owe (Game.rules.label.onRelease), the label may pay for a promo push,
+  // and a label that shelves may hold it a few weeks (it comes out then, with its buzz and fans). Returns { state, log }.
   release: function (state, type, songIds, name, promoId) {
     var problem = Game.rules.recording.releaseProblem(state, type, songIds, name, promoId);
     if (problem) return { state: state, log: [problem] };
-    var preview = Game.rules.recording.releasePreview(state, type, songIds);
+    var avg = songIds.reduce(function (sum, id) { return sum + state.songs[id].recording.quality; }, 0) / songIds.length;
     var s = Game.util.clone(state);
     var rng = Game.rng.create(s.rngState);
-    var gained = 0;
-    Object.keys(preview.fansPerCity).forEach(function (id) {
-      var added = Game.rules.audience.addFans(s, id, Game.rules.gigs.roundFans(rng, preview.fansPerCity[id])); // capped at the fan ceiling
-      s = added.state;
-      var n = added.added;
-      s.cities[id].lastActivityDay = s.day;
-      gained += n;
-      s = Game.rules.audience.addBuzz(s, id, preview.buzz).state;
-    });
-    s.rngState = rng.getState();
-    s.player.reputation = Game.util.clamp(s.player.reputation + preview.reputation, 0, Game.balance.reputation.max);
+    var hold = Game.rules.label.holdDays(s, rng);
     var id = 'rel' + s.nextReleaseId;
     s.nextReleaseId += 1;
     var title = type === 'single' || !String(name || '').trim() ? s.songs[songIds[0]].title : String(name).trim();
-    s.releases.push({ id: id, type: type, name: title, songIds: songIds.slice(), day: s.day, avgQuality: preview.avgQuality,
-      promo: promoId ? { id: promoId, week: 0 } : null, records: [], chart: null });
+    var rel = { id: id, type: type, name: title, songIds: songIds.slice(), day: s.day + hold, avgQuality: avg,
+      promo: promoId ? { id: promoId, week: 0 } : null, records: [], chart: null };
+    if (hold) rel.held = true;
+    s.releases.push(rel);
     songIds.forEach(function (songId) { s.songs[songId].releaseId = id; s.songs[songId].streams = Game.rules.streaming.newStats(); });
     var promoLog = '';
     if (promoId) {
@@ -236,16 +236,51 @@ Game.rules.recording = {
       s = Game.rules.money.spend(s, promo.cost, 'promotion').state;
       promoLog = ' ' + Game.content.promos[promoId].name + ': -$' + promo.cost.toLocaleString() + '.';
     }
+    rel = s.releases[s.releases.length - 1];
+    var labelLog = [];
+    if (s.label.deal) {
+      var dealt = Game.rules.label.onRelease(s, rel);
+      s = dealt.state;
+      labelLog = dealt.log;
+      rel = s.releases[s.releases.length - 1];
+    }
     var typeName = Game.content.releaseTypes[type].name;
+    if (hold) {
+      s.rngState = rng.getState();
+      return { state: s, log: ['You handed in "' + title + '" (' + typeName + ').' + promoLog + ' Your label is holding it until ' +
+        Game.rules.day.dateLabel(rel.day) + ': its buzz, new fans, and streams start then.'].concat(labelLog) };
+    }
+    var out = Game.rules.recording.releaseEffects(s, rel, rng);
+    s = out.state;
+    s.rngState = rng.getState();
+    return { state: s, log: ['Released "' + title + '" (' + typeName + ')!' + promoLog + ' ' + out.text].concat(labelLog) };
+  },
+
+  // What a record does when it comes out (now, or when a label stops holding it): buzz and new fans in every city
+  // where you have fans, the label's push, and reputation. rel is in s.releases. Uses the given dice.
+  // Returns { state, text }.
+  releaseEffects: function (state, rel, rng) {
+    var preview = Game.rules.recording.releasePreview(state, rel.type, rel.songIds, rel.id);
+    var s = state;
+    var gained = 0;
+    Object.keys(preview.fansPerCity).forEach(function (id) {
+      var added = Game.rules.audience.addFans(s, id, Game.rules.gigs.roundFans(rng, preview.fansPerCity[id])); // capped at the fan ceiling
+      s = added.state;
+      gained += added.added;
+      s.cities[id].lastActivityDay = s.day;
+      s = Game.rules.audience.addBuzz(s, id, preview.buzz).state;
+    });
+    var pushed = Game.rules.label.pushFans(s, rel, rng);
+    s = pushed.state;
+    s.player.reputation = Game.util.clamp(s.player.reputation + preview.reputation, 0, Game.balance.reputation.max);
     var u = Game.util;
     var cities = Object.keys(preview.fansPerCity).length;
-    return {
-      state: s,
-      log: ['Released "' + title + '" (' + typeName + ')!' + promoLog + ' ' +
-        (cities ? u.signed(preview.buzz) + ' buzz' + (preview.halved ? ' (halved: your last release was under ' + Game.balance.releases.spamWindowWeeks + ' weeks ago)' : '') +
-          ', +' + gained.toLocaleString() + ' fan' + (gained === 1 ? '' : 's') + ', ' : 'No fans yet to hear it, so no buzz or new fans. ') +
-        u.signed(preview.reputation) + ' reputation. Streaming money starts next Sunday.']
-    };
+    var text = (cities ? u.signed(preview.buzz) + ' buzz' + (preview.halved ? ' (halved: your last release was under ' + Game.balance.releases.spamWindowWeeks + ' weeks ago)' : '') +
+        ', +' + gained.toLocaleString() + ' fan' + (gained === 1 ? '' : 's') + ', ' : 'No fans yet to hear it, so no buzz or new fans. ') +
+      u.signed(preview.reputation) + ' reputation.' +
+      (pushed.gained ? ' Your label\'s push: +' + pushed.gained.toLocaleString() + ' fans across the country.' : '') +
+      ' Streaming money starts next Sunday.';
+    return { state: s, text: text };
   },
 
   // ----- Streaming -----

@@ -243,6 +243,7 @@ Game.ui.songs = {
       '<label class="form-row"><span class="muted">' + Game.content.releaseTypes[draft.type].name + ' name (optional, or it\'s named after its first song):</span>' +
         '<input type="text" id="release-name" class="input" maxlength="' + b.nameMaxLength + '" autocomplete="off" value="' + h.escape(draft.name || '') + '"></label>';
     return '<div class="panel"><h3 class="panel__title">Release music</h3>' +
+      Game.ui.songs.labelRulesHtml(state, draft) +
       '<div class="form-row__btns">' + types + '</div>' +
       '<div class="setlist-edit release-list">' + list + '</div>' +
       nameRow +
@@ -254,6 +255,23 @@ Game.ui.songs = {
         'Release ' + Game.content.releaseTypes[draft.type].name + (chosen ? ' (' + h.money(chosen.cost) + ')' : '') + '</button>' +
         (problem && draft.songIds.length ? ' <span class="pick__reason">' + h.escape(problem) + '</span>' : '') + '</div>' +
       '</div>';
+  },
+
+  // Signed to a label: how this release fits the deal (records owed, the quality bar, shelving, the free promo push).
+  labelRulesHtml: function (state, draft) {
+    var h = Game.ui.helpers;
+    var lb = Game.rules.label;
+    var d = state.label.deal;
+    if (!d || d.legacy) return '';
+    var counts = lb.counts(d, draft.type);
+    var bits = [counts ? 'This counts toward your deal: ' + (d.delivered + 1) + ' of ' + d.owe.count + ' (due ' + Game.rules.day.shortDate(d.nextDueDay) + ').'
+      : 'A ' + Game.content.releaseTypes[draft.type].name.toLowerCase() + ' doesn\'t count toward your deal (you owe ' + lb.oweText(d) + ').'];
+    if (d.qualityBar) bits.push('They won\'t release anything under average quality ' + d.qualityBar + '.');
+    if (counts && d.flopQuality) bits.push('Under ' + d.flopQuality + ' counts as a flop (a strike).');
+    if (d.control === 'shelve') bits.push('They may hold it for a few weeks.');
+    if (d.freePromo) bits.push('With no push picked, they pay for a ' + Game.content.promos[d.freePromo].name.toLowerCase() + '.');
+    bits.push('On these records you get ' + Math.round(d.royalty * 100) + '% of streaming' + (d.unrecouped > 0 ? ', after paying back ' + h.money(d.unrecouped) : '') + '.');
+    return '<p class="label-note"><strong>' + h.escape(lb.name(d.labelId)) + ':</strong> ' + h.escape(bits.join(' ')) + '</p>';
   },
 
   // ----- Charts -----

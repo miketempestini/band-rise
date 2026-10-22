@@ -379,7 +379,7 @@ Game.rules.manager = {
         crowd = Math.min(venue.capacity, Math.round(Game.rules.gigs.expectedCrowd(view, venue)));
       }
       var pay = Game.rules.booking.payFor(venue, 'door', crowd);
-      var afterCut = pay - Math.round(pay * b.manager.gigPayCut);
+      var afterCut = pay - Math.round(pay * b.manager.gigPayCut) - Game.rules.label.gigCut(state, pay);
       return { venueId: show.venueId, day: show.day, crowdNoAds: crowdNoAds, crowd: crowd, pay: pay, yourPay: Math.round(afterCut * share),
         production: Game.rules.booking.productionCost(venue, 'door', pay) };
     });
@@ -570,6 +570,7 @@ Game.rules.manager = {
       log.push('Ads booked in ' + Game.content.cities[cityId].name + ' ($' + pkg.cost.toLocaleString() + ').');
     });
     var landed = Game.rules.manager.processAds(s); // ads for a show within a week land right away
-    return { state: landed.state, log: log.concat(landed.log) };
+    var support = Game.rules.label.tourSupport(landed.state); // your label may chip in
+    return { state: support.state, log: log.concat(landed.log, support.log) };
   }
 };

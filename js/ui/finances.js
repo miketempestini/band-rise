@@ -68,7 +68,7 @@ Game.ui.finances = {
       card('Net', (sum.net >= 0 ? '+' : '-') + h.money(Math.abs(sum.net)), sum.net >= 0 ? 'pos' : 'neg') +
       card('Cash now', h.money(state.player.cash)) +
       (state.player.loanOwed ? card('Owed to Mom and Dad', h.money(state.player.loanOwed), 'neg') : '') +
-      (state.label.signed && state.label.owed > 0 ? card('Label advance to pay back', h.money(state.label.owed), 'neg') : '') +
+      (state.label.deal && state.label.deal.unrecouped > 0 ? card('Still to pay back to your label', h.money(state.label.deal.unrecouped), 'neg') : '') +
       '</div>';
   },
 
@@ -108,10 +108,12 @@ Game.ui.finances = {
   coveredHtml: function (sum) {
     var h = Game.ui.helpers;
     var b = sum.band;
-    if (!b.travelCovered.length && !b.labelKept) return '';
+    if (!b.travelCovered.length && !b.labelKept && !b.label360 && !b.labelPaid) return '';
     return '<div class="panel"><h3 class="panel__title">Covered by others</h3><dl class="rows">' +
       b.travelCovered.map(function (m) { return '<dt>' + h.escape(m.name) + '\'s part of gas and hotels</dt><dd>' + h.money(m.amount) + '</dd>'; }).join('') +
-      (b.labelKept ? '<dt>' + h.escape(Game.content.business.label.name) + ' kept (from streaming)</dt><dd>' + h.money(b.labelKept) + '</dd>' : '') +
+      (b.labelKept ? '<dt>Your label kept (from streaming)</dt><dd>' + h.money(b.labelKept) + '</dd>' : '') +
+      (b.label360 ? '<dt>Your label\'s cut of shows and merch</dt><dd>' + h.money(b.label360) + '</dd>' : '') +
+      (b.labelPaid ? '<dt>Your label paid (studio time and promo)</dt><dd>' + h.money(b.labelPaid) + '</dd>' : '') +
       '</dl></div>';
   },
 

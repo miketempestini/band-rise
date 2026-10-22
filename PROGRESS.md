@@ -4,6 +4,58 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14t: Record labels (2026-10-22)
+- **Why:** labels were a stub. One label made the same offer to everyone, and the advance was paid back in days late
+  in a career. Now a deal is the biggest business decision in the game.
+- **The labels:** 12 labels in four tiers, each with a personality that shapes its terms:
+  - **Indie:** Porchlight, Lantern Hill, Cassette Club, Static Bloom
+  - **Mid-size:** Northbound, Riverbend, Neon Harbor
+  - **Major:** Monolith, Crown & Anchor, Sunset Global
+  - **Sharks:** Goldtooth, Fast Lane
+- **The terms**, mixed differently in every offer:
+  - advance and royalty
+  - reach (more streams and fans on the deal's records) and a push (fans in every city you can play)
+  - free promo and tour support
+  - costs charged back to you
+  - records owed (EPs or albums) with deadlines and penalties (a fine, a lower royalty, or one more record)
+  - creative control (approval with a quality bar, or shelving)
+  - masters (yours, coming back after a few years, or theirs forever)
+  - a 360 cut of shows and merch
+  - renewal options
+  - the buyout
+  - getting dropped (2 strikes), except sharks, which never let go
+- **Offers:**
+  - **Who:** only with a manager; each tier has its own reputation and fans bar.
+  - **When:** on Mondays, more often when you're hot. Sharks circle when you're desperate.
+  - **Bidding wars:** up to 3 offers at once, with a side-by-side comparison.
+  - **Negotiating:** one counter-offer (up to 2 asks, with live odds).
+  - **Declining:** that label waits 8 to 16 weeks. Let an offer run out and a rival may sign instead.
+- **The contract:** every term in plain words, rated Good, Fair, or Harsh.
+  - **The estimate:** what the deal means at your fans, shows, and writing pace, compared with staying independent.
+  - **Your manager's take:** it names the worst clauses (like "At your pace a record takes 15 weeks; they want one
+    every 10").
+- **Under a deal:**
+  - **The Manager screen:** a label panel with records delivered, the next deadline, strikes, what you still owe,
+    royalties, and the buyout.
+  - **Releases:** the release form shows the label's rules.
+  - **Reminders:** they come before each deadline.
+  - **Finances:** it shows the label's share, its 360 cut, and what it paid.
+- **What labels open:** any deal opens the Top studio; a mid-size or major label the National cities (or reputation
+  75); a major arena and festival offers (or a Top 10 on a smaller label, or reputation 90 and 250,000 fans). They stay
+  open.
+- **Rivals:** they sign with labels too, and get a streaming push.
+- **Other changes:**
+  - Milestone 16 is now "Record deal" (signing).
+  - The Guide has a full Record labels section.
+- **Saves:** version 24. An old Northbound deal carries on as it was (80% of streaming pays back the rest, nothing
+  owed, free to leave). The late-career test save now has a past indie deal and a current Crown & Anchor deal.
+- **How deals rate** (from offers rolled for test players):
+  - **Early (reputation 52):** indies are mostly good.
+  - **Mid-career (reputation 60):** mid-size labels are mostly good, penny-pinchers poor, sharks harsh.
+  - **Late:** most deals cost money, but bring reach and fans.
+- **Tests:** 399 passing (20 new label tests). The screens test opens offers, the contract, a counter-offer, the
+  comparison, and the label panel with both saves. **Version tag:** `v24-2026-10-22k`.
+
 ### Session 14s: Walt's welcome handbook and the Guide (2026-10-22)
 - **Why:** new players didn't know what to do, or why things happened. Morale is the clearest example: Rest gave
   "+5 morale" with no word on what morale does.

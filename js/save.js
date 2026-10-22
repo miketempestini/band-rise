@@ -112,6 +112,22 @@ Game.save = {
       });
     }
 
+    // Version 24 rebuilt record labels. An older save signed with Northbound keeps its deal as it was (80% of streaming
+    // pays back the rest of the advance, then it's all yours; nothing owed; free to leave), and keeps everything it
+    // opened. The old fields go.
+    if (fromVersion < 24) {
+      var old = data.label;
+      if (old.signed) {
+        old.deal = Game.rules.label.legacyDeal(old);
+        old.everSigned = true;
+        old.nextDealId = 2;
+        old.opened = { topStudio: true, national: true, bigShows: true };
+      }
+      ['signed', 'signedDay', 'advance', 'owed'].forEach(function (k) { delete old[k]; });
+      // An old-style offer still open in the Inbox can't be signed anymore: it lapses (new labels will call).
+      data.inbox.forEach(function (m) { if (m.kind === 'labelOffer' && !m.data.labelId && !m.resolved) { m.resolved = 'expired'; m.data.cooled = true; } });
+    }
+
     // Cities you already qualify for open right away (new cities in an update shouldn't wait for the next End Day).
     data = Game.rules.travel.updateCityUnlocks(data).state;
 

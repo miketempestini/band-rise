@@ -10,6 +10,58 @@ Game.ui.manager = {
 
   sizes: { 1: 'Small rooms', 2: 'Clubs', 3: 'Theaters' },
 
+  // Your record deal: the label, every term, what you've delivered and owe, the money so far, and the buyout.
+  // Without one: whether labels can call, open offers, and past deals.
+  labelHtml: function (state) {
+    var h = Game.ui.helpers;
+    var lb = Game.rules.label;
+    var d = state.label.deal;
+    var pct = function (x) { return Math.round(x * 100) + '%'; };
+    var past = state.label.past.length ? '<p class="hint">Past deals: ' + state.label.past.map(function (x) {
+      return h.escape(lb.name(x.labelId)) + ' (' + h.escape(x.endReason || 'ended') + ' ' + Game.rules.day.shortDate(x.endDay) + ')';
+    }).join(', ') + '.</p>' : '';
+    if (!d) {
+      var problem = lb.offersProblem(state);
+      var open = lb.openOffers(state);
+      return '<div class="panel"><h3 class="panel__title">Record labels</h3>' +
+        (open.length ? '<p>' + open.length + ' label offer' + (open.length === 1 ? ' is' : 's are') + ' waiting for you.</p>' +
+          '<button class="btn btn--small btn--primary" data-action="labelOffers">' + (open.length > 1 ? 'Compare the offers' : 'Read the contract') + '</button>'
+          : '<p>' + h.escape(problem || 'No deal yet. Labels call on Mondays, more often when you\'re hot (buzz, a charting song, a new record).') + '</p>') +
+        past + '</div>';
+    }
+    var info = lb.info(d.labelId);
+    if (d.legacy) {
+      return '<div class="panel"><h3 class="panel__title">Your label: ' + h.escape(info.name) + '</h3>' +
+        '<p>Your original deal: ' + (d.unrecouped > 0 ? pct(d.recoupShare) + ' of your streaming pays back the last ' + h.money(d.unrecouped) + ' of the advance, then it\'s all yours.'
+          : 'the advance is paid back, so your streaming is all yours.') + ' You owe them no records, and you can leave for free.</p>' +
+        '<button class="btn btn--small" data-action="buyout">Leave the deal</button>' + past + '</div>';
+    }
+    var buyout = lb.buyoutPrice(state);
+    var owe = d.delivered + ' of ' + d.owe.count + ' ' + (d.owe.type === 'album' ? 'albums' : 'EPs or albums') + ' delivered';
+    var weeksLeft = Math.ceil((d.nextDueDay - state.day) / Game.balance.time.daysPerWeek);
+    return '<div class="panel label-panel"><h3 class="panel__title">Your label: <span class="label-card__logo" style="--label-ink:' + info.color + '">' + h.escape(info.name) + '</span></h3>' +
+      '<p class="muted">' + Game.content.labelTiers[info.tier] + ' · ' + Game.content.labelPersonalities[info.personality] + ' · signed ' + h.dateLabel(d.signedDay) + '</p>' +
+      '<dl class="rows">' +
+        '<dt>Records</dt><dd>' + owe + '</dd>' +
+        '<dt>Next record due</dt><dd' + (weeksLeft <= 4 ? ' class="neg"' : '') + '>' + h.dateLabel(d.nextDueDay) + ' (' + Math.max(0, weeksLeft) + ' week' + (weeksLeft === 1 ? '' : 's') + ')</dd>' +
+        '<dt>Missing it means</dt><dd>' + h.escape(lb.penaltyText(d)) + '</dd>' +
+        '<dt>Strikes</dt><dd' + (d.strikes ? ' class="neg"' : '') + '>' + d.strikes + (d.dropsYou ? ' of ' + Game.balance.label.strikesToDrop + ' (then they can drop you)' : ' (they never let go)') + '</dd>' +
+        '<dt>Royalty</dt><dd>' + pct(d.royalty) + ' of streaming on these records</dd>' +
+        '<dt>Still to pay back</dt><dd' + (d.unrecouped > 0 ? ' class="neg"' : '') + '>' + h.money(d.unrecouped) + ' <span class="muted">(advance ' + h.money(d.advance) +
+          (d.charged ? ' + ' + h.money(d.charged) + ' charged back' : '') + ')</span></dd>' +
+        '<dt>Royalties paid to you</dt><dd>' + h.money(d.royaltyPaid) + '</dd>' +
+        '<dt>The label has kept</dt><dd>' + h.money(d.labelKept) + (d.cut360 ? ' from streaming, plus ' + h.money(d.cut360) + ' of shows and merch' : '') + '</dd>' +
+        '<dt>Reach</dt><dd>+' + pct(d.reach) + ' streams on these records' + (d.freePromo ? ', a ' + h.escape(Game.content.promos[d.freePromo].name.toLowerCase()) + ' on each' : '') + '</dd>' +
+        (d.gigCut || d.merchCut ? '<dt>360 cut</dt><dd>' + pct(d.gigCut) + ' of shows, ' + pct(d.merchCut) + ' of merch</dd>' : '') +
+        '<dt>Creative control</dt><dd>' + h.escape(lb.controlText(d)) + '</dd>' +
+        '<dt>Masters</dt><dd>' + h.escape(lb.mastersText(d)) + '</dd>' +
+        (d.renewal ? '<dt>Renewal option</dt><dd>' + (d.renewed ? 'Used: they kept you for ' + d.renewal + ' more' : '+' + d.renewal + ' if your last record is quality ' + Game.balance.label.renewalMinQuality + '+') + '</dd>' : '') +
+        '<dt>Buyout</dt><dd>' + h.money(buyout) + '</dd>' +
+      '</dl>' +
+      '<button class="btn btn--small" data-action="buyout"' + (lb.buyoutProblem(state) ? ' disabled title="' + h.escape(lb.buyoutProblem(state)) + '"' : '') + '>Buy out for ' + h.money(buyout) + '</button>' +
+      past + '</div>';
+  },
+
   render: function (root, app) {
     var h = Game.ui.helpers;
     var state = app.state;
@@ -25,14 +77,15 @@ Game.ui.manager = {
         ' fans, ' + h.escape(who.name) + ' of ' + h.escape(who.company) + ' will offer to manage you (Inbox).</p>' +
         '<p class="hint">You have reputation ' + Math.floor(state.player.reputation) + ' and ' + Game.rules.progress.totalFans(state).toLocaleString() + ' fans. ' +
         'A manager takes ' + Math.round(b.manager.gigPayCut * 100) + '% of gig pay, and gives you a ' + b.time.managerBookingWeeks +
-        '-week calendar, auto-booking, tours on request, and the press and radio push.</p></div>';
+        '-week calendar, auto-booking, tours on request, and the press and radio push. Record labels only talk to artists with a manager.</p></div>' +
+        (state.label.deal ? self.labelHtml(state) : ''); // a deal you signed before letting your manager go
     } else {
       body = '<div class="panel"><h3 class="panel__title">' + h.escape(who.name) + ' · ' + h.escape(who.company) + '</h3>' +
         '<p>Takes ' + Math.round(b.manager.gigPayCut * 100) + '% of all gig pay (before the band\'s split). Since ' + h.dateLabel(state.manager.hiredDay) + '.</p>' +
         '<p class="hint">You can book ' + b.time.managerBookingWeeks + ' weeks ahead. Press and radio push: ' +
           (Game.rules.actions.pressPushWait(state) ? 'ready in ' + Game.rules.actions.pressPushWait(state) + ' days' : 'ready (plan it from any free block)') + '.</p>' +
         '<button class="btn btn--small btn--ghost" data-action="letGo">Let them go</button></div>' +
-        self.rulesHtml(state) + self.tourHtml(state, app);
+        self.labelHtml(state) + self.rulesHtml(state) + self.tourHtml(state, app);
     }
 
     root.innerHTML =
@@ -54,7 +107,9 @@ Game.ui.manager = {
       tourCity: function (e, el) { app.tourDraftSet('city', el.getAttribute('data-city')); },
       tourTier: function (e, el) { app.tourDraftSet('tier', Number(el.getAttribute('data-tier'))); },
       requestTour: function () { app.requestTour(); },
-      openTourBuilder: function () { app.openTourBuilder(); }
+      openTourBuilder: function () { app.openTourBuilder(); },
+      buyout: function () { app.buyoutLabel(); },
+      labelOffers: function () { var open = Game.rules.label.openOffers(app.state); if (open.length > 1) app.openLabelCompare(); else app.openLabelDeal(open[0].id); }
     });
     var start = root.querySelector('#tour-start');
     if (start) start.addEventListener('change', function () { app.tourDraftSet('earliestDay', Number(start.value)); });

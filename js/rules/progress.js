@@ -34,7 +34,7 @@ Game.rules.progress = {
     firstTour: function (s) { return Game.rules.travel.playedTour(s); },
     manager: function (s) { return Game.rules.manager.qualifies(s); },
     theater: function (s) { return s.player.reputation >= Game.balance.milestones.theaterReputation && s.releases.length > 0; },
-    labelOffer: function (s) { return Game.rules.label.qualifies(s); },
+    labelOffer: function (s) { return s.label.everSigned; },
     awards: function (s) { return s.awards.length > 0; },
     arena: function (s) {
       var m = Game.balance.milestones;
@@ -76,9 +76,9 @@ Game.rules.progress = {
     manager: ' A manager wants to work with you: check your Inbox. With one you get a ' + Game.balance.time.managerBookingWeeks +
       '-week calendar, auto-booking, tours on request, and the press and radio push.',
     theater: ' Theaters are open (they cost $' + Game.balance.production.theater.toLocaleString() + ' in production a night).',
-    labelOffer: ' A label wants to sign you: check your Inbox.',
+    labelOffer: ' Your first record deal. Your deal, what you owe, and the buyout are on the Manager screen.',
     awards: ' Your first award nomination. See your Inbox.',
-    arena: ' Arena and festival offers can come now (with a label deal).',
+    arena: ' Arena and festival offers can come with a major label (or a Top 10 record on a smaller one).',
     goingGlobal: ' Your first show abroad! The private jet is now in the Shop.',
     fullBand: ' Clubs open up once your reputation reaches ' + Game.balance.venues.tiers[2].minReputation + '.'
   },

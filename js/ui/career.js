@@ -97,7 +97,7 @@ Game.ui.career = {
   },
 
   // Chart highlights (first entries, Top 10s, and #1s) and every Gold and Platinum record.
-  // You and your three rivals side by side, on a clipped sheet: fame, fans, reputation, latest record, best chart spot
+  // You and your three rivals side by side, on a clipped sheet: fame, label, fans, reputation, latest record, best chart spot
   // this year, awards won, and the next show on the calendar.
   rivalsHtml: function (state) {
     var h = Game.ui.helpers;
@@ -108,6 +108,7 @@ Game.ui.career = {
       return '<tr class="' + (r.you ? 'chart-row--you' : '') + '">' +
         '<td><strong>' + h.escape(r.name) + '</strong>' + (r.you ? ' <span class="badge">You</span>' : ' <span class="badge badge--rival">Rival</span>') + '</td>' +
         '<td>' + h.escape(r.fame) + '</td>' +
+        '<td>' + (r.label ? h.escape(r.label) : 'Unsigned') + '</td>' +
         '<td class="num">' + r.fans.toLocaleString() + '</td>' +
         '<td class="num">' + Math.round(r.reputation) + '</td>' +
         '<td>' + latest + '</td>' +
@@ -117,7 +118,7 @@ Game.ui.career = {
     }).join('');
     return '<div class="chart-sheet paper rivals-sheet"><h3 class="panel__title">Rivals</h3>' +
       '<p class="hint">Three bands from Millbrook climbing alongside you. They chase the same opening slots, chart against you, and turn up at the awards.</p>' +
-      '<div class="table-scroll"><table class="chart-table"><thead><tr><th>Band</th><th>Fame</th><th class="num">Fans</th><th class="num">Reputation</th>' +
+      '<div class="table-scroll"><table class="chart-table"><thead><tr><th>Band</th><th>Fame</th><th>Label</th><th class="num">Fans</th><th class="num">Reputation</th>' +
       '<th>Latest record</th><th class="num">Best chart this year</th><th class="num">Awards</th><th>Next show</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
   },
 

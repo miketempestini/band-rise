@@ -106,10 +106,11 @@ Game.content = Game.content || {};
     [String(b.geography.nearMinReputation), 'Near cities (day trips).'],
     [String(tiers[2].minReputation), 'Clubs (with ' + b.people.minOnStageForClubs + '+ people on stage).'],
     [String(b.geography.midMinReputation), 'Mid cities (after a Near show), the Pro studio, the Big campaign.'],
-    [String(b.milestones.managerReputation), 'A manager (with ' + b.milestones.managerFans.toLocaleString('en-US') + ' fans). Far cities (with a van).'],
+    [String(b.milestones.managerReputation), 'A manager (with ' + b.milestones.managerFans.toLocaleString('en-US') + ' fans), and with one, indie label offers. Far cities (with a van).'],
+    [String(b.label.tiers.mid.minReputation), 'Mid-size labels can offer (with a manager and ' + b.label.tiers.mid.minFans.toLocaleString('en-US') + ' fans).'],
     [String(tiers[3].minReputation), 'Theaters (with a release).'],
-    [String(b.milestones.labelReputation), 'A label offer (with ' + b.milestones.labelFans.toLocaleString('en-US') + ' fans).'],
-    [String(tiers[4].minReputation), 'Arena and festival offers (with ' + b.milestones.arenaFans.toLocaleString('en-US') + ' fans).']
+    [String(b.label.tiers.major.minReputation), 'Major labels can offer (with ' + b.label.tiers.major.minFans.toLocaleString('en-US') + ' fans).'],
+    [String(tiers[4].minReputation), 'Arena and festival offers (with ' + b.milestones.arenaFans.toLocaleString('en-US') + ' fans and a major label, or a Top 10 record on a smaller one).']
   ] } };
 
   var scoreTable = { table: { cols: ['Part of the score', 'How much'], rows: [
@@ -338,6 +339,7 @@ Game.content = Game.content || {};
       var sw = b.sessionWork;
       var t = b.travel;
       var h = b.housing;
+      var lb = b.label;
       return [
         {
           id: 'goal', title: 'The goal and fame', note: 'Nobody hands you an arena. You build up to one.',
@@ -643,7 +645,7 @@ Game.content = Game.content || {};
               ['Near', 'Reputation ' + b.geography.nearMinReputation, t.blocksEachWay.near + ' block', money(t.gasRoundTrip.near) + ' gas round trip'],
               ['Mid', 'Reputation ' + b.geography.midMinReputation + ' and a Near show', t.blocksEachWay.mid + ' blocks', money(t.gasRoundTrip.mid) + ' gas'],
               ['Far', 'Reputation ' + b.geography.farMinReputation + ' and a van', t.blocksEachWay.far + ' blocks (a full day)', money(t.gasRoundTrip.far) + ' gas'],
-              ['National', 'A manager and a label deal', t.flight.blocks + ' blocks', money(t.flight.perPersonOneWay) + ' a person each way (flight)'],
+              ['National', 'A manager, and a mid-size or major label (or reputation ' + b.label.nationalWithoutLabel + ')', t.flight.blocks + ' blocks', money(t.flight.perPersonOneWay) + ' a person each way (flight)'],
               ['International', 'Tour shows in ' + b.geography.internationalMinNationalCities + ' National cities', t.internationalFlight.blocks + ' blocks',
                 money(t.internationalFlight.perPersonOneWay) + ' a person each way, and jet lag (' + t.jetLag.energy + ' energy)']
             ] } },
@@ -656,20 +658,57 @@ Game.content = Game.content || {};
           ]
         },
         {
-          id: 'bigTime', title: 'Manager, label, and big shows', note: 'Good people take a cut. Great ones earn it.',
+          id: 'bigTime', title: 'Manager and big shows', note: 'Good people take a cut. Great ones earn it.',
           body: [
             '<strong>Manager</strong> (reputation ' + b.milestones.managerReputation + ' and ' + b.milestones.managerFans.toLocaleString('en-US') + ' fans): takes ' +
               pct(b.manager.gigPayCut) + ' of all gig pay. Books shows for you (up to the shows a week you set), plans tours, posts every day (+' +
               b.manager.social.dailyBuzz + ' buzz wherever you have fans), opens the press push, and stretches the calendar to ' + b.time.managerBookingWeeks + ' weeks.',
-            '<strong>Label</strong> (reputation ' + b.milestones.labelReputation + ' and ' + b.milestones.labelFans.toLocaleString('en-US') + ' fans): an advance of ' +
-              money(b.label.advanceBase) + ' + ' + money(b.label.advancePerFan) + ' per fan (up to ' + money(b.label.advanceMax) + '). They keep ' + pct(b.label.streamingCut) +
-              ' of your streaming until the advance is paid back. Opens the Top studio and National cities (with a manager).',
+            '<strong>Record labels</strong> only talk to artists with a manager. Deals change everything about your records: see Record labels.',
             '<strong>Theaters</strong> (reputation ' + tiers[3].minReputation + ' and a release) and <strong>arenas and festivals</strong> (reputation ' +
-              tiers[4].minReputation + ' and ' + b.milestones.arenaFans.toLocaleString('en-US') + ' fans, by offer on Mondays). Big rooms have production costs: ' +
+              tiers[4].minReputation + ' and ' + b.milestones.arenaFans.toLocaleString('en-US') + ' fans, by offer on Mondays, with a major label: or a Top 10 record on a smaller one, ' +
+              'or reputation ' + b.label.bigShowsWithout.reputation + ' and ' + b.label.bigShowsWithout.fans.toLocaleString('en-US') + ' fans without). Big rooms have production costs: ' +
               pct(b.production.share) + ' of the show\'s pay, up to ' + money(b.production.theater) + ' at a theater and ' + money(b.production.arena) + ' at an arena.',
             '<strong>Awards</strong> every December: nominations on the first Monday, the ceremony on the last Saturday. Song of the Year (a release with quality ' +
               b.awards.songMinQuality + '+), Record of the Year (an EP or album, ' + b.awards.recordMinQuality + '+), and Breakout Act (' +
               b.awards.breakoutMinFans.toLocaleString('en-US') + '+ new fans that year). Each win is ' + signed(b.awards.winReputation) + ' reputation.'
+          ]
+        },
+        {
+          id: 'labels', title: 'Record labels', note: 'A good deal is rocket fuel. A bad one is a cage. Read every line.',
+          body: [
+            'Once you have a manager, labels start calling (mostly on Mondays, more when you\'re hot: buzz, a charting song, a new record). When one offers, ' +
+              'others may join within days: up to ' + lb.maxOpenOffers + ' at once, side by side. Each offer opens as a full contract with your manager\'s take. ' +
+              'You can make one counter-offer per deal; the label answers the next morning. Turn a label down and it waits ' + lb.declineCooldownWeeks.min + ' to ' +
+              lb.declineCooldownWeeks.max + ' weeks before calling again; others can still call. Let an offer run out and a rival might get it.',
+            { table: { cols: ['Labels', 'Can offer at', 'Typical deal'], rows: ['indie', 'mid', 'major', 'shark'].map(function (k) {
+              var t = lb.tiers[k];
+              var names = Object.keys(Game.content.labels).filter(function (id) { return Game.content.labels[id].tier === k; })
+                .map(function (id) { return Game.content.labels[id].name; }).join(', ');
+              return [names, 'Reputation ' + t.minReputation + ', ' + t.minFans.toLocaleString('en-US') + ' fans' + (k === 'shark' ? ' (more often when you\'re desperate)' : ''),
+                pct(t.royalty.min) + ' to ' + pct(t.royalty.max) + ' royalty, +' + pct(t.reach.min) + ' to +' + pct(t.reach.max) + ' reach, ' +
+                t.records.min + ' to ' + t.records.max + (t.recordType === 'album' ? ' albums' : ' EPs or albums') + ', ' + t.deadlineWeeks.min + ' to ' + t.deadlineWeeks.max + ' weeks each'];
+            }) } },
+            '<strong>How the money works:</strong> on records made under a deal, the label keeps its share of streaming and your royalty pays back the advance ' +
+              '(and anything they charge back to you) before you see a cent. In return the label\'s reach boosts those records\' streams and new fans, and its push ' +
+              'wins fans in every city you can play. Records you made before signing stay all yours.',
+            { table: { cols: ['Term', 'What to look for'], rows: [
+              ['Advance', 'Cash now, but it\'s paid back from your royalty. Big advances often hide harsh terms.'],
+              ['Royalty', 'Your share of streaming on these records. Under 15% and they barely pay you.'],
+              ['Charged back', 'Studio time, promo, or tour support added to what you owe them.'],
+              ['Records owed', 'How many EPs or albums, and the weeks for each. Singles never count. Missing a deadline means a fine, a lower royalty, or one more record.'],
+              ['Creative control', 'Approval: they reject records under their quality bar. Shelving: they can hold a finished record for weeks.'],
+              ['Masters', 'Who owns the recordings when the deal ends. If the label does, those records keep paying you only your royalty, forever.'],
+              ['360 cut', 'A share of every show\'s pay and every merch sale while you\'re signed.'],
+              ['Renewal option', 'If your last record is good, they can keep you for more.'],
+              ['Buyout', 'The price to leave early. In bad deals it\'s a fortune.'],
+              ['Getting dropped', lb.strikesToDrop + ' strikes (missed deadlines, or flops under the label\'s quality floor) and most labels can let you go: reputation ' +
+                lb.dropReputation + ', but you\'re free. Some never let go.']
+            ] } },
+            '<strong>Ending a deal:</strong> deliver every record you owe (unless they pick up a renewal), buy yourself out, or get dropped. A few weeks later, offers start again.',
+            '<strong>What labels open:</strong> any deal opens the Top studio; a mid-size or major label opens the National cities (or reach reputation ' + lb.nationalWithoutLabel +
+              '); a major opens arena and festival offers (or a Top 10 record on a smaller label, or reputation ' + lb.bigShowsWithout.reputation + ' and ' +
+              lb.bigShowsWithout.fans.toLocaleString('en-US') + ' fans). Once open, they stay open.',
+            { tip: 'Read the "What this means for you" box and your manager\'s take on every contract. The worst deals look the best on the first line.' }
           ]
         },
         {

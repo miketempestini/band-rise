@@ -373,6 +373,34 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
     compare them (they're byte-identical when nothing changed). Check phones with the preview's device emulation (375,
     390, and 430 wide): no sideways scrolling on any screen. Headless Chrome won't lay out narrower than about 500
     pixels, so don't trust its phone screenshots.
+- **Record labels (`Game.rules.label`)**: 12 labels in `js/content/labels.js` (tier: indie / mid / major / shark, and a
+  personality). All their numbers are in `balance.label`: tier ranges, and how each personality shapes them.
+  - **Offers:** offers need a manager.
+    - `offerCheck` runs each morning: Monday rolls, plus bidding-war joiners in `state.label.pending`.
+    - `makeTerms` rolls an offer with the game's dice. Inbox messages are kind `labelOffer` with `data { labelId, terms,
+      counter, cooled }`.
+    - `nightly` (in End Day, before `offerCheck`) handles held records coming out, counter-offer answers, deadline
+      reminders and misses, cooldowns, and rivals sniping lapsed offers (scene dice).
+  - **The deal:** the deal is `state.label.deal` (terms plus progress); ended deals go in `state.label.past`.
+  - **Streaming:** releases carry `dealId`, and `streaming.weekly` splits money per release through
+    `label.settleStreaming`. Always use `label.releaseDeal(state, rel)`, since older saves' legacy deal covers every
+    release. `label.reachFor` is the stream boost.
+  - **360 cut:** `label.gigCut` (in `gigs.playGig`, beside the manager's cut) and `label.merchCut` (in
+    `merch.sellAtGig`).
+  - **Studio and tours:** studio time under a deal is paid by the label (`label.payStudio`); tour support comes in
+    `manager.acceptTour`.
+  - **Releases:** go through `recording.release`:
+    - `label.releaseProblem` applies the quality bar
+    - `holdDays` handles shelving: the release gets `held: true` and a future day, and
+      `recording.releaseEffects` runs when it comes out
+    - `onRelease` counts records owed, flops, renewal, and the deal ending
+  - **What deals open:** use `label.opens(state, 'topStudio' | 'national' | 'bigShows')`, never "is signed". Opened
+    doors are kept in `state.label.opened`.
+  - **The screens:**
+    - the contract and comparison: `Game.ui.labelDeal`, with actions in `js/app/label.js`
+    - the label panel on the Manager screen
+    - `label.estimate`, `termRows`, and `managerTake` give what a contract means. When you add a term, add a row there.
+  - **Debug:** "Label offer" and "Label deadline today".
 - **Walt's handbook and the Guide**:
   - **The text:** `js/content/handbook.js` holds `mentor` (the name is set once at the top), `pages(state)` for the
     welcome handbook, and `sections()` for the Guide. Every number in it is built from balance.js.

@@ -142,15 +142,129 @@ Game.balance = {
   },
 
   // ---------------------------------------------------------------
-  // The label (milestone 16: reputation 65 and 10,000 fans)
+  // Record labels (see js/rules/label.js; the 12 labels' names are in js/content/labels.js)
+  // Offers only come once you have a manager. Each label has a tier (indie, mid, major, shark) and a personality.
+  // An offer's terms are rolled from its tier's ranges, then shaped by its personality.
   // ---------------------------------------------------------------
   label: {
-    advanceBase: 10000,              // Advance = $10,000 + $2 per fan, up to $50,000
-    advancePerFan: 2,
-    advanceMax: 50000,
-    streamingCut: 0.80,              // The label keeps 80% of streaming until the advance is paid back
-    offerExpiryDays: 7,
-    reofferWeeks: 8                  // Turn the label down and they ask again this many weeks later
+    offerExpiryDays: 7,              // Answer an offer within this many days (longer while a counter-offer is pending)
+    maxOpenOffers: 3,                // At most this many label offers open at once (a bidding war)
+    offerDayOfWeek: 0,               // New offers arrive on Mondays (0 = Monday)
+    declineCooldownWeeks: { min: 8, max: 16 }, // Turn a label down and it waits this long before offering again
+    expireCooldownWeeks: { min: 6, max: 10 },  // Let its offer run out: this long
+    afterDealWeeks: 4,               // After a deal ends (or you buy out), offers start again this many weeks later
+    hotChance: { buzzAt: 50, buzz: 0.05, charting: 0.05, recentRelease: 0.05, recentDays: 28 }, // Extra chance a week:
+                                     // buzz 50+ where you have fans, a song on the chart, or a release in the last 4 weeks
+    biddingWar: { chance: 0.35, days: { min: 1, max: 4 } }, // When one label offers, each other eligible label may join
+    rivalSnipeChance: 0.5,           // An offer you let run out may go to a rival without a label
+    // The tiers: who can offer, how often (each Monday), and the ranges every offer's terms are rolled from.
+    //   royalty: your share of streaming money on records made under the deal
+    //   advanceWeeks: the advance in weeks of your current streaming money (never under advanceFloor, in dollars)
+    //   reach: how much the label boosts those records' streams (0.5 = +50%) and new fans when they come out
+    //   push: new fans in every open city when a record comes out, as a share of that city's most fans x quality
+    //   records: how many EPs or albums you owe; recordType 'ep' = an EP or an album counts, 'album' = albums only
+    //   deadlineWeeks: weeks to deliver each record
+    //   freePromo: the release-week push the label pays for on each record (null = none)
+    //   tourSupport: money toward each tour you accept (dollars)
+    tiers: {
+      indie: { minReputation: 40, minFans: 2000, weeklyChance: 0.12, royalty: { min: 0.45, max: 0.60 }, advanceWeeks: { min: 4, max: 10 },
+               advanceFloor: { min: 5000, max: 15000 }, reach: { min: 0.20, max: 0.40 }, push: 0.005, records: { min: 1, max: 2 }, recordType: 'ep',
+               deadlineWeeks: { min: 24, max: 30 }, freePromo: null, tourSupport: { min: 0, max: 0 } },
+      mid:   { minReputation: 55, minFans: 10000, weeklyChance: 0.10, royalty: { min: 0.25, max: 0.40 }, advanceWeeks: { min: 8, max: 16 },
+               advanceFloor: { min: 15000, max: 40000 }, reach: { min: 0.30, max: 0.50 }, push: 0.006, records: { min: 2, max: 3 }, recordType: 'ep',
+               deadlineWeeks: { min: 18, max: 26 }, freePromo: 'playlist', tourSupport: { min: 2000, max: 5000 } },
+      major: { minReputation: 70, minFans: 50000, weeklyChance: 0.08, royalty: { min: 0.15, max: 0.25 }, advanceWeeks: { min: 20, max: 40 },
+               advanceFloor: { min: 75000, max: 200000 }, reach: { min: 0.60, max: 1.20 }, push: 0.015, records: { min: 3, max: 5 }, recordType: 'album',
+               deadlineWeeks: { min: 16, max: 24 }, freePromo: 'radio', tourSupport: { min: 10000, max: 30000 } },
+      shark: { minReputation: 35, minFans: 1000, weeklyChance: 0.04, royalty: { min: 0.08, max: 0.15 }, advanceWeeks: { min: 30, max: 50 },
+               advanceFloor: { min: 30000, max: 80000 }, reach: { min: 0.15, max: 0.35 }, push: 0.003, records: { min: 3, max: 5 }, recordType: 'album',
+               deadlineWeeks: { min: 10, max: 14 }, freePromo: null, tourSupport: { min: 0, max: 0 } }
+    },
+    tierOrder: ['indie', 'mid', 'major', 'shark'],
+    // Sharks come looking when you're desperate: in debt, after a flop, or after turning down this many deals.
+    desperate: { weeklyChance: 0.25, declinedDeals: 3 },
+    // Personalities shape the terms: multipliers on the tier's ranges, and how likely each clause is.
+    //   royaltyShift: added to the rolled royalty     advanceMult / reachMult: multiply the advance and the reach
+    //   masters: chances of 'artist' (you own them), 'reverts' (they come back revertWeeks after the deal), 'label' (theirs)
+    //   control: chances of 'full', 'approval' (a quality bar), 'shelve' (they may hold a record a few weeks)
+    //   gigCut / merchCut: { chance, min, max } of a 360 cut     recoup: chance each cost is charged back to you
+    //   penalty: chances of each missed-deadline penalty      renewal: chance of a renewal option
+    //   buyout: { mult, flatShare }: buyout = unrecouped x mult + advance x flatShare     dropsYou: false = they never let you go
+    personalities: {
+      friendly:   { royaltyShift: 0.10, advanceMult: 0.7, reachMult: 0.8, deadlineShift: 6, recordsShift: 0, promoShift: 0, tourMult: 1,
+                    masters: { artist: 0.8, reverts: 0.2, label: 0 }, control: { full: 1, approval: 0, shelve: 0 },
+                    gigCut: { chance: 0, min: 0, max: 0 }, merchCut: { chance: 0, min: 0, max: 0 },
+                    recoup: { recording: 0, promo: 0, tour: 0 }, penalty: { fine: 1, royalty: 0, extend: 0 },
+                    renewal: 0, buyout: { mult: 1, flatShare: 0 }, dropsYou: true, awardsBoost: 0, bigShowMult: 1 },
+      prestige:   { royaltyShift: 0, advanceMult: 0.6, reachMult: 1.0, deadlineShift: 2, recordsShift: 0, promoShift: 0, tourMult: 1,
+                    masters: { artist: 0, reverts: 0.6, label: 0.4 }, control: { full: 0, approval: 1, shelve: 0 },
+                    gigCut: { chance: 0, min: 0, max: 0 }, merchCut: { chance: 0.3, min: 0.05, max: 0.10 },
+                    recoup: { recording: 0.5, promo: 0, tour: 0.5 }, penalty: { fine: 0, royalty: 1, extend: 0 },
+                    renewal: 0.3, buyout: { mult: 1.5, flatShare: 0.25 }, dropsYou: true, awardsBoost: 0.10, bigShowMult: 1.5 },
+      pincher:    { royaltyShift: -0.02, advanceMult: 0.4, reachMult: 0.5, deadlineShift: 0, recordsShift: 0, promoShift: -1, tourMult: 0,
+                    masters: { artist: 0.2, reverts: 0.3, label: 0.5 }, control: { full: 0.7, approval: 0.3, shelve: 0 },
+                    gigCut: { chance: 0.2, min: 0.05, max: 0.10 }, merchCut: { chance: 0.3, min: 0.05, max: 0.15 },
+                    recoup: { recording: 0.9, promo: 0.9, tour: 0.9 }, penalty: { fine: 0.7, royalty: 0.3, extend: 0 },
+                    renewal: 0.2, buyout: { mult: 1.5, flatShare: 0.25 }, dropsYou: true, awardsBoost: 0, bigShowMult: 1 },
+      hype:       { royaltyShift: 0, advanceMult: 1.2, reachMult: 1.4, deadlineShift: -4, recordsShift: 0, promoShift: 1, tourMult: 1.5,
+                    masters: { artist: 0.1, reverts: 0.3, label: 0.6 }, control: { full: 0.6, approval: 0, shelve: 0.4 },
+                    gigCut: { chance: 0.5, min: 0.05, max: 0.20 }, merchCut: { chance: 0.8, min: 0.10, max: 0.20 },
+                    recoup: { recording: 0.5, promo: 0.7, tour: 0.7 }, penalty: { fine: 0.3, royalty: 0, extend: 0.7 },
+                    renewal: 0.5, buyout: { mult: 2, flatShare: 0.5 }, dropsYou: true, awardsBoost: 0, bigShowMult: 1.5 },
+      balanced:   { royaltyShift: 0, advanceMult: 1.0, reachMult: 1.0, deadlineShift: 0, recordsShift: 0, promoShift: 0, tourMult: 1,
+                    masters: { artist: 0.3, reverts: 0.5, label: 0.2 }, control: { full: 0.8, approval: 0.2, shelve: 0 },
+                    gigCut: { chance: 0.2, min: 0.05, max: 0.10 }, merchCut: { chance: 0.2, min: 0.05, max: 0.10 },
+                    recoup: { recording: 0.5, promo: 0.3, tour: 0.3 }, penalty: { fine: 0.5, royalty: 0.3, extend: 0.2 },
+                    renewal: 0.3, buyout: { mult: 1.2, flatShare: 0.1 }, dropsYou: true, awardsBoost: 0, bigShowMult: 1 },
+      corporate:  { royaltyShift: -0.02, advanceMult: 1.3, reachMult: 1.3, deadlineShift: 0, recordsShift: 1, promoShift: 0, tourMult: 1,
+                    masters: { artist: 0, reverts: 0.1, label: 0.9 }, control: { full: 0.3, approval: 0.5, shelve: 0.2 },
+                    gigCut: { chance: 0.5, min: 0.05, max: 0.15 }, merchCut: { chance: 0.5, min: 0.05, max: 0.15 },
+                    recoup: { recording: 1, promo: 0.8, tour: 0.8 }, penalty: { fine: 0.2, royalty: 0.2, extend: 0.6 },
+                    renewal: 0.7, buyout: { mult: 2, flatShare: 0.5 }, dropsYou: true, awardsBoost: 0.03, bigShowMult: 2 },
+      predatory:  { royaltyShift: 0, advanceMult: 1.0, reachMult: 1.0, deadlineShift: 0, recordsShift: 0, promoShift: 0, tourMult: 0,
+                    masters: { artist: 0, reverts: 0, label: 1 }, control: { full: 0, approval: 0.3, shelve: 0.7 },
+                    gigCut: { chance: 1, min: 0.20, max: 0.30 }, merchCut: { chance: 1, min: 0.20, max: 0.30 },
+                    recoup: { recording: 1, promo: 1, tour: 1 }, penalty: { fine: 0, royalty: 0.3, extend: 0.7 },
+                    renewal: 1, buyout: { mult: 3, flatShare: 1 }, dropsYou: false, awardsBoost: 0, bigShowMult: 1 }
+    },
+    promoLadder: [null, 'playlist', 'radio', 'video'], // free promo pushes, smallest first (personality promoShift moves along it)
+    qualityBar: { indie: 65, mid: 60, major: 70, shark: 50 }, // a label with approval rejects records under this average quality
+    revertWeeks: { min: 104, max: 260 }, // masters that come back to you: this long after the deal ends (2 to 5 years)
+    shelveWeeks: { min: 2, max: 8 },  // a label that shelves holds a record this long...
+    shelveChance: 0.5,                // ...this often
+    penaltyAmounts: { fineShare: 0.15, fineMin: 2000, royalty: 0.03, royaltyFloor: 0.02, extend: 1 }, // fine: 15% of the advance
+    renewalRecords: { min: 1, max: 2 }, // a renewal option adds this many records...
+    renewalMinQuality: 60,            // ...if your last record's average quality was this or better
+    strikesToDrop: 2,                 // Missed deadlines plus flops: this many and the label can drop you
+    flopQuality: { indie: 45, mid: 50, major: 55, shark: 0 }, // a record under this average quality counts as a flop
+    dropReputation: -5,               // Getting dropped costs this much reputation...
+    dropBuzz: -15,                    // ...and this much buzz everywhere you have fans
+    reminderWeeks: [4, 1],            // Inbox reminders this many weeks before a deadline
+    roundTo: 500,                     // Advances, tour support, and buyouts are rounded to this many dollars
+    // Counter-offers: one per offer, up to maxAsks things. Chance they agree = base - each ask's cost + leverage.
+    counter: {
+      maxAsks: 2, base: 0.70, replyDays: 1, keepOpenDays: 2, minChance: 0.05, maxChance: 0.90,
+      asks: {                         // what each ask changes, and how much it lowers the chance
+        advance:  { amount: 0.25, cost: 0.15 },   // +25% advance
+        royalty:  { amount: 0.05, cost: 0.25 },   // +5 royalty points
+        records:  { amount: 1,    cost: 0.20 },   // one record fewer (never under 1)
+        deadline: { amount: 6,    cost: 0.10 },   // +6 weeks per record
+        masters:  { cost: 0.25 },                 // masters one step better for you (label → reverts → yours)
+        no360:    { cost: 0.20 }                  // no cut of shows or merch
+      },
+      perOtherOffer: 0.15,            // +15% for each other open label offer (a bidding war)
+      fameDivisor: 200,               // +(reputation - the tier's minimum) / 200
+      buzzDivisor: 400                // +your average buzz / 400
+    },
+    // The estimate on the contract: what a typical record makes (fans x this x tracks x weeks), and tracks per record.
+    estimate: { perFanPerSongWeek: 0.006, tracks: { ep: 4, album: 10 }, writeBlocksPerWeek: 4, trapTerms: 4 }, // 4+ harsh terms: the verdict drops a step // ...and Write blocks a typical week has room for
+    // Rivals sign too (scene dice): each Monday, each rival without a label signs with this chance once they qualify.
+    rivalSignChance: 0.05,
+    // What deals open (once open, they stay open). Without the right label, they open later:
+    nationalWithoutLabel: 75,         // National cities: a mid-size or major label, or reputation 75 (and a manager)
+    bigShowsWithout: { reputation: 90, fans: 250000 }, // Arenas: a major, or a smaller label with a Top 10 record,
+                                     // or reputation 90 and 250,000 fans without
+    legacyRecoupShare: 0.8           // Older saves' Northbound deal: 80% of streaming paid the advance back
   },
 
   // ---------------------------------------------------------------
@@ -935,8 +1049,6 @@ Game.balance = {
     managerReputation: 50,
     managerFans: 2000,               // (the manager's cut is in balance.manager)
     theaterReputation: 60,
-    labelReputation: 65,
-    labelFans: 10000,                // (the advance and streaming cut are in balance.label)
     arenaReputation: 85,
     arenaFans: 100000
   },
@@ -974,7 +1086,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 23,                     // Save format version, bumped when the state shape changes
+    version: 24,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

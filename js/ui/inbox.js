@@ -46,7 +46,8 @@ Game.ui.inbox = {
       reviewContract: function (e, el) { app.openContract(el.getAttribute('data-id')); },
       acceptSessionWork: function (e, el) { app.acceptSessionWork(el.getAttribute('data-id')); },
       hireManager: function (e, el) { app.hireManager(el.getAttribute('data-id')); },
-      signLabel: function (e, el) { app.signLabel(el.getAttribute('data-id')); },
+      readContract: function (e, el) { app.openLabelDeal(el.getAttribute('data-id')); },
+      compareLabels: function () { app.openLabelCompare(); },
       acceptTour: function (e, el) { app.acceptTour(el.getAttribute('data-id'), el.getAttribute('data-job') || null); },
       acceptBigShow: function (e, el) { app.acceptBigShow(el.getAttribute('data-id'), el.getAttribute('data-job') || null); }
     });
@@ -84,7 +85,7 @@ Game.ui.inbox = {
       }
     }
     var status = m.resolved
-      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired', taken: 'Taken by a rival' }[m.resolved] || m.resolved) + '</span>'
+      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired', taken: 'Taken by a rival', withdrawn: 'Withdrawn: you signed elsewhere' }[m.resolved] || m.resolved) + '</span>'
       : '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>';
     return '<div class="message paper message--' + m.kind + (m.read ? '' : ' message--new') + '">' +
       '<div class="message__head"><strong class="pos">' + h.escape(head) + '</strong>' + (m.read ? '' : ' <span class="badge badge--warn">New</span>') +
@@ -109,7 +110,7 @@ Game.ui.inbox = {
         (problem ? ' <span class="pick__reason">' + h.escape(problem) + '</span>' : '');
     }
     var status = m.resolved
-      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired', taken: 'Taken by a rival' }[m.resolved] || m.resolved) + '</span>'
+      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired', taken: 'Taken by a rival', withdrawn: 'Withdrawn: you signed elsewhere' }[m.resolved] || m.resolved) + '</span>'
       : '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>';
     return '<div class="message paper message--' + m.kind + (m.read ? '' : ' message--new') + '">' +
       '<div class="message__head"><strong class="pos">' + h.escape(d.bandName) + ' want you on their recording</strong>' +
@@ -124,12 +125,36 @@ Game.ui.inbox = {
   cardHtml: function (m, head, body, buttons) {
     var h = Game.ui.helpers;
     var status = m.resolved
-      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired', taken: 'Taken by a rival' }[m.resolved] || m.resolved) + '</span>'
+      ? '<span class="badge">' + ({ accepted: 'Accepted', declined: 'Declined', expired: 'Expired', taken: 'Taken by a rival', withdrawn: 'Withdrawn: you signed elsewhere' }[m.resolved] || m.resolved) + '</span>'
       : (m.expiresDay !== null ? '<span class="muted">Answer by ' + h.dateLabel(m.expiresDay) + '</span>' : '');
     return '<div class="message paper message--' + m.kind + (m.read ? '' : ' message--new') + '">' +
       '<div class="message__head"><strong class="pos">' + h.escape(head) + '</strong>' + (m.read ? '' : ' <span class="badge badge--warn">New</span>') +
         '<span class="message__date muted">' + h.dateLabel(m.day) + '</span></div>' + body +
       (buttons || status ? '<div class="message__foot">' + (m.resolved ? '' : buttons || '') + ' ' + status + '</div>' : '') + '</div>';
+  },
+
+  // A record label's offer: the headline terms, your manager's take, and the contract (and a comparison when several
+  // labels are bidding). Older saves' offers (before version 24) only had an advance.
+  labelOfferHtml: function (state, m, decline) {
+    var h = Game.ui.helpers;
+    var d = m.data;
+    if (!d.labelId) return Game.ui.inbox.cardHtml(m, 'A label offer', '<p>A ' + h.money(d.advance || 0) + ' advance (an older offer).</p>', '');
+    var lb = Game.rules.label;
+    var info = lb.info(d.labelId);
+    var t = d.terms;
+    var est = lb.estimate(state, t);
+    var others = lb.openOffers(state).length;
+    var counter = d.counter
+      ? '<p class="hint">' + ({ pending: 'Counter-offer sent: they answer tomorrow.', accepted: 'They agreed to your counter-offer: these are the new terms.',
+          refused: 'They turned down your counter-offer. The original terms still stand.' }[d.counter.status]) + '</p>'
+      : '';
+    var body = '<p class="label-card__who"><span class="label-card__logo" style="--label-ink:' + info.color + '">' + h.escape(info.name) + '</span> ' +
+        '<span class="muted">' + Game.content.labelTiers[info.tier] + ' · ' + Game.content.labelPersonalities[info.personality] + '</span></p>' +
+      '<p>' + h.money(t.advance) + ' advance · ' + Math.round(t.royalty * 100) + '% royalty · ' + h.escape(lb.oweText(t)) + ', ' + t.deadlineWeeks + ' weeks each.</p>' +
+      (m.resolved ? '' : '<p class="label-card__take">' + h.escape(lb.managerTake(state, t, est)) + '</p>') + counter;
+    var buttons = '<button class="btn btn--small btn--primary" data-action="readContract" data-id="' + m.id + '">Read the contract</button> ' +
+      (others > 1 ? '<button class="btn btn--small" data-action="compareLabels">Compare ' + others + ' offers</button> ' : '') + decline;
+    return Game.ui.inbox.cardHtml(m, info.name + ' wants to sign you', body, buttons);
   },
 
   // Accept buttons that ask how to take workdays off when an offer needs them (one button per way).
@@ -164,13 +189,7 @@ Game.ui.inbox = {
         '-week calendar, auto-booking by your rules, tours planned on request, and the press and radio push.</p>',
         '<button class="btn btn--small btn--primary" data-action="hireManager" data-id="' + m.id + '">Hire them</button> ' + decline);
     }
-    if (m.kind === 'labelOffer') {
-      return self.cardHtml(m, Game.content.business.label.name + ' wants to sign you',
-        '<p>A <strong>' + h.money(d.advance) + '</strong> advance, paid now. You get the Top studio' + (Game.rules.manager.hired(state) ? ' and the National cities' : ' (and National cities once you have a manager)') +
-        '. The label keeps ' + Math.round(b.label.streamingCut * 100) + '% of your streaming money until the advance is paid back. Turn it down and they\'ll ask again in ' +
-        b.label.reofferWeeks + ' weeks.</p>',
-        '<button class="btn btn--small btn--primary" data-action="signLabel" data-id="' + m.id + '">Sign</button> ' + decline);
-    }
+    if (m.kind === 'labelOffer') return self.labelOfferHtml(state, m, decline);
     if (m.kind === 'tourProposal') {
       var ads = (m.resolved ? null : Game.app.tourAds[m.id]) || {};
       var e = d.shows.length && !m.resolved ? Game.rules.manager.proposalEstimate(state, m.id, ads) : d.estimate;

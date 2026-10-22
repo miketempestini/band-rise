@@ -27,7 +27,7 @@ Game.content.milestones = [
   { id: 'firstTour',     number: 13, name: 'First tour',       trigger: Game.balance.tours.minShows + '+ out-of-town shows in ' + Game.balance.tours.withinDays + ' days' },
   { id: 'manager',       number: 14, name: 'Manager',          trigger: 'Reputation ' + m.managerReputation + ' and ' + n(m.managerFans) + ' fans' },
   { id: 'theater',       number: 15, name: 'Theater',          trigger: 'Reputation ' + m.theaterReputation + ' and a release' },
-  { id: 'labelOffer',    number: 16, name: 'Label offer',      trigger: 'Reputation ' + m.labelReputation + ' and ' + n(m.labelFans) + ' fans' },
+  { id: 'labelOffer',    number: 16, name: 'Record deal',      trigger: 'Sign with a record label (offers need a manager)' },
   { id: 'awards',        number: 17, name: 'Awards season',    trigger: 'Every December' },
   { id: 'arena',         number: 18, name: 'Arena',            trigger: 'Reputation ' + m.arenaReputation + ' and ' + n(m.arenaFans) + ' fans' },
   { id: 'goingGlobal',   number: 19, name: 'Going global',     trigger: 'Play your first show abroad' }

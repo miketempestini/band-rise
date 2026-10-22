@@ -67,6 +67,24 @@
     });
     check('action picker', function (a) { a.show('today'); a.pickerBlock = 'evening'; a.render(); });
     check('day readout', function (a) { a.show('today'); a.dayReportOpen = true; a.render(); });
+    // Record labels: three offers (a contract, a counter-offer pending, the comparison), then the Manager screen signed.
+    check('label offers', function (a) {
+      var rng = Game.rng.create(3);
+      ['porchlight', 'monolith', 'goldtooth'].forEach(function (id) { a.state = Game.rules.label.addOffer(a.state, rng, id); });
+      var ids = Game.rules.label.openOffers(a.state).map(function (m) { return m.id; });
+      a.show('inbox');
+      a.openLabelDeal(ids[0]);
+      a.labelAsks = ['advance', 'royalty']; a.render();
+      a.state = Game.rules.label.counter(a.state, ids[1], ['records']).state;
+      a.openLabelDeal(ids[1]);
+      a.openLabelCompare();
+      a.state.manager.hired = true;
+      a.state = Game.rules.label.sign(a.state, ids[2]).state;
+      a.show('manager');
+      a.musicSection = 'releases'; a.show('songs'); a.musicSection = 'writing';
+      a.show('career');
+      a.show('finances');
+    });
     Game.content.handbook.pages(state).forEach(function (page, i) {
       check('handbook page ' + (i + 1), function (a) { a.openHandbook('today'); a.handbookGo(i); });
     });

@@ -1,6 +1,6 @@
 // bigtime.test.js
 // Tests for Phase 12, the big time: the manager (cut, 12-week horizon, auto-booking, tours), the Big campaign
-// and the press push, production costs, the label (advance, streaming payback, Top studio, National cities),
+// and the press push, production costs,
 // flights, arena and festival offers, awards season, and milestones 14 to 18.
 // Day 0 is a Monday.
 
@@ -248,46 +248,7 @@
     t.equal(r.state.thisWeek.costs.production, Math.min(p.theater, Math.round(gross * p.share)), 'paid on the night: 25% of $' + gross);
   });
 
-  // ----- The label -----
-
-  Game.test('Label: offer at reputation 65 and 10,000 fans; advance $10,000 + $2 a fan, up to $50,000', function (t) {
-    var s = bigState();
-    s.player.reputation = 65;
-    s.cities.hometown.fans = 9999;
-    t.equal(Game.rules.label.offerCheck(s).state.inbox.length, 0, '9,999 fans: no offer');
-    s.cities.hometown.fans = 15000;
-    t.equal(Game.rules.label.advanceFor(s), 40000, '15,000 fans: $40,000');
-    s.cities.hometown.fans = 50000;
-    t.equal(Game.rules.label.advanceFor(s), Game.balance.label.advanceMax, 'capped at $50,000');
-    s.cities.hometown.fans = 15000;
-    s = Game.rules.label.offerCheck(s).state;
-    t.equal(lastMessage(s, 'labelOffer').data.advance, 40000, 'the offer');
-  });
-
-  Game.test('Label: signing pays the advance, opens the Top studio and (with a manager) National cities', function (t) {
-    var s = bigState();
-    t.ok(Game.rules.recording.studioProblem(s, 'top'), 'Top studio locked');
-    s = Game.rules.booking.addInbox(s, 'labelOffer', { advance: 30000 }, s.day + 7);
-    var cash = s.player.cash;
-    s = Game.rules.label.sign(s, s.inbox[s.inbox.length - 1].id).state;
-    t.equal(s.player.cash, cash + 30000, '+$30,000');
-    t.equal(s.label.owed, 30000, 'owed back from streaming');
-    t.equal(Game.rules.recording.studioProblem(s, 'top'), null, 'Top studio open');
-    t.equal(s.cities.newHalston.unlocked, false, 'National cities also need a manager');
-    s = withManager(s);
-    t.ok(s.cities.newHalston.unlocked && s.cities.kingsport.unlocked, 'with a manager: National cities open');
-    t.equal(s.cities.lindenberg.unlocked, false, 'International stays locked');
-  });
-
-  Game.test('Label: keeps 80% of streaming until the advance is paid back, then it\'s all yours', function (t) {
-    var s = bigState();
-    s.label = { signed: true, signedDay: 0, advance: 100, owed: 100, nextOfferDay: 0 };
-    t.sameContents(Game.rules.label.splitStreaming(s, 50), { yours: 10, label: 40 }, '$50: label $40, you $10');
-    t.sameContents(Game.rules.label.splitStreaming(Object.assign(Game.util.clone(s), { label: { signed: true, owed: 30 } }), 50), { yours: 20, label: 30 },
-      'never more than you still owe');
-    s.label.owed = 0;
-    t.sameContents(Game.rules.label.splitStreaming(s, 50), { yours: 50, label: 0 }, 'paid back: all yours');
-  });
+  // ----- The label: see label.test.js -----
 
   // ----- Flights -----
 
@@ -302,7 +263,7 @@
 
   // ----- Arenas and festivals -----
 
-  Game.test('Arenas and festivals: offers only, from reputation 85 and 100,000 fans with a label; booked with flights', function (t) {
+  Game.test('Arenas and festivals: offers only, from reputation 85 and 100,000 fans with a major label; booked with flights', function (t) {
     var s = withBand(withManager(bigState()), 2);
     for (var i = 0; i < 12; i++) { var st = Game.rules.songs.startSong(s); s = Game.rules.songs.finishSong(st.state, st.songId).state; }
     s.player.reputation = 85;
@@ -310,7 +271,7 @@
     s.cities.harlowFalls.fans = 30000;
     s.cities.portEllery.fans = 25000;
     t.equal(Game.rules.bigShows.eligible(s), false, 'no label: no offers');
-    s.label = { signed: true, signedDay: 0, advance: 0, owed: 0, nextOfferDay: 0 };
+    s.label.opened.bigShows = true; // a major label deal opened them
     s = Game.rules.progress.checkUnlocks(s).state;
     t.ok(Game.rules.bigShows.eligible(s), 'eligible');
     t.ok(Game.rules.booking.venues().every(function (v) { return v.tier < 4; }), 'arenas can\'t be emailed');
@@ -338,7 +299,7 @@
     s.cities.hometown.fans = 50000;
     s.cities.harlowFalls.fans = 30000;
     s.cities.portEllery.fans = 25000;
-    s.label = { signed: true, signedDay: 0, advance: 0, owed: 0, nextOfferDay: 0 };
+    s.label.opened.bigShows = true; // a major label deal opened them
     s = Game.rules.progress.checkUnlocks(s).state;
     var m = lastMessage(Game.rules.bigShows.roll(s, 'arena').state, 'arenaOffer');
     var later = Game.util.clone(s);
@@ -480,7 +441,7 @@
 
   // ----- Milestones and saving -----
 
-  Game.test('Milestones 14 to 18: Manager, Theater, Label offer, Awards season, Arena', function (t) {
+  Game.test('Milestones 14 to 18: Manager, Theater, Record deal, Awards season, Arena', function (t) {
     var s = bigState();
     s.player.reputation = 60;
     s.cities.hometown.fans = 2000;
@@ -494,7 +455,10 @@
     s.cities.harlowFalls.fans = 30000;
     s.cities.portEllery.fans = 20000;
     var top = Game.rules.progress.checkUnlocks(s).state;
-    t.ok(top.milestones.labelOffer !== undefined, 'Label offer at reputation 65 and 10,000 fans');
+    t.equal(top.milestones.labelOffer, undefined, 'Record deal: not until you sign');
+    s.label.everSigned = true;
+    top = Game.rules.progress.checkUnlocks(s).state;
+    t.ok(top.milestones.labelOffer !== undefined, 'Record deal once you sign');
     t.ok(top.milestones.arena !== undefined, 'Arena at reputation 85 and 100,000 fans');
   });
 
@@ -506,7 +470,7 @@
     t.ok(loaded.ok, 'loaded: ' + loaded.message);
     t.equal(loaded.state.version, Game.balance.save.version);
     t.equal(loaded.state.manager.hired, false, 'no manager');
-    t.equal(loaded.state.label.signed, false, 'no label');
+    t.equal(loaded.state.label.deal, null, 'no label');
     t.sameContents(loaded.state.awards, [], 'no awards');
   });
 

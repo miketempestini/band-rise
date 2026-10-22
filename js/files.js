@@ -13,7 +13,7 @@ window.Game = window.Game || {};
 
 Game.files = {
 
-  tag: 'v23-2026-10-22c',   // Must start with "v" + the save version (balance.save.version): a test checks it
+  tag: 'v24-2026-10-22k',   // Must start with "v" + the save version (balance.save.version): a test checks it
 
   css: 'styles.css',
 
@@ -29,7 +29,7 @@ Game.files = {
     'js/content/calendar.js', 'js/content/skills.js', 'js/content/instruments.js', 'js/content/cities.js', 'js/content/countries.js',
     'js/content/actions.js', 'js/content/names.js', 'js/content/venues.js', 'js/content/gigText.js',
     'js/content/people.js', 'js/content/events.js', 'js/content/milestones.js', 'js/content/tutorial.js',
-    'js/content/studios.js', 'js/content/business.js', 'js/content/finance.js', 'js/content/art.js', 'js/content/scene.js', 'js/content/handbook.js',
+    'js/content/studios.js', 'js/content/business.js', 'js/content/finance.js', 'js/content/art.js', 'js/content/scene.js', 'js/content/labels.js', 'js/content/handbook.js',
     'js/state.js', 'js/save.js',
     'js/rules/money.js', 'js/rules/finances.js', 'js/rules/housing.js', 'js/rules/energy.js', 'js/rules/morale.js',
     'js/rules/skills.js', 'js/rules/audience.js', 'js/rules/songs.js', 'js/rules/setlist.js', 'js/rules/people.js', 'js/rules/gigs.js',
@@ -48,9 +48,9 @@ Game.files = {
     'js/ui/inbox.js', 'js/ui/calendar.js', 'js/ui/careerCard.js', 'js/ui/career.js', 'js/ui/sliceEnd.js',
     'js/ui/skipSummary.js', 'js/ui/shop.js', 'js/ui/finances.js', 'js/ui/contract.js', 'js/ui/job.js', 'js/ui/quitJob.js',
     'js/ui/planWeek.js', 'js/ui/map.js', 'js/ui/manager.js', 'js/ui/weeklySummary.js', 'js/ui/settings.js',
-    'js/ui/gameOver.js', 'js/ui/tourPoster.js', 'js/ui/tourWrapUp.js', 'js/ui/tourBuilder.js', 'js/ui/handbook.js', 'js/ui/guide.js', 'js/ui/debugPanel.js',
+    'js/ui/gameOver.js', 'js/ui/tourPoster.js', 'js/ui/tourWrapUp.js', 'js/ui/tourBuilder.js', 'js/ui/labelDeal.js', 'js/ui/handbook.js', 'js/ui/guide.js', 'js/ui/debugPanel.js',
     'js/app/core.js', 'js/app/picker.js', 'js/app/booking.js', 'js/app/calendar.js', 'js/app/shop.js', 'js/app/job.js',
-    'js/app/bigTime.js', 'js/app/planWeek.js', 'js/app/people.js', 'js/app/music.js', 'js/app/tourBuilder.js', 'js/app/today.js', 'js/app/guide.js'
+    'js/app/bigTime.js', 'js/app/planWeek.js', 'js/app/people.js', 'js/app/music.js', 'js/app/tourBuilder.js', 'js/app/today.js', 'js/app/guide.js', 'js/app/label.js'
   ],
 
   // Starts the game. The game page only, and always last.

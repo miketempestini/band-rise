@@ -84,9 +84,9 @@
     l.releases.push({ id: 'r1', type: 'single', songIds: [ids[0]], day: 0, avgQuality: 100 });
     l.cities.hometown.fans = 10000;
     l.day = 6;
-    l.label = { signed: true, signedDay: 0, advance: 1000, owed: 1000, nextOfferDay: 0 };
+    l.label.deal = Game.rules.label.legacyDeal({ advance: 1000, owed: 1000, signedDay: 0 }); // 80% of streaming pays back the advance
     var paid = Game.rules.recording.payStreaming(l).state;
-    t.equal(F().summary(paid, 7).band.labelKept, 1000 - paid.label.owed, 'the label\'s cut');
+    t.equal(F().summary(paid, 7).band.labelKept, 1000 - paid.label.deal.unrecouped, 'the label\'s cut');
   });
 
   Game.test('Finances: periods filter by days, and records older than 92 days are dropped', function (t) {

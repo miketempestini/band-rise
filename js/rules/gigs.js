@@ -295,13 +295,14 @@ Game.rules.gigs = {
     }
 
     // Tips and show pay: split into equal shares with the band (a Diva takes 1.5). You keep your share.
-    // A manager takes their cut of the show pay first (not tips).
+    // A manager takes their cut of the show pay first (not tips), and so does a label with a 360 cut.
     var share = Game.rules.people.payShares(s).yourShare;
     var yourTips = Math.round(tips * share);
     if (yourTips > 0) s = Game.rules.money.earn(s, yourTips, 'tips').state;
     var grossPay = opts.deal ? Game.rules.booking.payFor(venue, opts.deal, crowd, opts.fee) : 0;
     var managerCut = Game.rules.manager.cutOf(s, grossPay);
-    var pay = grossPay - managerCut;
+    var labelCut = Game.rules.label.gigCut(s, grossPay);
+    var pay = grossPay - managerCut - labelCut;
     var yourPay = Math.round(pay * share);
     if (yourPay > 0) s = Game.rules.money.earn(s, yourPay, 'gigPay').state;
     s.stats.totalEarned += yourTips + yourPay;
@@ -313,7 +314,7 @@ Game.rules.gigs = {
     // Merch: some of the crowd buys a shirt or a CD (if you have stock). Merch money is all yours.
     var merch = Game.rules.merch.sellAtGig(s, crowd, result, venueId, opts.tourId);
     s = merch.state;
-    s.stats.totalEarned += merch.revenue;
+    s.stats.totalEarned += merch.revenue - merch.labelCut;
 
     // The Finances screen: the show's money for the whole band (ticket sales or the fee, the manager's cut, each
     // bandmate's pay, the band's tips) and a record of the show.
@@ -325,8 +326,12 @@ Game.rules.gigs = {
     });
     Game.rules.finances.add(s, { flow: 'band', cat: opts.deal === 'door' ? 'ticketSales' : 'showFees', amount: grossPay });
     Game.rules.finances.add(s, { flow: 'band', cat: 'managerPay', amount: managerCut });
+    if (labelCut + merch.labelCut > 0) {
+      Game.rules.finances.add(s, { flow: 'band', cat: 'label360', amount: labelCut + merch.labelCut });
+      s.label.deal.cut360 += labelCut + merch.labelCut;
+    }
     Game.rules.finances.add(s, { flow: 'band', cat: 'bandTips', amount: tips - yourTips });
-    Game.rules.finances.addShow(s, { venueId: venueId, deal: opts.deal || 'openMic', gross: grossPay, managerCut: managerCut, memberPay: memberPay,
+    Game.rules.finances.addShow(s, { venueId: venueId, deal: opts.deal || 'openMic', gross: grossPay, managerCut: managerCut, labelCut: labelCut + merch.labelCut, memberPay: memberPay,
       yourPay: yourPay, tips: tips, yourTips: yourTips, merch: merch.revenue, production: 0, tripId: null, tour: false, tourName: null,
       tourId: null, crowd: crowd, result: result, fans: fans });
 
@@ -400,6 +405,7 @@ Game.rules.gigs = {
         yourTips: yourTips,
         pay: pay,
         managerCut: managerCut,
+        labelCut: labelCut,
         yourPay: yourPay,
         venueRelationship: venueChange,
         merch: { sold: merch.sold, revenue: merch.revenue, soldOut: merch.soldOut },
@@ -415,8 +421,9 @@ Game.rules.gigs = {
     var resultName = result.charAt(0).toUpperCase() + result.slice(1);
     var money = '';
     if (yourTips) money += ', $' + yourTips + ' in tips' + (bandNames.length ? ' (your share)' : '');
-    if (pay) money += ', $' + pay + ' pay' + (managerCut ? ' after your manager\'s $' + managerCut : '') + (bandNames.length ? ' (your share $' + yourPay + ')' : '');
-    if (merch.revenue) money += ', $' + merch.revenue + ' in merch';
+    var cuts = [managerCut ? 'your manager\'s $' + managerCut : '', labelCut ? 'your label\'s $' + labelCut : ''].filter(function (x) { return x; });
+    if (pay) money += ', $' + pay + ' pay' + (cuts.length ? ' after ' + cuts.join(' and ') : '') + (bandNames.length ? ' (your share $' + yourPay + ')' : '');
+    if (merch.revenue) money += ', $' + merch.revenue + ' in merch' + (merch.labelCut ? ' (your label took $' + merch.labelCut + ')' : '');
     return {
       state: s,
       gig: gig,

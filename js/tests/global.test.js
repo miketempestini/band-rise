@@ -89,7 +89,7 @@
     var tr = Game.rules.travel;
     var s = worldState();
     s.manager.hired = true;
-    s.label.signed = true;
+    s.label.opened.national = true; // a mid-size or major label deal opened the National cities
     Object.keys(s.cities).forEach(function (id) { if (Game.content.cities[id].region === 'national') s.cities[id].unlocked = true; });
     t.ok(/2 different National cities/.test(tr.cityUnlockProblem(s, 'lindenberg')), tr.cityUnlockProblem(s, 'lindenberg'));
     // A self-booked tour: 3 out-of-town shows in a few days, two of them in National cities.
@@ -113,7 +113,7 @@
   Game.test('Saves: a version 21 save gets credit for National cities it played, and cities it qualifies for open on load', function (t) {
     var s = worldState(5);
     s.manager.hired = true;
-    s.label.signed = true;
+    s.label.opened.national = true; // a mid-size or major label deal opened the National cities
     s.stats.citiesPlayed = { newHalston: 2, crescentCity: 1 };
     var old = JSON.parse(JSON.stringify(s));
     old.version = 21;
@@ -166,7 +166,7 @@
   Game.test('Manager tours abroad: a country\'s cities stay together, with short hops between them', function (t) {
     var s = worldState();
     s.manager.hired = true;
-    s.label.signed = true;
+    s.label.opened.national = true; // a mid-size or major label deal opened the National cities
     Object.keys(s.cities).forEach(function (id) { s.cities[id].unlocked = true; });
     var plan = Game.rules.manager.planTour(s, ['lindenberg', 'valmora', 'askerholm', 'castellune'], 2, null);
     var order = plan.shows.map(function (x) { return Game.content.cities[Game.content.venues[x.venueId].cityId].countryId; });

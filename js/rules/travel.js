@@ -133,7 +133,7 @@ Game.rules.travel = {
     }
     if (region === 'national') {
       if (!state.manager.hired) need.push('a manager');
-      if (!state.label.signed) need.push('a label deal');
+      if (!Game.rules.label.opens(state, 'national')) need.push('a mid-size or major label deal (or reputation ' + Game.balance.label.nationalWithoutLabel + ')');
     }
     if (region === 'international') {
       var n = Game.balance.geography.internationalMinNationalCities;

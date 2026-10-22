@@ -63,7 +63,7 @@ Game.rules.finances = {
   // Everything for one period: your money in and out by category, the band's show money, and what others covered.
   // Returns { from, to, yourIn: [{ key, amount }], yourOut, totalIn, totalOut, net,
   //           band: { ticketSales, showFees, managerPay, members: [{ personId, name, amount }], yourPay, yourTips,
-  //                   bandTips, travelCovered: [{ personId, name, amount }], labelKept } }.
+  //                   bandTips, travelCovered: [{ personId, name, amount }], labelKept, label360, labelPaid } }.
   summary: function (state, days) {
     var f = Game.rules.finances;
     var list = f.inPeriod(state.finances.entries, state, days);
@@ -89,7 +89,7 @@ Game.rules.finances = {
         yourTips: (yourIn.filter(function (r) { return r.key === 'tips'; })[0] || { amount: 0 }).amount,
         bandTips: sumCat('bandTips'),
         travelCovered: people('travelCovered'),
-        labelKept: sumCat('labelKept')
+        labelKept: sumCat('labelKept'), label360: sumCat('label360'), labelPaid: sumCat('labelPaid')
       }
     };
   },

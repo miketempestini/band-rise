@@ -76,6 +76,7 @@ Game.ui.debugPanel = {
           '<button class="btn btn--small" data-action="addFans">+' + Game.balance.debug.fansStep.toLocaleString() + ' fans</button>' +
           '<button class="btn btn--small" data-action="managerOffer">Manager offer</button>' +
           '<button class="btn btn--small" data-action="labelOffer">Label offer</button>' +
+          '<button class="btn btn--small" data-action="labelDeadlineNow">Label deadline today</button>' +
           '<button class="btn btn--small" data-action="arenaOffer">Arena offer</button>' +
           '<button class="btn btn--small" data-action="festivalOffer">Festival offer</button>' +
           '<button class="btn btn--small" data-action="awardsNominate">Award nominations</button>' +
@@ -130,7 +131,8 @@ Game.ui.debugPanel = {
       sessionRelease: function () { app.applyRule(rules.releaseSessionSongs(app.state)); },
       addFans: function () { app.applyRule(rules.addFans(app.state, Game.balance.debug.fansStep)); },
       managerOffer: function () { app.applyRule(rules.managerOffer(app.state)); },
-      labelOffer: function () { app.applyRule(rules.labelOffer(app.state)); },
+      labelOffer: function () { app.applyWithNotice(rules.labelOffer(app.state)); },
+      labelDeadlineNow: function () { app.applyWithNotice(rules.labelDeadlineNow(app.state)); },
       arenaOffer: function () { app.applyWithNotice(rules.bigOffer(app.state, 'arena')); },
       festivalOffer: function () { app.applyWithNotice(rules.bigOffer(app.state, 'festival')); },
       awardsNominate: function () { app.applyWithNotice(rules.awardsNominate(app.state)); },

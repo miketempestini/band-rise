@@ -83,7 +83,5 @@ Object.assign(Game.app, {
     app.afterGigResult();
   },
 
-  signLabel: function (messageId) { Game.app.applyWithNotice(Game.rules.label.sign(Game.app.state, messageId)); },
-
   acceptBigShow: function (messageId, jobChoice) { Game.app.applyWithNotice(Game.rules.bigShows.accept(Game.app.state, messageId, jobChoice)); }
 });

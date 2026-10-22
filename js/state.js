@@ -122,8 +122,10 @@ Game.state = {
       // Every tour you booked, for the Career screen: { id, name (or null), cities, firstDay, lastDay, shows }.
       tours: [],
       tourMerch: { tourId: null, count: 0 }, // tour shirts in stock, and which tour they're for
-      // The label (Phase 12): owed is the part of the advance not yet paid back from streaming.
-      label: { signed: false, signedDay: null, advance: 0, owed: 0, nextOfferDay: 0 },
+      // Record labels (see Game.rules.label): your current deal (or null), ended deals (their masters still matter),
+      // each label's cooldown after you turn it down, bidding-war labels about to join, and what deals have opened.
+      label: { deal: null, past: [], cooldowns: {}, pending: [], nextOfferDay: 0, opened: { topStudio: false, national: false, bigShows: false },
+        declined: 0, droppedDay: null, everSigned: false, nextDealId: 1 },
       // The music scene (other bands, your rivals, venue calendars, rivals' records): see Game.rules.scene.
       scene: Game.rules.scene.create(seed),
       awards: [],         // every nomination: { year, category, title, chance, won (null until the ceremony) }

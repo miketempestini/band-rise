@@ -429,7 +429,7 @@ running order) and you can swap songs before the show.
 | Home setup | $300 once, then free | Capped at 40 | First recording milestone |
 | Demo studio | $75 a block | +0 | Nothing |
 | Pro studio | $250 a block | +10 | Reputation 40 |
-| Top studio | $1,000 a block | +20 | Label deal |
+| Top studio | $1,000 a block | +20 | Any label deal (stays open after it ends) |
 
 ```latex
 \text{recording quality} = 0.5 \times \text{song quality} + 0.25 \times \text{band musicianship} + 0.25 \times \text{tightness} + \text{studio bonus}
@@ -465,7 +465,7 @@ You start in one hometown with seven venues across four tiers. Other cities open
 | 1. Small room | Corner Tap (45), The Back Room (60), Hollow Records in-store (40) | 40 to 60 | Reputation 10 | 7 to 14 days | 70% of door (a $50 to $100 flat fee only for fill-ins and residencies) | $8 |
 | 2. Club | The Basement (200), Velvet Lounge (300) | 150 to 300 | Reputation 30, 3+ on stage | 14 to 28 days | 75% of door ($200 to $500 flat for fill-ins and residencies) | $12 |
 | 3. Theater | The Orpheum (1,200) | 800 to 1,500 | Reputation 60, a release | 28 to 56 days | 80% of door ($2,000+ flat for residencies) | $25 |
-| 4. Arena or festival | Bigger cities only | 5,000+ | Reputation 85, a label | Offers only | $20,000+ | $45 |
+| 4. Arena or festival | Bigger cities only | 5,000+ | Reputation 85 and a major label (see Record labels) | Offers only | $20,000+ | $45 |
 
 Hollow Records is the odd one out: it pays nothing, but merch sells at double the normal rate, and its in-store shows are in the afternoon (so on a weekday they clash with the day job). Venues are made-up names.
 
@@ -498,7 +498,7 @@ Hollow Records is the odd one out: it pays nothing, but merch sells at double th
 | Near cities (2) | 1 block | Reputation 25 | Day trips |
 | Mid cities (2) | 2 blocks | First Near show and reputation 40 | Usually an overnight |
 | Far cities (4+) | A full day | Reputation 50 and a van | Needs vacation days or no day job |
-| National cities (6) | Flights (2 blocks) | Manager and a label | Arenas and festivals |
+| National cities (6) | Flights (2 blocks) | Manager, and a mid-size or major label (or reputation 75) | Arenas and festivals |
 | International cities (15, in 5 countries) | Flights abroad (3 blocks) | Tour shows in 2 different National cities (any tour) | Clubs and theaters everywhere; arenas in each capital; 3 festivals |
 
 Each city keeps its own fans, buzz, an open mic , and 2 to 4 venues. Each city also has a fan ceiling: 50,000 for the hometown, 20,000 to 40,000 for nearby cities, up to 500,000 for big national cities.
@@ -550,7 +550,7 @@ Every international city has an open mic, a club, and a theater.
 - **The World map:** a toggle on the Map screen shows a drawn world map with every country, city pins sized by fans,
   and flight paths from Millbrook.
 
-Out of town, small rooms, clubs, and theaters book for a share of the door (cover nights and in-stores are hometown only), and theaters need a release. Opening slots, residencies, and fill-ins stay in the hometown. National cities open with a manager and a label; International cities after you've played tour shows in 2 different National cities (a tour you booked yourself or the manager's: 3+ out-of-town shows in 10 days).
+Out of town, small rooms, clubs, and theaters book for a share of the door (cover nights and in-stores are hometown only), and theaters need a release. Opening slots, residencies, and fill-ins stay in the hometown. National cities open with a manager and a mid-size or major label (or reputation 75); International cities after you've played tour shows in 2 different National cities (a tour you booked yourself or the manager's: 3+ out-of-town shows in 10 days).
 
 ### Tours
 
@@ -581,9 +581,9 @@ Out of town, small rooms, clubs, and theaters book for a share of the door (cove
     - **Wrap-up:** after the last show, a settlement sheet for the whole tour shows the shows, the crowd, your money after costs, the best night, and new fans per city. A tour that made money earns a gold record.
     - **Road mood:** each night on the road, Party Animals gain 2 satisfaction. Easygoing bandmates lose 2 from the 4th night, and everyone else loses 1 from the 8th.
     - **Auto-booking:** it leaves an open tour proposal's dates alone. The manager plans for 5 days, then sends a proposal: one show per city, nearest cities first, starting at least 5 weeks out (inside the 12-week calendar), with each show's expected crowd and your pay (after the manager and the band), plus travel, hotels, and production. Accepting books every show and all the travel (city to city where it makes sense); declining scraps the plan. A tour needs a van.
-- **Flights**: National cities (open with a manager and a label) are 2 blocks each way by plane, $300 a person each way (you plus your bandmates).
-- **Label** (reputation 65 and 10,000 fans): an advance of $10,000 + $2 per fan (up to $50,000), the Top studio, and National cities (with a manager). The label keeps 80% of streaming until the advance is paid back.
-- **Arenas and festivals** (reputation 85, 100,000 fans, and a label): offers only. Each Monday a 10% chance of each (one open at a time), 6 to 10 weeks out, answer within 5 days. An arena pays its flat fee ($20,000 to $30,000), an 18-song set, $5,000 production. A festival pays $5,000 to $15,000 for an 8-song afternoon slot to 30% to 60% of the grounds, production provided. Festivals: New Halston Music Fest, Crescent Riverfront Festival, Harborline Summer Fest.
+- **Flights**: National cities (open with a manager and a mid-size or major label, or reputation 75) are 2 blocks each way by plane, $300 a person each way (you plus your bandmates).
+- **Record labels**: offers need a manager. See "Record labels" below.
+- **Arenas and festivals** (reputation 85, 100,000 fans, and a major label; or a Top 10 record on a smaller label; or reputation 90 and 250,000 fans without one): offers only. A big label brings them more often. Each Monday a 10% chance of each (one open at a time), 6 to 10 weeks out, answer within 5 days. An arena pays its flat fee ($20,000 to $30,000), an 18-song set, $5,000 production. A festival pays $5,000 to $15,000 for an 8-song afternoon slot to 30% to 60% of the grounds, production provided. Festivals: New Halston Music Fest, Crescent Riverfront Festival, Harborline Summer Fest.
 - **Awards season**: every December, in real calendar years. Nominations arrive on the first Monday of December; the ceremony is the last Saturday of December. "This year" and "new fans this year" start on January 1. Song of the Year (a release this year with recording quality 60+), Record of the Year (an EP or album this year averaging 55+), Breakout Act (2,000+ new fans this year). Strength: (quality - 50) / 50 (+0.1 for a Top 10 that year), or new fans / 20,000, kept between 10% and 80%.
   - **Head to head:** each category you're nominated in has up to 5 nominees: you, your rivals with a qualifying record
     (or 2,000+ new fans) that year, and the scene's biggest bands. Other bands' records are judged by their skills
@@ -591,6 +591,109 @@ Out of town, small rooms, clubs, and theaters book for a share of the door (cove
   - **One winner per category:** picked by strength cubed, so the strongest nominee usually wins but not always. Your
     chance is your share (shown on the nominations). A rival that wins keeps count (shown on Career).
   - Each win: +5 reputation.
+
+## Record labels
+
+Labels are the biggest business decision in a career. A good deal is the push to the next level; a bad one can trap you
+for years. Offers only come once you have a manager.
+
+### The labels
+
+Twelve labels in four tiers. Each has a personality that shapes its terms, and the same label can make a fair offer one
+year and a stingy one the next (the dice roll every offer inside its ranges).
+
+| Tier | Labels | Can offer at | Typical terms |
+| --- | --- | --- | --- |
+| Indie | Porchlight Records (artist-friendly), Lantern Hill (prestige), Cassette Club (penny-pincher), Static Bloom (hype machine) | Reputation 40, 2,000 fans | 45-60% royalty, +20-40% reach, 1-2 EPs or albums, 24-30 weeks each |
+| Mid-size | Northbound Records (balanced), Riverbend Music Group (penny-pincher), Neon Harbor (hype machine) | Reputation 55, 10,000 fans | 25-40% royalty, +30-50% reach, a free playlist push, 2-3 EPs or albums, 18-26 weeks each |
+| Major | Monolith Music (corporate), Crown & Anchor (prestige), Sunset Global (hype machine) | Reputation 70, 50,000 fans | 15-25% royalty, +60-120% reach, a free radio push, tour support, 3-5 albums, 16-24 weeks each |
+| Shark | Goldtooth Entertainment, Fast Lane Artist Group (predatory) | Reputation 35, 1,000 fans; far more often when you're desperate (in debt, recently dropped, or after turning down 3 deals) | A huge advance, 8-15% royalty, 20-30% of shows and merch, everything charged back, 3-5 albums every 10-14 weeks, they own your masters, renewal options, a brutal buyout, and they never let you go |
+
+### Offers
+
+- **When:** on Mondays, each label that could sign you rolls a chance to call. Buzz, a charting song, or a release in the
+  last 4 weeks raises it.
+- **Bidding wars:** when one label offers, others may join over the next few days (up to 3 open). The Inbox can compare
+  them side by side. Competing offers make a counter-offer more likely to work.
+- **Answering:** within 7 days. Signing withdraws every other offer.
+  - **Turning one down:** that label waits 8 to 16 weeks.
+  - **Letting one run out:** it waits 6 to 10, and half the time a rival without a label signs with them instead.
+- **While signed:** no offers. After a deal ends, they start again 4 weeks later.
+
+### The contract
+
+Every term shows in plain words, rated Good, Fair, or Harsh.
+
+**What this means for you** is a rough estimate at your current fans, shows, and writing pace:
+- what you'd get (the advance, plus royalties once it's paid back, minus fines)
+- what those records would make you unsigned
+- the label's push in new fans
+- its cut of your shows and merch
+- when the advance is paid back
+- the buyout price
+
+A deal with 4 or more harsh terms is rated a step worse than its numbers.
+
+**Your manager's take** names the two worst clauses: missed deadlines at your pace, never letting go, a tiny royalty, a big
+360 cut, masters, shelving.
+
+| Term | What it does |
+| --- | --- |
+| Advance | Cash when you sign. Paid back from your royalty before you see any streaming money from the deal's records. |
+| Royalty | Your share of streaming money on records made under the deal (the label keeps the rest). |
+| Reach and push | The label boosts those records' streams and new fans, and each record wins fans in every city you can play. |
+| Support | A free release-week promo push on each record, and tour support money for each tour you accept. |
+| Charged back | Studio time (the label pays for it), promo pushes, or tour support, added to what you owe. |
+| Records owed | A number of EPs or albums (singles never count), each due a set number of weeks after the last. |
+| Missed deadline | A fine (15% of the advance), the royalty dropping 3 points, or one more record owed. Each miss is a strike. |
+| Creative control | Yours, their approval (they reject records under a quality bar: 60 to 70), or shelving (they may hold a finished record 2 to 8 weeks; it counts as delivered, and comes out with its buzz and fans later). |
+| Masters | Yours, theirs until 2 to 5 years after the deal, or theirs forever (those records keep paying you only your royalty). |
+| 360 cut | A share of every show's pay and every merch sale while signed. |
+| Renewal option | If your last owed record is quality 60+, they can add 1 or 2 more. |
+| Buyout | Leave early for what you still owe them x a multiplier, plus a share of the advance (x1 at friendly labels, x3 plus the whole advance at sharks). |
+| Getting dropped | 2 strikes (missed deadlines, or records under the label's flop quality) and most labels drop you: reputation -5, buzz -15, but you're free and the debt is written off. Sharks never let go. |
+
+### Counter-offers
+
+- **One per offer:** up to 2 asks. Each ask has its own cost to your odds:
+  | Ask | What it changes | Cost to your odds |
+  | --- | --- | --- |
+  | A bigger advance | +25% | -15% |
+  | A higher royalty | +5 points | -25% |
+  | Fewer records | 1 fewer | -20% |
+  | More time per record | +6 weeks | -10% |
+  | Better masters | One step better for you | -25% |
+  | No 360 cut | None | -20% |
+- **The odds:** start at 70%, minus each ask's cost.
+  - **Each other open offer:** +15%.
+  - **Fame:** +(your reputation above the tier's bar) / 200.
+  - **Buzz:** + your average buzz / 400.
+  - **Limits:** never below 5% or above 90%.
+- **The answer:** the label replies the next morning. A "no" leaves the original offer standing.
+
+### Under a deal
+
+- **Releases:** the release form shows how a record fits the deal. Every EP or album that counts moves the next deadline
+  to that day plus the deal's weeks.
+- **Reminders:** 4 weeks and 1 week before each deadline.
+- **Streaming:** split record by record each Sunday. Records you made before signing (or with no label) stay all
+  yours.
+- **Records:** the deal ends when you've delivered everything (unless a renewal kicks in).
+- **The label panel:** on the Manager screen: terms, records delivered, the next deadline, strikes, what you still owe,
+  royalties so far, the label's share so far, and the buyout.
+
+### What labels open
+
+- **Any deal:** the Top studio.
+- **A mid-size or major label:** the National cities (or reputation 75 without).
+- **A major label:** arena and festival offers (also a Top 10 record on a smaller label, or reputation 90 and 250,000 fans
+  without one). A big label brings them up to twice as often.
+- **Once open, they stay open.** Prestige labels also add up to +10% to awards chances.
+
+### Rivals
+
+Rivals sign too (5% a week once they qualify for a tier): their label shows on the Career screen, and its reach boosts
+their records' streams and chart spots.
 
 ## The music scene
 
@@ -761,7 +864,7 @@ Milestones unlock new actions and screens, so the game keeps handing the player 
 | 13 | First tour | 3+ out-of-town shows in 10 days | Bigger opening slots |
 | 14 | Manager | Reputation 50 and 2,000 fans | Auto-booking, 12-week calendar, press push. Manager takes 15% of gig pay |
 | 15 | Theater | Reputation 60 and a release | Tier 3 venues |
-| 16 | Label offer | Reputation 65 and 10,000 fans | A cash advance ($10,000 + $2 per fan, up to $50,000; turned down, it's offered again 8 weeks later), Top studio, national cities. The label keeps 80% of streaming until the advance is paid back |
+| 16 | Record deal | Sign with a record label (offers need a manager) | Whatever the deal opens: the Top studio, and with a bigger label the National cities and arena offers (see Record labels) |
 | 17 | Awards season | Every December (first nomination) | Nominations from your releases and fans. A win adds reputation |
 | 18 | Arena | Reputation 85 and 100,000 fans | Arena and festival offers |
 | 19 | Going global | Your first show abroad | The private jet in the Shop |
@@ -885,7 +988,7 @@ Four risks could make the game stop being fun. Each has fixes already built into
 
 - Skills and reputation grow slower the higher they get.
 - Each city has a fan ceiling, so growth means going to new places.
-- Costs climb with success: more bandmates to pay, a manager's 15%, production costs, housing, and a label that keeps most streaming money until it's paid back.
+- Costs climb with success: more bandmates to pay, a manager's 15%, production costs, housing, and a label that keeps most of the streaming money on records made under its deal (and maybe a cut of shows and merch).
 - Bigger rooms are harder to impress (venue tier penalty) and have more at stake.
 - Fans fade if you stop showing up.
 

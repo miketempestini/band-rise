@@ -317,7 +317,7 @@ Game.balanceSim = {
 
   // The same player as the 90-day check, plus the big-time moves: writes up to a 14-song theater set, hires the manager and turns on auto-booking
   // (clubs and theaters, Friday and Saturday, 2 a week), buys a used van, records and releases an EP every
-  // 12 weeks, asks for a tour every 10 weeks (with Local ads in each city when cash allows), uses the press push, signs the label, takes arena and festival
+  // 12 weeks, asks for a tour every 10 weeks (with Local ads in each city when cash allows), uses the press push, signs the label deal that beats staying independent, takes arena and festival
   // offers, and quits the day job once music covers its bills 1.5 times over.
   planBigDay: function (s) {
     var sim = Game.balanceSim;
@@ -336,11 +336,23 @@ Game.balanceSim = {
       });
     }
 
-    // Offers: hire, sign, book tours and big shows (calling in sick if a trip needs work days).
+    // Label offers: read every open contract's estimate, sign the best one if it beats staying independent (on the
+    // numbers), and turn the rest down.
+    var offers = Game.rules.label.openOffers(s).filter(function (m) { return m.data.labelId && !(m.data.counter && m.data.counter.status === 'pending'); });
+    if (offers.length) {
+      var best = null;
+      offers.forEach(function (m) {
+        var e = Game.rules.label.estimate(s, m.data.terms);
+        if (!best || e.ratio > best.ratio) best = { id: m.id, ratio: e.ratio };
+      });
+      if (best.ratio >= 1 && !Game.rules.label.signProblem(s, best.id)) s = Game.rules.label.sign(s, best.id).state;
+      Game.rules.label.openOffers(s).forEach(function (m) { s = Game.rules.booking.declineOffer(s, m.id).state; });
+    }
+
+    // Offers: hire, book tours and big shows (calling in sick if a trip needs work days).
     s.inbox.forEach(function (m) {
       if (m.resolved) return;
       if (m.kind === 'managerOffer') s = Game.rules.manager.hire(s, m.id).state;
-      if (m.kind === 'labelOffer') s = Game.rules.label.sign(s, m.id).state;
       if (m.kind === 'tourProposal') {
         var job = Game.rules.manager.tourAcceptProblem(s, m.id, null) ? 'sick' : null;
         // Local ads in every tour city, if there's comfortably enough cash.
@@ -379,13 +391,20 @@ Game.balanceSim = {
     }
 
     // An EP every 12 weeks: record the three best unreleased originals at the best studio you can use, then release.
+    // Signed to an albums-only label: an album (8 songs) instead, as soon as there are enough songs and the deadline
+    // is within 4 weeks.
     var lastRelease = s.releases.length ? s.releases[s.releases.length - 1].day : -Infinity;
+    var deal = s.label.deal && !s.label.deal.legacy ? s.label.deal : null;
+    var albumDeal = deal && deal.owe.type === 'album' && deal.delivered < deal.owe.count;
+    var size = albumDeal ? Game.balance.releases.sizes.album.min : 3;
     var fresh = Game.rules.songs.playable(s).filter(function (x) { return !x.isCover && !x.releaseId; })
-      .sort(function (a, b) { return b.quality - a.quality; }).slice(0, 3);
-    if (s.day - lastRelease >= 84 && fresh.length === 3 && s.player.cash > 3000) {
-      var studio = Game.rules.label.signed(s) ? 'top' : (Game.rules.recording.studioProblem(s, 'pro') ? 'demo' : 'pro');
+      .sort(function (a, b) { return b.quality - a.quality; }).slice(0, size);
+    var due = deal && deal.nextDueDay - s.day <= 4 * Game.balance.time.daysPerWeek;
+    if ((s.day - lastRelease >= 84 || due) && fresh.length === size && s.player.cash > 3000) {
+      var studio = Game.rules.label.opens(s, 'topStudio') ? 'top' : (Game.rules.recording.studioProblem(s, 'pro') ? 'demo' : 'pro');
       fresh.forEach(function (song) { s = Game.rules.recording.record(s, song.id, studio).state; });
-      s = Game.rules.recording.release(s, 'ep', fresh.map(function (x) { return x.id; })).state;
+      var released = Game.rules.recording.release(s, albumDeal ? 'album' : 'ep', fresh.map(function (x) { return x.id; }));
+      s = released.state;
     }
 
     // A tour every 10 weeks (up to 6 out-of-town cities, clubs or theaters).
@@ -422,7 +441,7 @@ Game.balanceSim = {
       s = Game.rules.day.endDay(s).state;
       if (checkpoints[s.day] === null) checkpoints[s.day] = s.player.cash;
       if (when.manager === null && s.manager.hired) when.manager = s.day;
-      if (when.label === null && s.label.signed) when.label = s.day;
+      if (when.label === null && s.label.everSigned) when.label = s.day;
       if (when.quit === null && s.player.job.quitDay !== null) when.quit = s.day;
       if (when.tour === null && s.milestones.firstTour !== undefined) when.tour = s.day;
       if (when.cash50k === null && s.player.cash >= 50000) when.cash50k = s.day;
@@ -446,7 +465,10 @@ Game.balanceSim = {
       checkpoints: checkpoints, when: when, cash: s.player.cash, fans: Game.rules.progress.totalFans(s), reputation: s.player.reputation,
       weeklyIn: weeklyIn, weeklyOut: weeklyOut, inBy: inBy, outBy: outBy,
       runwayWeeks: weeklyOut > 0 ? s.player.cash / weeklyOut : Infinity, gameOver: !!s.gameOver,
-      labelOwed: s.label.owed, bills: b.housing[s.player.housing].weeklyCost
+      labelOwed: s.label.deal ? s.label.deal.unrecouped : 0, bills: b.housing[s.player.housing].weeklyCost,
+      labels: s.label.past.concat(s.label.deal ? [s.label.deal] : []).map(function (d) {
+        return Game.content.labels[d.labelId].name + ' (' + (d.endReason || 'still signed') + ')';
+      })
     };
   },
 
@@ -484,7 +506,7 @@ Game.balanceSim = {
       : 'Money still matters by the end of year 2 in most runs (' + (all.length - stopped) + ' of ' + all.length + ' have less than a year of costs saved).';
     el.innerHTML += '<h2>Balance check: two years, ' + runs + ' runs (does money ever stop mattering?)</h2>' +
       '<p class="muted">The 90-day player, plus: hires the manager and auto-books clubs and theaters, buys a used van, releases an EP every 12 weeks, ' +
-        'asks for a tour every 10 weeks (with Local ads in each city when cash allows), uses the press push, signs the label, takes arena and festival offers, and quits the day job once music pays ' +
+        'asks for a tour every 10 weeks (with Local ads in each city when cash allows), uses the press push, signs the label deal that beats staying independent, takes arena and festival offers, and quits the day job once music pays ' +
         'the bills 1.5 times over. (' + ((Date.now() - started) / 1000).toFixed(1) + 's)</p>' +
       '<table class="sim"><thead><tr><th>Cash at</th><th>Average</th><th>Range</th></tr></thead><tbody>' + cashRows + '</tbody></table>' +
       '<table class="sim" style="margin-top:16px"><thead><tr><th>When</th><th>Reached</th><th>Average day</th></tr></thead><tbody>' + whenRows + '</tbody></table>' +
@@ -495,6 +517,7 @@ Game.balanceSim = {
         '<tr><td>Fans / reputation at the end</td><td>' + Math.round(avg(all.map(function (r) { return r.fans; }))).toLocaleString() + ' / ' +
           Math.round(avg(all.map(function (r) { return r.reputation; }))) + '</td><td></td></tr>' +
         '<tr><td>Still owed to the label</td><td>' + money(avg(all.map(function (r) { return r.labelOwed; }))) + '</td><td></td></tr>' +
+        '<tr><td>Label deals</td><td colspan="2">' + all.map(function (r) { return r.labels.length ? r.labels.join(', ') : 'never signed'; }).join(' · ') + '</td></tr>' +
         '<tr><td>Game overs</td><td>' + all.filter(function (r) { return r.gameOver; }).length + '</td><td></td></tr>' +
       '</tbody></table><p><strong>' + verdict + '</strong></p>';
     return all;

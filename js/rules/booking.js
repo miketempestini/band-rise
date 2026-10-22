@@ -336,7 +336,8 @@ Game.rules.booking = {
     s.inbox.forEach(function (m) {
       if (!m.resolved && m.expiresDay !== null && m.expiresDay < s.day) {
         m.resolved = 'expired';
-        log.push('The offer from ' + (m.data.venueId ? Game.content.venues[m.data.venueId].name : m.data.bandName) + ' expired.');
+        log.push('The offer from ' + (m.data.venueId ? Game.content.venues[m.data.venueId].name
+          : (m.data.labelId ? Game.rules.label.name(m.data.labelId) : (m.data.bandName || 'them'))) + ' expired.');
       }
     });
     return { state: s, log: log };
@@ -593,7 +594,7 @@ Game.rules.booking = {
     var s = after.state;
     var log = played.log.concat(after.log);
     // Theaters and arenas: production (sound and lights), paid on the night.
-    var production = Game.rules.booking.productionCost(venue, entry.deal, played.gig.rewards.pay + played.gig.rewards.managerCut);
+    var production = Game.rules.booking.productionCost(venue, entry.deal, played.gig.rewards.pay + played.gig.rewards.managerCut + (played.gig.rewards.labelCut || 0));
     // The Finances screen's show record: its trip (if out of town), tour, and production.
     var trip = Object.keys(state.trips).filter(function (id) { return state.trips[id].showIds.indexOf(entry.id) !== -1; })[0] || null;
     var record = s.finances && s.finances.shows[s.finances.shows.length - 1];

@@ -3,7 +3,7 @@
 // 1. each released song gets a stream count for the week:
 //      total fans x streamsPerFan x (recording quality / 100) x freshness x boosts
 //    (boosts: buzz, last week's chart spot, live plays that week, a release-week promo push, and going viral)
-// 2. streaming money is paid (streams x payPerStream, through the label's split as before)
+// 2. streaming money is paid (streams x payPerStream; records made under a label deal are split with the label)
 // 3. the charts are updated: a Top 40 singles chart and a Top 20 albums chart, where your songs and releases compete
 //    with made-up songs by other acts
 // 4. releases that pass a stream total earn Gold and Platinum records, and first chart moments get a banner
@@ -54,7 +54,8 @@ Game.rules.streaming = {
     return p.boost * (1 - release.promo.week / p.weeks);
   },
 
-  // Everything that multiplies a song's streams this week: { buzz, chart, live, promo, viral, total }.
+  // Everything that multiplies a song's streams this week: { buzz, chart, live, promo, viral, label, total }.
+  // label: the reach of the label you're signed with, on records made under that deal.
   boosts: function (state, song) {
     var st = Game.balance.streaming;
     var sr = Game.rules.streaming;
@@ -64,9 +65,10 @@ Game.rules.streaming = {
       chart: sr.chartBoost(song.chart && song.chart.pos),
       live: Math.min(st.liveMax, stats.live * st.livePerShow),
       promo: sr.promoBoost(sr.releaseOf(state, song)),
-      viral: stats.viral ? st.viralCurve[stats.viral - 1] : 1
+      viral: stats.viral ? st.viralCurve[stats.viral - 1] : 1,
+      label: Game.rules.label.reachFor(state, song)
     };
-    b.total = Math.min(st.maxBoost, (1 + b.buzz) * (1 + b.chart) * (1 + b.live) * (1 + b.promo) * b.viral);
+    b.total = Math.min(st.maxBoost, (1 + b.buzz) * (1 + b.chart) * (1 + b.live) * (1 + b.promo) * b.viral * (1 + b.label));
     return b;
   },
 
@@ -159,17 +161,22 @@ Game.rules.streaming = {
     });
     s.releases.forEach(function (rel) { if (rel.promo && rel.day < s.day) rel.promo.week += 1; });
 
-    // Money: through the label's split, as before.
+    // Money: records made under a label deal (now or before) are split with that label (Game.rules.label); the rest
+    // is all yours.
     var pay = sr.payFor(totalStreams);
-    var split = Game.rules.label.splitStreaming(s, pay);
-    if (split.yours > 0) s = Game.rules.money.earn(s, split.yours, 'streaming').state;
-    if (split.label) {
-      s.label.owed -= split.label;
-      Game.rules.finances.add(s, { flow: 'band', cat: 'labelKept', amount: split.label });
-      log.push('Streaming: ' + totalStreams.toLocaleString() + ' streams, $' + pay.toLocaleString() + '. ' + Game.content.business.label.name + ' kept $' +
-        split.label.toLocaleString() + (s.label.owed > 0 ? ' ($' + s.label.owed.toLocaleString() + ' of the advance still to pay back), you got $' + split.yours.toLocaleString() + '.'
-        : '. The advance is paid back: from now on streaming is all yours (you got $' + split.yours.toLocaleString() + ').'));
+    var dealt = s.releases.some(function (rel) { return Game.rules.label.releaseDeal(s, rel); });
+    if (dealt) {
+      var byRelease = {};
+      s.releases.forEach(function (rel) {
+        if (rel.day >= s.day) return;
+        var streams = rel.songIds.reduce(function (t, id) { return t + (weekly[id] || 0); }, 0);
+        if (streams > 0) byRelease[rel.id] = sr.payFor(streams);
+      });
+      var settled = Game.rules.label.settleStreaming(s, byRelease);
+      s = settled.state;
+      log.push(totalStreams.toLocaleString() + ' streams. ' + settled.log[0]);
     } else {
+      if (pay > 0) s = Game.rules.money.earn(s, pay, 'streaming').state;
       log.push('Streaming: ' + totalStreams.toLocaleString() + ' streams, +$' + pay.toLocaleString() + ' this week.');
     }
     viralNow.forEach(function (song) {

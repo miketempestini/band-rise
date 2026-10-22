@@ -368,7 +368,8 @@ Game.rules.scene = {
   rivalStreams: function (s, rel, day) {
     var st = Game.balance.streaming;
     var band = Game.rules.scene.band(s, rel.bandId);
-    var perTrack = Math.round((band ? band.fans : 0) * st.streamsPerFan * (rel.quality / 100) * Game.rules.recording.freshness(rel, day));
+    var perTrack = Math.round((band ? band.fans : 0) * st.streamsPerFan * (rel.quality / 100) * Game.rules.recording.freshness(rel, day) *
+      (1 + Game.rules.label.rivalReach(band))); // a rival on a label gets its push
     return { perTrack: perTrack, total: perTrack * rel.tracks };
   },
 
@@ -541,7 +542,10 @@ Game.rules.scene = {
     if (Game.rules.day.isNewYear(s.day)) {
       Object.keys(s.scene.bands).forEach(function (id) { s.scene.bands[id].yearStartFans = s.scene.bands[id].fans; });
     }
-    if (Game.rules.day.dayOfWeek(s.day) === 0) sc.weeklyDrift(s, rng);
+    if (Game.rules.day.dayOfWeek(s.day) === 0) {
+      sc.weeklyDrift(s, rng);
+      Game.rules.label.rivalSignings(s, rng).forEach(function (note) { notes.push(note); }); // rivals sign with labels too
+    }
 
     // Rivals' records: when it's time, or (sometimes) the same week as an EP or album you put out yesterday.
     var ready = sc.rivals(s).filter(function (band) { return band.reputation >= b.releases.minRep; });
@@ -644,6 +648,7 @@ Game.rules.scene = {
       .filter(function (e) { return e.type === 'gig' && e.day >= state.day; }).sort(function (a, b) { return a.day - b.day; })[0];
     var rows = [{
       name: state.band.name || state.player.name, you: true, fame: Game.rules.progress.fame(state).name,
+      label: state.label.deal ? Game.rules.label.name(state.label.deal.labelId) : null,
       fans: Game.rules.progress.totalFans(state), reputation: state.player.reputation,
       latest: myLatest ? { name: myLatest.name, type: myLatest.type, day: myLatest.day } : null,
       bestChart: best(myCharts),
@@ -656,6 +661,7 @@ Game.rules.scene = {
         .sort(function (a, b) { return a.day - b.day; })[0];
       rows.push({
         name: band.name, you: false, fame: sc.fameName(band.fans), fans: band.fans, reputation: band.reputation,
+        label: band.labelId && Game.content.labels[band.labelId] ? Game.rules.label.name(band.labelId) : null,
         latest: rels[0] ? { name: rels[0].name, type: rels[0].type, day: rels[0].day } : null,
         bestChart: best(rels.map(function (r) { return thisYear(r.chart); }).concat(rels.map(function (r) { return thisYear(r.leadChart); }))),
         awards: band.awardsWon,

@@ -460,9 +460,9 @@ Game.rules.day = {
     var sessionOffer = Game.rules.sessionWork.roll(s);
     s = sessionOffer.state;
     sessionOffer.log.forEach(function (line) { endLines.push(line); });
-    // The big time: your manager books "yes" replies, plans tours, and emails venues on Mondays; manager,
-    // label, arena, and festival offers may arrive; and in December, awards season.
-    [Game.rules.manager.processAds, Game.rules.manager.autoAccept, Game.rules.manager.offerCheck, Game.rules.label.offerCheck,
+    // The big time: your manager books "yes" replies, plans tours, and emails venues on Mondays; your label deal's
+    // deadlines and held records; manager, label, arena, and festival offers may arrive; and in December, awards season.
+    [Game.rules.manager.processAds, Game.rules.manager.autoAccept, Game.rules.manager.offerCheck, Game.rules.label.nightly, Game.rules.label.offerCheck,
       Game.rules.manager.processTourRequests, Game.rules.bigShows.roll, Game.rules.manager.autoBook, Game.rules.awards.check].forEach(function (rule) {
       var r = rule(s);
       s = r.state;
@@ -590,7 +590,7 @@ Game.rules.day = {
       case 'sessionWork': return 'Session work offer from ' + d.bandName + '.';
       case 'sessionRelease': return 'A song you played on came out.';
       case 'managerOffer': return 'A manager wants to work with you.';
-      case 'labelOffer': return 'A label wants to sign you.';
+      case 'labelOffer': return Game.rules.label.name(d.labelId) + ' wants to sign you.';
       case 'tourProposal': return 'Your tour proposal is ready.';
       case 'arenaOffer': return 'Arena offer: ' + venue.name + '.';
       case 'festivalOffer': return 'Festival offer: ' + venue.name + '.';

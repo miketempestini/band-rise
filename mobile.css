@@ -347,3 +347,14 @@ canvas { height: auto; }
 .guide-section__nav { flex-direction: column; }
 .guide-section__nav .btn, .guide-section__top { width: 100%; }
 .guide-section__top { margin-top: 10px; }
+
+/* ---------- Record labels ---------- */
+
+.contract { padding: 22px 16px 18px; }
+.terms, .deal-counter .asks { grid-template-columns: minmax(0, 1fr); }
+.ask { min-height: 40px; }
+.deal-actions .btn { flex: 1 1 100%; }
+.compare { overflow-x: auto; }
+.compare__table { display: table; min-width: 560px; }
+.deal-estimate .rows, .label-panel .rows { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+.deal-estimate .rows dd, .label-panel .rows dd { margin-bottom: 8px; text-align: left; }

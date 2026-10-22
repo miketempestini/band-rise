@@ -110,7 +110,8 @@ Game.rules.merch = {
   // (1% Rough, 3% Solid, 6% Great, 9% Legendary; double at Hollow Records). Sales stop when stock runs out.
   // Tour shirts sell too: on their tour at a higher price and rate, after it at the leftover price (tourId: this
   // show's tour, if any). Merch money is yours (not split with the band).
-  // Returns { state, sold: { shirts, cds, tourShirts }, revenue, soldOut: [names] }.
+  // Signed to a label with a 360 cut, the label takes its share of the sales.
+  // Returns { state, sold: { shirts, cds, tourShirts }, revenue (all sales), labelCut, soldOut: [names] }.
   sellAtGig: function (state, crowd, result, venueId, tourId) {
     var m = Game.balance.merch;
     var s = Game.util.clone(state);
@@ -144,7 +145,8 @@ Game.rules.merch = {
       if (s.tourMerch.count === 0 && sold.tourShirts > 0) soldOut.push('tour shirts');
     }
     s.rngState = rng.getState();
-    if (revenue > 0) s = Game.rules.money.earn(s, revenue, 'merch').state;
-    return { state: s, sold: sold, revenue: revenue, soldOut: soldOut };
+    var labelCut = Game.rules.label.merchCut(s, revenue);
+    if (revenue - labelCut > 0) s = Game.rules.money.earn(s, revenue - labelCut, 'merch').state;
+    return { state: s, sold: sold, revenue: revenue, labelCut: labelCut, soldOut: soldOut };
   }
 };

@@ -149,12 +149,28 @@ Game.rules.debug = {
   managerOffer: function (state) {
     return { state: Game.rules.booking.addInbox(state, 'managerOffer', {}, state.day + Game.balance.manager.offerExpiryDays), log: [] };
   },
+  // A real random offer from a random label that doesn't have one open (any tier: the dice pick).
   labelOffer: function (state) {
-    return { state: Game.rules.booking.addInbox(state, 'labelOffer', { advance: Game.rules.label.advanceFor(state) }, state.day + Game.balance.label.offerExpiryDays), log: [] };
+    var open = Game.rules.label.openOffers(state).map(function (m) { return m.data.labelId; });
+    var ids = Object.keys(Game.content.labels).filter(function (id) { return open.indexOf(id) === -1; });
+    if (!ids.length) return { state: state, log: ['Every label has an offer open already.'] };
+    var s = Game.util.clone(state);
+    var rng = Game.rng.create(s.rngState);
+    var id = rng.pick(ids);
+    s = Game.rules.label.addOffer(s, rng, id);
+    s.rngState = rng.getState();
+    return { state: s, log: [Game.rules.label.name(id) + ' made you an offer (debug).'] };
+  },
+  // Your next label deadline is today, so tomorrow it's missed (debug).
+  labelDeadlineNow: function (state) {
+    if (!state.label.deal || state.label.deal.nextDueDay === null) return { state: state, log: ['No label deadline to move.'] };
+    var s = Game.util.clone(state);
+    s.label.deal.nextDueDay = s.day;
+    return { state: s, log: ['Your next record for ' + Game.rules.label.name(s.label.deal.labelId) + ' is due today.'] };
   },
   bigOffer: function (state, kind) {
     var r = Game.rules.bigShows.roll(state, kind);
-    return { state: r.state, log: r.log.length ? r.log : ['No ' + kind + ' offer: one is open already, or no National city is unlocked (needs a manager and a label).'] };
+    return { state: r.state, log: r.log.length ? r.log : ['No ' + kind + ' offer: one is open already, or no National city is unlocked (needs a manager and a mid-size label, or reputation ' + Game.balance.label.nationalWithoutLabel + ').'] };
   },
   // Awards: nominations now, or the ceremony now (for this year's nominations).
   awardsNominate: function (state) {
