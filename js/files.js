@@ -13,7 +13,7 @@ window.Game = window.Game || {};
 
 Game.files = {
 
-  tag: 'v25-2026-10-22a',   // Must start with "v" + the save version (balance.save.version): a test checks it
+  tag: 'v25-2026-10-22e',   // Must start with "v" + the save version (balance.save.version): a test checks it
 
   css: 'styles.css',
 
@@ -48,7 +48,7 @@ Game.files = {
     'js/ui/inbox.js', 'js/ui/calendar.js', 'js/ui/careerCard.js', 'js/ui/career.js', 'js/ui/sliceEnd.js',
     'js/ui/skipSummary.js', 'js/ui/shop.js', 'js/ui/finances.js', 'js/ui/contract.js', 'js/ui/job.js', 'js/ui/quitJob.js',
     'js/ui/planWeek.js', 'js/ui/map.js', 'js/ui/manager.js', 'js/ui/weeklySummary.js', 'js/ui/settings.js',
-    'js/ui/gameOver.js', 'js/ui/tourPoster.js', 'js/ui/tourWrapUp.js', 'js/ui/tourBuilder.js', 'js/ui/labelDeal.js', 'js/ui/handbook.js', 'js/ui/guide.js', 'js/ui/debugPanel.js',
+    'js/ui/gameOver.js', 'js/ui/tourPoster.js', 'js/ui/tourWrapUp.js', 'js/ui/tourBuilder.js', 'js/ui/labelDeal.js', 'js/ui/dealSigned.js', 'js/ui/handbook.js', 'js/ui/guide.js', 'js/ui/debugPanel.js',
     'js/app/core.js', 'js/app/picker.js', 'js/app/booking.js', 'js/app/calendar.js', 'js/app/shop.js', 'js/app/job.js',
     'js/app/bigTime.js', 'js/app/planWeek.js', 'js/app/people.js', 'js/app/music.js', 'js/app/tourBuilder.js', 'js/app/today.js', 'js/app/guide.js', 'js/app/label.js'
   ],

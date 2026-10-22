@@ -1512,6 +1512,108 @@ button.recap:hover { transform: none; }
 .label-note { padding: 10px 14px; background: var(--case-raised); border-left: 4px solid var(--tape-studio); border-radius: var(--radius); }
 .label-panel .rows { margin: 10px 0 14px; }
 
+/* ---------- Signing a record deal: the big moment ----------
+   One timeline (each piece waits for the one before): the lights go down (0s), the contract slams onto the desk
+   (0.3s), the room shakes (1.05s), your signature is written in marker (1.3s), the label's stamp comes down (3.4s),
+   then "Deal signed!" bursts out with rays and confetti (3.9s) and the button appears (5s). Everything ends in its
+   final place, so players who asked for less motion simply see the finished moment. */
+
+.signing { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; overflow: hidden; cursor: pointer;
+  background: radial-gradient(ellipse at 50% 30%, #2c2440 0%, var(--house-deep) 60%, #07060d 100%);
+  animation: signing-dim 0.5s ease-out both, signing-shake 0.35s 1.05s, signing-shake 0.4s 3.45s; }
+.signing__light { position: absolute; inset: -20%; pointer-events: none;
+  background: radial-gradient(circle at 50% 42%, rgba(255, 214, 140, 0.32), transparent 45%);
+  animation: signing-light 1.2s 0.2s ease-out both; }
+.signing__stage { position: relative; width: min(560px, calc(100vw - 32px)); perspective: 1200px; }
+
+.signing__contract { position: relative; padding: 34px 38px 30px; transform-origin: 50% 100%;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.65), 0 2px 0 rgba(255, 255, 255, 0.5) inset;
+  animation: signing-drop 0.75s 0.3s cubic-bezier(0.2, 0.9, 0.25, 1.15) both, signing-recede 0.8s 3.9s ease-in-out forwards; }
+.signing__label { font: 800 var(--size-3xl)/1 var(--font-head); color: var(--label-ink, var(--ink)); }
+.signing__title { margin: 6px 0 2px; font: 700 var(--size-l) var(--font-head); letter-spacing: 0.5px; color: var(--ink-soft); }
+.signing__between { margin: 0 0 16px; }
+.signing__terms { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 0 0 14px; padding: 12px 0; border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--paper-rule); }
+.signing__terms dt { color: var(--ink-soft); }
+.signing__terms dd { margin: 0; font-weight: 700; }
+.signing__fine span { display: block; height: 7px; margin: 8px 0; border-radius: 2px; background: var(--paper-rule); }
+.signing__fine span:nth-child(2) { width: 92%; }
+.signing__fine span:nth-child(3) { width: 96%; }
+.signing__fine span:nth-child(4) { width: 64%; }
+
+.signing__sign { position: relative; margin-top: 18px; }
+.signing__signature { display: block; width: 100%; height: 92px; overflow: visible; }
+.signing__signature text { font: 72px var(--font-hand); fill: var(--blue-pen); fill-opacity: 0; stroke: var(--blue-pen); stroke-width: 1.6;
+  stroke-dasharray: var(--ink-len, 2400); stroke-dashoffset: var(--ink-len, 2400); stroke-linecap: round; stroke-linejoin: round;
+  animation: signing-write 2s 1.3s cubic-bezier(0.45, 0.05, 0.55, 0.95) both, signing-ink 0.5s 3s ease-out both; }
+.signing__line { height: 2px; background: var(--ink); }
+.signing__who { display: flex; justify-content: space-between; margin-top: 4px; font-size: var(--size-xs); color: var(--ink-soft); }
+
+.signing__stamp { position: absolute; right: 26px; bottom: 54px; display: grid; place-items: center; width: 130px; height: 130px; border-radius: 50%;
+  color: var(--label-ink, var(--red-pen)); border: 5px double currentColor; transform: rotate(-14deg);
+  background: radial-gradient(circle, color-mix(in srgb, currentColor 10%, transparent), transparent 70%);
+  animation: signing-stamp 0.4s 3.4s cubic-bezier(0.3, 1.6, 0.6, 1) both; }
+.signing__stamp span { font: 800 26px/1 var(--font-head); letter-spacing: 1px; }
+.signing__stamp small { margin-top: -18px; font: 700 11px var(--font-head); max-width: 100px; text-align: center; }
+
+.signing__burst { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.signing__ray { position: absolute; width: 12vmax; height: 150vmax; transform: rotate(var(--a)) scaleY(0);
+  background: linear-gradient(to top, transparent 50%, rgba(255, 196, 92, 0.18) 52%, transparent 75%);
+  animation: signing-ray 1.2s 3.85s ease-out both; }
+
+.signing__confetti { position: absolute; inset: 0; pointer-events: none; }
+.signing__bit { position: absolute; top: -4vh; left: var(--x); width: 10px; height: 16px; border-radius: 2px; background: var(--c); opacity: 0;
+  animation: signing-fall 2.8s calc(3.95s + var(--delay)) cubic-bezier(0.25, 0.5, 0.5, 1) both; }
+
+.signing__finale { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: 16px; text-align: center; pointer-events: none; }
+/* A dark glow behind the words, so they read over the contract. */
+.signing__finale::before { content: ""; position: absolute; inset: 15% 0; z-index: -1;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(7, 6, 13, 0.85), transparent 75%); animation: signing-dim 0.6s 3.9s ease-out both; }
+.signing__headline { margin: 0; font: 800 clamp(56px, 13vw, 132px)/0.95 var(--font-head); letter-spacing: 1px; color: var(--amber);
+  text-shadow: 0 0 24px rgba(255, 181, 71, 0.75), 0 0 70px rgba(255, 140, 40, 0.5), 0 6px 0 var(--amber-deep), 0 12px 30px rgba(0, 0, 0, 0.6);
+  animation: signing-boom 0.9s 3.9s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.signing__sub { margin: 0; font-size: var(--size-l); color: var(--text); text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9); animation: signing-rise 0.6s 4.6s ease-out both; }
+.signing__go { pointer-events: auto; animation: signing-rise 0.6s 5s ease-out both; }
+
+@keyframes signing-dim { from { opacity: 0; } to { opacity: 1; } }
+@keyframes signing-light { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+@keyframes signing-drop {
+  0% { opacity: 0; transform: translateY(-110vh) rotate(-14deg) scale(1.25); }
+  70% { opacity: 1; transform: translateY(14px) rotate(-1deg) scale(1); }
+  100% { opacity: 1; transform: translateY(0) rotate(-2deg) scale(1); }
+}
+@keyframes signing-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-6px, 4px); }
+  40% { transform: translate(5px, -3px); }
+  60% { transform: translate(-3px, 2px); }
+  80% { transform: translate(2px, -1px); }
+}
+@keyframes signing-write { to { stroke-dashoffset: 0; } }
+@keyframes signing-ink { to { fill-opacity: 1; } }
+@keyframes signing-stamp {
+  0% { opacity: 0; transform: rotate(-30deg) scale(3.2); }
+  100% { opacity: 0.92; transform: rotate(-14deg) scale(1); }
+}
+@keyframes signing-recede { from { transform: translateY(0) rotate(-2deg) scale(1); filter: none; } to { transform: translateY(-4vh) rotate(-2deg) scale(0.86); filter: brightness(0.35) blur(2px); } }
+@keyframes signing-ray {
+  0% { transform: rotate(var(--a)) scaleY(0); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: rotate(calc(var(--a) + 20deg)) scaleY(1); opacity: 0.55; }
+}
+@keyframes signing-fall {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0); }
+  10% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--drift), 112vh) rotate(var(--spin)); }
+}
+@keyframes signing-boom {
+  0% { opacity: 0; transform: scale(0.2); letter-spacing: -6px; }
+  60% { opacity: 1; transform: scale(1.18); }
+  100% { opacity: 1; transform: scale(1); letter-spacing: 1px; }
+}
+@keyframes signing-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
 /* ---------- Walt's welcome handbook and the Guide: a mentor's notes on paper ---------- */
 
 .handbook { max-width: 820px; }

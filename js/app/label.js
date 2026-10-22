@@ -10,6 +10,7 @@ Object.assign(Game.app, {
 
   labelOfferId: null,     // the offer whose contract is open (null with the comparison open)
   labelAsks: [],          // the counter-offer asks ticked on the contract
+  signedNotice: null,     // what you signed, shown on the Manager screen after the signing moment
 
   // Opens an offer's contract.
   openLabelDeal: function (messageId) {
@@ -70,9 +71,19 @@ Object.assign(Game.app, {
     app.labelOfferId = null;
     app.state = result.state;
     app.autoSave();
+    app.signedNotice = result.log.join(' ');
+    app.show('dealSigned'); // the signing moment, then your deal on the Manager screen
+    window.scrollTo(0, 0);
+  },
+
+  // From the signing moment: on to your deal, with what you signed as the message.
+  leaveDealSigned: function () {
+    var app = Game.app;
     app.show('manager');
-    app.notice = { kind: 'info', text: result.log.join(' ') }; // after switching screens (which clears messages)
+    app.notice = app.signedNotice ? { kind: 'info', text: app.signedNotice } : null; // after switching screens (which clears messages)
+    app.signedNotice = null;
     app.render();
+    window.scrollTo(0, 0);
   },
 
   declineLabel: function (messageId) {

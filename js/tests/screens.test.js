@@ -80,7 +80,9 @@
       a.openLabelCompare();
       a.state.manager.hired = true;
       a.state = Game.rules.label.sign(a.state, ids[2]).state;
-      a.show('manager');
+      a.signedNotice = 'Signed.';
+      a.show('dealSigned');      // the signing moment
+      a.leaveDealSigned();       // then your deal on the Manager screen
       a.musicSection = 'releases'; a.show('songs'); a.musicSection = 'writing';
       a.show('career');
       a.show('finances');

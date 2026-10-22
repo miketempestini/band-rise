@@ -404,6 +404,9 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
     - the contract and comparison: `Game.ui.labelDeal`, with actions in `js/app/label.js`
     - the label panel on the Manager screen
     - `label.estimate`, `termRows`, and `managerTake` give what a contract means. When you add a term, add a row there.
+    - Signing plays the `dealSigned` screen (`Game.ui.dealSigned`): one CSS timeline in styles.css ("Signing a record
+      deal"). The contract drops, the signature draws, the stamp lands, and "Deal signed!" bursts with confetti. A tap
+      finishes every animation; under reduced motion it shows the end. "See your deal" calls `app.leaveDealSigned`.
   - **Debug:** "Label offer" and "Label deadline today".
 - **Walt's handbook and the Guide**:
   - **The text:** `js/content/handbook.js` holds `mentor` (the name is set once at the top), `pages(state)` for the

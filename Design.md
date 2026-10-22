@@ -677,6 +677,14 @@ A deal with 4 or more harsh terms is rated a step worse than its numbers.
   - **Limits:** never below 5% or above 90%.
 - **The answer:** the label replies the next morning. A "no" leaves the original offer standing.
 
+### Signing
+
+Signing is a big moment. The lights go down, and the contract slams onto the desk in the label's ink with the deal's
+real terms. Your name is written across the signature line in marker, stroke by stroke, then the label's stamp comes
+down and the room shakes. "Deal signed!" bursts out of a flash of light rays with confetti in the spike-tape colors,
+with your advance underneath. "See your deal" goes to the label panel. A tap skips to the end, and players who asked
+for less motion see the finished moment right away.
+
 ### Under a deal
 
 - **Releases:** the release form shows how a record fits the deal. Every EP or album that counts moves the next deadline

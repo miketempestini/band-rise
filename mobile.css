@@ -358,3 +358,13 @@ canvas { height: auto; }
 .compare__table { display: table; min-width: 560px; }
 .deal-estimate .rows, .label-panel .rows { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .deal-estimate .rows dd, .label-panel .rows dd { margin-bottom: 8px; text-align: left; }
+
+/* ---------- Signing a record deal ---------- */
+
+.signing__contract { padding: 24px 20px 22px; }
+.signing__signature { height: 70px; }
+.signing__stamp { width: 96px; height: 96px; right: 12px; bottom: 48px; }
+.signing__stamp span { font-size: 20px; }
+.signing__stamp small { margin-top: -12px; font-size: 9px; max-width: 76px; }
+.signing__sub { font-size: var(--size-m); }
+.signing__go { width: calc(100% - 32px); max-width: 360px; }

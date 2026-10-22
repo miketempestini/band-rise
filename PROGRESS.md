@@ -4,6 +4,17 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14v: The signing moment (2026-10-22)
+- **The moment:** signing a record deal now plays a full-screen sequence, about 5 seconds:
+  1. the lights go down
+  2. the contract slams onto the desk (the label's name in its ink, your advance, royalty, records owed, and masters)
+  3. your name is written across the signature line in marker, stroke by stroke (long names shrink to fit)
+  4. the label's stamp comes down and the room shakes
+  5. "Deal signed!" explodes out of a burst of light with confetti, then your advance and "See your deal"
+- **Skipping:** a tap jumps to the end. Under reduced motion it shows the end right away.
+- **Code:** `js/ui/dealSigned.js` and the "Signing a record deal" styles.
+- **Checks:** desktop and phone (390). **Version tag:** `v25-2026-10-22e`.
+
 ### Session 14u: Ask your manager to find a record deal (2026-10-22)
 - **Asking:** whenever you have a manager and no deal (for example after buying out), the Manager screen has "Ask Rita to
   find a record deal".
