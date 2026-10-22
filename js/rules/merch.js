@@ -7,19 +7,20 @@ Game.rules = Game.rules || {};
 
 Game.rules.merch = {
 
-  // Everything in the Shop: { id, name, price, detail, unlocked, why, owned }.
+  // Everything in the Shop: { id, name, price, detail, unlocked, why, owned }. Merch items also have packSize and
+  // orders: the order sizes you can buy at once ([{ packs, count, price }], smallest first; price is one pack's).
   shopItems: function (state) {
     var m = Game.balance.merch;
     var home = Game.balance.recording.studios.home;
     var hasEp = state.releases.some(function (r) { return r.type === 'ep' || r.type === 'album'; });
     return [
       {
-        id: 'shirts', name: 'T-shirts (' + m.shirt.packSize + ')', price: m.shirt.packCost,
+        id: 'shirts', name: 'T-shirts', price: m.shirt.packCost, packSize: m.shirt.packSize, orders: Game.rules.merch.orders('shirts', m.shirt),
         detail: 'Sell for $' + m.shirt.price + ' each at gigs. You have ' + state.player.merchStock.shirts + '.',
         unlocked: state.milestones.firstPaidGig !== undefined, why: 'Unlocks with your first paid gig.'
       },
       {
-        id: 'cds', name: 'CDs (' + m.cd.packSize + ')', price: m.cd.packCost,
+        id: 'cds', name: 'CDs', price: m.cd.packCost, packSize: m.cd.packSize, orders: Game.rules.merch.orders('cds', m.cd),
         detail: 'Sell for $' + m.cd.price + ' each at gigs. You have ' + state.player.merchStock.cds + '.',
         unlocked: hasEp, why: 'Unlocks with your first EP (or album).'
       },
@@ -30,6 +31,11 @@ Game.rules.merch = {
         owned: state.player.gear.homeStudio
       }
     ].concat(Game.rules.merch.tourShirtItems(state), Game.rules.merch.vanItems(state), [Game.rules.merch.jetItem(state)]);
+  },
+
+  // The order sizes for a merch item: [{ packs, count, price }] (balance.merch.orderPacks).
+  orders: function (itemId, pack) {
+    return Game.balance.merch.orderPacks[itemId].map(function (n) { return { packs: n, count: n * pack.packSize, price: n * pack.packCost }; });
   },
 
   // The private jet: unlocked by milestone 19 (Going global, your first international show).
@@ -54,7 +60,8 @@ Game.rules.merch = {
     var problem = Game.rules.tours.shirtProblem(state);
     var have = state.tourMerch.tourId === t.id ? state.tourMerch.count : 0;
     return [{
-      id: 'tourShirts', name: 'Tour shirts: ' + Game.rules.tours.label(t) + ' (' + ts.packSize + ')', price: ts.packCost,
+      id: 'tourShirts', name: 'Tour shirts: ' + Game.rules.tours.label(t), price: ts.packCost, packSize: ts.packSize,
+      orders: Game.rules.merch.orders('tourShirts', ts),
       detail: 'Sell for $' + ts.tourPrice + ' each on this tour, and fans are ' + ts.buyBoost + ' times as likely to buy one. ' +
         'Leftovers sell for $' + ts.leftoverPrice + ' after the tour. You have ' + have + '.',
       unlocked: !problem, why: problem
@@ -78,16 +85,21 @@ Game.rules.merch = {
     });
   },
 
-  // Buys an item from the Shop. Merch is paid up front. Returns { state, log }.
-  buy: function (state, itemId) {
+  // Buys an item from the Shop. Merch is paid up front; packs: how many packs at once (merch only, one of the item's
+  // order sizes; 1 if left out). Returns { state, log }.
+  buy: function (state, itemId, packs) {
     var item = Game.rules.merch.shopItems(state).filter(function (i) { return i.id === itemId; })[0];
     if (!item) return { state: state, log: ['That isn\'t in the shop.'] };
     if (!item.unlocked) return { state: state, log: [item.why] };
     if (item.owned) return { state: state, log: ['You already have one.'] };
-    if (state.player.cash < item.price) return { state: state, log: ['That costs $' + item.price + ' (you have $' + Math.floor(state.player.cash) + ').'] };
-    if (itemId === 'tourShirts') return Game.rules.tours.buyShirts(state);
+    packs = packs || 1;
+    if (item.orders && !item.orders.some(function (o) { return o.packs === packs; })) return { state: state, log: ['Pick one of the order sizes.'] };
+    if (!item.orders && packs !== 1) return { state: state, log: ['That comes one at a time.'] };
+    var price = item.price * packs;
+    if (state.player.cash < price) return { state: state, log: ['That costs $' + price.toLocaleString() + ' (you have $' + Math.floor(state.player.cash).toLocaleString() + ').'] };
+    if (itemId === 'tourShirts') return Game.rules.tours.buyShirts(state, packs);
     var m = Game.balance.merch;
-    var s = Game.rules.money.spend(state, item.price, itemId === 'homeStudio' || itemId === 'jet' || item.kind ? 'gear' : 'merchStock').state;
+    var s = Game.rules.money.spend(state, price, itemId === 'homeStudio' || itemId === 'jet' || item.kind ? 'gear' : 'merchStock').state;
     if (itemId === 'jet') {
       s.player.gear.jet = true;
       // Trips that haven't started are laid out again: the jet is faster and has its own prices.
@@ -100,10 +112,14 @@ Game.rules.merch = {
       // A first van is milestone 12 (Wheels), and may open the Far cities.
       return { state: Game.rules.progress.checkUnlocks(s).state, log: ['Bought a ' + item.name.toLowerCase() + ' for $' + item.price.toLocaleString() + '.'] };
     }
-    if (itemId === 'shirts') s.player.merchStock.shirts += m.shirt.packSize;
-    if (itemId === 'cds') s.player.merchStock.cds += m.cd.packSize;
+    if (itemId === 'shirts') s.player.merchStock.shirts += m.shirt.packSize * packs;
+    if (itemId === 'cds') s.player.merchStock.cds += m.cd.packSize * packs;
     if (itemId === 'homeStudio') s.player.gear.homeStudio = true;
-    return { state: s, log: ['Bought ' + item.name + ' for $' + item.price + '.'] };
+    if (item.orders) {
+      return { state: s, log: ['Bought ' + (item.packSize * packs).toLocaleString() + ' ' + item.name + ' for $' + price.toLocaleString() + '. You have ' +
+        (itemId === 'shirts' ? s.player.merchStock.shirts : s.player.merchStock.cds).toLocaleString() + ' now.'] };
+    }
+    return { state: s, log: ['Bought ' + item.name + ' for $' + price.toLocaleString() + '.'] };
   },
 
   // Selling at a gig: each person in the crowd has a chance to buy each item you have in stock

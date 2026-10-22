@@ -141,7 +141,7 @@ You start with $500 and save about $150 a week if you spend nothing on music, so
 | Gas | $40, $80, $150 round trip | Near, Mid, Far cities |
 | Hotel | $80 a night | Out-of-town stays |
 | Van | Beater $1,500 (lasts 10 out-of-town shows), Used $3,000 (30 shows), New $12,000 (never breaks down) | Needed for Far cities with a band, and for tours. A worn-out van gets you home, then it's gone |
-| Merch stock | $200 for 25 shirts, $150 for 50 CDs | Paid up front |
+| Merch stock | $200 for 25 shirts, $150 for 50 CDs (tour shirts $250 for 25) | Paid up front. Bigger orders at the same price per item: shirts up to 50 packs ($10,000), CDs up to 70 ($10,500), tour shirts up to 40 ($10,000) |
 | Production | 25% of the show's pay, up to $1,000 at a theater and $5,000 at an arena (festivals provide their own) | Sound and lights, paid on the night, so a half-empty room doesn't lose money on production alone |
 | Surprise bills | $40 to $300 | Random events like a broken string or car trouble |
 

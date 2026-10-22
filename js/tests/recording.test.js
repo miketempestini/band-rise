@@ -140,6 +140,15 @@
     t.equal(bought.state.player.merchStock.shirts, 25, '+25 shirts');
     t.equal(bought.state.player.cash, s.player.cash - 200, '$200');
     t.ok(Game.rules.merch.buy(s, 'cds').log[0].indexOf('EP') !== -1, 'CDs locked');
+    // Bigger orders: the same price per shirt, many packs at once.
+    s.player.cash = 20000;
+    var big = Game.rules.merch.buy(s, 'shirts', 50);
+    t.equal(big.state.player.merchStock.shirts, 25 * 50, '50 packs: 1,250 shirts');
+    t.equal(big.state.player.cash, 20000 - 200 * 50, 'for $10,000');
+    t.ok(Game.rules.merch.buy(s, 'shirts', 3).state === s, 'only the listed order sizes');
+    s.player.cash = 500;
+    t.ok(/costs \$1,000/.test(Game.rules.merch.buy(s, 'shirts', 5).log[0]), 'not enough cash for 5 packs');
+    s.player.cash = 20000;
     s.milestones.firstRecording = 0;
     var home = Game.rules.merch.buy(s, 'homeStudio').state;
     t.ok(home.player.gear.homeStudio, 'home setup bought');

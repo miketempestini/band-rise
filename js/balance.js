@@ -351,7 +351,10 @@ Game.balance = {
     recordStoreMultiplier: 2,        // Hollow Records in-store: merch sells at double the rate
     // Tour shirts (in the Shop while a tour is coming up): sold on that tour's shows at a higher price, and fans are
     // more likely to buy one. Leftovers after the tour sell for less at any gig. One tour's shirts at a time.
-    tourShirt: { packSize: 25, packCost: 250, tourPrice: 30, buyBoost: 1.5, leftoverPrice: 10 }
+    tourShirt: { packSize: 25, packCost: 250, tourPrice: 30, buyBoost: 1.5, leftoverPrice: 10 },
+    // Order sizes in the Shop, in packs (the same price per item at any size): T-shirts $200 to $10,000, CDs $150 to
+    // $10,500, tour shirts $250 to $10,000, so you can stock up before a tour in one go.
+    orderPacks: { shirts: [1, 5, 10, 25, 50], cds: [1, 4, 10, 30, 70], tourShirts: [1, 4, 10, 20, 40] }
   },
 
   // ---------------------------------------------------------------

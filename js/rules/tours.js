@@ -141,16 +141,18 @@ Game.rules.tours = {
     return null;
   },
 
-  // Buys a pack of tour shirts for the next tour. Returns { state, log }.
-  buyShirts: function (state) {
+  // Buys tour shirts for the next tour: packs (1 if left out) packs at once. Returns { state, log }.
+  buyShirts: function (state, packs) {
     var problem = Game.rules.tours.shirtProblem(state);
     if (problem) return { state: state, log: [problem] };
     var ts = Game.balance.merch.tourShirt;
-    if (state.player.cash < ts.packCost) return { state: state, log: ['That costs $' + ts.packCost + ' (you have $' + Math.floor(state.player.cash) + ').'] };
+    packs = packs || 1;
+    var cost = ts.packCost * packs;
+    if (state.player.cash < cost) return { state: state, log: ['That costs $' + cost.toLocaleString() + ' (you have $' + Math.floor(state.player.cash).toLocaleString() + ').'] };
     var t = Game.rules.tours.shirtTour(state);
-    var s = Game.rules.money.spend(state, ts.packCost, 'merchStock').state;
-    s.tourMerch = { tourId: t.id, count: s.tourMerch.count + ts.packSize };
-    return { state: s, log: ['Bought ' + ts.packSize + ' tour shirts for ' + Game.rules.tours.label(t) + ' ($' + ts.packCost + ').'] };
+    var s = Game.rules.money.spend(state, cost, 'merchStock').state;
+    s.tourMerch = { tourId: t.id, count: s.tourMerch.count + ts.packSize * packs };
+    return { state: s, log: ['Bought ' + (ts.packSize * packs).toLocaleString() + ' tour shirts for ' + Game.rules.tours.label(t) + ' ($' + cost.toLocaleString() + ').'] };
   },
 
   // How tour shirts sell at a show: { price, boost } on their tour, the leftover price once the tour is over, or

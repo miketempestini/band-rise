@@ -8,9 +8,9 @@ Game.app = Game.app || {};
 Object.assign(Game.app, {
 
 
-  buyItem: function (itemId) {
+  buyItem: function (itemId, packs) {
     var app = Game.app;
-    var result = Game.rules.merch.buy(app.state, itemId);
+    var result = Game.rules.merch.buy(app.state, itemId, packs);
     app.notice = { kind: result.state === app.state ? 'error' : 'info', text: result.log.join(' ') };
     app.applyRule(result);
   },

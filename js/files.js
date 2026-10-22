@@ -13,7 +13,7 @@ window.Game = window.Game || {};
 
 Game.files = {
 
-  tag: 'v25-2026-10-22e',   // Must start with "v" + the save version (balance.save.version): a test checks it
+  tag: 'v25-2026-10-22f',   // Must start with "v" + the save version (balance.save.version): a test checks it
 
   css: 'styles.css',
 

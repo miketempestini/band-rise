@@ -4,6 +4,19 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14w: Bigger merch orders (2026-10-22)
+- **Order sizes:** T-shirts, CDs, and tour shirts now have five order sizes each in the Shop, at the same price per
+  item. Buttons too big for your cash are greyed out.
+
+  | Item | Order sizes |
+  | --- | --- |
+  | T-shirts | 25 ($200), 125 ($1,000), 250 ($2,000), 625 ($5,000), 1,250 ($10,000) |
+  | CDs | 50 ($150), 200 ($600), 500 ($1,500), 1,500 ($4,500), 3,500 ($10,500) |
+  | Tour shirts | 25 ($250), 100 ($1,000), 250 ($2,500), 500 ($5,000), 1,000 ($10,000) |
+- **Where the sizes live:** `balance.merch.orderPacks`; `merch.buy(state, itemId, packs)` and
+  `tours.buyShirts(state, packs)`.
+- **Tests:** 401 passing (bigger-order checks added). **Version tag:** `v25-2026-10-22f`.
+
 ### Session 14v: The signing moment (2026-10-22)
 - **The moment:** signing a record deal now plays a full-screen sequence, about 5 seconds:
   1. the lights go down

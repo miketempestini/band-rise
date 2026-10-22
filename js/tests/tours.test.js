@@ -95,6 +95,11 @@
     s = Game.rules.merch.buy(s, 'tourShirts').state;
     t.equal(s.player.cash, cash - ts.packCost, 'paid $' + ts.packCost);
     t.sameContents(s.tourMerch, { tourId: tour.id, count: ts.packSize }, 'stocked for this tour');
+    var bulk = Game.util.clone(s);
+    bulk.player.cash = 20000;
+    bulk = Game.rules.merch.buy(bulk, 'tourShirts', 10).state;
+    t.equal(bulk.tourMerch.count, ts.packSize * 11, 'a bigger order: 10 more packs (' + ts.packSize * 10 + ' shirts)');
+    t.equal(bulk.player.cash, 20000 - ts.packCost * 10, 'for $' + (ts.packCost * 10).toLocaleString());
     t.equal(Game.rules.tours.shirtSale(s, null), null, 'saved for the tour: not sold at other shows before it');
     var on = Game.rules.tours.shirtSale(s, tour.id);
     t.equal(on.price, ts.tourPrice, '$' + ts.tourPrice + ' on the tour');

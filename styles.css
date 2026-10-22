@@ -1355,6 +1355,8 @@ button.recap:hover { transform: none; }
 .shop-item--locked { background: linear-gradient(170deg, rgba(255, 255, 255, 0.25), transparent 50%), #d9cfb8; }
 .shop-item__name { font: 800 var(--size-xl)/1.05 var(--font-head); color: var(--ink); }
 .shop-item__buy { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+.shop-item__orders { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }   /* merch order sizes, smallest first */
+.shop-item__orders .btn:first-child { grid-column: 1 / -1; }
 
 /* ---------- Residency contract ---------- */
 

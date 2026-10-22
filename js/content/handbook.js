@@ -634,6 +634,8 @@ Game.content = Game.content || {};
                 money(b.vans.new.price) + ' (never breaks)', 'Far cities with a band, and tours'],
               ['Private jet', money(t.jet.price), 'Cheaper, faster flights (after Going global)']
             ] } },
+            'Merch comes in bigger orders too, at the same price per item: up to ' + b.merch.orderPacks.shirts.slice(-1)[0] * b.merch.shirt.packSize + ' T-shirts or ' +
+              b.merch.orderPacks.cds.slice(-1)[0] * b.merch.cd.packSize + ' CDs at once, so you can stock up before a tour.',
             'Each person in the crowd might buy each item you have in stock: ' + pct(b.merch.buyChance.rough) + ' on a Rough night, ' + pct(b.merch.buyChance.solid) +
               ' Solid, ' + pct(b.merch.buyChance.great) + ' Great, ' + pct(b.merch.buyChance.legendary) + ' Legendary. Performance helps you sell.'
           ]

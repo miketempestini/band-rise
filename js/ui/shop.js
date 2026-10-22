@@ -41,6 +41,14 @@ Game.ui.shop = {
       var button;
       if (item.owned) button = '<span class="badge badge--warn">Owned</span>';
       else if (!item.unlocked) button = '<span class="pick__reason">' + h.escape(item.why) + '</span>';
+      else if (item.orders) {
+        // Merch: one button per order size, from one pack to a big pre-tour stock-up.
+        button = '<div class="shop-item__orders">' + item.orders.map(function (o, i) {
+          return '<button class="btn btn--small' + (i === 0 ? ' btn--primary' : '') + '" data-action="buy" data-item="' + item.id + '" data-packs="' + o.packs + '"' +
+            (state.player.cash < o.price ? ' disabled title="Not enough cash (' + h.money(o.price) + ')"' : '') + '>' +
+            o.count.toLocaleString() + ' for ' + h.money(o.price) + '</button>';
+        }).join('') + '</div>';
+      }
       else button = '<button class="btn btn--primary" data-action="buy" data-item="' + item.id + '"' +
         (state.player.cash < item.price ? ' disabled title="Not enough cash"' : '') + '>Buy for ' + h.money(item.price) + '</button>';
       return '<div class="shop-item paper' + (item.unlocked ? '' : ' shop-item--locked') + '">' +
@@ -77,7 +85,7 @@ Game.ui.shop = {
     h.bind(root, {
       back: function () { app.goBack('shop'); },
       focusPayBack: function () { app.goBack('shop'); },
-      buy: function (e, el) { app.buyItem(el.getAttribute('data-item')); },
+      buy: function (e, el) { app.buyItem(el.getAttribute('data-item'), Number(el.getAttribute('data-packs')) || 1); },
       moveHome: function (e, el) { app.moveHome(el.getAttribute('data-home')); },
       buyVacation: function () { app.buyVacationHome(); },
       sellVacation: function () { app.sellVacationHome(); }
