@@ -619,6 +619,12 @@ year and a stingy one the next (the dice roll every offer inside its ranges).
   - **Turning one down:** that label waits 8 to 16 weeks.
   - **Letting one run out:** it waits 6 to 10, and half the time a rival without a label signs with them instead.
 - **While signed:** no offers. After a deal ends, they start again 4 weeks later.
+- **Asking your manager:** whenever you have a manager and no deal, the Manager screen's "Ask Rita to find a record
+  deal" sends them shopping.
+  - **The offer:** it arrives in 1 to 2 weeks, from a label that would sign you (never a shark). 70% of the time it's
+    from the biggest tier you qualify for.
+  - **One at a time:** one search runs at a time, and the offer must be answered before you ask again.
+  - **Turning it down:** declining it, or letting it run out, means waiting 4 weeks before you can ask again.
 
 ### The contract
 

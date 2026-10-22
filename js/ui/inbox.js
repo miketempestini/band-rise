@@ -150,6 +150,8 @@ Game.ui.inbox = {
       : '';
     var body = '<p class="label-card__who"><span class="label-card__logo" style="--label-ink:' + info.color + '">' + h.escape(info.name) + '</span> ' +
         '<span class="muted">' + Game.content.labelTiers[info.tier] + ' · ' + Game.content.labelPersonalities[info.personality] + '</span></p>' +
+      (d.fromManager ? '<p class="hint">' + h.escape(lb.managerFirst()) + ' found this one for you. Turn it down and you\'ll wait ' +
+        Math.round(Game.balance.label.managerSearch.rejectWaitDays / 7) + ' weeks before asking again.</p>' : '') +
       '<p>' + h.money(t.advance) + ' advance · ' + Math.round(t.royalty * 100) + '% royalty · ' + h.escape(lb.oweText(t)) + ', ' + t.deadlineWeeks + ' weeks each.</p>' +
       (m.resolved ? '' : '<p class="label-card__take">' + h.escape(lb.managerTake(state, t, est)) + '</p>') + counter;
     var buttons = '<button class="btn btn--small btn--primary" data-action="readContract" data-id="' + m.id + '">Read the contract</button> ' +

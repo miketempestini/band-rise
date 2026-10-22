@@ -23,11 +23,23 @@ Game.ui.manager = {
     if (!d) {
       var problem = lb.offersProblem(state);
       var open = lb.openOffers(state);
+      var who = lb.managerFirst();
+      var ms = Game.balance.label.managerSearch;
+      var searchProblem = lb.searchProblem(state);
+      // Ask your manager to find a deal (whenever you have one and aren't signed).
+      var search = state.label.search
+        ? '<p class="hint">' + h.escape(who) + ' is shopping your music to labels: expect an offer by ' + h.dateLabel(state.label.search.readyDay) + '.</p>'
+        : (Game.rules.manager.hired(state)
+          ? '<div class="actions actions--left"><button class="btn btn--small' + (open.length ? '' : ' btn--primary') + '" data-action="labelSearch"' +
+              (searchProblem ? ' disabled title="' + h.escape(searchProblem) + '"' : '') + '>Ask ' + h.escape(who) + ' to find a record deal</button></div>' +
+            '<p class="hint">' + h.escape(searchProblem || who + ' brings back an offer in ' + ms.days.min / 7 + ' to ' + ms.days.max / 7 +
+              ' weeks. Turn it down and you\'ll wait ' + Math.round(ms.rejectWaitDays / 7) + ' weeks before asking again.') + '</p>'
+          : '');
       return '<div class="panel"><h3 class="panel__title">Record labels</h3>' +
         (open.length ? '<p>' + open.length + ' label offer' + (open.length === 1 ? ' is' : 's are') + ' waiting for you.</p>' +
           '<button class="btn btn--small btn--primary" data-action="labelOffers">' + (open.length > 1 ? 'Compare the offers' : 'Read the contract') + '</button>'
           : '<p>' + h.escape(problem || 'No deal yet. Labels call on Mondays, more often when you\'re hot (buzz, a charting song, a new record).') + '</p>') +
-        past + '</div>';
+        search + past + '</div>';
     }
     var info = lb.info(d.labelId);
     if (d.legacy) {
@@ -109,6 +121,7 @@ Game.ui.manager = {
       requestTour: function () { app.requestTour(); },
       openTourBuilder: function () { app.openTourBuilder(); },
       buyout: function () { app.buyoutLabel(); },
+      labelSearch: function () { app.applyWithNotice(Game.rules.label.requestSearch(app.state)); },
       labelOffers: function () { var open = Game.rules.label.openOffers(app.state); if (open.length > 1) app.openLabelCompare(); else app.openLabelDeal(open[0].id); }
     });
     var start = root.querySelector('#tour-start');

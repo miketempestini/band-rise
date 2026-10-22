@@ -4,6 +4,16 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14u: Ask your manager to find a record deal (2026-10-22)
+- **Asking:** whenever you have a manager and no deal (for example after buying out), the Manager screen has "Ask Rita to
+  find a record deal".
+- **The offer:** it lands in your Inbox in 1 to 2 weeks, from a label that would sign you. It's never a shark, and
+  usually from the biggest tier you qualify for. It works even in the weeks after a deal when labels aren't calling.
+- **Turning it down:** declining that offer (or letting it run out) means waiting 4 weeks before you can ask again. The
+  button shows the date, and the offer and its contract say so up front.
+- **Saves:** version 25 (two new fields, filled in for older saves). The late-career test save was upgraded.
+- **Tests:** 401 passing (2 new). **Version tag:** `v25-2026-10-22a`.
+
 ### Session 14t: Record labels (2026-10-22)
 - **Why:** labels were a stub. One label made the same offer to everyone, and the advance was paid back in days late
   in a career. Now a deal is the biggest business decision in the game.
@@ -53,6 +63,12 @@ A running log of what's built, what's next, and known issues. Update at the end 
   - **Early (reputation 52):** indies are mostly good.
   - **Mid-career (reputation 60):** mid-size labels are mostly good, penny-pinchers poor, sharks harsh.
   - **Late:** most deals cost money, but bring reach and fans.
+- **Two-year balance check** (10 runs, a simple player who signs the offer with the best numbers):
+  - **Signing:** every run signed a label, on day 166 on average (just after hiring the manager).
+  - **Sharks:** 3 of 10 signed a shark. The simple player only compares money and ignores the traps, so the bait works.
+  - **Getting dropped:** 6 runs were dropped by a mid-size label for missing album deadlines, then signed elsewhere.
+  - **Money:** still stops mattering by year 2 (9 of 10 runs; this was already a known issue).
+  - **Arenas:** no run reached one (fans end around 64,000, under the 100,000 needed).
 - **Tests:** 399 passing (20 new label tests). The screens test opens offers, the contract, a counter-offer, the
   comparison, and the label panel with both saves. **Version tag:** `v24-2026-10-22k`.
 
@@ -1033,6 +1049,12 @@ No gameplay numbers changed: the balance checks give the same results as before.
 - Promotion (flyers, social ads) still only reaches the hometown; the Big campaign and press push reach other cities.
 
 ## Known issues / open decisions
+- **The label estimate is rough.** It's based on your fans now, your recent shows, and a typical writing pace. Late in a
+  career almost every deal costs streaming money: a label's value there is its reach, fans, and the doors it opens. The
+  balance check's simple player signs sharks when their advance looks big; a player who reads the ratings and Rita's
+  take shouldn't.
+- **The balance check's player misses album deadlines** (it releases EPs on a 12-week rhythm), so it gets dropped
+  often. Teach it to write toward an album when it signs an albums-only deal.
 - **The phone layout has only been tested on emulated phones.** Try it on a real iPhone in Safari and Chrome after
   publishing. Real-device checks still to do:
   - the share sheet for Export and "Save as image"

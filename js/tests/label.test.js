@@ -95,6 +95,55 @@
     t.ok(L().desperate(s), 'after turning down ' + Game.balance.label.desperate.declinedDeals + ' deals');
   });
 
+  // ----- Your manager finds you a deal -----
+
+  Game.test('Labels: your manager can find you a deal: an offer in 1 to 2 weeks (never a shark), any time you\'re unsigned', function (t) {
+    var ms = Game.balance.label.managerSearch;
+    var s = signedUpState();
+    s.manager.hired = false;
+    t.ok(L().searchProblem(s), 'no manager: ' + L().searchProblem(s));
+    s.manager.hired = true;
+    s.label.nextOfferDay = s.day + 20; // just out of a deal: labels aren't calling yet
+    t.equal(L().searchProblem(s), null, 'you can ask right after a deal ends');
+    var asked = L().requestSearch(s).state;
+    var ready = asked.label.search.readyDay;
+    t.ok(ready - s.day >= ms.days.min && ready - s.day <= ms.days.max, 'ready in ' + (ready - s.day) + ' days');
+    t.ok(L().searchProblem(asked), 'only one search at a time');
+    var early = Game.util.clone(asked);
+    early.day = ready - 1;
+    t.equal(L().openOffers(L().offerCheck(early).state).length, 0, 'nothing the day before');
+    var day = Game.util.clone(asked);
+    day.day = ready;
+    var r = L().offerCheck(day).state;
+    var m = L().openOffers(r)[0];
+    t.ok(m && m.data.fromManager, 'the offer arrives: ' + (m ? L().name(m.data.labelId) : 'none'));
+    t.ok(Game.content.labels[m.data.labelId].tier !== 'shark', 'not a shark');
+    t.equal(r.label.search, null, 'the search is done');
+    t.ok(L().searchProblem(r), 'answer it before asking again');
+    var signed = signWith(signedUpState(), 'northbound');
+    t.ok(L().searchProblem(signed), 'not while signed');
+  });
+
+  Game.test('Labels: turn down the deal your manager found and you wait a month to ask again', function (t) {
+    var ms = Game.balance.label.managerSearch;
+    var s = L().requestSearch(signedUpState()).state;
+    s.day = s.label.search.readyDay;
+    s = L().offerCheck(s).state;
+    var m = L().openOffers(s)[0];
+    var declined = Game.rules.booking.declineOffer(s, m.id).state;
+    t.ok(/ask again/.test(L().searchProblem(declined)), L().searchProblem(declined));
+    declined.day += ms.rejectWaitDays - 1;
+    t.ok(L().searchProblem(declined), 'still waiting the day before');
+    declined.day += 1;
+    t.equal(L().searchProblem(declined), null, 'a month later you can ask again');
+    // Letting it run out counts as turning it down.
+    var lapsed = Game.util.clone(s);
+    lapsed.day = m.expiresDay + 1;
+    lapsed = Game.rules.booking.expireOffers(lapsed).state;
+    lapsed = L().nightly(lapsed).state;
+    t.equal(lapsed.label.searchWaitUntil, lapsed.day + ms.rejectWaitDays, 'letting it run out: the same wait');
+  });
+
   // ----- Terms -----
 
   Game.test('Labels: every label\'s terms stay inside its tier and personality, and the same dice give the same offer', function (t) {

@@ -125,7 +125,8 @@ Game.state = {
       // Record labels (see Game.rules.label): your current deal (or null), ended deals (their masters still matter),
       // each label's cooldown after you turn it down, bidding-war labels about to join, and what deals have opened.
       label: { deal: null, past: [], cooldowns: {}, pending: [], nextOfferDay: 0, opened: { topStudio: false, national: false, bigShows: false },
-        declined: 0, droppedDay: null, everSigned: false, nextDealId: 1 },
+        declined: 0, droppedDay: null, everSigned: false, nextDealId: 1,
+        search: null, searchWaitUntil: 0 }, // your manager looking for a deal: { askedDay, readyDay }, and when you can ask again
       // The music scene (other bands, your rivals, venue calendars, rivals' records): see Game.rules.scene.
       scene: Game.rules.scene.create(seed),
       awards: [],         // every nomination: { year, category, title, chance, won (null until the ceremony) }

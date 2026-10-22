@@ -449,10 +449,16 @@ Game.rules.booking = {
     return { state: s, log: log, entryId: id };
   },
 
-  // Declines an offer (no penalty). Returns { state, log }.
+  // Declines an offer (no penalty). Turning down a record deal your manager found means waiting a month before asking
+  // them again. Returns { state, log }.
   declineOffer: function (state, messageId) {
     var s = Game.util.clone(state);
-    s.inbox.forEach(function (m) { if (m.id === messageId) { m.resolved = 'declined'; m.read = true; } });
+    s.inbox.forEach(function (m) {
+      if (m.id !== messageId) return;
+      m.resolved = 'declined';
+      m.read = true;
+      if (m.kind === 'labelOffer' && m.data.fromManager) s.label.searchWaitUntil = s.day + Game.balance.label.managerSearch.rejectWaitDays;
+    });
     return { state: s, log: [] };
   },
 

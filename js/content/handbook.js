@@ -680,6 +680,9 @@ Game.content = Game.content || {};
               'others may join within days: up to ' + lb.maxOpenOffers + ' at once, side by side. Each offer opens as a full contract with your manager\'s take. ' +
               'You can make one counter-offer per deal; the label answers the next morning. Turn a label down and it waits ' + lb.declineCooldownWeeks.min + ' to ' +
               lb.declineCooldownWeeks.max + ' weeks before calling again; others can still call. Let an offer run out and a rival might get it.',
+            '<strong>Asking your manager:</strong> whenever you\'re unsigned, ask your manager (Manager screen) to find you a deal. An offer arrives in ' +
+              lb.managerSearch.days.min / 7 + ' to ' + lb.managerSearch.days.max / 7 + ' weeks, from a label that would sign you (never a shark). Turn it down and you wait ' +
+              Math.round(lb.managerSearch.rejectWaitDays / 7) + ' weeks before you can ask again.',
             { table: { cols: ['Labels', 'Can offer at', 'Typical deal'], rows: ['indie', 'mid', 'major', 'shark'].map(function (k) {
               var t = lb.tiers[k];
               var names = Object.keys(Game.content.labels).filter(function (id) { return Game.content.labels[id].tier === k; })

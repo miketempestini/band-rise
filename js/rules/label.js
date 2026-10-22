@@ -24,8 +24,10 @@
 //   delivered, nextDueDay, misses, flops, strikes, renewed, reminders, endDay, endReason, allReleases (older saves).
 //
 // state.label = { deal, past: [ended deals], cooldowns: { labelId: day }, pending: [{ labelId, day }] (bidding-war
-//   joiners), nextOfferDay, opened: { topStudio, national, bigShows }, declined, droppedDay, everSigned, nextDealId }
-// Inbox message: kind 'labelOffer', data { labelId, terms, counter: null | { asks, chance, replyDay, status }, cooled }.
+//   joiners), nextOfferDay, opened: { topStudio, national, bigShows }, declined, droppedDay, everSigned, nextDealId,
+//   search: null | { askedDay, readyDay } (your manager looking for a deal), searchWaitUntil }
+// Inbox message: kind 'labelOffer', data { labelId, terms, counter: null | { asks, chance, replyDay, status }, cooled,
+//   fromManager (true when your manager found it) }.
 // A release made under a deal keeps dealId; a release the label is holding has held: true (it comes out on its day).
 
 window.Game = window.Game || {};
@@ -193,6 +195,9 @@ Game.rules.label = {
   offerCheck: function (state) {
     var lb = Game.rules.label;
     var b = Game.balance.label;
+    var searched = lb.processSearch(state); // your manager's search can bring an offer any day
+    if (searched.log.length) return searched;
+    state = searched.state;
     if (lb.offersProblem(state)) {
       if (state.label.pending.length && state.label.deal) { var c = Game.util.clone(state); c.label.pending = []; return { state: c, log: [] }; }
       return { state: state, log: [] };
@@ -233,6 +238,68 @@ Game.rules.label = {
     }
     s.rngState = rng.getState();
     return { state: s, log: log };
+  },
+
+  // ----- Your manager looks for a deal -----
+
+  // Why you can't ask your manager to find a deal right now, or null.
+  searchProblem: function (state) {
+    var lb = Game.rules.label;
+    var who = lb.managerFirst();
+    if (!Game.rules.manager.hired(state)) return 'You need a manager to shop for a record deal.';
+    if (state.label.deal) return 'You\'re signed with ' + lb.name(state.label.deal.labelId) + '.';
+    if (state.label.search) return who + ' is already looking: expect an offer by ' + Game.rules.day.dateLabel(state.label.search.readyDay) + '.';
+    if (lb.openOffers(state).some(function (m) { return m.data.fromManager; })) return 'Answer the offer ' + who + ' found first.';
+    if (state.day < (state.label.searchWaitUntil || 0)) {
+      return 'You turned down the last deal ' + who + ' found. You can ask again on ' + Game.rules.day.dateLabel(state.label.searchWaitUntil) + '.';
+    }
+    if (lb.openOffers(state).length >= Game.balance.label.maxOpenOffers) return 'You already have ' + Game.balance.label.maxOpenOffers + ' offers to read.';
+    return null;
+  },
+
+  // Asks your manager to shop your music to labels: an offer arrives in 1 to 2 weeks. Returns { state, log }.
+  requestSearch: function (state) {
+    var lb = Game.rules.label;
+    var problem = lb.searchProblem(state);
+    if (problem) return { state: state, log: [problem] };
+    var d = Game.balance.label.managerSearch.days;
+    var s = Game.util.clone(state);
+    var rng = Game.rng.create(s.rngState);
+    s.label.search = { askedDay: s.day, readyDay: s.day + rng.int(d.min, d.max) };
+    s.rngState = rng.getState();
+    return { state: s, log: [lb.managerFirst() + ' is shopping your music to labels. Expect an offer in your Inbox by ' +
+      Game.rules.day.dateLabel(s.label.search.readyDay) + '.'] };
+  },
+
+  // The label your manager brings back: one that would sign you (never a shark), usually from the biggest tier you
+  // qualify for. Labels waiting out a cooldown are skipped unless there's no one else.
+  searchLabel: function (state, rng) {
+    var lb = Game.rules.label;
+    var open = lb.openOffers(state).map(function (m) { return m.data.labelId; });
+    var tiers = ['major', 'mid', 'indie'].filter(function (t) { return lb.tierOpen(state, t); });
+    if (!tiers.length) tiers = ['indie'];
+    var tier = tiers.length > 1 && !rng.chance(Game.balance.label.managerSearch.bestTierChance) ? rng.pick(tiers.slice(1)) : tiers[0];
+    var all = Object.keys(Game.content.labels).filter(function (id) { return Game.content.labels[id].tier === tier && open.indexOf(id) === -1; });
+    var ready = all.filter(function (id) { return !((state.label.cooldowns[id] || 0) > state.day); });
+    var list = ready.length ? ready : all;
+    return list.length ? rng.pick(list) : null;
+  },
+
+  // Each morning: when your manager's search is done, the offer they found arrives. Returns { state, log }.
+  processSearch: function (state) {
+    var lb = Game.rules.label;
+    var search = state.label.search;
+    if (!search || state.day < search.readyDay) return { state: state, log: [] };
+    var s = Game.util.clone(state);
+    s.label.search = null;
+    if (s.label.deal) return { state: s, log: [] };
+    var rng = Game.rng.create(s.rngState);
+    var id = lb.searchLabel(s, rng);
+    if (!id) { s.rngState = rng.getState(); return { state: s, log: [] }; }
+    s = lb.addOffer(s, rng, id);
+    s.inbox[s.inbox.length - 1].data.fromManager = true;
+    s.rngState = rng.getState();
+    return { state: s, log: [lb.managerFirst() + ' found you a deal: ' + lb.name(id) + ' wants to sign you. Read the contract in your Inbox.'] };
   },
 
   // ----- Reading a contract -----
@@ -530,6 +597,7 @@ Game.rules.label = {
     s.label.deal = deal;
     s.label.everSigned = true;
     s.label.pending = [];
+    s.label.search = null;
     s.label.opened.topStudio = true;
     if (t.tier === 'mid' || t.tier === 'major') s.label.opened.national = true;
     if (t.tier === 'major') s.label.opened.bigShows = true;
@@ -815,6 +883,7 @@ Game.rules.label = {
     s.inbox.forEach(function (m) {
       if (m.kind !== 'labelOffer' || !m.data.labelId || m.data.cooled || (m.resolved !== 'declined' && m.resolved !== 'expired')) return;
       m.data.cooled = true;
+      if (m.data.fromManager && m.resolved === 'expired') s.label.searchWaitUntil = s.day + b.managerSearch.rejectWaitDays; // ask again in a month
       var cd = m.resolved === 'declined' ? b.declineCooldownWeeks : b.expireCooldownWeeks;
       s.label.cooldowns[m.data.labelId] = s.day + rng.int(cd.min, cd.max) * Game.balance.time.daysPerWeek;
       s.label.declined += 1;

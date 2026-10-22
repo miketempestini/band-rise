@@ -381,6 +381,10 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
       counter, cooled }`.
     - `nightly` (in End Day, before `offerCheck`) handles held records coming out, counter-offer answers, deadline
       reminders and misses, cooldowns, and rivals sniping lapsed offers (scene dice).
+    - Your manager can search for a deal: `requestSearch` / `searchProblem` set `state.label.search` ({ askedDay,
+      readyDay }). `processSearch` (run first in `offerCheck`) delivers an offer with `data.fromManager`. Turning that
+      offer down sets `state.label.searchWaitUntil`: `booking.declineOffer` does it right away, and `nightly` does it
+      for one that runs out.
   - **The deal:** the deal is `state.label.deal` (terms plus progress); ended deals go in `state.label.past`.
   - **Streaming:** releases carry `dealId`, and `streaming.weekly` splits money per release through
     `label.settleStreaming`. Always use `label.releaseDeal(state, rel)`, since older saves' legacy deal covers every

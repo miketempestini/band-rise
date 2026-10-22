@@ -157,6 +157,10 @@ Game.balance = {
                                      // buzz 50+ where you have fans, a song on the chart, or a release in the last 4 weeks
     biddingWar: { chance: 0.35, days: { min: 1, max: 4 } }, // When one label offers, each other eligible label may join
     rivalSnipeChance: 0.5,           // An offer you let run out may go to a rival without a label
+    // Asking your manager to find you a deal: an offer arrives in this many days (from a label that would sign you,
+    // never a shark; most often the biggest tier you qualify for). Turn that offer down (or let it run out) and you
+    // wait this many days before you can ask again.
+    managerSearch: { days: { min: 7, max: 14 }, bestTierChance: 0.7, rejectWaitDays: 28 },
     // The tiers: who can offer, how often (each Monday), and the ranges every offer's terms are rolled from.
     //   royalty: your share of streaming money on records made under the deal
     //   advanceWeeks: the advance in weeks of your current streaming money (never under advanceFloor, in dollars)
@@ -1086,7 +1090,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 24,                     // Save format version, bumped when the state shape changes
+    version: 25,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

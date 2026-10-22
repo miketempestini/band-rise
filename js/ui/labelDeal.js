@@ -124,6 +124,8 @@ Game.ui.labelDeal = {
         '<p class="contract__kind">' + Game.content.labelTiers[info.tier] + ' · ' + Game.content.labelPersonalities[info.personality] +
           (m.resolved ? '' : ' · answer by ' + h.dateLabel(m.expiresDay)) + '</p>' +
         '<p class="contract__blurb">' + h.escape(info.blurb) + '</p>' +
+        (m.data.fromManager ? '<p class="hint">' + h.escape(lb.managerFirst()) + ' found this deal for you. Turn it down and you\'ll wait ' +
+          Math.round(Game.balance.label.managerSearch.rejectWaitDays / 7) + ' weeks before asking again.</p>' : '') +
         '<p class="contract__take">' + h.escape(lb.managerTake(state, t, est)) + '</p>' +
         meaning +
         '<h3 class="contract__terms-title">The terms</h3>' +
