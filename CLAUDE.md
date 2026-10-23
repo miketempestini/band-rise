@@ -171,7 +171,14 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
   "Band traits" part; `payShares` splits any gig pay (use it for every kind of gig pay in later phases).
   `recordGig` must be called after every gig so members get relationship, pay, and satisfaction tallies.
 - **Satisfaction** changes go through `Game.rules.people.changeSatisfaction(state, id, amount, reason)` so
-  the People screen can show why. The Sunday check is `weeklyCheck` (called from End Day before the week closes).
+  the People screen can show why (or `satisfactionOn`, below). The Sunday check is `weeklyCheck` (called from End Day
+  before the week closes).
+- **Copy once in loops (added later, for speed):** a late save is hundreds of KB, and every `Game.util.clone` copies all
+  of it. A rule that changes many cities, songs, or bandmates should copy the state once, then use the helpers that
+  change that copy directly: `audience.buzzOn(s, cityId, amount)`, `songs.tightenOn(s, songId, amount)`,
+  `people.interactOn(s, id, gain)`, `people.satisfactionOn(s, id, amount, reason, merge)`. Never pass them a state you
+  didn't copy yourself. Old records are dropped nightly by `day.pruneHistory` (`balance.history`): new lists that grow
+  every day or week need a cleanup there too.
 - **Actions done with someone** set `needsPerson: 'anyone' | 'member'`; the entry stores `personId`.
   Rehearse uses `songsMax` (pick 1 to 4 songs). Network has `effects.meet`.
 

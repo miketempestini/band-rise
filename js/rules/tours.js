@@ -174,7 +174,7 @@ Game.rules.tours = {
   // been away. Returns { state, log }.
   roadMood: function (state, roadNight) {
     var rm = Game.balance.traits.roadMood;
-    var s = state;
+    var s = Game.util.clone(state); // one copy for the whole band
     var log = [];
     Game.rules.people.members(state).forEach(function (p) {
       var change = 0, reason = '';
@@ -182,7 +182,7 @@ Game.rules.tours = {
       else if (p.trait === 'easygoing') { if (roadNight >= rm.easygoingFromNight) { change = rm.easygoing; reason = 'Misses home'; } }
       else if (roadNight >= rm.othersFromNight) { change = rm.others; reason = 'Road-weary'; }
       if (!change) return;
-      s = Game.rules.people.changeSatisfaction(s, p.id, change, reason, true).state;
+      Game.rules.people.satisfactionOn(s, p.id, change, reason, true);
       log.push(p.name + ': ' + Game.util.signed(change) + ' satisfaction (' + reason.toLowerCase() + ').');
     });
     return { state: s, log: log };

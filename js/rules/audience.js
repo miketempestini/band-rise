@@ -24,10 +24,16 @@ Game.rules.audience = {
 
   // Adds buzz to one city, kept between 0 and 100. Returns { state, log }.
   addBuzz: function (state, cityId, amount) {
-    var b = Game.balance.buzz;
     var s = Game.util.clone(state);
-    s.cities[cityId].buzz = Game.util.clamp(s.cities[cityId].buzz + amount, b.min, b.max);
+    Game.rules.audience.buzzOn(s, cityId, amount);
     return { state: s, log: [] };
+  },
+
+  // The same as addBuzz, but it changes s itself instead of making a copy. Only for rules that already made their
+  // own copy of the state and change many cities in a loop (copying the whole game once per city is slow).
+  buzzOn: function (s, cityId, amount) {
+    var b = Game.balance.buzz;
+    s.cities[cityId].buzz = Game.util.clamp(s.cities[cityId].buzz + amount, b.min, b.max);
   },
 
   // Adds fans to a city, never above its fan ceiling (the most fans it can ever have). Returns { state, added }.

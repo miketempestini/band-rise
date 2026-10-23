@@ -471,12 +471,12 @@ Game.rules.manager = {
     if (!Game.rules.manager.hired(state)) return { state: state, log: [] };
     var so = Game.balance.manager.social;
     var focus = Game.rules.manager.focusCities(state);
-    var s = state;
+    var s = Game.util.clone(state); // one copy for every city (not one per city: the game is big late in a career)
     var reached = 0;
     Object.keys(state.cities).forEach(function (id) {
       var amount = (state.cities[id].fans > 0 ? so.dailyBuzz : 0) + (focus.indexOf(id) !== -1 ? so.focusBuzz : 0);
       if (!amount) return;
-      s = Game.rules.audience.addBuzz(s, id, amount).state;
+      Game.rules.audience.buzzOn(s, id, amount);
       reached += 1;
     });
     if (!reached) return { state: s, log: [] };

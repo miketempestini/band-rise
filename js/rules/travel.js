@@ -615,7 +615,7 @@ Game.rules.travel = {
     var country = Game.content.cities[cityId].countryId;
     Object.keys(Game.content.cities).forEach(function (id) {
       var same = country ? Game.content.cities[id].countryId === country : Game.content.cities[id].region === region;
-      if (id !== cityId && same) s = Game.rules.audience.addBuzz(s, id, b.tours.regionBuzz).state;
+      if (id !== cityId && same) Game.rules.audience.buzzOn(s, id, b.tours.regionBuzz);
     });
     if (tour) {
       var next = tr.outOfTownShows(s).filter(function (e) { return e.id !== entry.id && e.day >= entry.day && tr.cityOfVenue(e.venueId) !== cityId; })[0];
@@ -629,7 +629,7 @@ Game.rules.travel = {
     s.stats.citiesPlayed[cityId] = (s.stats.citiesPlayed[cityId] || 0) + 1;
     if (tour && s.band.memberIds.length) {
       var gain = Game.balance.satisfaction.change.tourShow;
-      Game.rules.people.members(s).forEach(function (m) { s = Game.rules.people.changeSatisfaction(s, m.id, gain, 'Tour show').state; });
+      Game.rules.people.members(s).forEach(function (m) { Game.rules.people.satisfactionOn(s, m.id, gain, 'Tour show'); });
       log.push('Tour show: bandmates +' + gain + ' satisfaction.');
     }
     var van = s.player.gear.van;

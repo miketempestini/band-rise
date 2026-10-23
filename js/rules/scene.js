@@ -562,7 +562,8 @@ Game.rules.scene = {
     var rivals = sc.rivals(s).filter(function (band) { return sc.sizeOf(band.reputation) >= 1; });
     if (!rivals.length) rivals = sc.rivals(s);
     s.inbox.forEach(function (m) {
-      if (m.kind !== 'opening' || !m.data.showId || m.data.filled) return;
+      // (Slots you accepted are yours: skip them, so they don't roll the scene's dice every night.)
+      if (m.kind !== 'opening' || !m.data.showId || m.data.filled || m.resolved === 'accepted') return;
       var show = sc.showById(s, m.data.showId);
       var rival = rng.pick(rivals);
       if (!m.resolved && rng.chance(b.stealChance)) {

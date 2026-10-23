@@ -1158,6 +1158,13 @@ Game.balance = {
   },
 
   // ---------------------------------------------------------------
+  // Old records (dropped so the saved game doesn't keep growing)
+  // ---------------------------------------------------------------
+  history: {
+    keepDays: 92                     // Read, finished Inbox messages and answered booking emails older than this are dropped each night
+  },
+
+  // ---------------------------------------------------------------
   // Time savers
   // ---------------------------------------------------------------
   timeSavers: {

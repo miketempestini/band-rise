@@ -203,11 +203,18 @@ Game.rules.songs = {
   // Returns { state, log, added }.
   practiceSong: function (state, songId, amount) {
     var s = Game.util.clone(state);
+    var added = Game.rules.songs.tightenOn(s, songId, amount);
+    return { state: s, log: [], added: added };
+  },
+
+  // The same as practiceSong, but it changes s itself instead of making a copy. Only for rules that already made
+  // their own copy of the state (like a gig playing a whole set). Returns how much tightness was added.
+  tightenOn: function (s, songId, amount) {
     var song = s.songs[songId];
     var before = song.tightness;
     song.tightness = Math.min(Game.balance.songs.tightness.max, song.tightness + amount);
     song.lastPlayedDay = s.day;
-    return { state: s, log: [], added: song.tightness - before };
+    return song.tightness - before;
   },
 
   // "Practice all songs": every finished song gets +1 tightness (max 100) and counts as played today,
@@ -216,7 +223,7 @@ Game.rules.songs = {
     var s = Game.util.clone(state);
     var songs = Game.rules.songs.playable(s);
     songs.forEach(function (song) {
-      s = Game.rules.songs.practiceSong(s, song.id, amount).state;
+      Game.rules.songs.tightenOn(s, song.id, amount);
     });
     return { state: s, log: [], count: songs.length };
   },

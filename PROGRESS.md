@@ -4,6 +4,34 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14x: A faster End Day late in a career (2026-10-23)
+- **Why:** a code review found End Day getting slow late in a career, for two reasons: the saved game never dropped
+  old records, and a few rules made a full copy of the whole game for every city, song, or bandmate in a loop.
+- **Old records are dropped each night** (`day.pruneHistory`, next to the money-record cleanup in End Day):
+  - Inbox messages you've read that are finished (answered, expired, or just news) and older than
+    `balance.history.keepDays` (92). Unread messages, offers still waiting for an answer, and the newest message of
+    each kind always stay.
+  - answered booking emails that old (pending ones stay)
+  - weekly summaries beyond what the Finances chart and the quit screen show (13 weeks)
+  - **What players see:** the Inbox now goes back about 3 months instead of the whole career.
+- **Copy once:** new helpers change a copy a rule already made, instead of copying the whole game again:
+  `audience.buzzOn`, `songs.tightenOn`, `people.interactOn`, `people.satisfactionOn`. The manager's nightly posts,
+  playing a set, rehearsals, recording a gig with the band, the weekly band check, tour shows, road mood, and Practice
+  all songs use them.
+- **Small fix:** every opening slot you'd ever accepted rolled the scene's dice again every night, for nothing. Accepted
+  slots are now skipped (`scene.nightly`). This changes which bands the scene picks from here on, nothing else.
+- **Results** (14 End Days, the average per day):
+
+  | Save | Before | After | Save size after |
+  | --- | --- | --- | --- |
+  | band-rise-2030-03-17 (4 years in) | 258 ms | 50 ms | 885 KB → 387 KB |
+  | late-career | 188 ms | 47 ms | 759 KB → 349 KB |
+  | band-rise-2029-09-02 | 181 ms | 39 ms | 770 KB → 344 KB |
+
+  With only the copy-once change, game results came out exactly the same as before. With the cleanup too, everything
+  matched except the scene's dice (from the small fix above).
+- **Tests:** 407 passing (6 new in `js/tests/history.test.js`). **Version tag:** `v25-2026-10-23a`.
+
 ### Session 14w: Bigger merch orders (2026-10-22)
 - **Order sizes:** T-shirts, CDs, and tour shirts now have five order sizes each in the Shop, at the same price per
   item. Buttons too big for your cash are greyed out.
@@ -1088,8 +1116,10 @@ No gameplay numbers changed: the balance checks give the same results as before.
 - **Rivals copy your level closely** (they aim for your reputation and fans, plus or minus a little), so they never
   pull far ahead or fall far behind. If that feels too tidy, give them a little random luck each year.
 - **Late in a career, your songs and your rivals' records fill most of the charts.** Other bands mostly sit lower down.
-- **The scene adds a little time to every End Day** (the saved game is bigger). Fine in play; the balance checks take
-  longer.
+- **The scene adds a little time to every End Day** (its future shows are about 125 KB of a late save). Fine in play
+  since Session 14x made End Day about 5x faster late in a career; the balance checks take longer.
+- **The two-year balance check** hasn't been timed again since Session 14x. It should be quicker now, since it runs
+  End Day hundreds of times.
 - **A huge act fills the singles chart.** Late in a big career, your own songs can take the top 15 spots, because the
   other acts' #1 sits around 1.2M streams a week. That's realistic, but if it feels too easy, the other acts' levels
   could grow with your fame. The simulated player never buys a release-week push, so promo's effect on money isn't in

@@ -338,6 +338,7 @@ Game.rules.day = {
     }
     // Old money records drop off (the Finances screen keeps the last few months).
     s = Game.rules.finances.prune(s).state;
+    s = day.pruneHistory(s).state; // and old Inbox messages, booking emails, and weekly summaries
     // On the road: a hotel if you're away tonight, and road fatigue from day 5.
     var road = Game.rules.travel.nightly(s);
     s = road.state;
@@ -647,6 +648,36 @@ Game.rules.day = {
       s.gameOver = { day: s.day, message: d.gameOverMessage };
     }
     return s;
+  },
+
+  // Each night: drops old records nothing uses any more, so the saved game stops growing (every rule copies the whole
+  // game, so a bigger save makes End Day slower). It drops:
+  // - Inbox messages you've read that are finished (answered, expired, or just news) and older than keepDays,
+  //   except the newest message of each kind (the manager's offer check looks at when the last one came)
+  // - answered booking emails that old
+  // - weekly summaries older than the Finances chart and the quit screen show
+  // Returns { state, log }.
+  pruneHistory: function (state) {
+    var b = Game.balance;
+    var oldest = state.day - b.history.keepDays;
+    var ledgerWeeks = Math.max(b.finances.chartWeeks, b.job.quitScreenIncomeWeeks);
+    var newest = {};
+    state.inbox.forEach(function (m) { newest[m.kind] = m.id; });
+    var dropMessage = function (m) {
+      return m.read && m.day < oldest && (m.resolved || m.expiresDay === null) && newest[m.kind] !== m.id;
+    };
+    var oldRequests = Object.keys(state.requests).filter(function (id) {
+      var r = state.requests[id];
+      return r.status !== 'pending' && r.sentDay < oldest;
+    });
+    if (!state.inbox.some(dropMessage) && !oldRequests.length && state.ledger.length <= ledgerWeeks) {
+      return { state: state, log: [] }; // nothing to drop: skip the copy
+    }
+    var s = Game.util.clone(state);
+    s.inbox = s.inbox.filter(function (m) { return !dropMessage(m); });
+    oldRequests.forEach(function (id) { delete s.requests[id]; });
+    s.ledger = s.ledger.slice(-ledgerWeeks);
+    return { state: s, log: [] };
   },
 
   // Saves this week's totals into the ledger (for the weekly summary) and starts a fresh tally.

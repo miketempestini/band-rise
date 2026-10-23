@@ -346,12 +346,12 @@ Game.rules.gigs = {
     // Each song played gets tighter and counts as played today.
     var songResults = songIds.map(function (id) {
       var before = s.songs[id].tightness;
-      s = Game.rules.songs.practiceSong(s, id, b.songs.tightness.playLiveGain).state;
+      Game.rules.songs.tightenOn(s, id, b.songs.tightness.playLiveGain);
       var song = s.songs[id];
       return { id: id, title: song.title, isCover: song.isCover, quality: song.quality, tightnessBefore: before, tightnessAfter: song.tightness };
     });
     // The encore song gets played too.
-    if (encore) s = Game.rules.songs.practiceSong(s, encore.songId, b.songs.tightness.playLiveGain).state;
+    if (encore) Game.rules.songs.tightenOn(s, encore.songId, b.songs.tightness.playLiveGain);
 
     // Skill gains for playing live (Tired halves them, like any other action).
     var skillGains = {};

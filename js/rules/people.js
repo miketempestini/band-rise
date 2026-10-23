@@ -280,23 +280,35 @@ Game.rules.people = {
   // Spending time with someone: relationship goes up (max 100) and it counts as seeing them this week.
   interact: function (state, personId, relationshipGain) {
     var s = Game.util.clone(state);
+    Game.rules.people.interactOn(s, personId, relationshipGain);
+    return { state: s, log: [] };
+  },
+
+  // The same as interact, but it changes s itself instead of making a copy. Only for rules that already made their
+  // own copy of the state and go through the whole band in a loop.
+  interactOn: function (s, personId, relationshipGain) {
     var p = s.people[personId];
     p.relationship = Game.util.clamp(p.relationship + relationshipGain, 0, Game.balance.people.statMax);
     p.lastSeenDay = s.day;
     p.interactedThisWeek = true;
-    return { state: s, log: [] };
   },
 
   // Changes a member's satisfaction (0 to 100) and remembers why, for the People screen.
   // merge: true adds to this week's reason with the same words instead of listing it again (for nightly changes).
   changeSatisfaction: function (state, personId, amount, reason, merge) {
     var s = Game.util.clone(state);
+    Game.rules.people.satisfactionOn(s, personId, amount, reason, merge);
+    return { state: s, log: [] };
+  },
+
+  // The same as changeSatisfaction, but it changes s itself instead of making a copy. Only for rules that already
+  // made their own copy of the state and go through the whole band in a loop.
+  satisfactionOn: function (s, personId, amount, reason, merge) {
     var p = s.people[personId];
     p.satisfaction = Game.util.clamp(p.satisfaction + amount, 0, Game.balance.satisfaction.max);
     var same = merge && p.satisfactionReasons.filter(function (r) { return r.text === reason; })[0];
     if (same) same.amount += amount;
     else p.satisfactionReasons.push({ text: reason, amount: amount });
-    return { state: s, log: [] };
   },
 
   // Talk (members only): +15 satisfaction, once every 2 weeks per person. Returns { state, log }.
@@ -404,10 +416,10 @@ Game.rules.people = {
     if (!attended.length) gain *= tb.rehearseNoShowMultiplier;
     if (workhorseThere) gain *= 1 + t.workhorse.rehearsalTightnessBonus;
     songIds.forEach(function (id) {
-      if (s.songs[id]) s = Game.rules.songs.practiceSong(s, id, gain).state;
+      if (s.songs[id]) Game.rules.songs.tightenOn(s, id, gain);
     });
     attended.forEach(function (m) {
-      s = Game.rules.people.interact(s, m.id, 0).state;
+      Game.rules.people.interactOn(s, m.id, 0);
       s.people[m.id].week.rehearsals += 1;
     });
     return {
@@ -427,13 +439,13 @@ Game.rules.people = {
     var shares = Game.rules.people.payShares(s).memberShares;
     var log = [];
     Game.rules.people.members(s).forEach(function (m) {
-      s = Game.rules.people.interact(s, m.id, b.people.relationship.gigTogether).state;
+      Game.rules.people.interactOn(s, m.id, b.people.relationship.gigTogether);
       var p = s.people[m.id];
       p.week.gigs.push(result);
       p.gigDays.push(s.day);
       p.week.earned += pay * (shares[m.id] || 0);
       if (result === 'rough' && m.trait === 'perfectionist') {
-        s = Game.rules.people.changeSatisfaction(s, m.id, b.traits.perfectionist.roughGigSatisfaction, 'Hated the Rough gig (Perfectionist)').state;
+        Game.rules.people.satisfactionOn(s, m.id, b.traits.perfectionist.roughGigSatisfaction, 'Hated the Rough gig (Perfectionist)');
         log.push(m.name + ' is upset about the Rough gig.');
       }
     });
@@ -453,7 +465,7 @@ Game.rules.people = {
     var people = Game.rules.people;
 
     people.members(s).forEach(function (m) {
-      var add = function (amount, text) { s = people.changeSatisfaction(s, m.id, amount, text).state; };
+      var add = function (amount, text) { people.satisfactionOn(s, m.id, amount, text); };
       var w = m.week;
       var before = s.people[m.id].satisfaction;
       var gigsThisWeek = w.gigs.length;
