@@ -325,8 +325,11 @@ Game.balanceSim = {
     s = sim.planLongDay(s);
 
     // Theaters need a 14-song set: once theaters are close (reputation 55+), keep writing until there are 14 songs.
+    // Arenas need an 18-song set: once arenas are close (reputation 80+), keep writing toward that.
     var theaterSet = Game.rules.booking.setFor(Game.content.venues.orpheum, 'door').size;
-    if (s.player.reputation >= Game.balance.milestones.theaterReputation - 5 && Game.rules.songs.playable(s).length < theaterSet) {
+    var arenaSet = Game.balance.songs.setlist.arena.songs;
+    var wantSongs = s.player.reputation >= Game.balance.milestones.arenaReputation - 5 ? arenaSet : theaterSet;
+    if (s.player.reputation >= Game.balance.milestones.theaterReputation - 5 && Game.rules.songs.playable(s).length < wantSongs) {
       Game.balance.time.blocks.forEach(function (block) {
         var planned = A.plannedEntry(s, block);
         if (planned && planned.type === 'action' && (planned.actionId === 'practice' || planned.actionId === 'network' || planned.actionId === 'jam')) {
@@ -348,6 +351,13 @@ Game.balanceSim = {
       if (best.ratio >= 1 && !Game.rules.label.signProblem(s, best.id)) s = Game.rules.label.sign(s, best.id).state;
       Game.rules.label.openOffers(s).forEach(function (m) { s = Game.rules.booking.declineOffer(s, m.id).state; });
     }
+
+    // Label requests: throw the release party when there's plenty of cash; politely turn down the rest.
+    s.inbox.forEach(function (m) {
+      if (m.kind !== 'labelRequest' || m.resolved) return;
+      var yes = m.data.type === 'party' && s.player.cash > 2 * m.data.cost && !Game.rules.label.answerProblem(s, m.id, 'yes');
+      s = Game.rules.label.answerRequest(s, m.id, yes ? 'yes' : 'no').state;
+    });
 
     // Offers: hire, book tours and big shows (calling in sick if a trip needs work days).
     s.inbox.forEach(function (m) {

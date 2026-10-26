@@ -26,6 +26,7 @@ Game.ui.settings = {
             '<button class="btn btn--primary" data-action="guide">Open the Guide</button>' +
             '<button class="btn" data-action="handbook">Read the welcome handbook again</button>' +
           '</div>' +
+          '<p class="hint d-only">Keyboard shortcuts: press <strong>?</strong> on any screen with the tabs.</p>' +
           '<label class="switch"><input type="checkbox" id="tips-toggle"' + (app.state.settings.tutorial ? ' checked' : '') + '>' +
             ' Show tutorial tips on the first ' + Game.balance.tutorial.days + ' days</label>' +
         '</div>' : '') +

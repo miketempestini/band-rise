@@ -591,7 +591,8 @@ Game.rules.label = {
     var deal = Object.assign(t, {
       id: 'd' + s.label.nextDealId, signedDay: s.day, unrecouped: t.advance, recouped: 0, recoupShare: 1, royaltyPaid: 0, labelKept: 0,
       cut360: 0, charged: 0, delivered: 0, nextDueDay: s.day + t.deadlineWeeks * Game.balance.time.daysPerWeek, misses: 0, flops: 0,
-      strikes: 0, renewed: false, reminders: {}, endDay: null, endReason: null, allReleases: false
+      strikes: 0, renewed: false, reminders: {}, endDay: null, endReason: null, allReleases: false,
+      mood: Game.balance.label.mood.start, ask: null, nextPushBonus: 0
     });
     s.label.nextDealId += 1;
     s.label.deal = deal;
@@ -619,7 +620,7 @@ Game.rules.label = {
     if (!d) return 0;
     var rel = Game.rules.streaming.releaseOf(state, song);
     var owner = Game.rules.label.releaseDeal(state, rel);
-    return owner && owner.id === d.id ? d.reach : 0;
+    return owner && owner.id === d.id ? d.reach * Game.rules.label.moodMult(d) : 0;
   },
 
   // Your share of a record's streaming money under its deal: royalty while the deal runs; after it, everything if you
@@ -718,18 +719,63 @@ Game.rules.label = {
     var size = rb.sizeBonus[rel.type] / rb.sizeBonus.album;
     var s = state;
     var gained = 0;
+    var bonus = Game.rules.label.counts(deal, rel.type) ? deal.nextPushBonus || 0 : 0; // earned by a requested single: the next record uses it
     Object.keys(s.cities).filter(function (id) { return s.cities[id].unlocked; }).forEach(function (id) {
-      var n = Game.content.cities[id].fanCeiling * deal.push * (rel.avgQuality / 100) * size;
+      var n = Game.content.cities[id].fanCeiling * deal.push * (rel.avgQuality / 100) * size * Game.rules.label.moodMult(deal) * (1 + bonus);
       var added = Game.rules.audience.addFans(s, id, Game.rules.gigs.roundFans(rng, n));
       s = added.state;
       gained += added.added;
     });
+    if (bonus && s.label.deal && s.label.deal.id === deal.id) {
+      s = Game.util.clone(s);
+      s.label.deal.nextPushBonus = 0; // the bonus from delivering a requested single is used up
+    }
     return { state: s, gained: gained };
   },
 
-  // After a release under a deal: the label's free promo, records delivered, flops, renewals, and the deal ending
-  // when you've delivered everything. rel is in s.releases already (s is changed). Returns { state, log }.
+  // After a release under a deal: what the label asked of you (a single first, A&R notes), the deal's own bookkeeping
+  // (onReleaseDeal), then the label's follow-ups: A&R notes after a weak record, and a release party.
+  // rel is in s.releases already (s is changed). Returns { state, log }.
   onRelease: function (s, rel) {
+    var lb = Game.rules.label;
+    var r = Game.balance.label.requests;
+    var d = s.label.deal;
+    if (!d || d.legacy) return lb.onReleaseDeal(s, rel);
+    var log = [];
+    var counted = lb.counts(d, rel.type);
+    var ask = d.ask;
+    if (ask && ask.type === 'singleFirst' && rel.type === 'single' && s.day <= ask.dueDay) {
+      d.ask = null;
+      d.nextPushBonus = r.singleFirst.pushBonus;
+      log.push(lb.changeMood(d, r.singleFirst.met, 'you put out the single they asked for') + ' Their push on your next record will be bigger.');
+    } else if (ask && ask.type === 'anr' && counted) {
+      d.ask = null;
+      log.push(rel.avgQuality >= ask.target
+        ? lb.changeMood(d, r.anr.met, '"' + rel.name + '" hit their quality note (' + Math.round(rel.avgQuality) + ')')
+        : lb.changeMood(d, r.anr.missed, '"' + rel.name + '" missed their quality note (' + Math.round(rel.avgQuality) + ', they wanted ' + ask.target + ')'));
+    }
+    var dealt = lb.onReleaseDeal(s, rel);
+    s = dealt.state;
+    log = log.concat(dealt.log);
+    d = s.label.deal;
+    if (!d || !counted) return { state: s, log: log };
+    // Follow-ups: A&R notes after a weak record (if nothing else is pending), and a release party when it comes out.
+    if (rel.avgQuality < r.anr.below && !d.ask && !lb.openRequest(s)) {
+      var target = Math.min(r.anrMax, Math.round(rel.avgQuality) + r.anr.plus);
+      s = Game.rules.booking.addInbox(s, 'labelRequest', { labelId: d.labelId, dealId: d.id, type: 'anr', target: target, settled: false },
+        s.day + r.expiryDays);
+      log.push(lb.name(d.labelId) + ' sent A&R notes about "' + rel.name + '". Check your Inbox.');
+    }
+    if (!rel.held) {
+      s = lb.offerParty(s, rel);
+      log.push(lb.name(d.labelId) + ' wants to throw a release party. Check your Inbox.');
+    }
+    return { state: s, log: log };
+  },
+
+  // The deal's bookkeeping for a release: the label's free promo, records delivered, flops, renewals, and the deal
+  // ending when you've delivered everything. rel is in s.releases already (s is changed). Returns { state, log }.
+  onReleaseDeal: function (s, rel) {
     var lb = Game.rules.label;
     var b = Game.balance.label;
     var d = s.label.deal;
@@ -737,7 +783,7 @@ Game.rules.label = {
     var log = [];
     rel.dealId = d.id;
     if (d.legacy) return { state: s, log: [] }; // an older save's deal: nothing owed
-    if (!rel.promo && d.freePromo) {
+    if (!rel.promo && d.freePromo && (d.mood === undefined || d.mood >= b.mood.cold)) { // a cold label won't pay for promo
       rel.promo = { id: d.freePromo, week: 0 };
       var cost = Game.balance.streaming.promos[d.freePromo].cost;
       Game.rules.finances.add(s, { flow: 'band', cat: 'labelPaid', amount: cost });
@@ -826,6 +872,142 @@ Game.rules.label = {
     return lb.endDeal(s, 'bought out', ['You bought yourself out of your ' + name + ' deal for $' + price.toLocaleString() + '. The records you made with them: ' + masters]);
   },
 
+  // ----- How the label feels about you -----
+
+  // A plain word for the label's mood.
+  moodName: function (mood) {
+    var m = Game.balance.label.mood;
+    return mood >= m.love ? 'Loves you' : (mood >= m.warm ? 'Warm' : (mood >= m.cold ? 'Lukewarm' : 'Cold'));
+  },
+
+  // How the label's mood changes its reach and push: stronger when it loves you, weaker when it's cold.
+  moodMult: function (deal) {
+    var m = Game.balance.label.mood;
+    if (!deal || deal.mood === undefined) return 1;
+    return deal.mood >= m.love ? m.loveReach : (deal.mood < m.cold ? m.coldReach : 1);
+  },
+
+  // Changes a deal's mood (kept 0 to 100). Changes the deal. Returns a line saying what happened.
+  changeMood: function (deal, amount, why) {
+    var m = Game.balance.label.mood;
+    var before = Game.rules.label.moodName(deal.mood);
+    deal.mood = Game.util.clamp(deal.mood + amount, 0, m.max);
+    var after = Game.rules.label.moodName(deal.mood);
+    return Game.rules.label.name(deal.labelId) + ': ' + Game.util.signed(amount) + ' label mood (' + why + ').' +
+      (after !== before ? ' They\'re now ' + after.toLowerCase().replace('loves you', 'loving you') + '.' : '');
+  },
+
+  // ----- Label requests between records -----
+
+  // The label's open request in the Inbox, or null.
+  openRequest: function (state) {
+    return state.inbox.filter(function (m) { return m.kind === 'labelRequest' && !m.resolved; })[0] || null;
+  },
+
+  // Release day: the label offers a release party. Returns the new state.
+  offerParty: function (s, rel) {
+    var d = s.label.deal;
+    var p = Game.balance.label.requests.party;
+    return Game.rules.booking.addInbox(s, 'labelRequest', { labelId: d.labelId, dealId: d.id, type: 'party', releaseId: rel.id, releaseName: rel.name,
+      cost: p.cost[d.tier], settled: false }, s.day + p.expiryDays);
+  },
+
+  // Mondays: the label may ask for a single before your next record (when it's more than 8 weeks away, you haven't
+  // put one out lately, and nothing else is pending). Returns { state, log }.
+  requestCheck: function (state) {
+    var lb = Game.rules.label;
+    var r = Game.balance.label.requests;
+    var f = r.singleFirst;
+    var d = state.label.deal;
+    var week = Game.balance.time.daysPerWeek;
+    if (!d || d.legacy || d.ask || lb.openRequest(state) || Game.rules.day.dayOfWeek(state.day) !== Game.balance.label.offerDayOfWeek) return { state: state, log: [] };
+    if (d.nextDueDay === null || d.nextDueDay - state.day <= f.minWeeksToDue * week) return { state: state, log: [] };
+    var recentSingle = state.releases.some(function (rel) { return rel.type === 'single' && state.day - rel.day < f.recentSingleDays; });
+    if (recentSingle) return { state: state, log: [] };
+    var s = Game.util.clone(state);
+    var rng = Game.rng.create(s.rngState);
+    var asked = rng.chance(r.weeklyChance);
+    s.rngState = rng.getState();
+    if (!asked) return { state: s, log: [] };
+    s = Game.rules.booking.addInbox(s, 'labelRequest', { labelId: d.labelId, dealId: d.id, type: 'singleFirst', dueDay: s.day + f.windowDays, settled: false },
+      s.day + r.expiryDays);
+    return { state: s, log: [lb.name(d.labelId) + ' wants a single out before your next record. Check your Inbox.'] };
+  },
+
+  // Why you can't answer a request this way, or null.
+  answerProblem: function (state, messageId, choice) {
+    var m = state.inbox.filter(function (x) { return x.id === messageId; })[0];
+    if (!m || m.kind !== 'labelRequest' || m.resolved) return 'That request isn\'t open.';
+    var d = state.label.deal;
+    if (!d || d.id !== m.data.dealId) return 'That deal is over.';
+    if (choice !== 'yes' && choice !== 'no') return 'Pick yes or no.';
+    if (choice === 'yes' && m.data.type === 'party' && state.player.cash < m.data.cost) {
+      return 'The party costs $' + m.data.cost.toLocaleString() + ' (you have $' + Math.floor(state.player.cash).toLocaleString() + ').';
+    }
+    return null;
+  },
+
+  // Answers a label request: yes takes it on (a party happens now), no cools the label a little. Returns { state, log }.
+  answerRequest: function (state, messageId, choice) {
+    var lb = Game.rules.label;
+    var r = Game.balance.label.requests;
+    var problem = lb.answerProblem(state, messageId, choice);
+    if (problem) return { state: state, log: [problem] };
+    var s = Game.util.clone(state);
+    var m = s.inbox.filter(function (x) { return x.id === messageId; })[0];
+    var d = s.label.deal;
+    var type = m.data.type;
+    m.resolved = choice === 'yes' ? 'accepted' : 'declined';
+    m.read = true;
+    m.data.settled = true;
+    var log = [];
+    if (choice === 'no') {
+      log.push(lb.changeMood(d, type === 'party' ? r.party.skip : r[type].no, type === 'party' ? 'you skipped the release party' : 'you turned down their request'));
+      return { state: s, log: log };
+    }
+    if (type === 'singleFirst') {
+      d.ask = { type: 'singleFirst', dueDay: m.data.dueDay };
+      return { state: s, log: ['You told ' + lb.name(d.labelId) + ' you\'d put out a single by ' + Game.rules.day.dateLabel(m.data.dueDay) + '.'] };
+    }
+    if (type === 'anr') {
+      d.ask = { type: 'anr', target: m.data.target };
+      return { state: s, log: ['You told ' + lb.name(d.labelId) + ' your next record will average quality ' + m.data.target + ' or better.'] };
+    }
+    // The release party: pay, spend the energy, and the buzz and morale land now.
+    var p = r.party;
+    s = Game.rules.money.spend(s, m.data.cost, 'promotion').state;
+    d = s.label.deal;
+    s.player.energy = Math.max(0, s.player.energy - p.energy);
+    Object.keys(s.cities).forEach(function (id) { if (s.cities[id].fans > 0) Game.rules.audience.buzzOn(s, id, p.buzz); });
+    s = Game.rules.morale.change(s, p.morale).state;
+    d = s.label.deal;
+    log.push('Release party for "' + m.data.releaseName + '": -$' + m.data.cost.toLocaleString() + ', -' + p.energy + ' energy, +' + p.buzz +
+      ' buzz everywhere you have fans, +' + p.morale + ' morale.');
+    log.push(lb.changeMood(d, p.mood, 'a great party'));
+    return { state: s, log: log };
+  },
+
+  // Each night: requests you turned down from the Inbox or let run out count as no; a single you promised but didn't
+  // put out in time cools the label. Changes s. Returns log lines.
+  checkRequests: function (s) {
+    var lb = Game.rules.label;
+    var r = Game.balance.label.requests;
+    var log = [];
+    var d = s.label.deal;
+    s.inbox.forEach(function (m) {
+      if (m.kind !== 'labelRequest' || m.data.settled || (m.resolved !== 'expired' && m.resolved !== 'declined')) return;
+      m.data.settled = true;
+      if (!d || d.id !== m.data.dealId) return;
+      log.push(lb.changeMood(d, m.data.type === 'party' ? r.party.skip : r[m.data.type].no,
+        m.resolved === 'expired' ? 'you never answered their request' : 'you turned down their request'));
+    });
+    if (d && d.ask && d.ask.type === 'singleFirst' && s.day > d.ask.dueDay) {
+      d.ask = null;
+      log.push(lb.changeMood(d, r.singleFirst.missed, 'the single you promised never came out'));
+    }
+    return log;
+  },
+
   // ----- Overnight -----
 
   // Each night: records the label was holding come out, counter-offers get their answers, deadlines bring reminders
@@ -839,7 +1021,8 @@ Game.rules.label = {
     var log = [];
     var notes = [];
 
-    // Held records come out.
+    // Held records come out (with a release party offer from the label).
+    var parties = [];
     s.releases.forEach(function (rel) {
       if (!rel.held || rel.day > s.day) return;
       rel.held = false;
@@ -847,7 +1030,10 @@ Game.rules.label = {
       s = out.state;
       notes.push({ title: '"' + rel.name + '" is out', text: '"' + rel.name + '" is finally out. ' + out.text });
       log.push('"' + rel.name + '" is out. ' + out.text);
+      if (s.label.deal && rel.dealId === s.label.deal.id && lb.counts(s.label.deal, rel.type)) parties.push(rel.id);
     });
+    // Label requests: ones turned down or never answered count as no; promised singles that never came.
+    log = log.concat(lb.checkRequests(s));
 
     // Counter-offer answers.
     s.inbox.forEach(function (m) {
@@ -904,6 +1090,10 @@ Game.rules.label = {
 
     s.rngState = rng.getState();
     notes.forEach(function (note) { s = Game.rules.booking.addInbox(s, 'note', note, null); });
+    parties.forEach(function (relId) {
+      var rel = s.releases.filter(function (x) { return x.id === relId; })[0];
+      if (s.label.deal) s = lb.offerParty(s, rel);
+    });
     return { state: s, log: log };
   },
 

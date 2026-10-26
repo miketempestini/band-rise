@@ -361,7 +361,9 @@ Game.content = Game.content || {};
             { list: [
               '<strong>Plan week:</strong> fill a whole week\'s evenings at once, and save it as a template to reuse (up to ' + b.planWeek.maxTemplates + ').',
               '<strong>Skip to next commitment:</strong> ends quiet days in one go, until a show, a plan, an event, a message, or Sunday\'s summary.',
-              '<strong>Repeat yesterday\'s evening:</strong> plans the same evening action again.'
+              '<strong>Repeat yesterday\'s evening:</strong> plans the same evening action again.',
+              '<strong>Keyboard shortcuts</strong> (on a computer): E ends the day, 1 / 2 / 3 plan the morning, afternoon, or evening, letters switch tabs ' +
+                '(T, C, I, B, M, U, P, S, F, R), Esc goes back, and ? shows the list.'
             ] },
             { table: { cols: ['Cancelling a show', 'Venue relationship', 'Reputation', 'Bandmates\' satisfaction'], rows: [
               [c.earlyNoticeDays + '+ days ahead', String(c.early.venueRelationship), String(c.early.reputation), String(c.early.bandSatisfaction)],
@@ -500,6 +502,8 @@ Game.content = Game.content || {};
           body: [
             '<strong>Fans</strong> are counted per city. New fans from a show = crowd × the result\'s rate × originals factor, slowing as the city fills up ' +
               '(each city has a most it can ever hold). A city you haven\'t played or released in for ' + b.fans.fadeAfterDays + ' days loses ' + pct(b.fans.fadePerWeek) + ' of its fans a week.',
+            '<strong>Fan clubs:</strong> once you have ' + pct(b.fans.club.share) + ' of a city\'s most possible fans, a fan club forms there. It grows that city\'s fans by ' +
+              pct(b.fans.club.weekly) + ' every week on its own, and those fans never fade. The Map shows where you have one, and how close you are elsewhere.',
             '<strong>Buzz</strong> (per city, 0 to ' + b.buzz.max + ') fades ' + Math.abs(b.buzz.fadePerDay) + ' a day. <strong>Expected crowd</strong> = city fans × (' +
               pct(b.crowd.fanTurnout) + ' + buzz ÷ ' + b.crowd.buzzTurnoutDivisor + ' %) + the venue\'s walk-ins × (' + b.crowd.footTrafficBase + ' + buzz ÷ ' +
               b.crowd.footTrafficBuzzDivisor + '), give or take, up to the room\'s size. The Book screen shows the range.',
@@ -653,7 +657,8 @@ Game.content = Game.content || {};
             ] } },
             'Book out-of-town shows from Book like any other; the game plans the trip (travel blocks, ' + t.energyPerBlock + ' energy each, hotels at ' +
               money(t.hotelPerNight) + ' a night). Shows close together are chained, so you drive straight on. Bandmates pay their share of the road costs.',
-            '<strong>Tours</strong> are ' + b.tours.minShows + '+ out-of-town shows within ' + b.tours.withinDays + ' days. Tour shows win ' + pct(b.tours.fanBonus) +
+            '<strong>Tours</strong> are ' + b.tours.minShows + '+ out-of-town shows within ' + b.tours.withinDays + ' days. Tour shows win ' + pct(b.tours.fanBonus) + ' (' + pct(b.tours.fanBonusByRegion.national) + ' in National cities, ' +
+              pct(b.tours.fanBonusByRegion.international) + ' abroad)' +
               ' more new fans and give the next city +' + b.tours.nextCityBuzz + ' buzz. With a manager, ask for a tour (or build one stop by stop in the Tour Builder) ' +
               'and approve the proposal, with optional ads in each city. Bandmates\' moods change on the road by trait, and from day ' + b.morale.roadFatigueStartDay +
               ' you lose ' + Math.abs(b.morale.roadFatiguePerDay) + ' morale a day.'
@@ -709,6 +714,11 @@ Game.content = Game.content || {};
               ['Getting dropped', lb.strikesToDrop + ' strikes (missed deadlines, or flops under the label\'s quality floor) and most labels can let you go: reputation ' +
                 lb.dropReputation + ', but you\'re free. Some never let go.']
             ] } },
+            '<strong>Keeping them happy:</strong> a label\'s mood (Loves you, Warm, Lukewarm, Cold) shows on the Manager screen. Loving you makes its reach ' +
+              Math.round((lb.mood.loveReach - 1) * 100) + '% stronger; cold, it\'s ' + Math.round((1 - lb.mood.coldReach) * 100) + '% weaker and stops paying for promo pushes. ' +
+              'Between records it sends requests: a single first (deliver it for ' + signed(lb.requests.singleFirst.met) + ' mood and a bigger push on your next record), ' +
+              'A&R notes after a weak record (hit their quality bar next time for ' + signed(lb.requests.anr.met) + '), and a release party when a record comes out. ' +
+              'Promising and missing hurts more than saying no.',
             '<strong>Ending a deal:</strong> deliver every record you owe (unless they pick up a renewal), buy yourself out, or get dropped. A few weeks later, offers start again.',
             '<strong>What labels open:</strong> any deal opens the Top studio; a mid-size or major label opens the National cities (or reach reputation ' + lb.nationalWithoutLabel +
               '); a major opens arena and festival offers (or a Top 10 record on a smaller label, or reputation ' + lb.bigShowsWithout.reputation + ' and ' +

@@ -13,7 +13,7 @@ window.Game = window.Game || {};
 
 Game.files = {
 
-  tag: 'v25-2026-10-23a',   // Must start with "v" + the save version (balance.save.version): a test checks it
+  tag: 'v26-2026-10-26c',   // Must start with "v" + the save version (balance.save.version): a test checks it
 
   css: 'styles.css',
 
@@ -42,7 +42,7 @@ Game.files = {
   // The screens (draw only) and the app (Game.app: holds the state and runs a screen's actions).
   // The game page loads these; tests.html loads them too, for the test that opens every screen.
   screens: [
-    'js/ui/helpers.js', 'js/ui/mobile.js', 'js/ui/setlistEditor.js', 'js/ui/topbar.js', 'js/ui/title.js', 'js/ui/newCareer.js', 'js/ui/chooseSkills.js',
+    'js/ui/helpers.js', 'js/ui/mobile.js', 'js/ui/keys.js', 'js/ui/setlistEditor.js', 'js/ui/topbar.js', 'js/ui/title.js', 'js/ui/newCareer.js', 'js/ui/chooseSkills.js',
     'js/ui/statsPanel.js', 'js/ui/actionPicker.js', 'js/ui/today.js', 'js/ui/dayResults.js', 'js/ui/songReveal.js',
     'js/ui/songs.js', 'js/ui/release.js', 'js/ui/gigResult.js', 'js/ui/people.js', 'js/ui/nameBand.js', 'js/ui/booking.js', 'js/ui/studio.js',
     'js/ui/inbox.js', 'js/ui/calendar.js', 'js/ui/careerCard.js', 'js/ui/career.js', 'js/ui/sliceEnd.js',

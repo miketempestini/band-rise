@@ -266,9 +266,23 @@ Game.balance = {
     rivalSignChance: 0.05,
     // What deals open (once open, they stay open). Without the right label, they open later:
     nationalWithoutLabel: 75,         // National cities: a mid-size or major label, or reputation 75 (and a manager)
-    bigShowsWithout: { reputation: 90, fans: 250000 }, // Arenas: a major, or a smaller label with a Top 10 record,
+    bigShowsWithout: { reputation: 95, fans: 60000 },  // Arenas: a major, or a smaller label with a Top 10 record,
                                      // or reputation 90 and 250,000 fans without
-    legacyRecoupShare: 0.8           // Older saves' Northbound deal: 80% of streaming paid the advance back
+    legacyRecoupShare: 0.8,          // Older saves' Northbound deal: 80% of streaming paid the advance back
+    // How the label feels about you (0 to 100). Loving you strengthens its reach; cold, it weakens and stops paying for
+    // promo pushes.
+    mood: { start: 60, max: 100, love: 75, warm: 50, cold: 30, loveReach: 1.2, coldReach: 0.7 },
+    // Requests between records (one open at a time). Answering yes and delivering wins the label over; yes and missing
+    // (or no, or not answering) cools it.
+    requests: {
+      weeklyChance: 0.35,            // Each Monday, the chance the label sends a "single first" request (when it fits)
+      expiryDays: 5,                 // Answer a request within this many days (not answering counts as no)
+      singleFirst: { minWeeksToDue: 8, recentSingleDays: 42, windowDays: 28, met: 15, missed: -15, no: -5, pushBonus: 0.5 },
+      anr: { below: 70, plus: 5, met: 15, missed: -15, no: -5 }, // after a record under quality 70: the next one should
+                                     // average 5 more than this one (and never ask for more than 95)
+      anrMax: 95,
+      party: { cost: { indie: 500, mid: 2000, major: 8000, shark: 2000 }, energy: 20, buzz: 8, morale: 5, mood: 5, skip: -3, expiryDays: 2 }
+    }
   },
 
   // ---------------------------------------------------------------
@@ -941,6 +955,7 @@ Game.balance = {
     withinDays: 10,                  // ...within 10 days
     // Word of mouth on tour: tour shows win 50% more new fans, and give buzz to the next city on the route.
     fanBonus: 0.5,
+    fanBonusByRegion: { national: 1.0, international: 1.25 }, // ...and more far from home: +100% in National cities, +125% abroad
     nextCityBuzz: 10,
     // Any out-of-town show gives a little buzz to the other cities in the same region (Near, Mid, Far...).
     regionBuzz: 3
@@ -951,7 +966,10 @@ Game.balance = {
   // ---------------------------------------------------------------
   fans: {
     fadeAfterDays: 30,               // No show or release in a city this long...
-    fadePerWeek: 0.02                // ...costs 2% of that city's fans per week
+    fadePerWeek: 0.02,               // ...costs 2% of that city's fans per week
+    // Fan clubs: once you have this share of a city's most possible fans, a fan club forms there. It grows the city's
+    // fans by this much each Sunday (still under the city's most), and that city's fans stop fading.
+    club: { share: 0.10, weekly: 0.02 }
   },
 
   buzz: {
@@ -1057,7 +1075,7 @@ Game.balance = {
     managerFans: 2000,               // (the manager's cut is in balance.manager)
     theaterReputation: 60,
     arenaReputation: 85,
-    arenaFans: 100000
+    arenaFans: 60000                 // (lowered from 100,000 so arenas are reachable in a normal career)
   },
 
   // ---------------------------------------------------------------
@@ -1093,7 +1111,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 25,                     // Save format version, bumped when the state shape changes
+    version: 26,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 

@@ -86,6 +86,11 @@ Object.assign(Game.app, {
     window.scrollTo(0, 0);
   },
 
+  // Answers a label request ('yes' or 'no').
+  answerLabelRequest: function (messageId, choice) {
+    Game.app.applyWithNotice(Game.rules.label.answerRequest(Game.app.state, messageId, choice));
+  },
+
   declineLabel: function (messageId) {
     var app = Game.app;
     app.state = Game.rules.booking.declineOffer(app.state, messageId).state;

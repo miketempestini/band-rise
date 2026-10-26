@@ -14,11 +14,24 @@ Game.ui.inbox = {
     var h = Game.ui.helpers;
     var state = app.state;
     var self = Game.ui.inbox;
-    var messages = state.inbox.slice().reverse(); // newest first
-    var offerKinds = ['opening', 'residency', 'sessionWork', 'managerOffer', 'labelOffer', 'tourProposal', 'arenaOffer', 'festivalOffer'];
+    var archivedView = app.inboxView === 'archived';
+    var all = state.inbox.slice().reverse(); // newest first
+    var archivedCount = all.filter(function (m) { return m.archived; }).length;
+    var messages = all.filter(function (m) { return !!m.archived === archivedView; });
+    var offerKinds = ['opening', 'residency', 'sessionWork', 'managerOffer', 'labelOffer', 'labelRequest', 'tourProposal', 'arenaOffer', 'festivalOffer'];
     var isOpen = function (m) { return !m.resolved && (m.data.yes || offerKinds.indexOf(m.kind) !== -1); };
     var open = messages.filter(isOpen);
     var rest = messages.filter(function (m) { return !isOpen(m); });
+    var canArchive = Game.rules.booking.archivable(state).length;
+    // Tabs (the Inbox and what you've archived) and the archive button.
+    var tabs = '<div class="inbox-tools">' +
+      '<div class="inbox-tabs">' +
+        '<button class="btn btn--small' + (archivedView ? '' : ' btn--primary') + '" data-action="inboxView" data-view="inbox">Inbox</button>' +
+        '<button class="btn btn--small' + (archivedView ? ' btn--primary' : '') + '" data-action="inboxView" data-view="archived">Archived (' + archivedCount + ')</button>' +
+      '</div>' +
+      (archivedView ? '' : '<button class="btn btn--small btn--ghost" data-action="archiveRead"' + (canArchive ? '' : ' disabled title="Nothing read and finished to archive"') + '>' +
+        'Archive read messages' + (canArchive ? ' (' + canArchive + ')' : '') + '</button>') +
+      '</div>';
 
     root.innerHTML =
       Game.ui.topbar.html(state, app.screen) +
@@ -28,8 +41,11 @@ Game.ui.inbox = {
           '<button class="btn" data-action="back">← Back</button>' +
         '</div>' +
         h.notice(app.notice) +
-        (messages.length ? '' : '<p class="hint">No messages yet. Email a venue from Book; their reply lands here in ' +
-          Game.balance.venues.replyDays.min + ' to ' + Game.balance.venues.replyDays.max + ' days.</p>') +
+        (all.length ? tabs : '') +
+        (messages.length ? '' : (archivedView ? '<p class="hint">Nothing archived. Archived messages are kept for about ' +
+            Math.round(Game.balance.history.keepDays / 30) + ' months.</p>'
+          : (all.length ? '<p class="hint">All caught up: everything else is archived.</p>' : '<p class="hint">No messages yet. Email a venue from Book; their reply lands here in ' +
+          Game.balance.venues.replyDays.min + ' to ' + Game.balance.venues.replyDays.max + ' days.</p>'))) +
         (open.length ? '<section class="mail"><h3 class="panel__title">Offers waiting for you</h3>' + open.map(function (m) { return self.safeMessageHtml(state, m); }).join('') + '</section>' : '') +
         (rest.length ? '<section class="mail"><h3 class="panel__title">Earlier</h3>' + rest.map(function (m) { return self.safeMessageHtml(state, m); }).join('') + '</section>' : '') +
       '</section>';
@@ -47,6 +63,9 @@ Game.ui.inbox = {
       acceptSessionWork: function (e, el) { app.acceptSessionWork(el.getAttribute('data-id')); },
       hireManager: function (e, el) { app.hireManager(el.getAttribute('data-id')); },
       readContract: function (e, el) { app.openLabelDeal(el.getAttribute('data-id')); },
+      labelAnswer: function (e, el) { app.answerLabelRequest(el.getAttribute('data-id'), el.getAttribute('data-choice')); },
+      inboxView: function (e, el) { app.inboxView = el.getAttribute('data-view'); app.render(); },
+      archiveRead: function () { app.applyWithNotice(Game.rules.booking.archiveRead(app.state)); },
       compareLabels: function () { app.openLabelCompare(); },
       acceptTour: function (e, el) { app.acceptTour(el.getAttribute('data-id'), el.getAttribute('data-job') || null); },
       acceptBigShow: function (e, el) { app.acceptBigShow(el.getAttribute('data-id'), el.getAttribute('data-job') || null); }
@@ -159,6 +178,38 @@ Game.ui.inbox = {
     return Game.ui.inbox.cardHtml(m, info.name + ' wants to sign you', body, buttons);
   },
 
+  // A request from your label between records: a single first, A&R notes, or a release party. Two choices.
+  labelRequestHtml: function (state, m) {
+    var h = Game.ui.helpers;
+    var lb = Game.rules.label;
+    var r = Game.balance.label.requests;
+    var d = m.data;
+    var name = lb.name(d.labelId);
+    var head, body, yes, no;
+    if (d.type === 'singleFirst') {
+      head = name + ' wants a single first';
+      body = 'They want a single out before your next record: by <strong>' + h.dateLabel(d.dueDay) + '</strong>. Deliver it and they\'ll love you for it ' +
+        '(' + Game.util.signed(r.singleFirst.met) + ' label mood, and a bigger push on your next record); promise and miss it, ' + r.singleFirst.missed + '. Saying no: ' + r.singleFirst.no + '.';
+      yes = 'We\'ll put one out'; no = 'Not this time';
+    } else if (d.type === 'anr') {
+      head = name + '\'s A&R notes';
+      body = 'Their A&R team thinks your last record was weak. They want your next one to average quality <strong>' + d.target + '</strong> or better ' +
+        '(better studio, tighter songs, stronger writing). Hit it: ' + Game.util.signed(r.anr.met) + ' label mood; miss it: ' + r.anr.missed + '. Brushing them off: ' + r.anr.no + '.';
+      yes = 'We\'re on it'; no = 'We like it as it is';
+    } else {
+      head = name + ' wants a release party for "' + d.releaseName + '"';
+      body = 'A big night for the new record: ' + h.money(d.cost) + ' and ' + r.party.energy + ' energy, for +' + r.party.buzz + ' buzz everywhere you have fans, +' +
+        r.party.morale + ' morale, and ' + Game.util.signed(r.party.mood) + ' label mood. Skipping it: ' + r.party.skip + '.';
+      yes = 'Throw the party'; no = 'Skip it';
+    }
+    var problem = m.resolved ? null : lb.answerProblem(state, m.id, 'yes');
+    var mood = state.label.deal && state.label.deal.id === d.dealId ? '<p class="hint">' + h.escape(name) + ' right now: ' + lb.moodName(state.label.deal.mood) + '.</p>' : '';
+    return Game.ui.inbox.cardHtml(m, head, '<p>' + body + '</p>' + mood,
+      '<button class="btn btn--small btn--primary" data-action="labelAnswer" data-id="' + m.id + '" data-choice="yes"' + (problem ? ' disabled title="' + h.escape(problem) + '"' : '') + '>' + yes + '</button> ' +
+      '<button class="btn btn--small" data-action="labelAnswer" data-id="' + m.id + '" data-choice="no">' + no + '</button>' +
+      (problem ? ' <span class="pick__reason">' + h.escape(problem) + '</span>' : ''));
+  },
+
   // Accept buttons that ask how to take workdays off when an offer needs them (one button per way).
   jobButtonsHtml: function (state, m, action, jobDays, problemFor, label) {
     var h = Game.ui.helpers;
@@ -262,6 +313,7 @@ Game.ui.inbox = {
     var h = Game.ui.helpers;
     var d = m.data;
     if (['note', 'managerOffer', 'labelOffer', 'tourProposal', 'arenaOffer', 'festivalOffer'].indexOf(m.kind) !== -1) return Game.ui.inbox.bigTimeHtml(state, m);
+    if (m.kind === 'labelRequest') return Game.ui.inbox.labelRequestHtml(state, m);
     if (m.kind === 'opening' || m.kind === 'residency') return Game.ui.inbox.offerHtml(state, m);
     if (m.kind === 'sessionWork') return Game.ui.inbox.sessionWorkHtml(state, m);
     if (m.kind === 'sessionRelease') {

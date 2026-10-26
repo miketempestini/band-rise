@@ -34,6 +34,7 @@ Game.app = Object.assign(Game.app || {}, {
   moreOpen: false,         // phone: the More sheet (the screens that aren't on the bottom bar) is open
   calendarWeek: 0,         // phone: which week the Calendar's week strip shows (0 = this week)
   mapView: 'home',         // the Map screen's view: 'home' (the road map) or 'world' (the World map)
+  inboxView: 'inbox',      // the Inbox's view: 'inbox' or 'archived'
   openMicDraft: null,   // an out-of-town open mic sign-up being set up: { venueId, day, jobChoice }
   setlistDraft: null,   // songs ticked while editing a booked show's setlist
   skipResult: null,     // what "Skip to next commitment" did, for the skip summary screen
@@ -65,6 +66,7 @@ Game.app = Object.assign(Game.app || {}, {
   // Runs once when the page loads.
   start: function () {
     Game.ui.mobile.installHints(); // phone: tap a greyed-out button to see why
+    Game.ui.keys.install();        // computer: keyboard shortcuts (press ?)
     Game.app.show('title');
   },
 

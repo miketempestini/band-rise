@@ -555,7 +555,7 @@ Out of town, small rooms, clubs, and theaters book for a share of the door (cove
 ### Tours
 
 - A tour is 3+ out-of-town shows within 10 days. It needs a van, plus vacation days or no day job.
-- Word of mouth: tour shows win 50% more new fans and give +10 buzz to the next city on the route. Any out-of-town show gives +3 buzz to the other cities in the same region.
+- Word of mouth: tour shows win 50% more new fans (100% in National cities, 125% abroad) and give +10 buzz to the next city on the route. Any out-of-town show gives +3 buzz to the other cities in the same region.
 - Bandmates chip in for gas, flights, and hotels by their pay shares (a Diva pays 1.5 shares), so only your share comes out of your cash.
 - Back-to-back cities chain travel and show in one day where the distance allows: if your next out-of-town show is within 2 days (or there's no time to go home in between), you drive straight on from city to city. A city-to-city leg uses the longer of the two cities' distances.
 - Road fatigue: from day 5 on the road, morale drops 3 a day. Bandmates gain 2 satisfaction per tour show.
@@ -583,7 +583,7 @@ Out of town, small rooms, clubs, and theaters book for a share of the door (cove
     - **Auto-booking:** it leaves an open tour proposal's dates alone. The manager plans for 5 days, then sends a proposal: one show per city, nearest cities first, starting at least 5 weeks out (inside the 12-week calendar), with each show's expected crowd and your pay (after the manager and the band), plus travel, hotels, and production. Accepting books every show and all the travel (city to city where it makes sense); declining scraps the plan. A tour needs a van.
 - **Flights**: National cities (open with a manager and a mid-size or major label, or reputation 75) are 2 blocks each way by plane, $300 a person each way (you plus your bandmates).
 - **Record labels**: offers need a manager. See "Record labels" below.
-- **Arenas and festivals** (reputation 85, 100,000 fans, and a major label; or a Top 10 record on a smaller label; or reputation 90 and 250,000 fans without one): offers only. A big label brings them more often. Each Monday a 10% chance of each (one open at a time), 6 to 10 weeks out, answer within 5 days. An arena pays its flat fee ($20,000 to $30,000), an 18-song set, $5,000 production. A festival pays $5,000 to $15,000 for an 8-song afternoon slot to 30% to 60% of the grounds, production provided. Festivals: New Halston Music Fest, Crescent Riverfront Festival, Harborline Summer Fest.
+- **Arenas and festivals** (reputation 85, 60,000 fans, and a major label; or a Top 10 record on a smaller label; or reputation 95 and 60,000 fans without one): offers only. A big label brings them more often. Each Monday a 10% chance of each (one open at a time), 6 to 10 weeks out, answer within 5 days. An arena pays its flat fee ($20,000 to $30,000), an 18-song set, $5,000 production. A festival pays $5,000 to $15,000 for an 8-song afternoon slot to 30% to 60% of the grounds, production provided. Festivals: New Halston Music Fest, Crescent Riverfront Festival, Harborline Summer Fest.
 - **Awards season**: every December, in real calendar years. Nominations arrive on the first Monday of December; the ceremony is the last Saturday of December. "This year" and "new fans this year" start on January 1. Song of the Year (a release this year with recording quality 60+), Record of the Year (an EP or album this year averaging 55+), Breakout Act (2,000+ new fans this year). Strength: (quality - 50) / 50 (+0.1 for a Top 10 that year), or new fans / 20,000, kept between 10% and 80%.
   - **Head to head:** each category you're nominated in has up to 5 nominees: you, your rivals with a qualifying record
     (or 2,000+ new fans) that year, and the scene's biggest bands. Other bands' records are judged by their skills
@@ -685,6 +685,22 @@ down and the room shakes. "Deal signed!" bursts out of a flash of light rays wit
 with your advance underneath. "See your deal" goes to the label panel. A tap skips to the end, and players who asked
 for less motion see the finished moment right away.
 
+### Keeping the label happy
+
+A signed label has a mood from 0 to 100. It starts at 60, and the label panel shows it as Loves you, Warm, Lukewarm, or
+Cold.
+- **Loves you (75+):** the label's reach and push are 20% stronger.
+- **Cold (under 30):** they're 30% weaker, and the label stops paying for promo pushes.
+
+Between records the label sends requests. Only one is open at a time, and you answer within 5 days (not answering
+counts as no):
+
+| Request | When | Yes, and you deliver | Yes, and you miss | No |
+| --- | --- | --- | --- | --- |
+| A single first | On a Monday (35% chance), when your next record is 8+ weeks away and you haven't put out a single in 6 weeks | +15, and your next record gets a 50% bigger push | -15 (a single by the 4-week date) | -5 |
+| A&R notes | After a record that counts comes in under quality 70 | +15 (the next record averages 5 more than that one) | -15 | -5 |
+| Release party | The day a record that counts comes out | Pay ($500 indie, $2,000 mid-size or shark, $8,000 major) and 20 energy for +8 buzz everywhere you have fans, +5 morale, +5 mood | | -3 (skip it) |
+
 ### Under a deal
 
 - **Releases:** the release form shows how a record fits the deal. Every EP or album that counts moves the next deadline
@@ -700,7 +716,7 @@ for less motion see the finished moment right away.
 
 - **Any deal:** the Top studio.
 - **A mid-size or major label:** the National cities (or reputation 75 without).
-- **A major label:** arena and festival offers (also a Top 10 record on a smaller label, or reputation 90 and 250,000 fans
+- **A major label:** arena and festival offers (also a Top 10 record on a smaller label, or reputation 95 and 60,000 fans
   without one). A big label brings them up to twice as often.
 - **Once open, they stay open.** Prestige labels also add up to +10% to awards chances.
 
@@ -708,6 +724,19 @@ for less motion see the finished moment right away.
 
 Rivals sign too (5% a week once they qualify for a tier): their label shows on the Career screen, and its reach boosts
 their records' streams and chart spots.
+
+## Inbox and keyboard
+
+- **Archiving:** "Archive read messages" moves every message you've read that's finished (answered, expired, or news)
+  to an Archived tab. Open offers and requests waiting for an answer stay. Messages are still dropped after about 3
+  months.
+- **Keyboard shortcuts** (computer only, on screens with the tabs, never while typing in a box):
+  - E ends the day (on Today)
+  - 1, 2, and 3 plan the morning, afternoon, and evening (on Today)
+  - T, C, I, B, M, U, P, S, F, and R switch to Today, Calendar, Inbox, Book, Map, Music, People, Shop, Finances, and
+    Career
+  - Esc goes back
+  - ? shows the list (Settings mentions it)
 
 ## The music scene
 
@@ -771,6 +800,9 @@ Each city tracks fans (people who stick around) and buzz (how hot you are right 
 - The last part slows growth as a city fills up, so no city maxes out quickly.
 - Fractions round randomly: 1.4 new fans means 1 fan, with a 40% chance of a second.
 - Fans only fade if you go quiet: no show or release in a city for 30 days costs 2% of that city's fans per week.
+- **Fan clubs:** once you have 10% of a city's most possible fans, a fan club forms there. It grows that city's fans 2%
+  a week on its own (never past the city's most), and that city's fans stop fading. The Map shows clubs, and the first
+  one gets a banner.
 
 ### Buzz (per city, 0 to 100)
 
@@ -880,7 +912,7 @@ Milestones unlock new actions and screens, so the game keeps handing the player 
 | 15 | Theater | Reputation 60 and a release | Tier 3 venues |
 | 16 | Record deal | Sign with a record label (offers need a manager) | Whatever the deal opens: the Top studio, and with a bigger label the National cities and arena offers (see Record labels) |
 | 17 | Awards season | Every December (first nomination) | Nominations from your releases and fans. A win adds reputation |
-| 18 | Arena | Reputation 85 and 100,000 fans | Arena and festival offers |
+| 18 | Arena | Reputation 85 and 60,000 fans | Arena and festival offers |
 | 19 | Going global | Your first show abroad | The private jet in the Shop |
 
 ### Housing (the lifestyle ladder)

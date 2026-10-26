@@ -4,6 +4,35 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14y: Road to arenas, label follow-ups, Inbox archive, keyboard shortcuts (2026-10-26)
+- **Arenas are reachable:**
+  - **The bar:** 60,000 fans (was 100,000), still reputation 85.
+  - **Without a label:** reputation 95 and 60,000 fans opens arena offers (was reputation 90 and 250,000).
+  - **Fan clubs:** form in any city where you have 10% of its most possible fans. They grow that city 2% a week on
+    their own, its fans stop fading, and the first one gets a banner. The Map shows them.
+  - **Tours far from home:** word of mouth is bigger: +100% new fans in National cities and +125% abroad (was +50%).
+- **Labels stay in touch:**
+  - **Mood:** a signed label has a mood (Loves you / Warm / Lukewarm / Cold) on the Manager screen. Loving you, its
+    reach is 20% stronger; cold, it's 30% weaker with no free promo.
+  - **Requests in the Inbox** (one at a time):
+    - **"A single first":** deliver it for +15 and a bigger push on your next record; promise and miss it, -15.
+    - **A&R notes after a weak record:** hit their quality note for +15.
+    - **A release party on release day:** costs money and 20 energy for buzz, morale, and +5 mood.
+  - **Saying no or ignoring a request** cools them a little.
+- **Inbox:** "Archive read messages" moves read, finished messages to an Archived tab (open offers stay).
+- **Keyboard shortcuts** (desktop):
+  - **Today:** E ends the day, and 1 / 2 / 3 plan a block.
+  - **Tabs:** T C I B M U P S F R switch tabs.
+  - **Other:** Esc goes back, and ? (or /) shows the list.
+- **Save version 26:** older deals get a mood of 60, and cities get fan clubs. The test save was upgraded.
+- **Two-year check** (10 runs, before the last tweak):
+  - **Fans:** end around 83,000 (was 64,000).
+  - **Festivals:** happen in 80% of runs (was 0%).
+  - **Arenas:** still 0%. The simulated player never had an 18-song arena set (it stopped writing at 14). It now
+    writes toward 18; a re-run was in progress at commit time.
+- **Tests:** 416 passing (new: arena.test.js, inbox.test.js, label mood and request tests). **Version tag:**
+  `v26-2026-10-26c`.
+
 ### Session 14x: A faster End Day late in a career (2026-10-23)
 - **Why:** a code review found End Day getting slow late in a career, for two reasons: the saved game never dropped
   old records, and a few rules made a full copy of the whole game for every city, song, or bandmate in a loop.

@@ -187,10 +187,13 @@ Game.ui.map = {
               (tr.hasJet(state) ? 'your jet, ' + h.money(Game.balance.travel.jet[kind]) + ' a flight' : h.money(tr.fare(kind).perPersonOneWay) + ' a person each way') + ')'
             : h.money(Game.balance.travel.gasRoundTrip[city.region]) + ' gas round trip') + '</dd>' : '') +
         '<dt>Fans</dt><dd>' + cs.fans.toLocaleString() + ' / ' + city.fanCeiling.toLocaleString() + '</dd>' +
+        '<dt>Fan club</dt><dd>' + (cs.club ? 'Yes: grows ' + Math.round(Game.balance.fans.club.weekly * 100) + '% a week'
+          : (cs.fans >= city.fanCeiling * Game.balance.fans.club.share ? 'Forms this Sunday'
+            : 'At ' + Math.round(city.fanCeiling * Game.balance.fans.club.share).toLocaleString() + ' fans')) + '</dd>' +
         '<dt>Buzz</dt><dd>' + Math.round(cs.buzz) + '</dd>' +
         (cityId === 'hometown' ? '' : '<dt>Shows played</dt><dd>' + played + '</dd>') +
       '</dl>' +
-      (cs.fans > 0 && fadeDays >= Game.balance.fans.fadeAfterDays ? '<p class="panel__warn">No show or release here in ' + fadeDays + ' days: fans are fading.</p>' : '') +
+      (cs.fans > 0 && !cs.club && fadeDays >= Game.balance.fans.fadeAfterDays ? '<p class="panel__warn">No show or release here in ' + fadeDays + ' days: fans are fading.</p>' : '') +
       '<p class="hint">' + venueList + '</p>' +
       (problem ? '<p class="pick__reason">' + h.escape(problem) + '</p>'
         : !cs.unlocked ? '<p class="hint">You qualify: it opens at the end of today.</p>'

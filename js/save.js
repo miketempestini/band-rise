@@ -128,6 +128,14 @@ Game.save = {
       data.inbox.forEach(function (m) { if (m.kind === 'labelOffer' && !m.data.labelId && !m.resolved) { m.resolved = 'expired'; m.data.cooled = true; } });
     }
 
+    // Version 26: a deal signed before then gets the label's mood (it starts warm), and nothing asked of you yet.
+    // (Fan clubs and the Inbox archive fill in on their own: cities get club: false above.)
+    if (fromVersion < 26 && data.label.deal && data.label.deal.mood === undefined) {
+      data.label.deal.mood = Game.balance.label.mood.start;
+      data.label.deal.ask = null;
+      data.label.deal.nextPushBonus = 0;
+    }
+
     // Cities you already qualify for open right away (new cities in an update shouldn't wait for the next End Day).
     data = Game.rules.travel.updateCityUnlocks(data).state;
 

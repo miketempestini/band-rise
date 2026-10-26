@@ -54,13 +54,43 @@ Game.rules.audience = {
     var log = [];
     Object.keys(s.cities).forEach(function (id) {
       var city = s.cities[id];
-      if (city.fans <= 0 || s.day - city.lastActivityDay < f.fadeAfterDays) return;
+      if (city.fans <= 0 || city.club || s.day - city.lastActivityDay < f.fadeAfterDays) return; // a fan club keeps fans around
       var lost = Math.min(city.fans, Game.rules.gigs.roundFans(rng, city.fans * f.fadePerWeek));
       if (!lost) return;
       city.fans -= lost;
       log.push(Game.content.cities[id].name + ': -' + lost + ' fan' + (lost === 1 ? '' : 's') + ' (no show or release there in ' + f.fadeAfterDays + '+ days).');
     });
     s.rngState = rng.getState();
+    return { state: s, log: log };
+  },
+
+  // Sunday night: fan clubs. A city where you have 10% of its most possible fans gets a fan club, and every fan club
+  // grows its city's fans by 2% a week on its own (never past the city's most). The first club ever gets a banner.
+  // Returns { state, log }.
+  fanClubs: function (state) {
+    var c = Game.balance.fans.club;
+    var s = Game.util.clone(state);
+    var rng = Game.rng.create(s.rngState);
+    var log = [];
+    var hadOne = Object.keys(s.cities).some(function (id) { return s.cities[id].club; });
+    var formed = [];
+    Object.keys(s.cities).forEach(function (id) {
+      var city = s.cities[id];
+      var ceiling = Game.content.cities[id].fanCeiling;
+      if (!city.club && city.fans >= ceiling * c.share) {
+        city.club = true;
+        formed.push(Game.content.cities[id].name);
+      }
+      if (!city.club) return;
+      var grow = Math.min(ceiling - city.fans, Game.rules.gigs.roundFans(rng, city.fans * c.weekly));
+      if (grow > 0) city.fans += grow;
+    });
+    s.rngState = rng.getState();
+    if (formed.length) {
+      var text = 'A fan club started in ' + formed.join(', ') + '! Fan clubs grow on their own every week, and those fans don\'t fade.';
+      log.push(text);
+      if (!hadOne) s.toasts.push({ id: 'fanClub-' + s.day, text: text });
+    }
     return { state: s, log: log };
   },
 

@@ -462,6 +462,21 @@ Game.rules.booking = {
     return { state: s, log: [] };
   },
 
+  // Inbox messages that can be archived: read, and finished (answered, expired, or just news). Open offers and requests
+  // waiting for an answer never are.
+  archivable: function (state) {
+    return state.inbox.filter(function (m) { return !m.archived && m.read && (m.resolved || m.expiresDay === null) && !(m.data && m.data.yes && !m.resolved); });
+  },
+
+  // Archives every read, finished message (they move to the Inbox's Archived tab). Returns { state, log }.
+  archiveRead: function (state) {
+    var ids = Game.rules.booking.archivable(state).map(function (m) { return m.id; });
+    if (!ids.length) return { state: state, log: [] };
+    var s = Game.util.clone(state);
+    s.inbox.forEach(function (m) { if (ids.indexOf(m.id) !== -1) m.archived = true; });
+    return { state: s, log: ['Archived ' + ids.length + ' message' + (ids.length === 1 ? '' : 's') + '. They\'re under Archived.'] };
+  },
+
   // Marks every inbox message as read (when the Inbox screen opens).
   markAllRead: function (state) {
     var s = Game.util.clone(state);
@@ -591,7 +606,7 @@ Game.rules.booking = {
       crowdShare: entry.deal === 'opening' ? o.openingSlot.crowdShare                // the headliner's crowd
         : (entry.deal === 'festival' ? Game.balance.bigOffers.festivalCrowdShare : null), // a festival crowd
       fanRate: (entry.deal === 'opening' ? o.openingSlotFanRate : 1) *              // their fans, at half the rate
-        (Game.rules.travel.isTourShow(state, entry) ? 1 + Game.balance.tours.fanBonus : 1), // word of mouth on tour: more new fans
+        (Game.rules.travel.isTourShow(state, entry) ? 1 + Game.rules.travel.tourFanBonus(entry.venueId) : 1), // word of mouth on tour: more new fans
       crowdFloor: entry.deal === 'residency' ? o.residency.crowdFloor : null,     // regulars come back
       tourId: entry.tourId || null,                                                // tour shirts sell best on their tour
       encoreSongId: entry.encoreSongId || null                                     // the encore, after a Great or Legendary night

@@ -152,7 +152,7 @@ Game.state = {
   startingCities: function () {
     var cities = {};
     Object.keys(Game.content.cities).forEach(function (id) {
-      cities[id] = { id: id, fans: 0, buzz: 0, unlocked: Game.content.cities[id].region === 'hometown', lastActivityDay: 0 };
+      cities[id] = { id: id, fans: 0, buzz: 0, unlocked: Game.content.cities[id].region === 'hometown', lastActivityDay: 0, club: false };
     });
     return cities;
   },

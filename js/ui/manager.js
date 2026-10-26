@@ -54,6 +54,10 @@ Game.ui.manager = {
     return '<div class="panel label-panel"><h3 class="panel__title">Your label: <span class="label-card__logo" style="--label-ink:' + info.color + '">' + h.escape(info.name) + '</span></h3>' +
       '<p class="muted">' + Game.content.labelTiers[info.tier] + ' · ' + Game.content.labelPersonalities[info.personality] + ' · signed ' + h.dateLabel(d.signedDay) + '</p>' +
       '<dl class="rows">' +
+        '<dt>How they feel</dt><dd>' + h.escape(lb.moodName(d.mood)) + ' (' + Math.round(d.mood) + ')' +
+          (d.mood >= Game.balance.label.mood.love ? ': a stronger push on your records' : (d.mood < Game.balance.label.mood.cold ? ': a weaker push, no free promo' : '')) + '</dd>' +
+        (d.ask ? '<dt>You promised</dt><dd>' + (d.ask.type === 'singleFirst' ? 'A single by ' + h.dateLabel(d.ask.dueDay)
+          : 'Your next record at quality ' + d.ask.target + '+') + '</dd>' : '') +
         '<dt>Records</dt><dd>' + owe + '</dd>' +
         '<dt>Next record due</dt><dd' + (weeksLeft <= 4 ? ' class="neg"' : '') + '>' + h.dateLabel(d.nextDueDay) + ' (' + Math.max(0, weeksLeft) + ' week' + (weeksLeft === 1 ? '' : 's') + ')</dd>' +
         '<dt>Missing it means</dt><dd>' + h.escape(lb.penaltyText(d)) + '</dd>' +

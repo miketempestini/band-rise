@@ -414,7 +414,21 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
     - Signing plays the `dealSigned` screen (`Game.ui.dealSigned`): one CSS timeline in styles.css ("Signing a record
       deal"). The contract drops, the signature draws, the stamp lands, and "Deal signed!" bursts with confetti. A tap
       finishes every animation; under reduced motion it shows the end. "See your deal" calls `app.leaveDealSigned`.
+  - **Mood and requests:**
+    - `deal.mood` (0 to 100; `moodName`, `moodMult` on reach and push, `changeMood`).
+    - Requests are Inbox kind `labelRequest` (`data.type`: 'singleFirst' | 'anr' | 'party'), from `requestCheck`
+      (Mondays) and `onRelease`. `onRelease` wraps `onReleaseDeal`, the deal's own bookkeeping.
+    - Answer with `answerRequest(state, id, 'yes' | 'no')`. A promise you said yes to is `deal.ask`.
+    - `checkRequests` (in `nightly`) settles requests you didn't answer and singles you missed.
   - **Debug:** "Label offer" and "Label deadline today".
+- **Fan clubs and the arena bar:** `audience.fanClubs` runs on Sundays and sets `cities[id].club` (`balance.fans.club`).
+  A club's city doesn't fade. Tours far from home use `travel.tourFanBonus(venueId)`
+  (`balance.tours.fanBonusByRegion`). Arenas need `balance.milestones.arenaFans` (60,000).
+- **Inbox archive:** `booking.archivable` / `archiveRead` set `m.archived`; the Inbox shows `app.inboxView` ('inbox' |
+  'archived').
+- **Keyboard shortcuts:** `Game.ui.keys` (`install` in `app.start`, `handle(event, app)`). It only acts on screens with
+  `.topbar`, steps aside while the picker or the day readout is open, and the `?` sheet is `toggleHelp`. A new tab
+  needs a letter in `keys.tabs`.
 - **Walt's handbook and the Guide**:
   - **The text:** `js/content/handbook.js` holds `mentor` (the name is set once at the top), `pages(state)` for the
     welcome handbook, and `sections()` for the Guide. Every number in it is built from balance.js.

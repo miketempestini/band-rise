@@ -589,6 +589,13 @@ Game.rules.travel = {
   // bandmate gains satisfaction. Returns { state, log }.
   // True if a show (about to be played, or just played) is part of a tour: counting every out-of-town show
   // played before it, the ones still booked, and this one.
+  // How many more new fans a tour show wins (word of mouth): more far from home (National cities, abroad).
+  tourFanBonus: function (venueId) {
+    var t = Game.balance.tours;
+    var region = Game.content.cities[Game.content.venues[venueId].cityId].region;
+    return t.fanBonusByRegion[region] !== undefined ? t.fanBonusByRegion[region] : t.fanBonus;
+  },
+
   isTourShow: function (state, entry) {
     var tr = Game.rules.travel;
     if (!tr.isOutOfTown(entry.venueId)) return false;

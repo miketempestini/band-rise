@@ -374,6 +374,10 @@ Game.rules.day = {
       var faded = Game.rules.audience.fadeFans(s);
       s = faded.state;
       faded.log.forEach(function (line) { endLines.push(line); });
+      // Fan clubs form where you're big, and grow on their own.
+      var clubs = Game.rules.audience.fanClubs(s);
+      s = clubs.state;
+      clubs.log.forEach(function (line) { endLines.push(line); });
 
       var drift = Game.rules.morale.weeklyDrift(s);
       s = drift.state;
@@ -463,7 +467,7 @@ Game.rules.day = {
     sessionOffer.log.forEach(function (line) { endLines.push(line); });
     // The big time: your manager books "yes" replies, plans tours, and emails venues on Mondays; your label deal's
     // deadlines and held records; manager, label, arena, and festival offers may arrive; and in December, awards season.
-    [Game.rules.manager.processAds, Game.rules.manager.autoAccept, Game.rules.manager.offerCheck, Game.rules.label.nightly, Game.rules.label.offerCheck,
+    [Game.rules.manager.processAds, Game.rules.manager.autoAccept, Game.rules.manager.offerCheck, Game.rules.label.nightly, Game.rules.label.offerCheck, Game.rules.label.requestCheck,
       Game.rules.manager.processTourRequests, Game.rules.bigShows.roll, Game.rules.manager.autoBook, Game.rules.awards.check].forEach(function (rule) {
       var r = rule(s);
       s = r.state;
@@ -592,6 +596,7 @@ Game.rules.day = {
       case 'sessionRelease': return 'A song you played on came out.';
       case 'managerOffer': return 'A manager wants to work with you.';
       case 'labelOffer': return Game.rules.label.name(d.labelId) + ' wants to sign you.';
+      case 'labelRequest': return Game.rules.label.name(d.labelId) + (d.type === 'party' ? ' wants to throw a release party.' : ' has a request.');
       case 'tourProposal': return 'Your tour proposal is ready.';
       case 'arenaOffer': return 'Arena offer: ' + venue.name + '.';
       case 'festivalOffer': return 'Festival offer: ' + venue.name + '.';

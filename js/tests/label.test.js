@@ -144,6 +144,89 @@
     t.equal(lapsed.label.searchWaitUntil, lapsed.day + ms.rejectWaitDays, 'letting it run out: the same wait');
   });
 
+  // ----- The label's mood and its requests -----
+
+  Game.test('Labels: their mood changes their reach (stronger when they love you, weaker and no free promo when cold)', function (t) {
+    var m = Game.balance.label.mood;
+    var s = signWith(signedUpState(), 'neonHarbor', { reach: 0.5, freePromo: 'playlist' });
+    t.equal(s.label.deal.mood, m.start, 'starts at ' + m.start);
+    var o = recorded(s, 2, 70);
+    s = o.state;
+    s.releases.push({ id: 'rA', type: 'single', songIds: [o.ids[0]], day: 0, avgQuality: 70, dealId: s.label.deal.id });
+    s.songs[o.ids[0]].releaseId = 'rA';
+    var song = s.songs[o.ids[0]];
+    t.equal(L().reachFor(s, song), 0.5, 'as signed');
+    s.label.deal.mood = m.love;
+    t.near(L().reachFor(s, song), 0.5 * m.loveReach, 'loves you: stronger');
+    s.label.deal.mood = m.cold - 1;
+    t.near(L().reachFor(s, song), 0.5 * m.coldReach, 'cold: weaker');
+    var cold = recorded(s, 1, 70);
+    var r = Game.rules.recording.release(cold.state, 'single', cold.ids, null, null).state;
+    t.equal(r.releases[r.releases.length - 1].promo, null, 'cold: no free promo push');
+  });
+
+  Game.test('Labels: "a single first": yes and deliver wins them over (and a bigger push), yes and miss cools them, no cools a little', function (t) {
+    var f = Game.balance.label.requests.singleFirst;
+    var s = signWith(signedUpState(), 'northbound', { deadlineWeeks: 20 });
+    var asked = null;
+    for (var seed = 1; seed <= 40 && !asked; seed++) {
+      var x = Game.util.clone(s);
+      x.rngState = seed;
+      x.day = 7; // a Monday
+      var r = L().requestCheck(x).state;
+      if (L().openRequest(r)) asked = r;
+    }
+    t.ok(asked, 'the label asked for a single');
+    var m = L().openRequest(asked);
+    t.equal(m.data.type, 'singleFirst', 'a single first, by ' + Game.rules.day.dateLabel(m.data.dueDay));
+    var yes = L().answerRequest(asked, m.id, 'yes').state;
+    t.equal(yes.label.deal.ask.type, 'singleFirst', 'you promised');
+    var o = recorded(yes, 1, 70);
+    var done = Game.rules.recording.release(o.state, 'single', o.ids, null, null).state;
+    t.equal(done.label.deal.mood, Game.balance.label.mood.start + f.met, 'delivered: +' + f.met);
+    t.equal(done.label.deal.nextPushBonus, f.pushBonus, 'a bigger push on the next record');
+    var late = Game.util.clone(yes);
+    late.day = yes.label.deal.ask.dueDay + 1;
+    late = L().nightly(late).state;
+    t.equal(late.label.deal.mood, Game.balance.label.mood.start + f.missed, 'missed: ' + f.missed);
+    var no = L().answerRequest(asked, m.id, 'no').state;
+    t.equal(no.label.deal.mood, Game.balance.label.mood.start + f.no, 'no: ' + f.no);
+    var ignored = Game.util.clone(asked);
+    ignored.day = m.expiresDay + 1;
+    ignored = Game.rules.booking.expireOffers(ignored).state;
+    ignored = L().nightly(ignored).state;
+    t.equal(ignored.label.deal.mood, Game.balance.label.mood.start + f.no, 'not answering counts as no');
+    t.equal(L().requestCheck(Object.assign(Game.util.clone(asked), { day: 14 })).state.inbox.filter(function (x) { return x.kind === 'labelRequest'; }).length, 1,
+      'only one request open at a time');
+  });
+
+  Game.test('Labels: A&R notes after a weak record; a release party when a record comes out', function (t) {
+    var a = Game.balance.label.requests;
+    var s = signWith(signedUpState(), 'northbound', { owe: { count: 3, type: 'ep' }, control: 'full', qualityBar: null, flopQuality: 0 });
+    var o = recorded(s, 3, 60);
+    s = Game.rules.recording.release(o.state, 'ep', o.ids, 'Weak EP', null).state;
+    var reqs = s.inbox.filter(function (m) { return m.kind === 'labelRequest' && !m.resolved; });
+    var anr = reqs.filter(function (m) { return m.data.type === 'anr'; })[0];
+    var party = reqs.filter(function (m) { return m.data.type === 'party'; })[0];
+    t.ok(anr && anr.data.target === 60 + a.anr.plus, 'A&R notes: next record at quality ' + (anr && anr.data.target));
+    t.ok(party, 'and a release party');
+    var cash = s.player.cash;
+    s.player.cash = Math.max(cash, party.data.cost + 100);
+    cash = s.player.cash;
+    var partied = L().answerRequest(s, party.id, 'yes').state;
+    t.equal(partied.player.cash, cash - party.data.cost, 'the party costs $' + party.data.cost);
+    t.equal(partied.label.deal.mood, Game.balance.label.mood.start + a.party.mood, 'mood +' + a.party.mood);
+    t.ok(partied.cities.hometown.buzz > s.cities.hometown.buzz, 'buzz where you have fans');
+    var noted = L().answerRequest(partied, anr.id, 'yes').state;
+    t.equal(noted.label.deal.ask.target, anr.data.target, 'you promised quality ' + anr.data.target);
+    var better = recorded(noted, 3, 75);
+    var met = Game.rules.recording.release(better.state, 'ep', better.ids, 'Better EP', null).state;
+    t.equal(met.label.deal.mood, noted.label.deal.mood + a.anr.met, 'hit the note: +' + a.anr.met);
+    var worse = recorded(noted, 3, 58);
+    var missed = Game.rules.recording.release(worse.state, 'ep', worse.ids, 'Worse EP', null).state;
+    t.equal(missed.label.deal.mood, noted.label.deal.mood + a.anr.missed, 'missed it: ' + a.anr.missed);
+  });
+
   // ----- Terms -----
 
   Game.test('Labels: every label\'s terms stay inside its tier and personality, and the same dice give the same offer', function (t) {
@@ -422,7 +505,7 @@
     free.player.reputation = Game.balance.label.bigShowsWithout.reputation;
     free.cities.hometown.fans = 50000;
     free.cities.newHalston.fans = 200000;
-    t.ok(L().opens(free, 'bigShows'), 'or reputation 90 and 250,000 fans without a label');
+    t.ok(L().opens(free, 'bigShows'), 'or reputation 95 and 60,000 fans without a label');
   });
 
   // ----- Rivals -----

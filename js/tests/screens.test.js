@@ -80,6 +80,17 @@
       a.openLabelCompare();
       a.state.manager.hired = true;
       a.state = Game.rules.label.sign(a.state, ids[2]).state;
+      // The label's requests in the Inbox (a single first, A&R notes, a release party), then the archived view.
+      var deal = a.state.label.deal;
+      a.state = Game.rules.booking.addInbox(a.state, 'labelRequest', { labelId: deal.labelId, dealId: deal.id, type: 'singleFirst', dueDay: a.state.day + 28, settled: false }, a.state.day + 5);
+      a.state = Game.rules.booking.addInbox(a.state, 'labelRequest', { labelId: deal.labelId, dealId: deal.id, type: 'anr', target: 70, settled: false }, a.state.day + 5);
+      a.state = Game.rules.booking.addInbox(a.state, 'labelRequest', { labelId: deal.labelId, dealId: deal.id, type: 'party', releaseId: 'x', releaseName: 'Test',
+        cost: 2000, settled: false }, a.state.day + 2);
+      a.show('inbox');
+      a.state = Game.rules.booking.archiveRead(Game.rules.booking.markAllRead(a.state).state).state;
+      a.inboxView = 'archived'; a.render(); a.inboxView = 'inbox';
+      a.state.cities.hometown.club = true;
+      a.show('map');
       a.signedNotice = 'Signed.';
       a.show('dealSigned');      // the signing moment
       a.leaveDealSigned();       // then your deal on the Manager screen

@@ -1511,6 +1511,19 @@ button.recap:hover { transform: none; }
 .compare__table tbody th { font-weight: 600; color: var(--text-muted); white-space: nowrap; }
 .compare .term__mark { margin-right: 4px; }
 
+.inbox-tools { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin: 0 0 18px; }
+.inbox-tabs { display: flex; gap: 6px; }
+
+/* The keyboard shortcuts sheet (press ?). */
+.keys-help { position: fixed; right: 24px; bottom: 24px; z-index: 65; width: 300px; padding: 18px 20px 14px; }
+.keys-help__title { margin: 0 0 10px; font: 700 var(--size-l) var(--font-head); }
+.keys-help dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; font-size: var(--size-s); }
+.keys-help dt { text-align: right; }
+.keys-help kbd { display: inline-block; min-width: 22px; padding: 1px 6px; font: 700 var(--size-s) var(--font-head); text-align: center;
+  color: var(--ink); background: var(--paper-old); border: 1px solid var(--paper-rule); border-bottom-width: 3px; border-radius: 4px; }
+.keys-help dd { margin: 0; }
+.keys-help__foot { margin: 10px 0 0; font-size: var(--size-xs); color: var(--ink-soft); }
+
 .label-note { padding: 10px 14px; background: var(--case-raised); border-left: 4px solid var(--tape-studio); border-radius: var(--radius); }
 .label-panel .rows { margin: 10px 0 14px; }
 
