@@ -205,11 +205,21 @@ Open tests.html straight from the file (or with headless Chrome's `--dump-dom`) 
 
 ## How the pieces fit (added in Phase 7)
 
-- **Events** are content in `js/content/events.js` (`when`, optional `setup`, `text`, `choices` with one `safe`
-  choice). `Game.rules.events` rolls one each morning (`roll`, at the end of End Day), describes and applies
-  effects, auto-answers with the safe choice at the next End Day, and runs temporary effects (`state.effects`:
-  `gigScore` shows as the "Setbacks" score part; `dailyEnergy` applies overnight). New effect kinds go in
-  `describe` and `apply`.
+- **Events** are content in `js/content/events.js` (Starting out, Local act) and `js/content/eventsBig.js` (Touring act,
+  Star, and story steps). Each has `stages`, `when`, optional `setup`, `text`, and `choices` with one `safe` choice.
+  - **Stages and money:** `events.stage(state)` comes from reputation (`balance.events.stages`: chance, cooldown, money
+    scale). Money in content goes through `S(s, base)` = `events.scaled`. Use `events.get(id)` / `events.all()`, never
+    `Game.content.events` directly. Costs are capped at a share of your cash by `events.cashOf` (used by `describe`
+    and `apply`), so always read an effect's money through it.
+  - **Gambles and stories:** effects can be `gamble: [{ chance, text, effects }]` (rolled in `apply`, odds on the card)
+    and `followUp: { eventId, inDays, data }`, queued in `state.eventQueue`. Story steps have `story: true` and only
+    come from the queue.
+  - **Other effects:** `fans`, `buzzAll`, `streams` (temporary, via `events.streamsMultiplier` in
+    `streaming.boosts`), `awardsBoost` (via `events.awardsBoost` in awards), `labelMood`, and `memberLeaves` (the card
+    marks it as risky).
+  - **Each morning:** `Game.rules.events` rolls one (`roll`, at the end of End Day; queued story steps first), auto-answers
+    with the safe choice at the next End Day, and runs temporary effects (`state.effects`: `gigScore` shows as the
+    "Setbacks" score part; `dailyEnergy` applies overnight). New effect kinds go in `describe` and `apply`.
 - **Milestones**: names in `js/content/milestones.js`; live checks in `Game.rules.progress.milestoneChecks`.
   `checkUnlocks` gives the banner and +10 morale (call it after anything that could reach one outside End Day).
 - **Tutorial** tips: `js/content/tutorial.js`; elements they point at carry `data-tour="..."`.

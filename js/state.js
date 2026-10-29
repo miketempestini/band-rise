@@ -136,6 +136,7 @@ Game.state = {
       nextTemplateId: 1,
       settings: { tutorial: true },
       tutorialSeen: {},   // tip card id: true once dismissed
+      eventQueue: [],     // story events waiting for their day: [{ eventId, day, data }] (see Game.rules.events)
     };
   },
 

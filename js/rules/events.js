@@ -1,18 +1,53 @@
 // events.js (rules)
 // Random events: rolling one in the morning, describing each choice's effects, applying the choice,
 // and temporary effects (like "-3 gig score for 7 days") that run out on their own.
+//
+// Events grow with your career. Your stage comes from your reputation (balance.events.stages: Starting out, Local
+// act, Touring act, Star); each event lists the stages it can happen in, and its dollar amounts are scaled by the
+// stage (events.scaled). Bigger stages roll a little less often, and an event waits longer before it can repeat.
+// Some choices are gambles (outcomes with odds, shown on the card) and some start a story: the next step is queued
+// in state.eventQueue ([{ eventId, day, data }]) and arrives on its day without a dice roll.
 
 window.Game = window.Game || {};
 Game.rules = Game.rules || {};
 
 Game.rules.events = {
 
-  // Events that could happen today (their conditions are met and they're not on cooldown).
+  // Your career stage for events, from your reputation: 'starting' | 'local' | 'touring' | 'star'.
+  stage: function (state) {
+    var b = Game.balance.events;
+    var stage = b.stageOrder[0];
+    b.stageOrder.forEach(function (id) { if (state.player.reputation >= b.stages[id].minReputation) stage = id; });
+    return stage;
+  },
+
+  // A base dollar amount scaled to your stage (and rounded to a tidy number).
+  scaled: function (state, base) {
+    var st = Game.balance.events.stages[Game.rules.events.stage(state)];
+    return Math.round(base * st.moneyScale / st.roundTo) * st.roundTo;
+  },
+
+  // Every event (both content files). Story steps only arrive through the queue.
+  all: function () {
+    var out = {};
+    [Game.content.events, Game.content.eventsBig || {}].forEach(function (group) {
+      Object.keys(group).forEach(function (id) { out[id] = group[id]; });
+    });
+    return out;
+  },
+
+  // One event by id.
+  get: function (id) { return Game.rules.events.all()[id]; },
+
+  // Events that could happen today: in your stage's pool, their conditions met, and not on cooldown.
   eligible: function (state) {
-    var all = Game.content.events;
+    var all = Game.rules.events.all();
+    var stage = Game.rules.events.stage(state);
+    var stageCooldown = Game.balance.events.stages[stage].cooldownDays;
     return Object.keys(all).map(function (id) { return all[id]; }).filter(function (e) {
+      if (e.story || e.stages.indexOf(stage) === -1) return false;
       var last = state.eventHistory[e.id];
-      var cooldown = e.cooldownDays || Game.balance.events.defaultCooldownDays;
+      var cooldown = e.cooldownDays || stageCooldown;
       if (last !== undefined && state.day - last < cooldown) return false;
       return e.when(state);
     });
@@ -23,14 +58,42 @@ Game.rules.events = {
   choices: function (state) {
     var pending = state.pendingEvent;
     if (!pending) return [];
-    var event = Game.content.events[pending.eventId];
+    var event = Game.rules.events.get(pending.eventId);
     return event.choices(state, pending.data).map(function (c) {
       return {
         id: c.id, label: c.label, effects: c.effects, safe: !!c.safe,
         description: Game.rules.events.describe(state, c.effects),
-        problem: Game.rules.events.problem(state, c.effects)
+        problem: Game.rules.events.problem(state, c.effects),
+        risky: Game.rules.events.risky(c.effects),
+        // A gamble's outcomes one by one (for the card), and what happens no matter what.
+        outcomes: c.effects.gamble ? c.effects.gamble.map(function (o) {
+          return { chance: o.chance, text: o.text || '', description: Game.rules.events.describe(state, o.effects) };
+        }) : null,
+        sure: c.effects.gamble ? Game.rules.events.describe(state, Object.assign({}, c.effects, { gamble: null })) : null
       };
     });
+  },
+
+  // True if a choice could cost you a bandmate (the card marks it).
+  risky: function (effects) {
+    if (effects.memberLeaves) return true;
+    return !!(effects.gamble && effects.gamble.some(function (o) { return o.effects.memberLeaves; }));
+  },
+
+  // About how many fans a share of your fans is (for the card).
+  fanCount: function (state, share) {
+    return Math.round(Game.rules.progress.totalFans(state) * Math.abs(share));
+  },
+
+  // The money a choice really moves. Gains are paid in full. A cost is capped at a share of the cash you have
+  // (rounded down to the stage's round number), so one bill hurts but never sinks you; bills up to costFloor are
+  // always paid in full. The card shows this same number.
+  cashOf: function (state, effects) {
+    var e = Game.balance.events;
+    if (!effects.cash || effects.cash > 0) return effects.cash || 0;
+    var roundTo = e.stages[Game.rules.events.stage(state)].roundTo;
+    var cap = Math.max(e.costFloor, Math.floor(Math.max(0, state.player.cash) * e.maxCashShare / roundTo) * roundTo);
+    return -Math.min(-effects.cash, cap);
   },
 
   // Why a choice can't be picked right now, or null.
@@ -46,7 +109,8 @@ Game.rules.events = {
   describe: function (state, effects) {
     var u = Game.util;
     var parts = [];
-    if (effects.cash) parts.push((effects.cash > 0 ? '+$' : '-$') + Math.abs(effects.cash));
+    var cash = Game.rules.events.cashOf(state, effects);
+    if (cash) parts.push((cash > 0 ? '+$' : '-$') + Math.abs(cash).toLocaleString());
     if (effects.energy) parts.push(u.signed(effects.energy) + ' energy');
     if (effects.morale) parts.push(u.signed(effects.morale) + ' morale');
     if (effects.buzz) parts.push(u.signed(effects.buzz) + ' ' + Game.content.cities.hometown.name + ' buzz');
@@ -80,6 +144,24 @@ Game.rules.events = {
     }
     if (effects.sessionForShow) parts.push('a session player covers tomorrow\'s show (-$' + Game.balance.economy.sessionPlayerFee + ')');
     if (effects.songProgress) parts.push('+' + effects.songProgress + ' progress on your song');
+    if (effects.fans) {
+      var many = Game.rules.events.fanCount(state, effects.fans);
+      parts.push((effects.fans > 0 ? '+' : '-') + many.toLocaleString() + ' fans');
+    }
+    if (effects.buzzAll) parts.push(u.signed(effects.buzzAll) + ' buzz everywhere you have fans');
+    if (effects.streams) parts.push(u.signed(Math.round(effects.streams.amount * 100)) + '% streams for ' + effects.streams.weeks + ' weeks');
+    if (effects.labelMood && state.label.deal && !state.label.deal.legacy) parts.push(u.signed(effects.labelMood) + ' label mood');
+    if (effects.awardsBoost) parts.push('+' + Math.round(effects.awardsBoost * 100) + '% award chances this year');
+    if (effects.memberLeaves) {
+      var gone = state.people[effects.memberLeaves];
+      parts.push((gone ? gone.name : 'They') + ' leaves the band');
+    }
+    if (effects.gamble) {
+      parts.push(effects.gamble.map(function (o) {
+        return Math.round(o.chance * 100) + '%: ' + (o.text ? o.text + ' (' : '') + Game.rules.events.describe(state, o.effects) + (o.text ? ')' : '');
+      }).join(' · or ') );
+    }
+    if (effects.followUp) parts.push('the story continues');
     return parts.length ? parts.join(' · ') : 'Nothing changes';
   },
 
@@ -89,15 +171,27 @@ Game.rules.events = {
     var b = Game.balance.events;
     var s = Game.util.clone(state);
     if (s.pendingEvent) return { state: s, log: [] };
+    // A story's next step arrives on its day, no dice needed.
+    var queued = (s.eventQueue || []).filter(function (q) { return q.day <= s.day; })[0];
+    if (queued) {
+      s.eventQueue = s.eventQueue.filter(function (q) { return q !== queued; });
+      var step = Game.rules.events.get(queued.eventId);
+      s.pendingEvent = { eventId: step.id, day: s.day, data: queued.data || {} };
+      s.eventHistory[step.id] = s.day;
+      s = Game.rules.booking.addInbox(s, 'event', { eventId: step.id, text: step.text(s, s.pendingEvent.data), title: step.title }, null);
+      s.inbox[s.inbox.length - 1].read = true;
+      return { state: s, log: [] };
+    }
     var options = Game.rules.events.eligible(s);
     if (!options.length) return { state: s, log: [] };
 
     var rng = Game.rng.create(s.rngState);
     var chosen = null;
     var overtime = options.filter(function (e) { return e.id === 'overtime'; })[0];
+    var chance = b.stages[Game.rules.events.stage(s)].dailyChance;
     if (overtime && Game.rules.day.weekNumber(s.day) === b.firstOvertimeWeek && s.eventHistory.overtime === undefined) {
       chosen = overtime;
-    } else if (rng.chance(b.dailyChance)) {
+    } else if (rng.chance(chance)) {
       var total = options.reduce(function (sum, e) { return sum + e.weight; }, 0);
       var roll = rng.next() * total;
       for (var i = 0; i < options.length && !chosen; i++) {
@@ -124,17 +218,18 @@ Game.rules.events = {
     var choice = Game.rules.events.choices(state).filter(function (c) { return c.id === choiceId; })[0];
     if (!choice) return { state: state, log: ['Pick one of the choices.'] };
     if (choice.problem) return { state: state, log: [choice.problem] };
-    var event = Game.content.events[pending.eventId];
+    var event = Game.rules.events.get(pending.eventId);
     var applied = Game.rules.events.apply(state, choice.effects);
     var s = applied.state;
     s.pendingEvent = null;
     s.inbox.forEach(function (m) {
       if (m.kind === 'event' && m.day === pending.day && m.data.eventId === pending.eventId && !m.resolved) {
         m.resolved = 'answered';
-        m.data.answer = choice.label + (auto ? ' (you didn\'t answer)' : '');
+        m.data.answer = choice.label + (auto ? ' (you didn\'t answer)' : '') + (applied.outcome ? '. ' + applied.outcome : '');
       }
     });
-    var line = event.title + ': ' + choice.label + (auto ? ' (you didn\'t answer, so that\'s what happened)' : '') + '. ' + choice.description + '.';
+    var line = event.title + ': ' + choice.label + (auto ? ' (you didn\'t answer, so that\'s what happened)' : '') + '. ' +
+      (choice.effects.gamble ? (applied.outcome || '') : choice.description + '.');
     return { state: s, log: [line].concat(applied.log) };
   },
 
@@ -150,9 +245,10 @@ Game.rules.events = {
     var b = Game.balance;
     var s = Game.util.clone(state);
     var log = [];
-    if (effects.cash > 0) s = Game.rules.money.earn(s, effects.cash, 'events').state;
-    if (effects.cash < 0) {
-      var spent = Game.rules.money.spend(s, -effects.cash, 'events');
+    var cash = Game.rules.events.cashOf(state, effects);
+    if (cash > 0) s = Game.rules.money.earn(s, cash, 'events').state;
+    if (cash < 0) {
+      var spent = Game.rules.money.spend(s, -cash, 'events');
       s = spent.state;
       log = log.concat(spent.log);
     }
@@ -219,7 +315,66 @@ Game.rules.events = {
       }
       s.songs[writing.id].progress = Math.min(b.songs.progressToFinish - 1, s.songs[writing.id].progress + effects.songProgress);
     }
-    return { state: s, log: log };
+    if (effects.fans) {
+      // Fans won or lost across every city where you have fans (in proportion; wins stay under each city's most).
+      Object.keys(s.cities).forEach(function (id) {
+        var city = s.cities[id];
+        if (city.fans <= 0) return;
+        var change = Math.round(city.fans * effects.fans);
+        city.fans = Math.max(0, Math.min(Game.content.cities[id].fanCeiling, city.fans + change));
+      });
+    }
+    if (effects.buzzAll) {
+      Object.keys(s.cities).forEach(function (id) { if (s.cities[id].fans > 0) Game.rules.audience.buzzOn(s, id, effects.buzzAll); });
+    }
+    if (effects.streams) {
+      s.effects.push({ id: 'e' + s.day + '-' + s.effects.length, kind: 'streams', amount: effects.streams.amount,
+        untilDay: s.day + effects.streams.weeks * b.time.daysPerWeek, label: effects.streams.label || 'Streams change' });
+    }
+    if (effects.awardsBoost) {
+      s.effects.push({ id: 'e' + s.day + '-' + s.effects.length, kind: 'awards', amount: effects.awardsBoost,
+        untilDay: s.day + b.events.awardsBoostDays, label: 'Award buzz' });
+    }
+    if (effects.labelMood && s.label.deal && !s.label.deal.legacy) log.push(Game.rules.label.changeMood(s.label.deal, effects.labelMood, 'an event'));
+    if (effects.memberLeaves && isMember(effects.memberLeaves)) {
+      var leaving = s.people[effects.memberLeaves];
+      s = Game.rules.people.leaveBand(s, effects.memberLeaves);
+      var hurt = Game.rules.morale.change(s, b.morale.change.bandmateQuits);
+      s = hurt.state;
+      log.push(leaving.name + ' left the band. ' + b.morale.change.bandmateQuits + ' morale.');
+    }
+    var outcome = null;
+    if (effects.gamble) {
+      // Roll the outcome with the game's dice, then apply it.
+      var rng = Game.rng.create(s.rngState);
+      var roll = rng.next();
+      s.rngState = rng.getState();
+      var picked = effects.gamble[effects.gamble.length - 1];
+      var sum = 0;
+      for (var g = 0; g < effects.gamble.length; g++) {
+        sum += effects.gamble[g].chance;
+        if (roll < sum) { picked = effects.gamble[g]; break; }
+      }
+      var inner = Game.rules.events.apply(s, picked.effects);
+      s = inner.state;
+      log = log.concat(inner.log);
+      outcome = (picked.text ? picked.text + ': ' : '') + Game.rules.events.describe(state, picked.effects) + '.';
+    }
+    if (effects.followUp) {
+      s.eventQueue = (s.eventQueue || []).concat([{ eventId: effects.followUp.eventId, day: s.day + effects.followUp.inDays, data: effects.followUp.data || {} }]);
+    }
+    return { state: s, log: log, outcome: outcome };
+  },
+
+  // The streams change from active events (a sync license, a backlash): a multiplier, never under the floor.
+  streamsMultiplier: function (state) {
+    var total = Game.rules.events.active(state, 'streams').reduce(function (sum, e) { return sum + e.amount; }, 0);
+    return Math.max(Game.balance.events.streamsFloor, 1 + total);
+  },
+
+  // Extra award chances from active events (a documentary, a magazine cover).
+  awardsBoost: function (state) {
+    return Game.rules.events.active(state, 'awards').reduce(function (sum, e) { return sum + e.amount; }, 0);
   },
 
   // Active temporary effects of one kind (they last until their untilDay).

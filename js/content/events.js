@@ -1,5 +1,7 @@
 // events.js
-// Random events: small surprises that come up in the morning, each with a choice.
+// Random events for Starting out and Local act (bigger stages and stories are in eventsBig.js): surprises that come
+// up in the morning, each with a choice. Each event lists the career stages it can happen in (stages); dollar amounts
+// go through S(), which scales them to your stage.
 // Fixed data, never saved. Every number (how often, how likely, costs and amounts) is in balance.js
 // (balance.events, one entry per event).
 //
@@ -30,6 +32,8 @@ Game.content = Game.content || {};
   var dow = function (state) { return Game.rules.day.dayOfWeek(state.day); };
   var name = function (state, id) { return state.people[id] ? state.people[id].name : 'A bandmate'; };
   var members = function (state) { return Game.rules.people.members(state); };
+  // A base dollar amount, scaled to your career stage (bigger for bigger acts).
+  var S = function (state, base) { return Game.rules.events.scaled(state, base); };
   // Tomorrow's booked show, if there is one.
   var showTomorrow = function (state) {
     var plan = state.schedule[state.day + 1] || {};
@@ -41,6 +45,7 @@ Game.content = Game.content || {};
 
     overtime: {
       id: 'overtime',
+      stages: ['starting', 'local'],
       title: 'Overtime offer',
       weight: n.overtime.weight,
       when: function (s) {
@@ -64,13 +69,14 @@ Game.content = Game.content || {};
 
     crackingAmp: {
       id: 'crackingAmp',
+      stages: ['starting', 'local'],
       title: 'Your amp is crackling',
       weight: n.crackingAmp.weight,
       when: function (s) { return s.stats.gigsPlayed >= n.crackingAmp.minGigsPlayed; },
       text: function () { return 'Your amp has started crackling and cutting out mid-song.'; },
-      choices: function () {
+      choices: function (s) {
         return [
-          { id: 'fix', label: 'Get it fixed', effects: { cash: -n.crackingAmp.fixCost } },
+          { id: 'fix', label: 'Get it fixed', effects: { cash: -S(s, n.crackingAmp.fixCost) } },
           { id: 'playOn', label: 'Play on', effects: { gigScore: { amount: n.crackingAmp.playOnGigScore, days: n.crackingAmp.playOnDays, label: 'Crackling amp' } }, safe: true }
         ];
       }
@@ -78,13 +84,14 @@ Game.content = Game.content || {};
 
     brokenString: {
       id: 'brokenString',
+      stages: ['starting', 'local'],
       title: 'Snap!',
       weight: n.brokenString.weight,
       when: function () { return true; },
       text: function () { return 'A string snapped during warm-up, and it was your last spare.'; },
-      choices: function () {
+      choices: function (s) {
         return [
-          { id: 'buy', label: 'Buy a fresh set', effects: { cash: -n.brokenString.fixCost } },
+          { id: 'buy', label: 'Buy a fresh set', effects: { cash: -S(s, n.brokenString.fixCost) } },
           { id: 'makeDo', label: 'Make do for now', effects: { gigScore: { amount: n.brokenString.makeDoGigScore, days: n.brokenString.makeDoDays, label: 'Missing a string' } }, safe: true }
         ];
       }
@@ -92,11 +99,12 @@ Game.content = Game.content || {};
 
     blogMention: {
       id: 'blogMention',
+      stages: ['starting'],
       title: 'A blog mentioned you',
       weight: n.blogMention.weight,
       when: function (s) { return s.stats.bestResult && s.stats.bestResult !== 'rough'; },
       text: function () { return 'A local music blog gave your last set a nice little write-up!'; },
-      choices: function () {
+      choices: function (s) {
         return [
           { id: 'share', label: 'Share it everywhere', effects: { buzz: n.blogMention.shareBuzz, energy: n.blogMention.shareEnergy } },
           { id: 'enjoy', label: 'Just enjoy it', effects: { buzz: n.blogMention.enjoyBuzz, morale: n.blogMention.enjoyMorale }, safe: true }
@@ -106,13 +114,14 @@ Game.content = Game.content || {};
 
     carTrouble: {
       id: 'carTrouble',
+      stages: ['starting', 'local'],
       title: 'Car trouble',
       weight: n.carTrouble.weight,
       when: function () { return true; },
       text: function () { return 'Your car makes a horrible grinding noise and won\'t start.'; },
-      choices: function () {
+      choices: function (s) {
         return [
-          { id: 'fix', label: 'Fix it properly', effects: { cash: -n.carTrouble.fixCost } },
+          { id: 'fix', label: 'Fix it properly', effects: { cash: -S(s, n.carTrouble.fixCost) } },
           { id: 'bus', label: 'Take the bus for a week', effects: { dailyEnergy: { amount: n.carTrouble.busEnergyPerNight, days: n.carTrouble.busDays, label: 'Taking the bus' } }, safe: true }
         ];
       }
@@ -120,6 +129,7 @@ Game.content = Game.content || {};
 
     fillIn: {
       id: 'fillIn',
+      stages: ['starting', 'local'],
       title: 'Can you fill in?',
       weight: n.fillIn.weight,
       when: function (s) {
@@ -145,13 +155,14 @@ Game.content = Game.content || {};
 
     lessons: {
       id: 'lessons',
+      stages: ['starting'],
       title: 'Lesson request',
       weight: n.lessons.weight,
       when: function (s) { return s.player.skills.musicianship >= n.lessons.minMusicianship; },
       text: function () { return 'A neighbor\'s kid wants a guitar lesson tonight. Their parents will pay.'; },
-      choices: function () {
+      choices: function (s) {
         return [
-          { id: 'teach', label: 'Teach the lesson', effects: { cash: n.lessons.pay, energy: n.lessons.energy } },
+          { id: 'teach', label: 'Teach the lesson', effects: { cash: S(s, n.lessons.pay), energy: n.lessons.energy } },
           { id: 'pass', label: 'Pass', effects: {}, safe: true }
         ];
       }
@@ -159,11 +170,12 @@ Game.content = Game.content || {};
 
     party: {
       id: 'party',
+      stages: ['starting', 'local'],
       title: 'Roommate\'s party',
       weight: n.party.weight,
       when: function () { return true; },
       text: function () { return 'Your roommate is throwing a party tonight. It\'s going to be loud either way.'; },
-      choices: function () {
+      choices: function (s) {
         return [
           { id: 'join', label: 'Join in', effects: { morale: n.party.joinMorale, energy: n.party.joinEnergy } },
           { id: 'earplugs', label: 'Earplugs and an early night', effects: { morale: n.party.stayInMorale }, safe: true }
@@ -173,10 +185,11 @@ Game.content = Game.content || {};
 
     sunnySaturday: {
       id: 'sunnySaturday',
+      stages: ['starting'],
       title: 'Sunny Saturday',
       weight: n.sunnySaturday.weight,
       when: function (s) { return dow(s) === n.sunnySaturday.dayOfWeek; },
-      setup: function (s, rng) { return { cash: rng.int(n.sunnySaturday.buskCash.min, n.sunnySaturday.buskCash.max) }; },
+      setup: function (s, rng) { return { cash: S(s, rng.int(n.sunnySaturday.buskCash.min, n.sunnySaturday.buskCash.max)) }; },
       text: function () { return 'It\'s gorgeous out and the downtown square is packed.'; },
       choices: function (s, data) {
         return [
@@ -188,6 +201,7 @@ Game.content = Game.content || {};
 
     moreRehearsal: {
       id: 'moreRehearsal',
+      stages: ['local', 'touring'],
       title: 'Your bandmate wants more',
       weight: n.moreRehearsal.weight,
       when: function (s) { return s.band.memberIds.length > 0; },
@@ -208,6 +222,7 @@ Game.content = Game.content || {};
 
     argument: {
       id: 'argument',
+      stages: ['local', 'touring'],
       title: 'Argument in the van',
       weight: n.argument.weight,
       when: function (s) { return s.band.memberIds.length >= n.argument.minMembers; },
@@ -236,6 +251,7 @@ Game.content = Game.content || {};
 
     sideProject: {
       id: 'sideProject',
+      stages: ['local', 'touring'],
       title: 'A side project',
       weight: n.sideProject.weight,
       when: function (s) { return members(s).some(function (m) { return m.ambition > n.sideProject.minAmbition; }); },
@@ -256,6 +272,7 @@ Game.content = Game.content || {};
 
     biggerShare: {
       id: 'biggerShare',
+      stages: ['local', 'touring', 'star'],
       title: 'A bigger share?',
       weight: n.biggerShare.weight,
       cooldownDays: n.biggerShare.cooldownDays,
@@ -276,13 +293,14 @@ Game.content = Game.content || {};
 
     gearStolen: {
       id: 'gearStolen',
+      stages: ['local', 'touring'],
       title: 'Gear stolen',
       weight: n.gearStolen.weight,
       when: function (s) { return s.band.memberIds.length >= 1; },
       text: function () { return 'Someone broke into the rehearsal room and walked off with a pedalboard and two mics.'; },
-      choices: function () {
+      choices: function (s) {
         return [
-          { id: 'replace', label: 'Replace it', effects: { cash: -n.gearStolen.replaceCost } },
+          { id: 'replace', label: 'Replace it', effects: { cash: -S(s, n.gearStolen.replaceCost) } },
           { id: 'borrow', label: 'Borrow gear for now', effects: { gigScore: { amount: n.gearStolen.borrowGigScore, days: n.gearStolen.borrowDays, label: 'Borrowed gear' } }, safe: true }
         ];
       }
@@ -290,6 +308,7 @@ Game.content = Game.content || {};
 
     sickBeforeShow: {
       id: 'sickBeforeShow',
+      stages: ['starting', 'local', 'touring', 'star'],
       title: 'Sick before a show',
       weight: n.sickBeforeShow.weight,
       when: function (s) { return s.band.memberIds.length >= 1 && !!showTomorrow(s); },
@@ -305,13 +324,14 @@ Game.content = Game.content || {};
 
     noiseComplaint: {
       id: 'noiseComplaint',
+      stages: ['starting', 'local'],
       title: 'Noise complaint',
       weight: n.noiseComplaint.weight,
       when: function (s) { return s.band.memberIds.length >= 1; },
       text: function () { return 'The neighbors at the rehearsal space called the landlord. There\'s a fine, or you can keep it down.'; },
-      choices: function () {
+      choices: function (s) {
         return [
-          { id: 'pay', label: 'Pay the fine', effects: { cash: -n.noiseComplaint.fine } },
+          { id: 'pay', label: 'Pay the fine', effects: { cash: -S(s, n.noiseComplaint.fine) } },
           { id: 'quiet', label: 'Keep it down', effects: { satisfactionAll: n.noiseComplaint.quietSatisfaction, reason: 'Rehearsing quietly' }, safe: true }
         ];
       }
@@ -319,6 +339,7 @@ Game.content = Game.content || {};
 
     songIdea: {
       id: 'songIdea',
+      stages: ['starting', 'local', 'touring'],
       title: 'A song idea',
       weight: n.songIdea.weight,
       when: function (s) { return s.band.memberIds.length >= 1; },
@@ -335,14 +356,207 @@ Game.content = Game.content || {};
 
     lateNight: {
       id: 'lateNight',
+      stages: ['local', 'touring'],
       title: 'Late-night hang',
       weight: n.lateNight.weight,
       when: function (s) { return s.band.memberIds.length >= n.lateNight.minMembers; },
       text: function () { return 'Rehearsal turned into pizza, which is turning into a very late night.'; },
-      choices: function () {
+      choices: function (s) {
         return [
           { id: 'stay', label: 'Stay out', effects: { morale: n.lateNight.morale, relationshipAll: n.lateNight.relationship, energy: n.lateNight.energy } },
           { id: 'home', label: 'Head home', effects: {}, safe: true }
+        ];
+      }
+    },
+
+    // ----- Local act: bigger chances around town -----
+
+    radioInterview: {
+      id: 'radioInterview',
+      title: 'Local radio wants you',
+      stages: ['local'],
+      weight: n.radioInterview.weight,
+      when: function (s) { return s.cities.hometown.fans > 0; },
+      text: function () { return 'The morning show on the local rock station wants you in the studio to play a song live and chat.'; },
+      choices: function () {
+        var r = n.radioInterview;
+        return [
+          { id: 'go', label: 'Go on air', effects: { energy: r.energy, buzz: r.buzz, fans: r.fans } },
+          { id: 'pass', label: 'Pass', effects: {}, safe: true }
+        ];
+      }
+    },
+
+    weddingGig: {
+      id: 'weddingGig',
+      title: 'A wedding gig',
+      stages: ['local'],
+      weight: n.weddingGig.weight,
+      when: function () { return true; },
+      text: function () { return 'A couple who saw you play wants you for their wedding reception. Covers all night, but the money\'s real.'; },
+      choices: function (s) {
+        var w = n.weddingGig;
+        return [
+          { id: 'play', label: 'Play the wedding', effects: { cash: S(s, w.pay), energy: w.energy, morale: w.morale } },
+          { id: 'decline', label: 'Not our thing', effects: {}, safe: true }
+        ];
+      }
+    },
+
+    venueFavor: {
+      id: 'venueFavor',
+      title: 'A favor for a venue',
+      stages: ['local'],
+      weight: n.venueFavor.weight,
+      when: function () { return true; },
+      text: function () { return 'The owner of a local club is putting on a benefit for a regular who got sick, and asks if you\'ll play for free.'; },
+      choices: function () {
+        var v = n.venueFavor;
+        return [
+          { id: 'play', label: 'Play the benefit', effects: { reputation: v.reputation, buzz: v.buzz, energy: v.energy } },
+          { id: 'decline', label: 'We can\'t this time', effects: {}, safe: true }
+        ];
+      }
+    },
+
+    heckler: {
+      id: 'heckler',
+      title: 'Heckled by a rival',
+      stages: ['local'],
+      weight: n.heckler.weight,
+      when: function (s) { return Game.rules.scene.rivals(s).length > 0; },
+      setup: function (s, rng) { return { bandId: rng.pick(Game.rules.scene.rivals(s)).id }; },
+      text: function (s, d) {
+        var band = Game.rules.scene.band(s, d.bandId);
+        return 'Someone from ' + (band ? band.name : 'a rival band') + ' heckled you all through your last set, and people noticed.';
+      },
+      choices: function () {
+        var h = n.heckler;
+        return [
+          { id: 'clapBack', label: 'Clap back from the stage next time', effects: { gamble: [
+            { chance: h.chance, text: 'The crowd loved it', effects: { buzz: h.winBuzz, reputation: h.winReputation } },
+            { chance: 1 - h.chance, text: 'It came off petty', effects: { reputation: h.loseReputation, morale: h.loseMorale } }] } },
+          { id: 'slide', label: 'Let it slide', effects: { morale: h.slideMorale }, safe: true }
+        ];
+      }
+    },
+
+    localPaper: {
+      id: 'localPaper',
+      title: 'A profile in the paper',
+      stages: ['local'],
+      weight: n.localPaper.weight,
+      when: function () { return true; },
+      text: function () { return 'The city paper wants to profile you for its weekend arts section.'; },
+      choices: function () {
+        var l = n.localPaper;
+        return [
+          { id: 'interview', label: 'Do the interview', effects: { buzz: l.buzz, fans: l.fans, energy: l.energy } },
+          { id: 'skip', label: 'Skip it', effects: {}, safe: true }
+        ];
+      }
+    },
+
+    shadyPromoter: {
+      id: 'shadyPromoter',
+      title: 'A promoter with a deal',
+      stages: ['local'],
+      weight: n.shadyPromoter.weight,
+      when: function () { return true; },
+      text: function (s) {
+        return 'A promoter you\'ve never heard of promises a packed, well-paid show if you put down a $' + S(s, n.shadyPromoter.deposit).toLocaleString() + ' deposit.';
+      },
+      choices: function (s) {
+        var p = n.shadyPromoter;
+        return [
+          { id: 'pay', label: 'Pay the deposit', effects: { cash: -S(s, p.deposit), gamble: [
+            { chance: p.chance, text: 'He was legit', effects: { cash: S(s, p.payout), buzz: p.winBuzz } },
+            { chance: 1 - p.chance, text: 'He vanished with your money', effects: { morale: p.loseMorale } }] } },
+          { id: 'walk', label: 'Walk away', effects: {}, safe: true }
+        ];
+      }
+    },
+
+    musicVideo: {
+      id: 'musicVideo',
+      title: 'A film student\'s offer',
+      stages: ['local'],
+      weight: n.musicVideo.weight,
+      when: function (s) { return s.releases.length > 0; },
+      text: function (s) {
+        return 'A film student wants to shoot a music video for one of your songs, for just $' + S(s, n.musicVideo.cost).toLocaleString() + ' in costs.';
+      },
+      choices: function (s) {
+        var m = n.musicVideo;
+        return [
+          { id: 'shoot', label: 'Shoot the video', effects: { cash: -S(s, m.cost), streams: { amount: m.streams, weeks: m.weeks, label: 'Music video' }, buzz: m.buzz } },
+          { id: 'pass', label: 'Pass', effects: {}, safe: true }
+        ];
+      }
+    },
+
+    coverViral: {
+      id: 'coverViral',
+      title: 'Your cover is taking off',
+      stages: ['local'],
+      weight: n.coverViral.weight,
+      when: function () { return true; },
+      text: function () { return 'A cover you posted on a whim is getting shared a lot more than usual.'; },
+      choices: function () {
+        var c = n.coverViral;
+        return [
+          { id: 'ride', label: 'Ride the wave: post every day', effects: { energy: c.energy, gamble: [
+            { chance: c.chance, text: 'It blew up', effects: { fans: c.winFans, buzzAll: c.winBuzz } },
+            { chance: 1 - c.chance, text: 'It cooled off', effects: { buzz: c.loseBuzz } }] } },
+          { id: 'leave', label: 'Enjoy it and move on', effects: { buzz: c.leaveBuzz }, safe: true }
+        ];
+      }
+    },
+
+    sponsorLocal: {
+      id: 'sponsorLocal',
+      title: 'A local sponsor',
+      stages: ['local'],
+      weight: n.sponsorLocal.weight,
+      when: function () { return true; },
+      text: function () { return 'A local brewery wants its logo on your flyers and banner. Some fans might roll their eyes.'; },
+      choices: function (s) {
+        var p = n.sponsorLocal;
+        return [
+          { id: 'take', label: 'Take the money', effects: { cash: S(s, p.pay), buzz: p.buzz, reputation: p.reputation } },
+          { id: 'pass', label: 'Keep it independent', effects: {}, safe: true }
+        ];
+      }
+    },
+
+    workshop: {
+      id: 'workshop',
+      title: 'Teach a workshop',
+      stages: ['local'],
+      weight: n.workshop.weight,
+      when: function (s) { return s.player.skills.musicianship >= n.lessons.minMusicianship; },
+      text: function () { return 'A music school asks you to run a weekend songwriting workshop.'; },
+      choices: function (s) {
+        var w = n.workshop;
+        return [
+          { id: 'teach', label: 'Run the workshop', effects: { cash: S(s, w.pay), energy: w.energy, morale: w.morale } },
+          { id: 'pass', label: 'Pass', effects: {}, safe: true }
+        ];
+      }
+    },
+
+    contestJudge: {
+      id: 'contestJudge',
+      title: 'Judge a battle of the bands',
+      stages: ['local'],
+      weight: n.contestJudge.weight,
+      when: function () { return true; },
+      text: function () { return 'The high school\'s battle of the bands wants a "real musician" on the judging panel.'; },
+      choices: function (s) {
+        var c = n.contestJudge;
+        return [
+          { id: 'judge', label: 'Be a judge', effects: { cash: S(s, c.pay), energy: c.energy, reputation: c.reputation } },
+          { id: 'pass', label: 'Pass', effects: {}, safe: true }
         ];
       }
     }

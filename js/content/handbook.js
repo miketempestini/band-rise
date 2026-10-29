@@ -764,8 +764,19 @@ Game.content = Game.content || {};
         {
           id: 'events', title: 'Events and milestones', note: 'Life happens. Answer it.',
           body: [
-            'Most mornings bring nothing special, but about one day in ' + Math.round(1 / b.events.dailyChance) + ' something happens: an overtime shift, a broken string, ' +
-              'a blog mention, a party, an argument in the band. Each event gives you choices on Today. If you don\'t answer, the safe choice is picked at End Day.',
+            'Some mornings something happens: an event with choices on Today. If you don\'t answer, the safe choice is picked at End Day. ' +
+              'Events grow with your career: your stage comes from your reputation, each stage has its own events, and the money at stake grows with it.',
+            { table: { cols: ['Stage', 'Reputation', 'How often', 'Money at stake', 'For example'], rows: b.events.stageOrder.map(function (id) {
+              var st = b.events.stages[id];
+              var examples = { starting: 'a broken string, a lesson, overtime', local: 'a radio interview, a wedding gig, a shady promoter',
+                touring: 'a sync license, lost luggage abroad, a rival poaching a bandmate', star: 'the halftime show, a tax audit, a tabloid story' }[id];
+              return [st.name, st.minReputation + '+', 'about 1 day in ' + Math.round(1 / st.dailyChance), 'x' + st.moneyScale, examples];
+            }) } },
+            '<strong>Gambles:</strong> some choices are risky, and the card shows the odds (like "60%: the crowd loved it · 40%: it came off petty"). ' +
+              'Choices that could cost you a bandmate are marked in red. <strong>Stories:</strong> some events continue days or weeks later (a brand deal\'s ad ' +
+              'comes out, a lawsuit goes to trial, a documentary premieres), and what you chose first shapes what comes next. Once an event happens, it won\'t ' +
+              'come back for months. And however big the bill, an event never takes more than ' + Math.round(b.events.maxCashShare * 100) +
+              '% of the cash you have (small bills up to $' + b.events.costFloor + ' are paid in full), so a bad break hurts but never sinks you.',
             '<strong>Milestones</strong> mark the big steps and each gives ' + signed(mc.milestone) + ' morale (quitting the job gives ' + signed(b.job.quitMoraleBonus) + '):',
             { table: { cols: ['#', 'Milestone', 'How'], rows: Game.content.milestones.map(function (m) { return [String(m.number), m.name, m.trigger]; }) } }
           ]

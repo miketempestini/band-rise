@@ -68,7 +68,8 @@ Game.rules.streaming = {
       viral: stats.viral ? st.viralCurve[stats.viral - 1] : 1,
       label: Game.rules.label.reachFor(state, song)
     };
-    b.total = Math.min(st.maxBoost, (1 + b.buzz) * (1 + b.chart) * (1 + b.live) * (1 + b.promo) * b.viral * (1 + b.label));
+    b.event = Game.rules.events.streamsMultiplier(state); // events: a sync license lifts streams, a scandal dents them
+    b.total = Math.min(st.maxBoost, (1 + b.buzz) * (1 + b.chart) * (1 + b.live) * (1 + b.promo) * b.viral * (1 + b.label) * b.event);
     return b;
   },
 

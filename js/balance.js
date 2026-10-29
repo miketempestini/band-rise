@@ -1111,7 +1111,7 @@ Game.balance = {
   // Saving
   // ---------------------------------------------------------------
   save: {
-    version: 26,                     // Save format version, bumped when the state shape changes
+    version: 27,                     // Save format version, bumped when the state shape changes
     storageKey: 'bandRise.save'      // The name the save is stored under in the browser
   },
 
@@ -1119,9 +1119,24 @@ Game.balance = {
   // Random events (see js/content/events.js for each event's own numbers)
   // ---------------------------------------------------------------
   events: {
-    dailyChance: 0.28,               // Chance each morning that something happens (about one every 3.5 days)
-    defaultCooldownDays: 10,         // The same event won't happen again for at least this many days
+    dailyChance: 0.28,               // (Starting out) chance each morning that something happens (about one every 3.5 days)
+    defaultCooldownDays: 10,         // The same event won't happen again for at least this many days (stages set their own)
     firstOvertimeWeek: 1,            // The overtime offer is guaranteed on this week's Friday
+    // Career stages (by reputation): which events can happen, how often, how long before one repeats, and how much
+    // money is at stake (an event's dollar amounts are its base x moneyScale, rounded to roundTo).
+    stages: {
+      starting: { name: 'Starting out', minReputation: 0,  dailyChance: 0.28, cooldownDays: 45,  moneyScale: 1,   roundTo: 5 },
+      local:    { name: 'Local act',    minReputation: 20, dailyChance: 0.24, cooldownDays: 90,  moneyScale: 4,   roundTo: 10 },
+      touring:  { name: 'Touring act',  minReputation: 50, dailyChance: 0.20, cooldownDays: 120, moneyScale: 25,  roundTo: 100 },
+      star:     { name: 'Star',         minReputation: 80, dailyChance: 0.18, cooldownDays: 150, moneyScale: 100, roundTo: 500 }
+    },
+    stageOrder: ['starting', 'local', 'touring', 'star'],
+    streamsFloor: 0.2,               // Temporary stream dips never cut streams below 20% of normal
+    // An event never costs more than this share of the cash you have (so a famous but broke act isn't sunk by one
+    // star-sized bill), except that a bill up to costFloor is always paid in full (the small beginner events).
+    maxCashShare: 0.25,
+    costFloor: 300,
+    awardsBoostDays: 365,            // An awards boost from an event lasts this long
 
     // Each event's own numbers. "weight" is how likely it is compared to the other events that can
     // happen that day (6 is twice as likely as 3). Cash amounts are dollars; gigScore/dailyEnergy
@@ -1144,7 +1159,62 @@ Game.balance = {
     sickBeforeShow:{ weight: 4, shortGigScore: -5, shortDays: 2 },
     noiseComplaint:{ weight: 2, fine: 40, quietSatisfaction: -3 },
     songIdea:      { weight: 3, progress: 15, energy: -10, satisfaction: 3 },
-    lateNight:     { weight: 3, minMembers: 2, morale: 8, relationship: 4, energy: -15 }
+    lateNight:     { weight: 3, minMembers: 2, morale: 8, relationship: 4, energy: -15 },
+
+    // ----- Bigger events (cash amounts are base dollars: x the stage's moneyScale) -----
+    // Local act
+    radioInterview: { weight: 3, energy: -15, buzz: 6, fans: 0.02 },
+    weddingGig:     { weight: 3, pay: 100, energy: -25, morale: -3 },
+    venueFavor:     { weight: 3, reputation: 1, buzz: 4, energy: -20 },
+    heckler:        { weight: 2, chance: 0.6, winBuzz: 6, winReputation: 1, loseReputation: -1, loseMorale: -5, slideMorale: -2 },
+    localPaper:     { weight: 3, buzz: 5, fans: 0.01, energy: -10 },
+    shadyPromoter:  { weight: 2, deposit: 75, chance: 0.5, payout: 250, winBuzz: 5, loseMorale: -5 },
+    musicVideo:     { weight: 3, cost: 50, streams: 0.2, weeks: 4, buzz: 3 },
+    coverViral:     { weight: 2, chance: 0.4, energy: -15, winFans: 0.05, winBuzz: 8, loseBuzz: 3, leaveBuzz: 2 },
+    sponsorLocal:   { weight: 2, pay: 150, buzz: 2, reputation: -1 },
+    workshop:       { weight: 2, pay: 75, energy: -20, morale: 3 },
+    contestJudge:   { weight: 2, pay: 50, energy: -10, reputation: 1 },
+    // Touring act
+    lostLuggage:    { weight: 4, rent: 60, gigScore: -5, days: 4 },
+    busBreakdown:   { weight: 4, rent: 100, dailyEnergy: -10, days: 5, morale: -5 },
+    soreThroat:     { weight: 4, restGigScore: -3, restDays: 2, chance: 0.65, badGigScore: -12, badDays: 7 },
+    syncLicense:    { weight: 3, pay: 400, streams: 0.4, weeks: 4, passMorale: 3 },
+    podcast:        { weight: 3, energy: -10, chance: 0.55, winFans: 0.04, winBuzz: 6, loseReputation: -2, loseMorale: -5 },
+    merchKnockoff:  { weight: 3, security: 40, ignoreMorale: -3 },
+    promoterSkips:  { weight: 3, legal: 40, chance: 0.5, payout: 160, letGoMorale: -5 },
+    supportLegend:  { weight: 2, energy: -20, buzz: 10, fans: 0.03, reputation: 2 },
+    poached:        { weight: 2, match: 60, matchSatisfaction: 10, chance: 0.5, staySatisfaction: 5 },
+    festivalSwap:   { weight: 3, energy: -15, buzz: 6, fans: 0.02 },
+    radioAdd:       { weight: 3, energy: -25, streams: 0.3, weeks: 3, buzz: 5, quietStreams: 0.1 },
+    tourInjury:     { weight: 3, session: 30, gigScore: -6, days: 5 },
+    labelPush:      { weight: 3, cost: 80, mood: 10, streams: 0.25, weeks: 4, passMood: -3 },
+    viralClip:      { weight: 3, energy: -10, buzz: 10, fans: 0.03, enjoyBuzz: 4 },
+    charityGig:     { weight: 2, energy: -20, reputation: 2, morale: 5 },
+    visaTrouble:    { weight: 3, expedite: 50, dailyEnergy: -8, days: 3, morale: -5 },
+    hotelDamage:    { weight: 2, pay: 40, satisfaction: -10 },
+    // Star
+    stadiumCharity: { weight: 2, energy: -25, reputation: 2, fans: 0.02, morale: 5, donate: 100, donateReputation: 1 },
+    tvSpot:         { weight: 2, energy: -20, chance: 0.7, winFans: 0.08, winBuzz: 15, winStreams: 0.5, weeks: 4, loseReputation: -3 },
+    taxAudit:       { weight: 2, accountants: 80, chance: 0.6, penalty: 300 },
+    superstarCollab:{ weight: 2, energy: -20, pay: 100, streams: 0.4, weeks: 6, fans: 0.05 },
+    burnout:        { weight: 3, restEnergy: 10, restDays: 14, restBuzz: -5, chance: 0.6, badMorale: -20, badGigScore: -8, badDays: 14 },
+    awardCampaign:  { weight: 2, cost: 150, boost: 0.10 },
+    leakedDemo:     { weight: 2, chance: 0.5, winStreams: 0.6, weeks: 4, winBuzz: 10, loseReputation: -2, loseMood: -10 },
+    magazineCover:  { weight: 3, energy: -10, boost: 0.05, buzz: 8 },
+    privateGig:     { weight: 2, pay: 500, reputation: -2, energy: -20 },
+    signatureGuitar:{ weight: 2, pay: 200, reputation: -1 },
+    breakupRumor:   { weight: 2, denyEnergy: -5, denyBuzz: 3, chance: 0.5, winBuzz: 12, loseSatisfaction: -8 },
+    // Stories (a first step, then a follow-up some days later)
+    brandDeal:      { weight: 2, pay: 300, followDays: 21, adEnergy: -10, chance: 0.6, winFans: 0.05, winBuzz: 8, loseReputation: -3, loseMorale: -8,
+                      quietChance: 0.6, quietBuzz: 3, quietReputation: -2 },
+    sampleLawsuit:  { weight: 2, settle: 120, lawyers: 40, followDays: 14, chance: 0.55, winPay: 100, winReputation: 1, losePay: 250, stepsSettle: 160 },
+    rivalFeud:      { weight: 2, energy: -15, chance: 0.5, winBuzz: 10, winFans: 0.03, loseReputation: -2, loseMorale: -5, peaceReputation: 1,
+                      ignoreMorale: -2, followDays: 10, jointBuzz: 6, jointFans: 0.02, jointEnergy: -15 },
+    documentary:    { weight: 2, energy: -10, filmEnergy: -3, filmDays: 14, followDays: 42, chance: 0.65, winBoost: 0.10, winFans: 0.05, winBuzz: 10,
+                      loseReputation: -3, loseMorale: -10, quietFans: 0.02, quietReputation: -2 },
+    soloOffer:      { weight: 2, support: 15, stay: -15, followDays: 30, plugEnergy: -5, plugBuzz: 4, plugSatisfaction: 10, focusSatisfaction: -5 },
+    tabloid:        { weight: 2, chance: 0.5, winBuzz: 5, loseReputation: -3, sue: 100, followDays: 21, quietReputation: -1,
+                      verdictChance: 0.5, verdictPay: 300, verdictReputation: 2, verdictLoss: 150 }
   },
 
   // ---------------------------------------------------------------

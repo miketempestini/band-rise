@@ -1524,6 +1524,13 @@ button.recap:hover { transform: none; }
 .keys-help dd { margin: 0; }
 .keys-help__foot { margin: 10px 0 0; font-size: var(--size-xs); color: var(--ink-soft); }
 
+/* Events: a story's next step, and a choice that could cost you a bandmate. */
+.event-card__story { margin-bottom: 4px; font: 700 var(--size-xs) var(--font-head); letter-spacing: 0.5px; color: var(--red-pen); }
+.choice-btn--risky { border-color: var(--red-pen); }
+.choice-btn__odds { display: block; margin-top: 3px; }
+.choice-btn__odds b { display: inline-block; min-width: 34px; font-family: var(--font-head); }
+.choice-btn__risk { color: var(--red-pen); font-style: normal; font-weight: 600; }
+
 .label-note { padding: 10px 14px; background: var(--case-raised); border-left: 4px solid var(--tape-studio); border-radius: var(--radius); }
 .label-panel .rows { margin: 10px 0 14px; }
 

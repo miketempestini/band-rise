@@ -67,6 +67,17 @@
     });
     check('action picker', function (a) { a.show('today'); a.pickerBlock = 'evening'; a.render(); });
     check('day readout', function (a) { a.show('today'); a.dayReportOpen = true; a.render(); });
+    // Event cards on Today: one per stage, a gamble, a risky choice, and a story step.
+    [['party', 0], ['radioInterview', 20], ['podcast', 50], ['poached', 50], ['tvSpot', 80], ['brandDealAd', 80]].forEach(function (pair) {
+      check('event: ' + pair[0], function (a) {
+        a.state.player.reputation = pair[1];
+        var e = Game.rules.events.get(pair[0]);
+        var data = { personId: a.state.band.memberIds[0] || 'p1', bandId: a.state.scene.rivals[0] };
+        a.state.pendingEvent = { eventId: pair[0], day: a.state.day, data: data };
+        a.show('today');
+        if (!e) throw new Error('no event ' + pair[0]);
+      });
+    });
     // Record labels: three offers (a contract, a counter-offer pending, the comparison), then the Manager screen signed.
     check('label offers', function (a) {
       var rng = Game.rng.create(3);

@@ -4,6 +4,52 @@ A running log of what's built, what's next, and known issues. Update at the end 
 
 ## What's built
 
+### Session 14z: Random events that grow with your career (2026-10-26)
+- **Why:** events were all beginner-sized ($40 lessons, a $15 string) at every stage, and the same few repeated.
+- **Stages by reputation** (`balance.events.stages`):
+
+  | Stage | Reputation | Money | Repeat wait |
+  | --- | --- | --- | --- |
+  | Starting out | 0+ | x1 | 45 days |
+  | Local act | 20+ | x4 | 90 days |
+  | Touring act | 50+ | x25 | 120 days |
+  | Star | 80+ | x100 | 150 days |
+
+  - Each event lists its stages, so beginner events retire as you climb.
+  - Bigger stages get events a little less often (28% of mornings down to 18%).
+- **69 events** (was 18): 63 random ones in `js/content/events.js` (starting and local) and the new
+  `js/content/eventsBig.js` (touring, star, stories), plus 6 story steps. They cover:
+  - business and media
+  - legal and money
+  - scandals
+  - road and health
+  - band drama
+- **Gambles:**
+  - Some choices roll the dice. The card shows each outcome and its odds, and the Inbox record says which happened.
+  - Choices that could cost a bandmate are marked in red.
+- **Six stories:** a brand deal, a sample lawsuit, a rival feud, a documentary, a bandmate's solo deal, and a tabloid.
+  Your first choice queues the next step (`state.eventQueue`), which arrives days or weeks later with no dice roll.
+- **New effects:**
+  - fans won or lost, as a share
+  - buzz everywhere
+  - streams up or down for some weeks
+  - award chances for a year
+  - the label's mood
+  - a bandmate leaving
+- **Costs are capped:** an event never takes more than 25% of your cash. Bills up to $300 are always paid in full.
+  - **Why:** the first two-year check had 8 game-overs in 10 runs. Reputation climbs much faster than money (the
+    simulated player hit Star around day 110 with $3,500), and a $12,000 lawsuit settlement then forced family loans
+    that ended the game.
+- **Save version 27** adds `eventQueue`. The test save was upgraded.
+- **Guide:** the Events section explains stages (a table built from balance.js), gambles, stories, and the cap.
+- **Tests:** 424 passing. New tests cover stage pools, money scaling, every event at every stage (new and late
+  careers), gambles, the story queue, the new effects, pacing, and the cost cap. **Version tag:** `v27-2026-10-28a`.
+- **Two-year check** (10 runs, with the cap):
+  - **Game-overs:** none (8 before the cap).
+  - **Arenas:** in 9 of 10 runs, first around day 448. **Festivals:** in all 10.
+  - **At the end:** cash around $638,000 and fans around 116,000.
+  - **Events late in a career:** cost about $825 a week, about a fifth of what you spend.
+
 ### Session 14y: Road to arenas, label follow-ups, Inbox archive, keyboard shortcuts (2026-10-26)
 - **Arenas are reachable:**
   - **The bar:** 60,000 fans (was 100,000), still reputation 85.
@@ -28,8 +74,9 @@ A running log of what's built, what's next, and known issues. Update at the end 
 - **Two-year check** (10 runs, before the last tweak):
   - **Fans:** end around 83,000 (was 64,000).
   - **Festivals:** happen in 80% of runs (was 0%).
-  - **Arenas:** still 0%. The simulated player never had an 18-song arena set (it stopped writing at 14). It now
-    writes toward 18; a re-run was in progress at commit time.
+  - **Arenas:** still 0% at first. The simulated player never had an 18-song arena set (it stopped writing at 14).
+  - **After teaching it to write toward 18:** first arena show in 9 of 10 runs (around day 556), festivals in 9 of 10,
+    and fans ending around 113,000.
 - **Tests:** 416 passing (new: arena.test.js, inbox.test.js, label mood and request tests). **Version tag:**
   `v26-2026-10-26c`.
 

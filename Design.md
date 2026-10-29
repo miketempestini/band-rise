@@ -725,6 +725,48 @@ counts as no):
 Rivals sign too (5% a week once they qualify for a tier): their label shows on the Career screen, and its reach boosts
 their records' streams and chart spots.
 
+## Random events
+
+Events grow with your career.
+
+**Stages.** Your stage comes from your reputation (`balance.events.stages`). Each event lists the stages it can happen
+in, so small beginner events retire as you climb. Dollar amounts are a base number times the stage's money scale.
+
+| Stage | Reputation | Chance each morning | Repeat after | Money scale | Events |
+| --- | --- | --- | --- | --- | --- |
+| Starting out | 0+ | 28% | 45 days | x1 | the original beginner events |
+| Local act | 20+ | 24% | 90 days | x4 | radio interview, wedding gig, venue benefit, heckled by a rival, newspaper profile, shady promoter, film student video, viral cover, local sponsor, workshop, battle-of-the-bands judge, plus band life |
+| Touring act | 50+ | 20% | 120 days | x25 | lost luggage abroad, bus breakdown, sore throat, sync license, big podcast, bootleg shirts, promoter skips out, opening for a legend, a bandmate poached by a rival, festival slot swap, national radio, road injury, label push, viral clip, hospital gig, visa trouble, hotel damage, breakup rumors |
+| Star | 80+ | 18% | 150 days | x100 | stadium benefit, halftime show, tax audit, superstar feature, doctor's warning, awards campaign, leaked demo, magazine cover, billionaire's party, signature guitar |
+
+**Gambles.** A gamble choice lists its outcomes with odds. It's rolled with the game's dice when you pick it, and the
+Inbox record says which outcome happened. Choices that could cost a bandmate are outlined in red pen.
+
+**Stories.** A story's first choice queues its next step in `state.eventQueue`, which arrives on its day without a
+roll:
+- **A brand deal** leads to the ad coming out.
+- **A sample lawsuit**, if you fight it, leads to a court date.
+- **A rival feud**, if you make peace, leads to a joint show.
+- **A documentary** leads to the premiere.
+- **A bandmate's solo deal** leads to the solo record.
+- **A tabloid story**, if you sue, leads to the verdict.
+
+**New effects:**
+- fans won or lost, as a share of every city
+- buzz in every city with fans
+- streams up or down for some weeks (never below 20%)
+- award chances for a year
+- the label's mood
+- a bandmate leaving
+
+**Costs are capped.** An event never costs more than 25% of the cash you have (rounded down to the stage's round
+number), but bills up to $300 are always paid in full. A famous but broke act pays what it can afford; a rich star
+pays the full star-sized bill. The card shows the capped amount.
+
+There are 63 events that can happen at random (12 can come up while starting out, 27 for a local act, 32 for a
+touring act, 32 for a star; many fit more than one stage), plus 6 story steps. Downsides hurt but never end a career, and the safe
+choice is always shown.
+
 ## Inbox and keyboard
 
 - **Archiving:** "Archive read messages" moves every message you've read that's finished (answered, expired, or news)

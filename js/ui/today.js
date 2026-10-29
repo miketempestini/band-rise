@@ -91,14 +91,22 @@ Game.ui.today = {
     var h = Game.ui.helpers;
     var pending = state.pendingEvent;
     if (!pending) return '';
-    var event = Game.content.events[pending.eventId];
+    var event = Game.rules.events.get(pending.eventId);
     var buttons = Game.rules.events.choices(state).map(function (c) {
-      return '<button class="choice-btn' + (c.safe ? ' choice-btn--safe' : '') + '" data-action="answerEvent" data-choice="' + c.id + '"' +
+      return '<button class="choice-btn' + (c.safe ? ' choice-btn--safe' : '') + (c.risky ? ' choice-btn--risky' : '') + '" data-action="answerEvent" data-choice="' + c.id + '"' +
         (c.problem ? ' disabled title="' + h.escape(c.problem) + '"' : '') + '>' +
-        '<strong>' + h.escape(c.label) + '</strong><span>' + h.escape(c.description) + '</span>' +
+        '<strong>' + h.escape(c.label) + '</strong>' +
+        (c.outcomes
+          ? (c.sure !== 'Nothing changes' ? '<span>' + h.escape(c.sure) + '</span>' : '') +
+            c.outcomes.map(function (o) {
+              return '<span class="choice-btn__odds"><b>' + Math.round(o.chance * 100) + '%</b> ' + h.escape(o.text) + ': ' + h.escape(o.description) + '</span>';
+            }).join('')
+          : '<span>' + h.escape(c.description) + '</span>') +
+        (c.risky ? '<em class="choice-btn__risk">Could cost you a bandmate</em>' : '') +
         (c.safe ? '<em>Happens if you don\'t answer</em>' : '') + '</button>';
     }).join('');
-    return '<div class="event-card paper"><div class="event-card__title">' + h.escape(event.title) + '</div>' +
+    return '<div class="event-card paper">' + (event.story ? '<div class="event-card__story">The story continues</div>' : '') +
+      '<div class="event-card__title">' + h.escape(event.title) + '</div>' +
       '<p>' + h.escape(event.text(state, pending.data)) + '</p>' +
       '<div class="event-card__choices">' + buttons + '</div></div>';
   },

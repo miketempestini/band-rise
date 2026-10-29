@@ -235,7 +235,7 @@
     var e = Game.balance.events.noiseComplaint;
     var band = withBand(2);
     var cash = band.state.player.cash;
-    t.equal(answer(band.state, 'noiseComplaint', {}, 'pay').player.cash, cash - e.fine, 'fine paid');
+    t.equal(answer(band.state, 'noiseComplaint', {}, 'pay').player.cash, cash - Game.rules.events.scaled(band.state, e.fine), 'fine paid (scaled to your stage)');
     var quiet = answer(band.state, 'noiseComplaint', {}, 'quiet');
     band.ids.forEach(function (id) {
       t.equal(quiet.people[id].satisfaction, band.state.people[id].satisfaction + e.quietSatisfaction, 'everyone a little unhappy');
@@ -274,7 +274,8 @@
     var e = Game.balance.events.gearStolen;
     var band = withBand(1);
     var cash = band.state.player.cash;
-    t.equal(answer(band.state, 'gearStolen', {}, 'replace').player.cash, cash - e.replaceCost, 'replaced');
+    t.equal(answer(band.state, 'gearStolen', {}, 'replace').player.cash, cash + Game.rules.events.cashOf(band.state, { cash: -Game.rules.events.scaled(band.state, e.replaceCost) }),
+      'replaced (scaled to your stage, capped by your cash)');
     var borrowed = answer(band.state, 'gearStolen', {}, 'borrow');
     t.equal(Game.rules.events.gigScoreChange(borrowed), e.borrowGigScore, '-3 gig score');
     var later = Game.util.clone(borrowed);

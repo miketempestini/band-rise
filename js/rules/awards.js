@@ -75,7 +75,7 @@ Game.rules.awards = {
     if (best && best.recording.quality >= a.songMinQuality) {
       list.push(aw.withRivals(state, { category: 'song', title: '"' + best.title + '"',
         strength: Math.min(a.maxChance, aw.qualityChance(best.recording.quality) + aw.chartBonus(state, best.chart) +
-          Game.rules.label.awardsBoost(state, Game.rules.streaming.releaseOf(state, best))) })); // a prestige label's records get noticed
+          Game.rules.label.awardsBoost(state, Game.rules.streaming.releaseOf(state, best)) + Game.rules.events.awardsBoost(state)) })); // a prestige label, a buzzy event
     }
 
     // Record of the Year: the best EP or album this year.
@@ -84,7 +84,8 @@ Game.rules.awards = {
     if (records.length) {
       var rec = records[0];
       list.push(aw.withRivals(state, { category: 'record', title: '"' + (rec.name || Game.content.releaseTypes[rec.type].name) + '" (' + Game.content.releaseTypes[rec.type].name + ')',
-        strength: Math.min(a.maxChance, aw.qualityChance(rec.avgQuality) + aw.chartBonus(state, rec.chart) + Game.rules.label.awardsBoost(state, rec)) }));
+        strength: Math.min(a.maxChance, aw.qualityChance(rec.avgQuality) + aw.chartBonus(state, rec.chart) + Game.rules.label.awardsBoost(state, rec) +
+          Game.rules.events.awardsBoost(state)) }));
     }
 
     // Breakout Act: new fans this year.
